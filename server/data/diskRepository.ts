@@ -11,6 +11,8 @@ import type {
   IResearchRepository,
   IFileRepository,
   IClassroomRepository,
+  IQuizRepository,
+  IVideoRepository,
   CreateMessageInput,
   MessageFilter
 } from './repository.ts';
@@ -37,7 +39,16 @@ import type {
   ClassroomParticipant,
   ClassroomSessionStatus,
   ParticipantConnectionStatus,
-  CreateClassroomSessionInput
+  CreateClassroomSessionInput,
+  Quiz,
+  QuizQuestion,
+  QuizResponse,
+  QuizParticipantState,
+  QuizStatus,
+  VideoRecord,
+  CreateVideoInput,
+  UpdateVideoInput,
+  VideoListFilter
 } from './types.ts';
 import type {
   EducationClass,
@@ -1390,6 +1401,400 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
     };
   }
 
+  get quizzes(): IQuizRepository {
+    return {
+      getQuizById: async (id: string, workspaceId?: string): Promise<Quiz | null> => {
+        const state = this.store.getState();
+        const q = (state.quizzes || []).find(
+          (item) => (item.id === id || item.quizId === id) && (!workspaceId || item.workspaceId === workspaceId)
+        );
+        return q ? JSON.parse(JSON.stringify(q)) : null;
+      },
+
+      listQuizzes: async (filter?: {
+        classId?: string;
+        sessionId?: string;
+        workspaceId?: string;
+        status?: QuizStatus;
+      }): Promise<Quiz[]> => {
+        const state = this.store.getState();
+        return (state.quizzes || [])
+          .filter((q) => {
+            if (filter?.classId && q.classId !== filter.classId) return false;
+            if (filter?.sessionId && q.classroomSessionId !== filter.sessionId) return false;
+            if (filter?.workspaceId && q.workspaceId !== filter.workspaceId) return false;
+            if (filter?.status && q.status !== filter.status) return false;
+            return true;
+          })
+          .map((q) => JSON.parse(JSON.stringify(q)));
+      },
+
+      createQuiz: async (input: {
+        id?: string;
+        workspaceId: string;
+        classId: string;
+        classroomSessionId: string;
+        teacherId: string;
+        title: string;
+        description?: string;
+        status?: QuizStatus;
+      }): Promise<Quiz> => {
+        const id = input.id || `quiz-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const now = new Date().toISOString();
+        const quiz: Quiz = {
+          id,
+          quizId: id,
+          workspaceId: input.workspaceId,
+          classId: input.classId,
+          classroomSessionId: input.classroomSessionId,
+          teacherId: input.teacherId,
+          title: input.title,
+          description: input.description,
+          status: input.status || 'draft',
+          currentQuestionIndex: -1,
+          totalQuestions: 0,
+          createdAt: now
+        };
+
+        this.store.mutate((st) => {
+          if (!st.quizzes) st.quizzes = [];
+          st.quizzes.push(JSON.parse(JSON.stringify(quiz)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(quiz));
+      },
+
+      updateQuiz: async (id: string, updates: Partial<Quiz>, workspaceId?: string): Promise<Quiz | null> => {
+        let updated: Quiz | null = null;
+        this.store.mutate((st) => {
+          if (!st.quizzes) st.quizzes = [];
+          const idx = st.quizzes.findIndex(
+            (q) => (q.id === id || q.quizId === id) && (!workspaceId || q.workspaceId === workspaceId)
+          );
+          if (idx !== -1) {
+            st.quizzes[idx] = {
+              ...st.quizzes[idx],
+              ...updates,
+              id: st.quizzes[idx].id,
+              quizId: st.quizzes[idx].quizId
+            };
+            updated = JSON.parse(JSON.stringify(st.quizzes[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+
+      deleteQuiz: async (id: string, workspaceId?: string): Promise<boolean> => {
+        let deleted = false;
+        this.store.mutate((st) => {
+          if (!st.quizzes) return;
+          const prev = st.quizzes.length;
+          st.quizzes = st.quizzes.filter(
+            (q) => !((q.id === id || q.quizId === id) && (!workspaceId || q.workspaceId === workspaceId))
+          );
+          deleted = st.quizzes.length < prev;
+          if (deleted) {
+            st.quizQuestions = (st.quizQuestions || []).filter((q) => q.quizId !== id);
+            st.quizResponses = (st.quizResponses || []).filter((r) => r.quizId !== id);
+            st.quizParticipantStates = (st.quizParticipantStates || []).filter((p) => p.quizId !== id);
+          }
+        });
+        if (deleted) await this.store.flush();
+        return deleted;
+      },
+
+      getQuestionById: async (questionId: string, quizId?: string): Promise<QuizQuestion | null> => {
+        const state = this.store.getState();
+        const q = (state.quizQuestions || []).find(
+          (item) => (item.id === questionId || item.questionId === questionId) && (!quizId || item.quizId === quizId)
+        );
+        return q ? JSON.parse(JSON.stringify(q)) : null;
+      },
+
+      listQuestions: async (quizId: string): Promise<QuizQuestion[]> => {
+        const state = this.store.getState();
+        return (state.quizQuestions || [])
+          .filter((q) => q.quizId === quizId)
+          .sort((a, b) => a.order - b.order)
+          .map((q) => JSON.parse(JSON.stringify(q)));
+      },
+
+      addQuestion: async (input: {
+        id?: string;
+        quizId: string;
+        order?: number;
+        questionText: string;
+        options: string[];
+        correctOption: string;
+        points?: number;
+        timeLimitSeconds?: number;
+      }): Promise<QuizQuestion> => {
+        const id = input.id || `qq-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        let question: QuizQuestion;
+
+        this.store.mutate((st) => {
+          if (!st.quizQuestions) st.quizQuestions = [];
+          const existing = st.quizQuestions.filter((q) => q.quizId === input.quizId);
+          const order = input.order !== undefined ? input.order : existing.length;
+
+          question = {
+            id,
+            questionId: id,
+            quizId: input.quizId,
+            order,
+            questionText: input.questionText,
+            options: input.options,
+            correctOption: input.correctOption,
+            points: input.points !== undefined ? input.points : 10,
+            timeLimitSeconds: input.timeLimitSeconds !== undefined ? input.timeLimitSeconds : 30,
+            status: 'pending'
+          };
+          st.quizQuestions.push(JSON.parse(JSON.stringify(question)));
+
+          // Update quiz totalQuestions count
+          if (!st.quizzes) st.quizzes = [];
+          const quizIdx = st.quizzes.findIndex((q) => q.id === input.quizId || q.quizId === input.quizId);
+          if (quizIdx !== -1) {
+            st.quizzes[quizIdx].totalQuestions = st.quizQuestions.filter((q) => q.quizId === input.quizId).length;
+          }
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(question!));
+      },
+
+      updateQuestion: async (questionId: string, updates: Partial<QuizQuestion>, quizId?: string): Promise<QuizQuestion | null> => {
+        let updated: QuizQuestion | null = null;
+        this.store.mutate((st) => {
+          if (!st.quizQuestions) return;
+          const idx = st.quizQuestions.findIndex(
+            (q) => (q.id === questionId || q.questionId === questionId) && (!quizId || q.quizId === quizId)
+          );
+          if (idx !== -1) {
+            st.quizQuestions[idx] = {
+              ...st.quizQuestions[idx],
+              ...updates,
+              id: st.quizQuestions[idx].id,
+              questionId: st.quizQuestions[idx].questionId,
+              quizId: st.quizQuestions[idx].quizId
+            };
+            updated = JSON.parse(JSON.stringify(st.quizQuestions[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+
+      removeQuestion: async (questionId: string, quizId?: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.quizQuestions) return;
+          const prev = st.quizQuestions.length;
+          const target = st.quizQuestions.find(
+            (q) => (q.id === questionId || q.questionId === questionId) && (!quizId || q.quizId === quizId)
+          );
+          if (!target) return;
+          const qQuizId = target.quizId;
+
+          st.quizQuestions = st.quizQuestions.filter((q) => !(q.id === target.id));
+          removed = st.quizQuestions.length < prev;
+
+          if (removed && qQuizId) {
+            const remaining = st.quizQuestions.filter((q) => q.quizId === qQuizId).sort((a, b) => a.order - b.order);
+            remaining.forEach((q, idx) => {
+              q.order = idx;
+            });
+            const quizIdx = (st.quizzes || []).findIndex((q) => q.id === qQuizId || q.quizId === qQuizId);
+            if (quizIdx !== -1 && st.quizzes) {
+              st.quizzes[quizIdx].totalQuestions = remaining.length;
+            }
+          }
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      },
+
+      saveResponse: async (response: QuizResponse): Promise<QuizResponse> => {
+        const id = response.id || response.responseId || `qr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const record: QuizResponse = {
+          ...response,
+          id,
+          responseId: id
+        };
+
+        this.store.mutate((st) => {
+          if (!st.quizResponses) st.quizResponses = [];
+          const idx = st.quizResponses.findIndex(
+            (r) => r.quizId === response.quizId && r.questionId === response.questionId && r.studentId === response.studentId
+          );
+          if (idx !== -1) {
+            st.quizResponses[idx] = JSON.parse(JSON.stringify(record));
+          } else {
+            st.quizResponses.push(JSON.parse(JSON.stringify(record)));
+          }
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+
+      getResponse: async (quizId: string, questionId: string, studentId: string): Promise<QuizResponse | null> => {
+        const state = this.store.getState();
+        const r = (state.quizResponses || []).find(
+          (item) => item.quizId === quizId && item.questionId === questionId && item.studentId === studentId
+        );
+        return r ? JSON.parse(JSON.stringify(r)) : null;
+      },
+
+      listResponses: async (quizId: string, questionId?: string): Promise<QuizResponse[]> => {
+        const state = this.store.getState();
+        return (state.quizResponses || [])
+          .filter((r) => r.quizId === quizId && (!questionId || r.questionId === questionId))
+          .map((r) => JSON.parse(JSON.stringify(r)));
+      },
+
+      upsertParticipantState: async (pState: QuizParticipantState): Promise<QuizParticipantState> => {
+        const id = pState.id || `${pState.quizId}:${pState.studentId}`;
+        const record: QuizParticipantState = { ...pState, id };
+
+        this.store.mutate((st) => {
+          if (!st.quizParticipantStates) st.quizParticipantStates = [];
+          const idx = st.quizParticipantStates.findIndex(
+            (p) => p.quizId === pState.quizId && p.studentId === pState.studentId
+          );
+          if (idx !== -1) {
+            st.quizParticipantStates[idx] = {
+              ...st.quizParticipantStates[idx],
+              ...record
+            };
+          } else {
+            st.quizParticipantStates.push(JSON.parse(JSON.stringify(record)));
+          }
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+
+      getParticipantState: async (quizId: string, studentId: string): Promise<QuizParticipantState | null> => {
+        const state = this.store.getState();
+        const p = (state.quizParticipantStates || []).find(
+          (item) => item.quizId === quizId && item.studentId === studentId
+        );
+        return p ? JSON.parse(JSON.stringify(p)) : null;
+      },
+
+      listParticipantStates: async (quizId: string): Promise<QuizParticipantState[]> => {
+        const state = this.store.getState();
+        return (state.quizParticipantStates || [])
+          .filter((p) => p.quizId === quizId)
+          .map((p) => JSON.parse(JSON.stringify(p)));
+      }
+    };
+  }
+
+  get videos(): IVideoRepository {
+    return {
+      getVideoById: async (id: string, workspaceId?: string): Promise<VideoRecord | null> => {
+        const state = this.store.getState();
+        const v = (state.videos || []).find(
+          (item) => (item.id === id || item.videoId === id) && (!workspaceId || item.workspaceId === workspaceId)
+        );
+        return v ? JSON.parse(JSON.stringify(v)) : null;
+      },
+
+      listVideos: async (filter?: VideoListFilter): Promise<VideoRecord[]> => {
+        const state = this.store.getState();
+        return (state.videos || [])
+          .filter((v) => {
+            if (filter?.classId && v.classId !== filter.classId) return false;
+            if (filter?.workspaceId && v.workspaceId !== filter.workspaceId) return false;
+            if (filter?.uploaderId && v.uploaderId !== filter.uploaderId) return false;
+            if (filter?.status && v.status !== filter.status) return false;
+            if (filter?.knowledgeSpaceId && v.knowledgeSpaceId !== filter.knowledgeSpaceId) return false;
+            if (filter?.search) {
+              const term = filter.search.toLowerCase();
+              const matchTitle = v.title.toLowerCase().includes(term);
+              const matchDesc = v.description.toLowerCase().includes(term);
+              const matchTags = (v.tags || []).some((t) => t.toLowerCase().includes(term));
+              if (!matchTitle && !matchDesc && !matchTags) return false;
+            }
+            return true;
+          })
+          .map((v) => JSON.parse(JSON.stringify(v)));
+      },
+
+      createVideo: async (input: CreateVideoInput): Promise<VideoRecord> => {
+        const id = input.id || `vid-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const now = new Date().toISOString();
+        const video: VideoRecord = {
+          id,
+          videoId: id,
+          workspaceId: input.workspaceId,
+          classId: input.classId,
+          uploaderId: input.uploaderId,
+          fileId: input.fileId,
+          title: input.title,
+          description: input.description || '',
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.sizeBytes,
+          durationSeconds: input.durationSeconds,
+          thumbnailUrl: input.thumbnailUrl,
+          status: input.status || 'ready',
+          visibility: input.visibility || 'class',
+          transcript: input.transcript,
+          captionTracks: input.captionTracks,
+          knowledgeSpaceId: input.knowledgeSpaceId,
+          tags: input.tags || [],
+          createdAt: now,
+          updatedAt: now
+        };
+
+        this.store.mutate((st) => {
+          if (!st.videos) st.videos = [];
+          st.videos.push(JSON.parse(JSON.stringify(video)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(video));
+      },
+
+      updateVideo: async (id: string, updates: UpdateVideoInput, workspaceId?: string): Promise<VideoRecord | null> => {
+        let updated: VideoRecord | null = null;
+        this.store.mutate((st) => {
+          if (!st.videos) st.videos = [];
+          const idx = st.videos.findIndex(
+            (v) => (v.id === id || v.videoId === id) && (!workspaceId || v.workspaceId === workspaceId)
+          );
+          if (idx !== -1) {
+            st.videos[idx] = {
+              ...st.videos[idx],
+              ...updates,
+              id: st.videos[idx].id,
+              videoId: st.videos[idx].videoId,
+              updatedAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.videos[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+
+      deleteVideo: async (id: string, workspaceId?: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.videos) return;
+          const prev = st.videos.length;
+          st.videos = st.videos.filter(
+            (v) => !((v.id === id || v.videoId === id) && (!workspaceId || v.workspaceId === workspaceId))
+          );
+          removed = st.videos.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      }
+    };
+  }
+
   get storagePath(): string {
     return this.store.getStoragePath();
   }
@@ -1431,6 +1836,23 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
       this.store.mutate((st) => {
         st.classroomSessions = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.classroomSessions || []));
         st.classroomParticipants = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.classroomParticipants || []));
+      });
+      await this.store.flush();
+    }
+    // Seed quiz data if not present in existing database
+    if (!state.quizzes || state.quizzes.length === 0) {
+      this.store.mutate((st) => {
+        st.quizzes = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.quizzes || []));
+        st.quizQuestions = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.quizQuestions || []));
+        st.quizResponses = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.quizResponses || []));
+        st.quizParticipantStates = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.quizParticipantStates || []));
+      });
+      await this.store.flush();
+    }
+    // Seed video data if not present in existing database
+    if (!state.videos || state.videos.length === 0) {
+      this.store.mutate((st) => {
+        st.videos = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.videos || []));
       });
       await this.store.flush();
     }

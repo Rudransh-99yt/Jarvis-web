@@ -62,7 +62,12 @@ export class JsonFileStore {
             researchReports: Array.isArray(parsed.researchReports) && parsed.researchReports.length > 0 ? parsed.researchReports : (INITIAL_DATABASE_SCHEMA.researchReports || []),
             files: Array.isArray(parsed.files) && parsed.files.length > 0 ? parsed.files : (INITIAL_DATABASE_SCHEMA.files || []),
             classroomSessions: Array.isArray(parsed.classroomSessions) && parsed.classroomSessions.length > 0 ? parsed.classroomSessions : (INITIAL_DATABASE_SCHEMA.classroomSessions || []),
-            classroomParticipants: Array.isArray(parsed.classroomParticipants) ? parsed.classroomParticipants : []
+            classroomParticipants: Array.isArray(parsed.classroomParticipants) ? parsed.classroomParticipants : [],
+            quizzes: Array.isArray(parsed.quizzes) ? parsed.quizzes : (INITIAL_DATABASE_SCHEMA.quizzes || []),
+            quizQuestions: Array.isArray(parsed.quizQuestions) ? parsed.quizQuestions : (INITIAL_DATABASE_SCHEMA.quizQuestions || []),
+            quizResponses: Array.isArray(parsed.quizResponses) ? parsed.quizResponses : (INITIAL_DATABASE_SCHEMA.quizResponses || []),
+            quizParticipantStates: Array.isArray(parsed.quizParticipantStates) ? parsed.quizParticipantStates : (INITIAL_DATABASE_SCHEMA.quizParticipantStates || []),
+            videos: Array.isArray(parsed.videos) ? parsed.videos : (INITIAL_DATABASE_SCHEMA.videos || [])
           };
           return;
         }

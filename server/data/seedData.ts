@@ -877,5 +877,106 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       updatedAt: '2026-10-02T10:00:00.000Z'
     }
   ],
-  classroomParticipants: []
+  classroomParticipants: [],
+  quizzes: [
+    {
+      id: 'quiz-seed-phys-1',
+      quizId: 'quiz-seed-phys-1',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      classroomSessionId: 'session-seed-phys-1',
+      teacherId: 'teacher-1',
+      title: 'Quantum Wavefunctions & Measurement Quiz',
+      description: 'Interactive concept check on wavefunction collapse and quantum superposition.',
+      status: 'ready',
+      currentQuestionIndex: 0,
+      totalQuestions: 2,
+      createdAt: '2026-10-02T10:30:00.000Z'
+    }
+  ],
+  quizQuestions: [
+    {
+      id: 'q-seed-phys-1',
+      questionId: 'q-seed-phys-1',
+      quizId: 'quiz-seed-phys-1',
+      order: 0,
+      questionText: 'What occurs during wavefunction collapse according to the Copenhagen interpretation?',
+      options: [
+        'A) The system branches into alternate parallel universes',
+        'B) The superposition state reduces to a single definite eigenstate',
+        'C) Entanglement between particles is permanently broken',
+        'D) Kinetic energy converts entirely to thermal radiation'
+      ],
+      correctOption: 'B',
+      points: 10,
+      timeLimitSeconds: 30,
+      status: 'pending'
+    },
+    {
+      id: 'q-seed-phys-2',
+      questionId: 'q-seed-phys-2',
+      quizId: 'quiz-seed-phys-1',
+      order: 1,
+      questionText: 'Which physical quantity is conserved in an isolated quantum system under unitary time evolution?',
+      options: [
+        'A) Total probability (normalization condition)',
+        'B) Magnetic vector potential phase angle',
+        'C) Quantum decoherence rate',
+        'D) Relativistic mass dilation factor'
+      ],
+      correctOption: 'A',
+      points: 10,
+      timeLimitSeconds: 30,
+      status: 'pending'
+    }
+  ],
+  quizResponses: [],
+  quizParticipantStates: [],
+  videos: [
+    {
+      id: 'vid-seed-phys-1',
+      videoId: 'vid-seed-phys-1',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      uploaderId: 'teacher-1',
+      fileId: 'file-seed-vid-1',
+      title: 'Quantum Harmonic Oscillator & Energy Eigenstates',
+      description: 'Comprehensive lecture breakdown on algebraic ladder operators, ground state energy derivation, and zero-point quantum fluctuations.',
+      filename: 'quantum_harmonic_oscillator_lecture.mp4',
+      mimeType: 'video/mp4',
+      sizeBytes: 18450200,
+      durationSeconds: 1840,
+      thumbnailUrl: '/media/thumbnails/quantum_oscillator.jpg',
+      status: 'ready',
+      visibility: 'class',
+      transcript: 'Welcome back to Advanced Quantum Mechanics. Today we explore the quantum harmonic oscillator using Dirac notation and ladder operators. The Hamiltonian operator is H equals p squared over 2m plus one-half m omega squared x squared. Notice that by defining the dimensionless raising and lowering operators a and a-dagger, the commutation relation is exactly [a, a-dagger] equals one. The ground state energy is one-half h-bar omega, confirming the physical reality of zero-point vacuum fluctuations.',
+      knowledgeSpaceId: 'ks-quantum',
+      knowledgeSourceId: 'src-qm-vid-1',
+      tags: ['Quantum', 'Lecture', 'Ladder Operators', 'Harmonic Oscillator'],
+      createdAt: '2026-10-02T11:00:00.000Z',
+      updatedAt: '2026-10-02T11:00:00.000Z'
+    },
+    {
+      id: 'vid-seed-math-1',
+      videoId: 'vid-seed-math-1',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-math-240',
+      uploaderId: 'teacher-1',
+      fileId: 'file-seed-vid-2',
+      title: 'Stokes Theorem & Differential Forms Visualization',
+      description: '3D geometric interpretation of curl flux across bounded manifolds and generalized Stokes formulation.',
+      filename: 'stokes_theorem_differential_forms.mp4',
+      mimeType: 'video/mp4',
+      sizeBytes: 24120800,
+      durationSeconds: 2150,
+      thumbnailUrl: '/media/thumbnails/stokes_theorem.jpg',
+      status: 'ready',
+      visibility: 'class',
+      transcript: 'In this lecture we visualize Stokes theorem across 2D surfaces in 3-space. The line integral of vector field F along boundary curve C equals the surface integral of the curl of F dot dS over surface S. When formulated with exterior calculus, the integral of d-omega over manifold M unifies line, surface, and volume integrals into a single equation.',
+      knowledgeSpaceId: 'ks-quantum',
+      tags: ['Calculus', 'Differential Forms', 'Stokes Theorem'],
+      createdAt: '2026-10-01T15:00:00.000Z',
+      updatedAt: '2026-10-01T15:00:00.000Z'
+    }
+  ]
 };

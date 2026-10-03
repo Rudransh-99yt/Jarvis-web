@@ -9,6 +9,7 @@ export interface ValidationConfig {
 }
 
 export const DEFAULT_MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+export const DEFAULT_MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
 
 export const ALLOWED_EXTENSIONS = [
   'pdf',
@@ -18,7 +19,12 @@ export const ALLOWED_EXTENSIONS = [
   'webp',
   'txt',
   'md',
-  'docx'
+  'docx',
+  'mp4',
+  'webm',
+  'ogg',
+  'mov',
+  'm4v'
 ];
 
 export const MIME_TYPE_MAP: Record<string, string> = {
@@ -29,7 +35,12 @@ export const MIME_TYPE_MAP: Record<string, string> = {
   webp: 'image/webp',
   txt: 'text/plain',
   md: 'text/markdown',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  mp4: 'video/mp4',
+  m4v: 'video/mp4',
+  webm: 'video/webm',
+  ogg: 'video/ogg',
+  mov: 'video/quicktime'
 };
 
 /**
@@ -96,6 +107,24 @@ export function inspectMagicBytes(buffer: Buffer): { detectedType?: string; isTe
     return { detectedType: 'docx' };
   }
 
+  // 6. MP4 / M4V / QuickTime: ftyp/moov box signature
+  if (buffer.length >= 8) {
+    const boxType = buffer.slice(4, 8).toString('latin1');
+    if (boxType === 'ftyp' || boxType === 'moov' || boxType === 'wide') {
+      return { detectedType: 'mp4' };
+    }
+  }
+
+  // 7. WebM / Matroska: \x1A\x45\xDF\xA3 (EBML ID)
+  if (buffer.length >= 4 && buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3) {
+    return { detectedType: 'webm' };
+  }
+
+  // 8. Ogg: OggS (0x4F 0x67 0x67 0x53)
+  if (buffer.length >= 4 && buffer[0] === 0x4F && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) {
+    return { detectedType: 'ogg' };
+  }
+
   // Check for plain text / markdown (ensure no binary null bytes in first 1024 bytes)
   const sample = buffer.slice(0, Math.min(buffer.length, 1024));
   let hasNull = false;
@@ -118,14 +147,17 @@ export function validateUpload(
   claimedMime?: string,
   config?: ValidationConfig
 ): FileValidationResult {
-  const maxSizeBytes = config?.maxSizeBytes || DEFAULT_MAX_FILE_SIZE;
+  const sanitizedName = sanitizeFilename(originalName);
+  const rawExt = path.extname(sanitizedName).toLowerCase().replace(/^\./, '');
+  const isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(rawExt);
+  const maxSizeBytes = config?.maxSizeBytes || (isVideo ? DEFAULT_MAX_VIDEO_SIZE : DEFAULT_MAX_FILE_SIZE);
   const allowedExtensions = config?.allowedExtensions || ALLOWED_EXTENSIONS;
 
   // 1. Check size limits
   if (!buffer || buffer.length === 0) {
     return {
       valid: false,
-      sanitizedName: sanitizeFilename(originalName),
+      sanitizedName,
       detectedMime: 'application/octet-stream',
       extension: '',
       error: 'File buffer is empty (0 bytes).'
@@ -137,7 +169,7 @@ export function validateUpload(
     const actualMb = (buffer.length / (1024 * 1024)).toFixed(1);
     return {
       valid: false,
-      sanitizedName: sanitizeFilename(originalName),
+      sanitizedName,
       detectedMime: 'application/octet-stream',
       extension: '',
       error: `File size (${actualMb} MB) exceeds maximum allowed limit of ${maxMb} MB.`
@@ -145,9 +177,6 @@ export function validateUpload(
   }
 
   // 2. Sanitize and validate filename & extension
-  const sanitizedName = sanitizeFilename(originalName);
-  const rawExt = path.extname(sanitizedName).toLowerCase().replace(/^\./, '');
-
   if (!rawExt) {
     return {
       valid: false,
@@ -220,6 +249,36 @@ export function validateUpload(
       detectedMime: 'application/octet-stream',
       extension: rawExt,
       error: 'File content does not match standard DOCX zip container signature.'
+    };
+  }
+
+  if ((rawExt === 'mp4' || rawExt === 'm4v' || rawExt === 'mov') && detectedType && detectedType !== 'mp4') {
+    return {
+      valid: false,
+      sanitizedName,
+      detectedMime: 'application/octet-stream',
+      extension: rawExt,
+      error: 'File content does not match standard MP4/QuickTime binary container signature.'
+    };
+  }
+
+  if (rawExt === 'webm' && detectedType && detectedType !== 'webm') {
+    return {
+      valid: false,
+      sanitizedName,
+      detectedMime: 'application/octet-stream',
+      extension: rawExt,
+      error: 'File content does not match standard WebM binary container signature.'
+    };
+  }
+
+  if (rawExt === 'ogg' && detectedType && detectedType !== 'ogg') {
+    return {
+      valid: false,
+      sanitizedName,
+      detectedMime: 'application/octet-stream',
+      extension: rawExt,
+      error: 'File content does not match standard Ogg binary container signature.'
     };
   }
 

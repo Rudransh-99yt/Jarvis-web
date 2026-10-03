@@ -6,6 +6,10 @@ import type {
   SmartBoardStateType,
   RemoteDeviceType
 } from '../../../types/classroom.ts';
+import type { Quiz, QuizQuestion, QuestionAggregate, QuizResults } from '../../../types/quiz.ts';
+import { SmartQuizTeacherPanel } from '../components/SmartQuizTeacherPanel.tsx';
+import { SmartQuizSmartBoardView } from '../components/SmartQuizSmartBoardView.tsx';
+import { SmartQuizStudentRemote } from '../components/SmartQuizStudentRemote.tsx';
 import {
   Radio,
   Play,
@@ -69,6 +73,12 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
   const [newMessage, setNewMessage] = useState<string>('');
   const [selectedStateType, setSelectedStateType] = useState<SmartBoardStateType>('lesson');
 
+  // Milestone 13: Smart Quiz State
+  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [activeQuizQuestion, setActiveQuizQuestion] = useState<QuizQuestion | null>(null);
+  const [activeQuizAggregate, setActiveQuizAggregate] = useState<QuestionAggregate | null>(null);
+  const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
+
   // EventSource stream ref
   const eventSourceRef = useRef<EventSource | null>(null);
   const presenceIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -105,10 +115,38 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
 
           // Fetch participants
           fetchParticipants(data.session.id);
+
+          // Fetch active quiz for session
+          try {
+            const qRes = await fetch(`/api/classroom/quizzes?sessionId=${data.session.id}&classId=${selectedClassId}&workspaceId=ws-stark-core`, {
+              headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+            });
+            if (qRes.ok) {
+              const qData = await qRes.json();
+              const liveOrLatest = (qData.quizzes || []).find((q: Quiz) => q.status === 'live' || q.status === 'paused')
+                || (qData.quizzes || [])[0] || null;
+              setActiveQuiz(liveOrLatest);
+              if (liveOrLatest) {
+                const stateRes = await fetch(`/api/classroom/quizzes/${liveOrLatest.id}/active-question?workspaceId=ws-stark-core`, {
+                  headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+                });
+                if (stateRes.ok) {
+                  const stateData = await stateRes.json();
+                  setActiveQuizQuestion(stateData.currentQuestion);
+                  setActiveQuizAggregate(stateData.aggregate);
+                }
+              }
+            }
+          } catch (qErr) {
+            console.warn('Quiz discovery error:', qErr);
+          }
         } else {
           setSession(null);
           setParticipants([]);
           setIsJoined(false);
+          setActiveQuiz(null);
+          setActiveQuizQuestion(null);
+          setActiveQuizAggregate(null);
         }
       } else {
         const err = await res.json().catch(() => ({}));
@@ -256,6 +294,136 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         const payload = JSON.parse(e.data);
         const { boardState } = payload;
         setSession((prev) => (prev ? { ...prev, boardState } : prev));
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    // Milestone 13: Quiz Realtime SSE Listeners
+    es.addEventListener('quiz.created', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuiz(payload.quiz);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.updated', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuiz(payload.quiz);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.started', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuiz(payload.quiz);
+        if (payload.activeQuestion) {
+          setActiveQuizQuestion(payload.activeQuestion);
+        }
+        showNotice(`Smart Quiz "${payload.quiz.title}" is now LIVE!`);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.question.started', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuizQuestion(payload.question);
+        setActiveQuizAggregate(payload.aggregate);
+        setActiveQuiz((prev) =>
+          prev ? { ...prev, currentQuestionIndex: payload.currentQuestionIndex } : prev
+        );
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.question.updated', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuizQuestion(payload.question);
+        if (payload.aggregate) {
+          setActiveQuizAggregate(payload.aggregate);
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.response.accepted', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuizAggregate(payload.aggregate);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.question.locked', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuizAggregate(payload.aggregate);
+        setActiveQuizQuestion((prev) =>
+          prev ? { ...prev, status: 'locked', correctOption: payload.correctOption } : prev
+        );
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.results.updated', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setQuizResults(payload.results);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.paused', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuiz(payload.quiz);
+        showNotice(`Quiz "${payload.quiz.title}" is paused.`);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.resumed', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuiz(payload.quiz);
+        showNotice(`Quiz "${payload.quiz.title}" resumed!`);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.completed', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuiz(payload.quiz);
+        setQuizResults(payload.results);
+        showNotice(`Quiz completed! Final class scores calculated.`);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
+    es.addEventListener('quiz.cancelled', (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setActiveQuiz(payload.quiz);
+        setActiveQuizQuestion(null);
+        setActiveQuizAggregate(null);
+        showNotice(`Quiz was cancelled.`);
       } catch (err) {
         console.warn(err);
       }
@@ -557,37 +725,49 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         </div>
 
         {/* Center Stage Presentation Area */}
-        <div className="relative z-10 py-10 my-auto flex flex-col items-center text-center max-w-4xl mx-auto space-y-6">
-          {/* State Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/50 bg-cyan-500/10 text-cyan-300 text-xs uppercase tracking-widest font-semibold shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
-            <span>STATE: {boardState.state}</span>
+        {activeQuiz && (activeQuiz.status === 'live' || activeQuiz.status === 'paused' || activeQuiz.status === 'completed') ? (
+          <div className="relative z-10 py-6 my-auto flex flex-col items-center w-full">
+            <SmartQuizSmartBoardView
+              quiz={activeQuiz}
+              activeQuestion={activeQuizQuestion}
+              aggregate={activeQuizAggregate}
+              results={quizResults}
+              activeStudentCount={participants.filter((p) => p.connectionStatus === 'connected').length}
+            />
           </div>
-
-          {/* Current Topic */}
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-100 via-cyan-300 to-blue-200 leading-tight">
-            {boardState.currentTopic || 'Session in Progress'}
-          </h2>
-
-          {/* Instructor Message / Slide Subtitle */}
-          <p className="text-base sm:text-lg text-cyan-200/80 max-w-2xl font-sans leading-relaxed">
-            {boardState.message || 'Please connect your software remote to participate in live classroom telemetry.'}
-          </p>
-
-          {/* Waiting or interactive indicator */}
-          {boardState.state === 'waiting' && (
-            <div className="flex items-center gap-3 pt-4 text-xs text-cyan-400/70 font-mono">
-              <Clock className="w-4 h-4 animate-spin text-cyan-400" />
-              <span>Awaiting instructor to advance lesson protocol...</span>
+        ) : (
+          <div className="relative z-10 py-10 my-auto flex flex-col items-center text-center max-w-4xl mx-auto space-y-6">
+            {/* State Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/50 bg-cyan-500/10 text-cyan-300 text-xs uppercase tracking-widest font-semibold shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+              <Radio className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
+              <span>STATE: {boardState.state}</span>
             </div>
-          )}
 
-          {boardState.state === 'question' && (
-            <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-950/20 text-amber-200 text-sm max-w-xl">
-              <span className="font-bold">LIVE POLL / QUESTION DISPATCHED:</span> Remote keypads active.
-            </div>
-          )}
-        </div>
+            {/* Current Topic */}
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-100 via-cyan-300 to-blue-200 leading-tight">
+              {boardState.currentTopic || 'Session in Progress'}
+            </h2>
+
+            {/* Instructor Message / Slide Subtitle */}
+            <p className="text-base sm:text-lg text-cyan-200/80 max-w-2xl font-sans leading-relaxed">
+              {boardState.message || 'Please connect your software remote to participate in live classroom telemetry.'}
+            </p>
+
+            {/* Waiting or interactive indicator */}
+            {boardState.state === 'waiting' && (
+              <div className="flex items-center gap-3 pt-4 text-xs text-cyan-400/70 font-mono">
+                <Clock className="w-4 h-4 animate-spin text-cyan-400" />
+                <span>Awaiting instructor to advance lesson protocol...</span>
+              </div>
+            )}
+
+            {boardState.state === 'question' && (
+              <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-950/20 text-amber-200 text-sm max-w-xl">
+                <span className="font-bold">LIVE POLL / QUESTION DISPATCHED:</span> Remote keypads active.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Bottom Connected Cadets Ticker / Grid */}
         <div className="relative z-10 border-t border-cyan-500/20 pt-6">
@@ -874,6 +1054,19 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
                 </button>
               </div>
             </div>
+
+            {/* Milestone 13: Smart Quiz Management Panel */}
+            {session && (
+              <SmartQuizTeacherPanel
+                sessionId={session.id}
+                classId={selectedClassId}
+                userId={currentUser.id}
+                activeStudentCount={participants.filter((p) => p.connectionStatus === 'connected').length}
+                activeQuiz={activeQuiz}
+                onQuizChange={(q) => setActiveQuiz(q)}
+                showNotice={showNotice}
+              />
+            )}
           </div>
 
           {/* Right Column (5 cols): Connected Student Roster */}
@@ -1093,33 +1286,42 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
                   </p>
                 </div>
 
-                {/* Interactive Keypad Placeholder (M13 Bridge) */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-cyan-400/70">
-                    <span className="flex items-center gap-1.5 font-semibold">
-                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                      REMOTE RESPONSE KEYPAD
-                    </span>
-                    <span className="text-[10px] text-cyan-500/50">M13 Poll & Quiz Foundation</span>
-                  </div>
+                {/* Milestone 13: Interactive Quiz Remote or Keypad Placeholder */}
+                {activeQuiz && (activeQuiz.status === 'live' || activeQuiz.status === 'paused' || activeQuiz.status === 'completed') ? (
+                  <SmartQuizStudentRemote
+                    quiz={activeQuiz}
+                    userId={currentUser.id}
+                    showNotice={showNotice}
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs text-cyan-400/70">
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        REMOTE RESPONSE KEYPAD
+                      </span>
+                      <span className="text-[10px] text-cyan-500/50">M13 Poll & Quiz Ready</span>
+                    </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {['A', 'B', 'C', 'D'].map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        className="py-4 rounded-xl border border-cyan-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-cyan-500/20 active:scale-95 text-cyan-200 font-bold text-lg transition-all shadow-md flex flex-col items-center justify-center gap-1"
-                      >
-                        <span>{opt}</span>
-                        <span className="text-[9px] text-cyan-400/50 uppercase font-mono">Response</span>
-                      </button>
-                    ))}
-                  </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {['A', 'B', 'C', 'D'].map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          disabled
+                          className="py-4 rounded-xl border border-cyan-500/20 bg-slate-900/60 opacity-60 text-cyan-200 font-bold text-lg cursor-not-allowed flex flex-col items-center justify-center gap-1"
+                        >
+                          <span>{opt}</span>
+                          <span className="text-[9px] text-cyan-400/50 uppercase font-mono">Response</span>
+                        </button>
+                      ))}
+                    </div>
 
-                  <div className="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/20 text-center text-xs text-cyan-400/70">
-                    Keypad locked until instructor dispatches an active poll or quiz question.
+                    <div className="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/20 text-center text-xs text-cyan-400/70">
+                      Keypad ready. Awaiting instructor to start a Smart Quiz question.
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
           </div>

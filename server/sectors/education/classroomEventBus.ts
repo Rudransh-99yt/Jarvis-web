@@ -7,6 +7,13 @@ import type {
   ClassroomParticipant,
   SmartBoardState
 } from '../../../src/types/classroom.ts';
+import type {
+  Quiz,
+  QuizQuestion,
+  QuizResponse,
+  QuestionAggregate,
+  QuizResults
+} from '../../../src/types/quiz.ts';
 
 export class ClassroomEventBus extends EventEmitter {
   constructor() {
@@ -138,6 +145,199 @@ export class ClassroomEventBus extends EventEmitter {
         boardState,
         activeStudentCount: session.activeStudentCount
       },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Milestone 13: Smart Quiz Real-Time Notification Helpers
+   */
+  notifyQuizCreated(quiz: Quiz): void {
+    this.publishEvent({
+      type: 'quiz.created',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quiz },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuizUpdated(quiz: Quiz): void {
+    this.publishEvent({
+      type: 'quiz.updated',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quiz },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuizStarted(quiz: Quiz, activeQuestion?: QuizQuestion): void {
+    this.publishEvent({
+      type: 'quiz.started',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quiz, activeQuestion },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuestionStarted(quiz: Quiz, question: QuizQuestion, aggregate: QuestionAggregate): void {
+    this.publishEvent({
+      type: 'quiz.question.started',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: {
+        quizId: quiz.id,
+        currentQuestionIndex: quiz.currentQuestionIndex,
+        totalQuestions: quiz.totalQuestions,
+        question: {
+          id: question.id,
+          questionId: question.questionId,
+          order: question.order,
+          questionText: question.questionText,
+          options: question.options,
+          points: question.points,
+          timeLimitSeconds: question.timeLimitSeconds,
+          status: question.status,
+          startedAt: question.startedAt,
+          deadline: question.deadline
+        },
+        aggregate
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuestionUpdated(quiz: Quiz, question: QuizQuestion, aggregate?: QuestionAggregate): void {
+    this.publishEvent({
+      type: 'quiz.question.updated',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quizId: quiz.id, question, aggregate },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyResponseAccepted(
+    quiz: Quiz,
+    questionId: string,
+    studentId: string,
+    aggregate: QuestionAggregate
+  ): void {
+    this.publishEvent({
+      type: 'quiz.response.accepted',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: {
+        quizId: quiz.id,
+        questionId,
+        studentId,
+        aggregate
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyResponseRejected(
+    quiz: Quiz,
+    studentId: string,
+    questionId: string,
+    reason: string
+  ): void {
+    this.publishEvent({
+      type: 'quiz.response.rejected',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: {
+        quizId: quiz.id,
+        studentId,
+        questionId,
+        reason
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuestionLocked(
+    quiz: Quiz,
+    question: QuizQuestion,
+    aggregate: QuestionAggregate
+  ): void {
+    this.publishEvent({
+      type: 'quiz.question.locked',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: {
+        quizId: quiz.id,
+        questionId: question.id,
+        order: question.order,
+        correctOption: question.correctOption,
+        aggregate
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyResultsUpdated(quiz: Quiz, results: QuizResults): void {
+    this.publishEvent({
+      type: 'quiz.results.updated',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quizId: quiz.id, results },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuizPaused(quiz: Quiz): void {
+    this.publishEvent({
+      type: 'quiz.paused',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quiz },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuizResumed(quiz: Quiz): void {
+    this.publishEvent({
+      type: 'quiz.resumed',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quiz },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuizCompleted(quiz: Quiz, results: QuizResults): void {
+    this.publishEvent({
+      type: 'quiz.completed',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quiz, results },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  notifyQuizCancelled(quiz: Quiz): void {
+    this.publishEvent({
+      type: 'quiz.cancelled',
+      sessionId: quiz.classroomSessionId,
+      classId: quiz.classId,
+      workspaceId: quiz.workspaceId,
+      data: { quiz },
       timestamp: new Date().toISOString()
     });
   }

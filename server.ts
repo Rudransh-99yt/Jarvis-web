@@ -13,6 +13,7 @@ import { knowledgeRouter } from './server/routes/knowledgeRoutes.ts';
 import { filesRouter } from './server/routes/files.ts';
 import { messagingRouter } from './server/routes/messagingRoutes.ts';
 import { classroomRouter } from './server/sectors/education/classroomRoutes.ts';
+import { quizRouter } from './server/sectors/education/quizRoutes.ts';
 import { storageManager } from './server/storage/index.ts';
 import { jarvisData } from './server/data/index.ts';
 
@@ -80,6 +81,7 @@ app.use('/api/knowledge-spaces', knowledgeRouter);
 app.use('/api/files', filesRouter);
 app.use('/api/messages', messagingRouter);
 app.use('/api/classroom/sessions', classroomRouter);
+app.use('/api/classroom/quizzes', quizRouter);
 
 // Sector REST Routers
 app.use('/api/education', educationRouter);

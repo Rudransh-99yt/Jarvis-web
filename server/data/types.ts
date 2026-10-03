@@ -13,6 +13,8 @@ import type { FileRecord } from '../../src/types/storage.ts';
 export * from '../../src/types/research.ts';
 export * from '../../src/types/storage.ts';
 export * from '../../src/types/classroom.ts';
+export * from '../../src/types/quiz.ts';
+export * from '../../src/types/video.ts';
 
 // 1. User
 export type UserRole = 'admin' | 'commander' | 'teacher' | 'student' | 'guest';
@@ -177,4 +179,9 @@ export interface DatabaseSchema {
   files: FileRecord[];
   classroomSessions: import('../../src/types/classroom.ts').ClassroomSession[];
   classroomParticipants: import('../../src/types/classroom.ts').ClassroomParticipant[];
+  quizzes?: import('../../src/types/quiz.ts').Quiz[];
+  quizQuestions?: import('../../src/types/quiz.ts').QuizQuestion[];
+  quizResponses?: import('../../src/types/quiz.ts').QuizResponse[];
+  quizParticipantStates?: import('../../src/types/quiz.ts').QuizParticipantState[];
+  videos?: import('../../src/types/video.ts').VideoRecord[];
 }

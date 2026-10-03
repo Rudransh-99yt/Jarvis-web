@@ -10,6 +10,8 @@ import type {
   IResearchRepository,
   IFileRepository,
   IClassroomRepository,
+  IQuizRepository,
+  IVideoRepository,
   CreateMessageInput,
   MessageFilter
 } from './repository.ts';
@@ -37,7 +39,16 @@ import type {
   ClassroomParticipant,
   ClassroomSessionStatus,
   ParticipantConnectionStatus,
-  CreateClassroomSessionInput
+  CreateClassroomSessionInput,
+  Quiz,
+  QuizQuestion,
+  QuizResponse,
+  QuizParticipantState,
+  QuizStatus,
+  VideoRecord,
+  CreateVideoInput,
+  UpdateVideoInput,
+  VideoListFilter
 } from './types.ts';
 import type {
   EducationClass,
@@ -61,6 +72,7 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
   public research: IResearchRepository;
   public files: IFileRepository;
   public classroom: IClassroomRepository;
+  public quizzes: IQuizRepository;
 
   constructor() {
     this.state = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA));
@@ -1227,6 +1239,352 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
           (p) => !(p.sessionId === sessionId && p.studentId === studentId)
         );
         return this.state.classroomParticipants.length < prev;
+      }
+    };
+
+    // 10. Quizzes Sub-Repository (Milestone 13)
+    this.quizzes = {
+      getQuizById: async (id: string, workspaceId?: string): Promise<Quiz | null> => {
+        if (!this.state.quizzes) return null;
+        const q = this.state.quizzes.find(
+          (item) => (item.id === id || item.quizId === id) && (!workspaceId || item.workspaceId === workspaceId)
+        );
+        return q ? { ...q } : null;
+      },
+
+      listQuizzes: async (filter?: {
+        classId?: string;
+        sessionId?: string;
+        workspaceId?: string;
+        status?: QuizStatus;
+      }): Promise<Quiz[]> => {
+        if (!this.state.quizzes) return [];
+        return this.state.quizzes
+          .filter((q) => {
+            if (filter?.classId && q.classId !== filter.classId) return false;
+            if (filter?.sessionId && q.classroomSessionId !== filter.sessionId) return false;
+            if (filter?.workspaceId && q.workspaceId !== filter.workspaceId) return false;
+            if (filter?.status && q.status !== filter.status) return false;
+            return true;
+          })
+          .map((q) => ({ ...q }));
+      },
+
+      createQuiz: async (input: {
+        id?: string;
+        workspaceId: string;
+        classId: string;
+        classroomSessionId: string;
+        teacherId: string;
+        title: string;
+        description?: string;
+        status?: QuizStatus;
+      }): Promise<Quiz> => {
+        if (!this.state.quizzes) this.state.quizzes = [];
+        const id = input.id || `quiz-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const now = new Date().toISOString();
+        const quiz: Quiz = {
+          id,
+          quizId: id,
+          workspaceId: input.workspaceId,
+          classId: input.classId,
+          classroomSessionId: input.classroomSessionId,
+          teacherId: input.teacherId,
+          title: input.title,
+          description: input.description,
+          status: input.status || 'draft',
+          currentQuestionIndex: -1,
+          totalQuestions: 0,
+          createdAt: now
+        };
+        this.state.quizzes.push(quiz);
+        return { ...quiz };
+      },
+
+      updateQuiz: async (id: string, updates: Partial<Quiz>, workspaceId?: string): Promise<Quiz | null> => {
+        if (!this.state.quizzes) return null;
+        const idx = this.state.quizzes.findIndex(
+          (q) => (q.id === id || q.quizId === id) && (!workspaceId || q.workspaceId === workspaceId)
+        );
+        if (idx === -1) return null;
+        this.state.quizzes[idx] = {
+          ...this.state.quizzes[idx],
+          ...updates,
+          id: this.state.quizzes[idx].id,
+          quizId: this.state.quizzes[idx].quizId
+        };
+        return { ...this.state.quizzes[idx] };
+      },
+
+      deleteQuiz: async (id: string, workspaceId?: string): Promise<boolean> => {
+        if (!this.state.quizzes) return false;
+        const prev = this.state.quizzes.length;
+        this.state.quizzes = this.state.quizzes.filter(
+          (q) => !((q.id === id || q.quizId === id) && (!workspaceId || q.workspaceId === workspaceId))
+        );
+        const deleted = this.state.quizzes.length < prev;
+        if (deleted) {
+          if (this.state.quizQuestions) {
+            this.state.quizQuestions = this.state.quizQuestions.filter((q) => q.quizId !== id);
+          }
+          if (this.state.quizResponses) {
+            this.state.quizResponses = this.state.quizResponses.filter((r) => r.quizId !== id);
+          }
+          if (this.state.quizParticipantStates) {
+            this.state.quizParticipantStates = this.state.quizParticipantStates.filter((p) => p.quizId !== id);
+          }
+        }
+        return deleted;
+      },
+
+      getQuestionById: async (questionId: string, quizId?: string): Promise<QuizQuestion | null> => {
+        if (!this.state.quizQuestions) return null;
+        const q = this.state.quizQuestions.find(
+          (item) => (item.id === questionId || item.questionId === questionId) && (!quizId || item.quizId === quizId)
+        );
+        return q ? { ...q } : null;
+      },
+
+      listQuestions: async (quizId: string): Promise<QuizQuestion[]> => {
+        if (!this.state.quizQuestions) return [];
+        return this.state.quizQuestions
+          .filter((q) => q.quizId === quizId)
+          .sort((a, b) => a.order - b.order)
+          .map((q) => ({ ...q }));
+      },
+
+      addQuestion: async (input: {
+        id?: string;
+        quizId: string;
+        order?: number;
+        questionText: string;
+        options: string[];
+        correctOption: string;
+        points?: number;
+        timeLimitSeconds?: number;
+      }): Promise<QuizQuestion> => {
+        if (!this.state.quizQuestions) this.state.quizQuestions = [];
+        const id = input.id || `qq-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const existing = this.state.quizQuestions.filter((q) => q.quizId === input.quizId);
+        const order = input.order !== undefined ? input.order : existing.length;
+
+        const question: QuizQuestion = {
+          id,
+          questionId: id,
+          quizId: input.quizId,
+          order,
+          questionText: input.questionText,
+          options: input.options,
+          correctOption: input.correctOption,
+          points: input.points !== undefined ? input.points : 10,
+          timeLimitSeconds: input.timeLimitSeconds !== undefined ? input.timeLimitSeconds : 30,
+          status: 'pending'
+        };
+        this.state.quizQuestions.push(question);
+
+        if (this.state.quizzes) {
+          const quizIdx = this.state.quizzes.findIndex((q) => q.id === input.quizId || q.quizId === input.quizId);
+          if (quizIdx !== -1) {
+            this.state.quizzes[quizIdx].totalQuestions = this.state.quizQuestions.filter((q) => q.quizId === input.quizId).length;
+          }
+        }
+        return { ...question };
+      },
+
+      updateQuestion: async (questionId: string, updates: Partial<QuizQuestion>, quizId?: string): Promise<QuizQuestion | null> => {
+        if (!this.state.quizQuestions) return null;
+        const idx = this.state.quizQuestions.findIndex(
+          (q) => (q.id === questionId || q.questionId === questionId) && (!quizId || q.quizId === quizId)
+        );
+        if (idx === -1) return null;
+        this.state.quizQuestions[idx] = {
+          ...this.state.quizQuestions[idx],
+          ...updates,
+          id: this.state.quizQuestions[idx].id,
+          questionId: this.state.quizQuestions[idx].questionId,
+          quizId: this.state.quizQuestions[idx].quizId
+        };
+        return { ...this.state.quizQuestions[idx] };
+      },
+
+      removeQuestion: async (questionId: string, quizId?: string): Promise<boolean> => {
+        if (!this.state.quizQuestions) return false;
+        const prev = this.state.quizQuestions.length;
+        const target = this.state.quizQuestions.find(
+          (q) => (q.id === questionId || q.questionId === questionId) && (!quizId || q.quizId === quizId)
+        );
+        if (!target) return false;
+        const qQuizId = target.quizId;
+
+        this.state.quizQuestions = this.state.quizQuestions.filter((q) => !(q.id === target.id));
+        const removed = this.state.quizQuestions.length < prev;
+
+        if (removed && qQuizId) {
+          const remaining = this.state.quizQuestions.filter((q) => q.quizId === qQuizId).sort((a, b) => a.order - b.order);
+          remaining.forEach((q, idx) => {
+            q.order = idx;
+          });
+          const quizIdx = (this.state.quizzes || []).findIndex((q) => q.id === qQuizId || q.quizId === qQuizId);
+          if (quizIdx !== -1 && this.state.quizzes) {
+            this.state.quizzes[quizIdx].totalQuestions = remaining.length;
+          }
+        }
+        return removed;
+      },
+
+      saveResponse: async (response: QuizResponse): Promise<QuizResponse> => {
+        if (!this.state.quizResponses) this.state.quizResponses = [];
+        const id = response.id || response.responseId || `qr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const record: QuizResponse = {
+          ...response,
+          id,
+          responseId: id
+        };
+
+        const idx = this.state.quizResponses.findIndex(
+          (r) => r.quizId === response.quizId && r.questionId === response.questionId && r.studentId === response.studentId
+        );
+        if (idx !== -1) {
+          this.state.quizResponses[idx] = { ...record };
+        } else {
+          this.state.quizResponses.push({ ...record });
+        }
+        return { ...record };
+      },
+
+      getResponse: async (quizId: string, questionId: string, studentId: string): Promise<QuizResponse | null> => {
+        if (!this.state.quizResponses) return null;
+        const r = this.state.quizResponses.find(
+          (item) => item.quizId === quizId && item.questionId === questionId && item.studentId === studentId
+        );
+        return r ? { ...r } : null;
+      },
+
+      listResponses: async (quizId: string, questionId?: string): Promise<QuizResponse[]> => {
+        if (!this.state.quizResponses) return [];
+        return this.state.quizResponses
+          .filter((r) => r.quizId === quizId && (!questionId || r.questionId === questionId))
+          .map((r) => ({ ...r }));
+      },
+
+      upsertParticipantState: async (pState: QuizParticipantState): Promise<QuizParticipantState> => {
+        if (!this.state.quizParticipantStates) this.state.quizParticipantStates = [];
+        const id = pState.id || `${pState.quizId}:${pState.studentId}`;
+        const record: QuizParticipantState = { ...pState, id };
+
+        const idx = this.state.quizParticipantStates.findIndex(
+          (p) => p.quizId === pState.quizId && p.studentId === pState.studentId
+        );
+        if (idx !== -1) {
+          this.state.quizParticipantStates[idx] = { ...this.state.quizParticipantStates[idx], ...record };
+        } else {
+          this.state.quizParticipantStates.push({ ...record });
+        }
+        return { ...record };
+      },
+
+      getParticipantState: async (quizId: string, studentId: string): Promise<QuizParticipantState | null> => {
+        if (!this.state.quizParticipantStates) return null;
+        const p = this.state.quizParticipantStates.find(
+          (item) => item.quizId === quizId && item.studentId === studentId
+        );
+        return p ? { ...p } : null;
+      },
+
+      listParticipantStates: async (quizId: string): Promise<QuizParticipantState[]> => {
+        if (!this.state.quizParticipantStates) return [];
+        return this.state.quizParticipantStates
+          .filter((p) => p.quizId === quizId)
+          .map((p) => ({ ...p }));
+      }
+    };
+  }
+
+  get videos(): IVideoRepository {
+    return {
+      getVideoById: async (id: string, workspaceId?: string): Promise<VideoRecord | null> => {
+        if (!this.state.videos) return null;
+        const v = this.state.videos.find(
+          (item) => (item.id === id || item.videoId === id) && (!workspaceId || item.workspaceId === workspaceId)
+        );
+        return v ? { ...v } : null;
+      },
+
+      listVideos: async (filter?: VideoListFilter): Promise<VideoRecord[]> => {
+        if (!this.state.videos) return [];
+        return this.state.videos
+          .filter((v) => {
+            if (filter?.classId && v.classId !== filter.classId) return false;
+            if (filter?.workspaceId && v.workspaceId !== filter.workspaceId) return false;
+            if (filter?.uploaderId && v.uploaderId !== filter.uploaderId) return false;
+            if (filter?.status && v.status !== filter.status) return false;
+            if (filter?.knowledgeSpaceId && v.knowledgeSpaceId !== filter.knowledgeSpaceId) return false;
+            if (filter?.search) {
+              const term = filter.search.toLowerCase();
+              const matchTitle = v.title.toLowerCase().includes(term);
+              const matchDesc = v.description.toLowerCase().includes(term);
+              const matchTags = (v.tags || []).some((t) => t.toLowerCase().includes(term));
+              if (!matchTitle && !matchDesc && !matchTags) return false;
+            }
+            return true;
+          })
+          .map((v) => ({ ...v }));
+      },
+
+      createVideo: async (input: CreateVideoInput): Promise<VideoRecord> => {
+        if (!this.state.videos) this.state.videos = [];
+        const id = input.id || `vid-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const now = new Date().toISOString();
+        const video: VideoRecord = {
+          id,
+          videoId: id,
+          workspaceId: input.workspaceId,
+          classId: input.classId,
+          uploaderId: input.uploaderId,
+          fileId: input.fileId,
+          title: input.title,
+          description: input.description || '',
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.sizeBytes,
+          durationSeconds: input.durationSeconds,
+          thumbnailUrl: input.thumbnailUrl,
+          status: input.status || 'ready',
+          visibility: input.visibility || 'class',
+          transcript: input.transcript,
+          captionTracks: input.captionTracks,
+          knowledgeSpaceId: input.knowledgeSpaceId,
+          tags: input.tags || [],
+          createdAt: now,
+          updatedAt: now
+        };
+        this.state.videos.push(video);
+        return { ...video };
+      },
+
+      updateVideo: async (id: string, updates: UpdateVideoInput, workspaceId?: string): Promise<VideoRecord | null> => {
+        if (!this.state.videos) return null;
+        const idx = this.state.videos.findIndex(
+          (v) => (v.id === id || v.videoId === id) && (!workspaceId || v.workspaceId === workspaceId)
+        );
+        if (idx === -1) return null;
+        this.state.videos[idx] = {
+          ...this.state.videos[idx],
+          ...updates,
+          id: this.state.videos[idx].id,
+          videoId: this.state.videos[idx].videoId,
+          updatedAt: new Date().toISOString()
+        };
+        return { ...this.state.videos[idx] };
+      },
+
+      deleteVideo: async (id: string, workspaceId?: string): Promise<boolean> => {
+        if (!this.state.videos) return false;
+        const prev = this.state.videos.length;
+        this.state.videos = this.state.videos.filter(
+          (v) => !((v.id === id || v.videoId === id) && (!workspaceId || v.workspaceId === workspaceId))
+        );
+        return this.state.videos.length < prev;
       }
     };
   }

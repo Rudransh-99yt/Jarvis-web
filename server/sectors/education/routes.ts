@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { educationStore } from './educationStore.ts';
+import { videoRouter } from './videoRoutes.ts';
 
 export const educationRouter = Router();
+
+// Milestone 14: Video Library & Media Knowledge Routes
+educationRouter.use('/videos', videoRouter);
 
 // GET /api/education/state - Hydrate entire Education sector state
 educationRouter.get('/state', (_req: Request, res: Response) => {

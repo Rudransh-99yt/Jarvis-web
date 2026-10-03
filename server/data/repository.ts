@@ -221,6 +221,58 @@ export interface IClassroomRepository {
   removeParticipant(sessionId: string, studentId: string): Promise<boolean>;
 }
 
+// Milestone 13: Smart Quiz & Live Responses Repository
+export interface IQuizRepository {
+  getQuizById(id: string, workspaceId?: string): Promise<import('../../src/types/quiz.ts').Quiz | null>;
+  listQuizzes(filter?: { classId?: string; sessionId?: string; workspaceId?: string; status?: import('../../src/types/quiz.ts').QuizStatus }): Promise<import('../../src/types/quiz.ts').Quiz[]>;
+  createQuiz(input: {
+    id?: string;
+    workspaceId: string;
+    classId: string;
+    classroomSessionId: string;
+    teacherId: string;
+    title: string;
+    description?: string;
+    status?: import('../../src/types/quiz.ts').QuizStatus;
+  }): Promise<import('../../src/types/quiz.ts').Quiz>;
+  updateQuiz(id: string, updates: Partial<import('../../src/types/quiz.ts').Quiz>, workspaceId?: string): Promise<import('../../src/types/quiz.ts').Quiz | null>;
+  deleteQuiz(id: string, workspaceId?: string): Promise<boolean>;
+
+  // Questions
+  getQuestionById(questionId: string, quizId?: string): Promise<import('../../src/types/quiz.ts').QuizQuestion | null>;
+  listQuestions(quizId: string): Promise<import('../../src/types/quiz.ts').QuizQuestion[]>;
+  addQuestion(input: {
+    id?: string;
+    quizId: string;
+    order?: number;
+    questionText: string;
+    options: string[];
+    correctOption: string;
+    points?: number;
+    timeLimitSeconds?: number;
+  }): Promise<import('../../src/types/quiz.ts').QuizQuestion>;
+  updateQuestion(questionId: string, updates: Partial<import('../../src/types/quiz.ts').QuizQuestion>, quizId?: string): Promise<import('../../src/types/quiz.ts').QuizQuestion | null>;
+  removeQuestion(questionId: string, quizId?: string): Promise<boolean>;
+
+  // Responses
+  saveResponse(response: import('../../src/types/quiz.ts').QuizResponse): Promise<import('../../src/types/quiz.ts').QuizResponse>;
+  getResponse(quizId: string, questionId: string, studentId: string): Promise<import('../../src/types/quiz.ts').QuizResponse | null>;
+  listResponses(quizId: string, questionId?: string): Promise<import('../../src/types/quiz.ts').QuizResponse[]>;
+
+  // Participant States
+  upsertParticipantState(state: import('../../src/types/quiz.ts').QuizParticipantState): Promise<import('../../src/types/quiz.ts').QuizParticipantState>;
+  getParticipantState(quizId: string, studentId: string): Promise<import('../../src/types/quiz.ts').QuizParticipantState | null>;
+  listParticipantStates(quizId: string): Promise<import('../../src/types/quiz.ts').QuizParticipantState[]>;
+}
+
+export interface IVideoRepository {
+  getVideoById(id: string, workspaceId?: string): Promise<import('../../src/types/video.ts').VideoRecord | null>;
+  listVideos(filter?: import('../../src/types/video.ts').VideoListFilter): Promise<import('../../src/types/video.ts').VideoRecord[]>;
+  createVideo(input: import('../../src/types/video.ts').CreateVideoInput): Promise<import('../../src/types/video.ts').VideoRecord>;
+  updateVideo(id: string, updates: import('../../src/types/video.ts').UpdateVideoInput, workspaceId?: string): Promise<import('../../src/types/video.ts').VideoRecord | null>;
+  deleteVideo(id: string, workspaceId?: string): Promise<boolean>;
+}
+
 export interface IJarvisDataRepository {
   readonly isPersistent: boolean;
   readonly storagePath?: string;
@@ -234,6 +286,8 @@ export interface IJarvisDataRepository {
   research: IResearchRepository;
   files: IFileRepository;
   classroom: IClassroomRepository;
+  quizzes: IQuizRepository;
+  videos: IVideoRepository;
 
   init(): Promise<void>;
   seed(force?: boolean): Promise<void>;

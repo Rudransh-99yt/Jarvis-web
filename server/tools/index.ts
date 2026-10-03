@@ -92,6 +92,18 @@ for (const tool of CLASSROOM_TOOLS) {
   toolRegistry.register(tool);
 }
 
+// 7. Register Smart Quiz & Live Response Tools (Milestone 13)
+import { quizTools } from '../sectors/education/quizTools.ts';
+for (const tool of quizTools) {
+  toolRegistry.register(tool);
+}
+
+// 8. Register Video Library & Media Knowledge Tools (Milestone 14)
+import { videoTools } from '../sectors/education/videoTools.ts';
+for (const tool of videoTools) {
+  toolRegistry.register(tool);
+}
+
 console.log(`[ToolRegistry] Initialized with ${toolRegistry.list().length} registered tools across sectors: ${toolRegistry.list().map(t => t.name).join(', ')}`);
 
 export * from './types.ts';

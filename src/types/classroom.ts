@@ -52,7 +52,20 @@ export type ClassroomEventType =
   | 'classroom.student.joined'
   | 'classroom.student.left'
   | 'classroom.student.presence'
-  | 'classroom.board.state.changed';
+  | 'classroom.board.state.changed'
+  | 'quiz.created'
+  | 'quiz.updated'
+  | 'quiz.started'
+  | 'quiz.question.started'
+  | 'quiz.question.updated'
+  | 'quiz.response.accepted'
+  | 'quiz.response.rejected'
+  | 'quiz.question.locked'
+  | 'quiz.results.updated'
+  | 'quiz.paused'
+  | 'quiz.resumed'
+  | 'quiz.completed'
+  | 'quiz.cancelled';
 
 export interface RealtimeClassroomEvent {
   type: ClassroomEventType;

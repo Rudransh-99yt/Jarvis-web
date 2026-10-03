@@ -2,7 +2,38 @@ import type { ToolCall, ToolExecutionContext, ToolResult } from './types.ts';
 import { toolRegistry } from './registry.ts';
 
 export class ToolExecutor {
-  async execute(call: ToolCall, context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(
+    callOrName: ToolCall | string,
+    contextOrArgs: ToolExecutionContext | Record<string, any>,
+    maybeContext?: ToolExecutionContext
+  ): Promise<ToolResult> {
+    let call: ToolCall;
+    let context: ToolExecutionContext;
+
+    const defaultContext: ToolExecutionContext = {
+      sessionId: 'session-default',
+      timestamp: new Date().toISOString(),
+      serverUptime: typeof process !== 'undefined' && process.uptime ? process.uptime() : 0,
+      workspaceId: 'ws-stark-core'
+    };
+
+    if (typeof callOrName === 'string') {
+      call = {
+        name: callOrName,
+        args: (contextOrArgs as Record<string, any>) || {}
+      };
+      context = {
+        ...defaultContext,
+        ...(maybeContext || {})
+      };
+    } else {
+      call = callOrName;
+      context = {
+        ...defaultContext,
+        ...((contextOrArgs as Partial<ToolExecutionContext>) || {})
+      };
+    }
+
     const startTime = Date.now();
     const toolName = call.name ? call.name.trim() : '';
 
