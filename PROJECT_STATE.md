@@ -162,10 +162,30 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 - **Comprehensive Automated Test Suite (`tests/milestone10_storage.test.ts`)**:
   - 34/34 tests passing across storage provider operations, security validation, path traversal defense, role-based authorization, tenant isolation, RAG bridge, deduplication, tool execution, and simulated restart persistence.
 
+### Milestone 15 — AI Video Discovery & Grounded Video Q&A (COMPLETED)
+- **AI-Powered Concept Discovery & Timestamped Search (`video.search`)**:
+  - Semantic transcript search and lexical keyword matching across video segments.
+  - Returns precise timestamped discovery entries with seconds offset, formatted `MM:SS` or `HH:MM:SS` timestamp labels, match confidence scores, and transcript excerpts.
+  - Supports single-video and course-wide multi-video search scopes.
+- **Transcript-Grounded Video Q&A (`video.ask`)**:
+  - Multi-stage grounded question answering synthesizing answers strictly from indexed video transcripts and captions.
+  - Strict course/class authorization verified prior to retrieval and synthesis.
+  - Structured verifiable citations with video ID, video title, timestamp seconds offset, formatted timestamp string, and verbatim transcript excerpts.
+  - Interactive timestamp seeking in Video Player UI when clicking citations or search results.
+- **Security, Safety & Refusal Guards**:
+  - Prompt-injection defense: User inquiries and transcript segments sanitized and fenced against instruction override.
+  - Insufficient-evidence refusal: Returns polite refusal without fabricating information or hallucinations when evidence is absent or query relevance is below threshold.
+  - Deterministic fallback synthesizer: High-fidelity deterministic local extraction and synthesis when Gemini API is unavailable or offline.
+- **Registered Tools in `ToolRegistry`**:
+  - `video.search`: Discover timestamped concepts across video materials.
+  - `video.ask`: Grounded question answering over lecture transcripts with timestamped citations.
+- **Comprehensive Automated Test Suite (`tests/milestone15_video_qa.test.ts`)**:
+  - 25/25 test assertions passing across timestamp discovery, single & multi-video Q&A, structured citations, prompt injection defense, cross-course authorization enforcement, insufficient evidence refusals, and deterministic offline fallback.
+
 ---
 
-## 4. Pre-M11 Checkpoint & Baseline Verification
-- **Audit Verification Status**: 100% Passing (180/180 total assertions verified)
+## 4. Pre-M16 Checkpoint & Baseline Verification
+- **Audit Verification Status**: 100% Passing (237/237 total assertions verified)
   - E2E Full Platform Audit Suite (`tests/audit_e2e_verification.test.ts`): 32/32 PASS
   - M4 Sandboxed Tools Suite (`tests/milestone4_tools.test.ts`): 20/20 PASS
   - M5 Persistence & Core Data Suite (`tests/persistence.test.ts`): 27/27 PASS
@@ -173,69 +193,33 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - M9 Research & Labs Sector Suite (`tests/milestone9_research.test.ts`): 33/33 PASS
   - M10 Unified File & Storage Foundation (`tests/milestone10_storage.test.ts`): 34/34 PASS
   - M11 Class Real-Time Messaging & Attachments (`tests/milestone11_messaging.test.ts`): 21/21 PASS
+  - M12 Smart Classroom Collaboration (`tests/milestone12_classroom.test.ts`): 18/18 PASS
+  - M13 Smart Quiz & Live Responses (`tests/milestone13_quiz.test.ts`, `tests/milestone13_1_multi_quiz.test.ts`): 35/35 PASS
+  - M14 Academic Video Library & Media Knowledge (`tests/milestone14_video.test.ts`, `tests/milestone14_2_security.test.ts`): 42/42 PASS
+  - M15 AI Video Discovery & Grounded Video Q&A (`tests/milestone15_video_qa.test.ts`): 25/25 PASS
   - Education Sector & Knowledge Suite (`tests/education_sector.test.ts`): 11/11 PASS
   - TypeScript Compiler (`tsc --noEmit`): 0 errors
   - Production Bundle Compilation (`npm run build`): Succeeded
 - **Partial Run Audit & Triage**:
-  - `src/sectors/education/views/ClassesView.tsx`: Integrated file upload modal for teacher syllabus materials. Verified safe, kept.
-  - `src/sectors/research/views/ResearchAssistantView.tsx`: Complete multi-mode UI and evidence extraction. Verified safe, kept.
-  - `server/storage/fileService.ts`: Added message/conversation relation bindings and status filtering. Verified safe, kept.
-  - `server/routes/files.ts`: Robust REST query parsing and error handling. Verified safe, kept.
-  - `server/storage/tools.ts`: Fully registered GenAI storage tool definitions. Verified safe, kept.
-  - `tests/audit_e2e_verification.test.ts`: End-to-end audit passing 32/32. Verified safe, kept.
+  - All features and sector bridges tested and verified in isolation with zero persistent storage mutation during test executions.
 
 ---
 
-## 5. Current Architecture & Milestone 12 & 13 Achievements
+## 5. Current Architecture & Milestone 12, 13, 14 & 15 Achievements
 - **Milestone 13: Deterministic Smart Quiz & Live Responses (Completed)**:
-  - **Deterministic Core Quiz Engine**:
-    - Complete server-authoritative lifecycle: `createQuiz`, `addQuestion`, `updateQuestion`, `removeQuestion`, `publishQuiz` (draft -> ready), `startQuiz` (ready -> live), `startQuestion`, `lockQuestion`, `advanceQuestion`, `pauseQuiz` (live -> paused), `resumeQuiz` (paused -> live), `completeQuiz` (live/paused -> completed), and `cancelQuiz`.
-    - Strict state transition machine enforcing valid lifecycle stages and rejecting illegal transitions.
-    - Server-authoritative countdown deadlines: Question responses evaluated against authoritative server deadline timestamps; late submissions strictly rejected and auto-locked without relying on client clocks.
-    - Deterministic scoring: Full question points awarded for correct options, zero points for incorrect options, zero score on expired submissions; cumulative score and answered counts calculated deterministically.
-    - Idempotency & Anti-tamper: Submitting the identical option multiple times is idempotent (returns existing response); attempting to modify an already-submitted response is rejected with immutable answer enforcement; arbitrary student IDs or unauthorized client inputs strictly denied.
-    - Role-tailored Privacy Guard: Question `correctOption` is stripped from student responses before question lock, preventing client inspection of correct answers; Smart Board displays question text and live aggregate option distributions during question answering without revealing correct answer or individual student choices; locks question before revealing correct option and percentages.
-    - Persistence & Process Restart Recovery: Complete disk repository schema support for `quizzes`, `quizQuestions`, `quizResponses`, and `quizParticipantStates` via atomic `JsonFileStore`; recovers active/completed quiz state, question state, accepted responses, and scores after restart.
-    - Real-Time EventBus Emission: Integrated 12 realtime quiz events (`quiz.created`, `quiz.updated`, `quiz.started`, `quiz.question.started`, `quiz.question.updated`, `quiz.response.accepted`, `quiz.response.rejected`, `quiz.question.locked`, `quiz.results.updated`, `quiz.paused`, `quiz.resumed`, `quiz.completed`, `quiz.cancelled`) scoped to workspace/class/session over existing classroom SSE.
-    - ToolRegistry & Sandboxed Execution: 14 formal quiz tools declared and registered in `ToolRegistry` (`quiz.create`, `quiz.question.add`, `quiz.question.update`, `quiz.question.remove`, `quiz.start`, `quiz.pause`, `quiz.resume`, `quiz.question.start`, `quiz.question.lock`, `quiz.question.advance`, `quiz.response.submit`, `quiz.status`, `quiz.results`, `quiz.complete`) executed safely through `ToolExecutor`.
-    - Rich UI Interfaces:
-      - Teacher Smart Quiz Panel (`SmartQuizTeacherPanel.tsx`): Create quiz, add questions, timer/points configuration, live option counts, lock question, advance question, pause/resume, and complete summary.
-      - Smart Board View (`SmartQuizSmartBoardView.tsx`): Live quiz title, countdown timer, question card, option cards, response count, post-lock aggregate percentages, correct answer highlight, and final quiz results summary.
-      - Cadet Software Remote (`SmartQuizStudentRemote.tsx`): Real-time countdown timer, A/B/C/D keypad buttons, submission state, disabled state post-submission, question locked state, and reconnect recovery via REST fetch.
-  - **Milestone 12 Hardening & Data Hygiene Checkpoint Complete**:
-    - Centralized `ClassroomAuthorizationPolicy` enforcing Authenticated User → Workspace Membership → Course/Instructor Role Verification → Session Authorization.
-    - Hardened `authenticateRequest(req)` to derive user identity strictly from trusted repository (`jarvisData.users`).
-    - Test suites maintain 100% byte-identical `data/jarvis-db.json` hash and 0 runtime test artifacts in `data/storage/objects/`.
-    - 40+ concurrent simulated students tested in test isolation with 100% success.
-  - **Milestone 14: Academic Video Library & Media Knowledge (Completed)**:
-    - **Unified Storage Architecture Extension**:
-      - Fully built on top of M10 `StorageProvider` and `FileRecord` architecture with zero second storage systems.
-      - Strong binary validation: Magic-byte inspection (`mp4`, `webm`, `ogg`, `mov`), extension allowlist, file-size limits (100 MB), path traversal defense, and tenant-safe deduplication.
-    - **Persistent Video Domain Model (`VideoRecord`)**:
-      - Fields: `id`, `videoId`, `workspaceId`, `classId`, `uploaderId`, `fileId`, `title`, `description`, `filename`, `mimeType`, `sizeBytes`, `durationSeconds`, `thumbnailUrl`, `status` (`uploading`, `processing`, `ready`, `failed`, `deleted`), `visibility` (`class`, `workspace`, `public`), `transcript`, `captionTracks`, `knowledgeSpaceId`, `knowledgeSourceId`, `tags`, `createdAt`, `updatedAt`.
-      - Persistent schema in `DatabaseSchema.videos` via atomic `JsonFileStore` and full repository support in `DiskJarvisDataRepository` and `MemoryJarvisDataRepository`.
-    - **Role-Based Authorization & Multi-Tenant Boundaries**:
-      - Teacher/Instructor: Authorized to upload course videos, title and edit metadata, associate with classes and Knowledge Spaces, view processing status, and delete videos with cascading storage cleanup.
-      - Student: Role-scoped video listing (sees only videos for enrolled courses or public materials), video playback, transcript inspection, and associated learning materials.
-      - Cross-workspace and unauthorized cross-class accesses strictly rejected.
-    - **RAG & Knowledge Space Ingestion**:
-      - Transcripts stored separately from raw video binary and automatically indexed into target Knowledge Space as notes/markdown.
-      - Full citation preservation back to video lecture and transcript.
-      - Works deterministically offline and independently of Gemini availability during playback.
-    - **Reusable Video Player Component (`VideoPlayer.tsx`)**:
-      - Fully responsive across desktop (1920x1080, 1440x900, 1280x720), tablet (1024x768, 768x1024), and mobile (430x932, 390x844).
-      - Strict layout containment: `aspect-video`, `w-full max-w-full`, controls overlay with scoped z-indexing, zero layout breakouts.
-      - Features: Play/pause, seek scrubber, volume/mute, playback rate speed selector (0.75x, 1x, 1.25x, 1.5x, 2x), keyboard shortcuts (Space, K, Left, Right, M, F), fullscreen toggle, loading/buffering states, and error handling.
-    - **HTTP Range Streaming API (`GET /api/education/videos/:id/stream`)**:
-      - Partial content HTTP 206 streaming for seeking and large video playback.
-    - **Tools Registry & Sandboxed Execution**:
-      - 5 formal video tools registered in `ToolRegistry` (`video.list`, `video.get`, `video.upload`, `video.update`, `video.delete`) and executed via `ToolExecutor`.
-    - **Automated Test Suite (`tests/milestone14_video.test.ts`)**:
-      - 32/32 tests passing across upload, metadata persistence, teacher/student authorization, workspace isolation, class isolation, safe filename traversal defense, deletion cleanup, restart recovery, tool execution, and RAG transcript indexing.
-  - **Comprehensive Regression Results**:
-    - All 11 test suites passing (100% across M4, Education, Persistence, M8, M9, M10, M11, M12, M13, M14, E2E Audit).
-    - TypeScript compilation (`tsc --noEmit`): 0 errors.
-    - Production bundle compilation (`npm run build`): Succeeded.
+  - Complete server-authoritative lifecycle: `createQuiz`, `addQuestion`, `updateQuestion`, `removeQuestion`, `publishQuiz`, `startQuiz`, `startQuestion`, `lockQuestion`, `advanceQuestion`, `pauseQuiz`, `resumeQuiz`, `completeQuiz`, `cancelQuiz`.
+  - Server-authoritative countdown deadlines, deterministic scoring, idempotent submission, anti-tamper answer immutability, role-tailored privacy guard, and recovery after restart.
+  - Real-Time EventBus emission and 14 formal quiz tools declared and registered in `ToolRegistry`.
+- **Milestone 14: Academic Video Library & Media Knowledge (Completed)**:
+  - Unified storage architecture extension with binary validation, magic byte verification, and tenant-safe deduplication.
+  - Video domain model in `DatabaseSchema.videos` via atomic `JsonFileStore` and full repository support.
+  - Role-based authorization & multi-tenant boundaries (Teacher / Student / Workspace).
+  - RAG transcript indexing with citation preservation and HTTP range streaming API (`GET /api/education/videos/:id/stream`).
+  - Reusable, responsive `VideoPlayer.tsx` with keyboard shortcuts, speed selector, and layout containment.
+- **Milestone 15: AI Video Discovery & Grounded Video Q&A (Completed)**:
+  - `video.search` and `video.ask` integration in `ToolRegistry` and REST APIs.
+  - Timestamped concept discovery and transcript-grounded RAG with clickable timestamp seek in UI.
+  - Defense in depth: prompt injection neutralization, cross-course access verification before retrieval, insufficient evidence refusal, and deterministic fallback when Gemini is offline.
 
 ---
 
@@ -251,5 +235,5 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 ---
 
 ## 7. Next Milestones & Roadmap
-- **Completed Milestones**: M1–M14 (Foundations, HUD, Terminal, Tools, Education, Persistence, Chat, RAG, Research, Storage, Messaging, Smart Classroom, Smart Quiz & Live Responses, Academic Video Library & Media Knowledge).
-- **Next Milestone**: **M15 — Autonomous Task Agent & Multi-Sector Orchestration**.
+- **Completed Milestones**: M1–M15 (Foundations, HUD, Terminal, Tools, Education, Persistence, Chat, RAG, Research, Storage, Messaging, Smart Classroom, Smart Quiz & Live Responses, Academic Video Library & Media Knowledge, AI Video Discovery & Grounded Video Q&A).
+- **Next Milestone**: **M16 — Autonomous Task Agent & Multi-Sector Orchestration**.
