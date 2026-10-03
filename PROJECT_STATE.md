@@ -164,20 +164,50 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 
 ---
 
-## 4. Current Constraints & Active Invariants
+## 4. Pre-M11 Checkpoint & Baseline Verification
+- **Audit Verification Status**: 100% Passing (180/180 total assertions verified)
+  - E2E Full Platform Audit Suite (`tests/audit_e2e_verification.test.ts`): 32/32 PASS
+  - M4 Sandboxed Tools Suite (`tests/milestone4_tools.test.ts`): 20/20 PASS
+  - M5 Persistence & Core Data Suite (`tests/persistence.test.ts`): 27/27 PASS
+  - M8 Grounded RAG & Multi-Source Knowledge Suite (`tests/milestone8_rag.test.ts`): 23/23 PASS
+  - M9 Research & Labs Sector Suite (`tests/milestone9_research.test.ts`): 33/33 PASS
+  - M10 Unified File & Storage Foundation (`tests/milestone10_storage.test.ts`): 34/34 PASS
+  - M11 Class Real-Time Messaging & Attachments (`tests/milestone11_messaging.test.ts`): 21/21 PASS
+  - Education Sector & Knowledge Suite (`tests/education_sector.test.ts`): 11/11 PASS
+  - TypeScript Compiler (`tsc --noEmit`): 0 errors
+  - Production Bundle Compilation (`npm run build`): Succeeded
+- **Partial Run Audit & Triage**:
+  - `src/sectors/education/views/ClassesView.tsx`: Integrated file upload modal for teacher syllabus materials. Verified safe, kept.
+  - `src/sectors/research/views/ResearchAssistantView.tsx`: Complete multi-mode UI and evidence extraction. Verified safe, kept.
+  - `server/storage/fileService.ts`: Added message/conversation relation bindings and status filtering. Verified safe, kept.
+  - `server/routes/files.ts`: Robust REST query parsing and error handling. Verified safe, kept.
+  - `server/storage/tools.ts`: Fully registered GenAI storage tool definitions. Verified safe, kept.
+  - `tests/audit_e2e_verification.test.ts`: End-to-end audit passing 32/32. Verified safe, kept.
+
+---
+
+## 5. Current Architecture & Milestone 11 Implementation
+- **Milestone 11 (Teacher ↔ Student Real-Time Messaging + File Attachments) Complete**:
+  - **Data Model**: Extensible `ClassMessage` and `ClassConversationThread` structures persisting to core JSON store (`data/jarvis-db.json`) across reboots with zero loss.
+  - **Authorization & Security**: Class membership validation (`validateClassAccess`) and workspace isolation enforce that only enrolled teachers and students can post/read messages and access attachments; non-enrolled students and cross-workspace attempts are strictly rejected.
+  - **File Attachments**: Messages link directly to M10 `FileRecord` IDs (PDFs, images, documents) with validation of workspace boundaries, MIME types, and 25MB file size limits.
+  - **Real-Time Delivery & Notifications**: Dedicated SSE uplink stream (`/api/messages/stream`) and `messageEventBus` deliver real-time events to connected clients with deduplication safeguards and automated notifications.
+  - **Tool Engine**: 3 new deterministic tools (`messaging.thread.list`, `messaging.message.list`, `messaging.message.send`) registered to the tool registry (total 34 deterministic tools).
+  - **Frontend UI**: Integrated `ClassMessagingDeck` into `ClassesView.tsx` with live SSE connection status, thread switching, multi-file attachment badging, modal viewers, and message composition.
+
+---
+
+## 6. Current Constraints & Active Invariants
 - Zero server secrets or API keys leaked to client code or bundles.
 - No third-party cloud database or cloud object storage required for local dev (durable local storage used).
 - ₹0 local-first execution mode fully operational for offline development.
 - Zero fake or manufactured citations produced.
-- Strict workspace and class membership boundaries enforced across User -> Workspace -> File -> KnowledgeSpace.
+- Strict workspace and class membership boundaries enforced across User -> Workspace -> File -> KnowledgeSpace -> Message.
 - Raw filesystem paths are strictly encapsulated on backend and never exposed to clients.
 - Production cloud storage (e.g. S3 / GCS) is **not yet enabled**; provider abstraction is cloud-ready.
 
 ---
 
-## 5. Recommended Next Milestone
-**Milestone 11 — Teacher & Student Real-Time Messaging with File Attachments**:
-1. Full duplex teacher ↔ student course messaging with direct assignment context.
-2. File attachments in messages referencing `FileRecord` from Milestone 10 unified storage.
-3. Audio voice-note recordings stored in `LocalStorageProvider` with procedural transcript synthesis.
-
+## 7. Next Milestones & Roadmap
+- **M12**: Voice & Audio Interaction (Web Audio API synthesis & STT integration).
+- **M13**: Autonomous Task Agent & Multi-Sector Orchestration.

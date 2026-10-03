@@ -8,8 +8,11 @@ import type {
   IEducationRepository,
   IAuditRepository,
   IResearchRepository,
-  IFileRepository
+  IFileRepository,
+  CreateMessageInput,
+  MessageFilter
 } from './repository.ts';
+
 import type {
   User,
   Workspace,
@@ -181,7 +184,16 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
           return { ...c, messageCount: count };
         });
       },
-      create: async (conversation: { id?: string; workspaceId: string; userId: string; title: string; sector?: string }): Promise<Conversation> => {
+      create: async (conversation: {
+        id?: string;
+        workspaceId: string;
+        userId: string;
+        title: string;
+        sector?: string;
+        classId?: string;
+        participantIds?: string[];
+        type?: 'direct' | 'class_channel' | 'ai_chat';
+      }): Promise<Conversation> => {
         const now = new Date().toISOString();
         const record: Conversation = {
           id: conversation.id || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -189,6 +201,9 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
           userId: conversation.userId || 'user-tony',
           title: conversation.title,
           sector: conversation.sector || 'command',
+          classId: conversation.classId,
+          participantIds: conversation.participantIds,
+          type: conversation.type,
           createdAt: now,
           updatedAt: now,
           messageCount: 0
@@ -257,6 +272,179 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
         const prev = this.state.messages.length;
         this.state.messages = this.state.messages.filter((m) => m.conversationId !== conversationId);
         return this.state.messages.length < prev;
+      },
+
+      // Milestone 11: Teacher ↔ Student Class Messaging
+      createMessage: async (input: CreateMessageInput): Promise<Message> => {
+        const now = input.createdAt || new Date().toISOString();
+        const msgId = input.id || `msg-cls-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        
+        let threadId = input.conversationId;
+        if (!threadId) {
+          threadId = `thread-${input.classId}-general`;
+        }
+
+        const messageRecord: Message = {
+          id: msgId,
+          conversationId: threadId,
+          workspaceId: input.workspaceId,
+          classId: input.classId,
+          senderUserId: input.senderUserId,
+          senderName: input.senderName || 'Authorized User',
+          senderRole: input.senderRole || 'student',
+          body: input.body,
+          content: input.body,
+          role: 'user',
+          timestamp: now,
+          createdAt: now,
+          updatedAt: now,
+          attachmentFileIds: input.attachmentFileIds || [],
+          readBy: input.readBy && input.readBy.length > 0 ? input.readBy : [input.senderUserId]
+        };
+
+        // Ensure thread exists
+        let thread = this.state.conversations.find((c) => c.id === threadId);
+        if (!thread) {
+          thread = {
+            id: threadId,
+            workspaceId: input.workspaceId,
+            userId: input.senderUserId,
+            title: `Class Discussion (${input.classId})`,
+            sector: 'education',
+            classId: input.classId,
+            type: 'class_channel',
+            participantIds: [input.senderUserId],
+            createdAt: now,
+            updatedAt: now,
+            messageCount: 0
+          };
+          this.state.conversations.push(thread);
+        } else {
+          thread.updatedAt = now;
+          if (thread.participantIds && !thread.participantIds.includes(input.senderUserId)) {
+            thread.participantIds.push(input.senderUserId);
+          }
+        }
+        thread.lastMessage = messageRecord;
+
+        // Associate attached files
+        if (Array.isArray(input.attachmentFileIds) && input.attachmentFileIds.length > 0) {
+          for (const fId of input.attachmentFileIds) {
+            const fileObj = this.state.files.find((f) => f.id === fId);
+            if (fileObj) {
+              fileObj.messageId = msgId;
+              fileObj.classId = input.classId;
+              fileObj.conversationId = threadId;
+            }
+          }
+        }
+
+        this.state.messages.push(messageRecord);
+
+        const attachedFiles = (messageRecord.attachmentFileIds || [])
+          .map((fId) => this.state.files.find((f) => f.id === fId))
+          .filter((f): f is FileRecord => Boolean(f));
+
+        return {
+          ...messageRecord,
+          attachments: attachedFiles
+        };
+      },
+
+      listMessages: async (filter: MessageFilter): Promise<Message[]> => {
+        let msgs = this.state.messages.filter((m) => {
+          if (filter.workspaceId && m.workspaceId && m.workspaceId !== filter.workspaceId) return false;
+          if (filter.classId && m.classId !== filter.classId) return false;
+          if (filter.conversationId && m.conversationId !== filter.conversationId) return false;
+          if (filter.senderUserId && m.senderUserId !== filter.senderUserId) return false;
+          if (filter.classId && !m.classId) return false;
+          return true;
+        });
+
+        msgs.sort((a, b) => new Date(a.createdAt || a.timestamp).getTime() - new Date(b.createdAt || b.timestamp).getTime());
+
+        if (filter.limit && filter.limit > 0) {
+          msgs = msgs.slice(-filter.limit);
+        }
+
+        const allFiles = this.state.files;
+        return msgs.map((m) => {
+          const attachments = (m.attachmentFileIds || [])
+            .map((fId) => allFiles.find((f) => f.id === fId))
+            .filter((f): f is FileRecord => Boolean(f));
+          return {
+            ...m,
+            attachments
+          };
+        });
+      },
+
+      getMessageById: async (id: string, workspaceId?: string): Promise<Message | null> => {
+        const msg = this.state.messages.find((m) => m.id === id && (!workspaceId || m.workspaceId === workspaceId));
+        if (!msg) return null;
+        const allFiles = this.state.files;
+        const attachments = (msg.attachmentFileIds || [])
+          .map((fId) => allFiles.find((f) => f.id === fId))
+          .filter((f): f is FileRecord => Boolean(f));
+        return { ...msg, attachments };
+      },
+
+      markMessageRead: async (id: string, userId: string): Promise<Message | null> => {
+        const index = this.state.messages.findIndex((m) => m.id === id);
+        if (index === -1) return null;
+        const msg = this.state.messages[index];
+        const readBy = new Set(msg.readBy || []);
+        readBy.add(userId);
+        this.state.messages[index] = {
+          ...msg,
+          readBy: Array.from(readBy),
+          updatedAt: new Date().toISOString()
+        };
+        const allFiles = this.state.files;
+        const attachments = (this.state.messages[index].attachmentFileIds || [])
+          .map((fId) => allFiles.find((f) => f.id === fId))
+          .filter((f): f is FileRecord => Boolean(f));
+        return { ...this.state.messages[index], attachments };
+      },
+
+      listThreads: async (classId: string, workspaceId?: string): Promise<Conversation[]> => {
+        const threads = this.state.conversations.filter(
+          (c) => c.classId === classId && (!workspaceId || c.workspaceId === workspaceId)
+        );
+        threads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        return threads.map((t) => {
+          const count = this.state.messages.filter((m) => m.conversationId === t.id).length;
+          const lastMsg = this.state.messages
+            .filter((m) => m.conversationId === t.id)
+            .sort((a, b) => new Date(b.createdAt || b.timestamp).getTime() - new Date(a.createdAt || a.timestamp).getTime())[0];
+          return { ...t, messageCount: count, lastMessage: lastMsg };
+        });
+      },
+
+      getOrCreateClassThread: async (classId: string, workspaceId: string, participantIds?: string[], title?: string): Promise<Conversation> => {
+        const existing = this.state.conversations.find(
+          (c) => c.classId === classId && c.workspaceId === workspaceId && (!title || c.title === title)
+        );
+        if (existing) {
+          const count = this.state.messages.filter((m) => m.conversationId === existing.id).length;
+          return { ...existing, messageCount: count };
+        }
+        const now = new Date().toISOString();
+        const thread: Conversation = {
+          id: `thread-${classId}-${Date.now().toString(36)}`,
+          workspaceId,
+          userId: participantIds?.[0] || 'system',
+          title: title || `Class Channel: ${classId}`,
+          sector: 'education',
+          classId,
+          type: 'class_channel',
+          participantIds: participantIds || [],
+          createdAt: now,
+          updatedAt: now,
+          messageCount: 0
+        };
+        this.state.conversations.push(thread);
+        return { ...thread };
       }
     };
 

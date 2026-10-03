@@ -96,6 +96,19 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       createdAt: '2026-10-02T08:00:00.000Z',
       updatedAt: '2026-10-02T08:00:05.000Z',
       messageCount: 2
+    },
+    {
+      id: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      userId: 'teacher-1',
+      title: 'PHYS-301 General Course Discussion',
+      sector: 'education',
+      classId: 'class-phys-301',
+      type: 'class_channel',
+      participantIds: ['teacher-1', 'student-1', 'student-2'],
+      createdAt: '2026-10-02T09:00:00.000Z',
+      updatedAt: '2026-10-02T09:30:00.000Z',
+      messageCount: 3
     }
   ],
 
@@ -113,8 +126,57 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       role: 'assistant',
       content: 'At your service, sir. All multi-sector data repositories and persistent bridges are fully initialized and nominal.',
       timestamp: '2026-10-02T08:00:05.000Z'
+    },
+    {
+      id: 'msg-phys-seed-1',
+      conversationId: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      senderUserId: 'teacher-1',
+      senderName: 'Dr. Sarah (Lead Physicist)',
+      senderRole: 'teacher',
+      role: 'user',
+      body: 'Welcome to Advanced Quantum Mechanics. Please review the lecture notes on harmonic oscillator ladder operators.',
+      content: 'Welcome to Advanced Quantum Mechanics. Please review the lecture notes on harmonic oscillator ladder operators.',
+      timestamp: '2026-10-02T09:00:00.000Z',
+      createdAt: '2026-10-02T09:00:00.000Z',
+      updatedAt: '2026-10-02T09:00:00.000Z',
+      readBy: ['teacher-1', 'student-1']
+    },
+    {
+      id: 'msg-phys-seed-2',
+      conversationId: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      senderUserId: 'student-1',
+      senderName: 'Alex Chen',
+      senderRole: 'student',
+      role: 'user',
+      body: 'Thank you Dr. Sarah. I am verifying the commutator [a, a^dagger] = 1 for the zero-point energy calculation.',
+      content: 'Thank you Dr. Sarah. I am verifying the commutator [a, a^dagger] = 1 for the zero-point energy calculation.',
+      timestamp: '2026-10-02T09:15:00.000Z',
+      createdAt: '2026-10-02T09:15:00.000Z',
+      updatedAt: '2026-10-02T09:15:00.000Z',
+      readBy: ['student-1', 'teacher-1']
+    },
+    {
+      id: 'msg-phys-seed-3',
+      conversationId: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      senderUserId: 'teacher-1',
+      senderName: 'Dr. Sarah (Lead Physicist)',
+      senderRole: 'teacher',
+      role: 'user',
+      body: 'Exactly right, Alex. Keep an eye on how the 1/2 hbar omega shift arises from symmetric ordering.',
+      content: 'Exactly right, Alex. Keep an eye on how the 1/2 hbar omega shift arises from symmetric ordering.',
+      timestamp: '2026-10-02T09:30:00.000Z',
+      createdAt: '2026-10-02T09:30:00.000Z',
+      updatedAt: '2026-10-02T09:30:00.000Z',
+      readBy: ['teacher-1']
     }
   ],
+
 
   // 5. Knowledge Spaces
   knowledgeSpaces: [

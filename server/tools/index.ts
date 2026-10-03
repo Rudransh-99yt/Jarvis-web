@@ -10,6 +10,12 @@ import {
   listKnowledgeSpacesTool
 } from '../sectors/education/tools.ts';
 import {
+  listThreadsTool,
+  listMessagesTool,
+  sendMessageTool
+} from '../sectors/education/messagingTools.ts';
+
+import {
   addSourceTool,
   listSourcesTool,
   ingestSourceTool,
@@ -50,6 +56,9 @@ toolRegistry.register(listAssignmentsTool);
 toolRegistry.register(createAssignmentTool);
 toolRegistry.register(studentProgressTool);
 toolRegistry.register(listKnowledgeSpacesTool);
+toolRegistry.register(listThreadsTool);
+toolRegistry.register(listMessagesTool);
+toolRegistry.register(sendMessageTool);
 
 // 3. Register RAG & Grounded Knowledge Engine Tools
 toolRegistry.register(addSourceTool);
@@ -87,6 +96,7 @@ export * from './protocols.ts';
 export * from './telemetry.ts';
 export * from './ragTools.ts';
 export * from '../sectors/education/tools.ts';
+export * from '../sectors/education/messagingTools.ts';
 export * from '../sectors/research/tools.ts';
 export * from '../storage/tools.ts';
 export { serverProtocolStore };

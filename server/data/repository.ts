@@ -50,18 +50,58 @@ export interface IWorkspaceRepository {
   removeMember(workspaceId: string, userId: string): Promise<boolean>;
 }
 
+export interface MessageFilter {
+  workspaceId?: string;
+  classId?: string;
+  conversationId?: string;
+  senderUserId?: string;
+  limit?: number;
+}
+
+export interface CreateMessageInput {
+  id?: string;
+  workspaceId: string;
+  classId: string;
+  conversationId?: string;
+  senderUserId: string;
+  senderName?: string;
+  senderRole?: 'teacher' | 'student' | 'commander' | 'admin' | 'system';
+  body: string;
+  attachmentFileIds?: string[];
+  readBy?: string[];
+  createdAt?: string;
+}
+
 export interface IConversationRepository {
   getById(id: string, workspaceId?: string): Promise<Conversation | null>;
   list(workspaceId?: string, limit?: number): Promise<Conversation[]>;
-  create(conversation: { id?: string; workspaceId: string; userId: string; title: string; sector?: string }): Promise<Conversation>;
+  create(conversation: {
+    id?: string;
+    workspaceId: string;
+    userId: string;
+    title: string;
+    sector?: string;
+    classId?: string;
+    participantIds?: string[];
+    type?: 'direct' | 'class_channel' | 'ai_chat';
+  }): Promise<Conversation>;
   updateTitle(id: string, title: string, workspaceId?: string): Promise<Conversation | null>;
   delete(id: string, workspaceId?: string): Promise<boolean>;
   
-  // Messages
+  // Legacy & AI Chat Messages
   appendMessage(conversationId: string, role: MessageRole, content: string, extra?: { toolCall?: any; toolResult?: any }): Promise<Message>;
   getMessages(conversationId: string, limit?: number): Promise<Message[]>;
   clearMessages(conversationId: string): Promise<boolean>;
+
+  // Milestone 11: Teacher ↔ Student Class Messaging & Attachments
+  createMessage(input: CreateMessageInput): Promise<Message>;
+  listMessages(filter: MessageFilter): Promise<Message[]>;
+  getMessageById(id: string, workspaceId?: string): Promise<Message | null>;
+  markMessageRead(id: string, userId: string): Promise<Message | null>;
+  listThreads(classId: string, workspaceId?: string): Promise<Conversation[]>;
+  getOrCreateClassThread(classId: string, workspaceId: string, participantIds?: string[], title?: string): Promise<Conversation>;
 }
+
 
 export interface IKnowledgeRepository {
   getSpaceById(id: string, workspaceId?: string): Promise<KnowledgeSpaceRecord | null>;

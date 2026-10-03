@@ -48,21 +48,37 @@ export interface WorkspaceMembership {
   joinedAt: string;
 }
 
-// 4. Conversation & Message
+// 4. Conversation & Message (Extended for M11 Class Messaging)
 export interface Conversation {
   id: string;
   workspaceId: string;
   userId: string;
   title: string;
   sector?: string;
+  classId?: string;
+  participantIds?: string[];
+  type?: 'direct' | 'class_channel' | 'ai_chat';
   createdAt: string;
   updatedAt: string;
   messageCount?: number;
+  lastMessage?: Message;
 }
 
 export interface Message extends ConversationMessage {
   conversationId: string;
+  workspaceId?: string;
+  classId?: string;
+  senderUserId?: string;
+  senderName?: string;
+  senderRole?: 'teacher' | 'student' | 'commander' | 'admin' | 'system';
+  body?: string;
+  attachmentFileIds?: string[];
+  attachments?: FileRecord[];
+  readBy?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
+
 
 // 5. Knowledge Space, Sources, & Chunks (RAG Layer)
 export type KnowledgeSourceType = 'pdf' | 'notes' | 'lecture' | 'dataset' | 'web' | 'code' | 'transcript' | 'markdown' | 'text';

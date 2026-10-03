@@ -91,6 +91,23 @@
       "createdAt": "2026-10-02T08:00:00.000Z",
       "updatedAt": "2026-10-02T08:00:05.000Z",
       "messageCount": 2
+    },
+    {
+      "id": "thread-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "userId": "teacher-1",
+      "title": "PHYS-301 General Course Discussion",
+      "sector": "education",
+      "classId": "class-phys-301",
+      "type": "class_channel",
+      "participantIds": [
+        "teacher-1",
+        "student-1",
+        "student-2"
+      ],
+      "createdAt": "2026-10-02T09:00:00.000Z",
+      "updatedAt": "2026-10-02T09:30:00.000Z",
+      "messageCount": 3
     }
   ],
   "messages": [
@@ -107,6 +124,62 @@
       "role": "assistant",
       "content": "At your service, sir. All multi-sector data repositories and persistent bridges are fully initialized and nominal.",
       "timestamp": "2026-10-02T08:00:05.000Z"
+    },
+    {
+      "id": "msg-phys-seed-1",
+      "conversationId": "thread-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "senderUserId": "teacher-1",
+      "senderName": "Dr. Sarah (Lead Physicist)",
+      "senderRole": "teacher",
+      "role": "user",
+      "body": "Welcome to Advanced Quantum Mechanics. Please review the lecture notes on harmonic oscillator ladder operators.",
+      "content": "Welcome to Advanced Quantum Mechanics. Please review the lecture notes on harmonic oscillator ladder operators.",
+      "timestamp": "2026-10-02T09:00:00.000Z",
+      "createdAt": "2026-10-02T09:00:00.000Z",
+      "updatedAt": "2026-10-02T09:00:00.000Z",
+      "readBy": [
+        "teacher-1",
+        "student-1"
+      ]
+    },
+    {
+      "id": "msg-phys-seed-2",
+      "conversationId": "thread-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "senderUserId": "student-1",
+      "senderName": "Alex Chen",
+      "senderRole": "student",
+      "role": "user",
+      "body": "Thank you Dr. Sarah. I am verifying the commutator [a, a^dagger] = 1 for the zero-point energy calculation.",
+      "content": "Thank you Dr. Sarah. I am verifying the commutator [a, a^dagger] = 1 for the zero-point energy calculation.",
+      "timestamp": "2026-10-02T09:15:00.000Z",
+      "createdAt": "2026-10-02T09:15:00.000Z",
+      "updatedAt": "2026-10-02T09:15:00.000Z",
+      "readBy": [
+        "student-1",
+        "teacher-1"
+      ]
+    },
+    {
+      "id": "msg-phys-seed-3",
+      "conversationId": "thread-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "senderUserId": "teacher-1",
+      "senderName": "Dr. Sarah (Lead Physicist)",
+      "senderRole": "teacher",
+      "role": "user",
+      "body": "Exactly right, Alex. Keep an eye on how the 1/2 hbar omega shift arises from symmetric ordering.",
+      "content": "Exactly right, Alex. Keep an eye on how the 1/2 hbar omega shift arises from symmetric ordering.",
+      "timestamp": "2026-10-02T09:30:00.000Z",
+      "createdAt": "2026-10-02T09:30:00.000Z",
+      "updatedAt": "2026-10-02T09:30:00.000Z",
+      "readBy": [
+        "teacher-1"
+      ]
     }
   ],
   "knowledgeSpaces": [
@@ -130,7 +203,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-03T09:56:55.447Z"
+      "updatedAt": "2026-10-01T15:30:00.000Z"
     },
     {
       "id": "ks-calculus",
@@ -152,7 +225,7 @@
         "What is the relation between Green Theorem and the Divergence Theorem?"
       ],
       "createdAt": "2026-09-12T11:00:00.000Z",
-      "updatedAt": "2026-10-03T09:56:26.833Z"
+      "updatedAt": "2026-09-28T09:15:00.000Z"
     }
   ],
   "knowledgeSources": [
@@ -218,27 +291,6 @@
       "tokenCount": 460,
       "createdAt": "2026-09-20T16:00:00.000Z",
       "updatedAt": "2026-09-20T16:00:00.000Z"
-    },
-    {
-      "id": "src-mus7w2mp-rauw",
-      "workspaceId": "ws-stark-core",
-      "knowledgeSpaceId": "ks-calculus",
-      "name": "Green Theorem Formulation.md",
-      "type": "notes",
-      "mimeType": "text/plain",
-      "size": "0.1 KB",
-      "sizeBytes": 108,
-      "status": "ready",
-      "ingestionStatus": "ready",
-      "embeddingStatus": "ready",
-      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
-      "author": "User",
-      "summary": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "fullText": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "tokenCount": 22,
-      "createdAt": "2026-10-03T09:56:26.833Z",
-      "updatedAt": "2026-10-03T09:56:26.833Z",
-      "chunkCount": 1
     }
   ],
   "knowledgeChunks": [
@@ -283,164 +335,6 @@
       "section": "Stokes Theorem on Smooth Manifolds",
       "contentHash": "a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842",
       "createdAt": "2026-09-20T16:00:00.000Z"
-    },
-    {
-      "id": "chunk-src-test-chunk-0",
-      "sourceId": "src-test-chunk",
-      "knowledgeSpaceId": "ks-quantum",
-      "workspaceId": "ws-stark-core",
-      "sourceTitle": "Test Doc",
-      "chunkIndex": 0,
-      "text": "Paragraph 1 statement about quantum states.",
-      "tokenCount": 8,
-      "page": 1,
-      "section": "General",
-      "contentHash": "d559f5f8f7448066528f3b65619eb7c419a0d44b1a5ca2c2a6d0bd8a75c48484",
-      "createdAt": "2026-10-03T09:56:26.171Z"
-    },
-    {
-      "id": "chunk-src-mus7w2mp-rauw-0",
-      "sourceId": "src-mus7w2mp-rauw",
-      "knowledgeSpaceId": "ks-calculus",
-      "workspaceId": "ws-stark-core",
-      "sourceTitle": "Green Theorem Formulation.md",
-      "chunkIndex": 0,
-      "text": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "tokenCount": 22,
-      "page": 1,
-      "section": "General Content",
-      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
-      "createdAt": "2026-10-03T09:56:26.833Z",
-      "embedding": [
-        0,
-        0.112517,
-        0,
-        0,
-        0.05517,
-        0,
-        0,
-        0,
-        0,
-        0.029723,
-        0.182499,
-        0.110341,
-        0.05517,
-        0.05517,
-        0.05517,
-        0.126461,
-        0,
-        0,
-        0,
-        0.110341,
-        0.03256,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0.05517,
-        0,
-        0.05517,
-        0,
-        0.02893,
-        0,
-        0.110341,
-        0,
-        0.05517,
-        0.144538,
-        0.110341,
-        0,
-        0,
-        0.165511,
-        0.05517,
-        0.118363,
-        0,
-        0,
-        0.110341,
-        0.165511,
-        0.083596,
-        0,
-        0.05517,
-        0.165511,
-        0,
-        0,
-        0.091574,
-        0,
-        0.192242,
-        0.118222,
-        0,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0,
-        0,
-        0.039878,
-        0,
-        0.05517,
-        0.275852,
-        0.05517,
-        0.165511,
-        0.110341,
-        0.165511,
-        0.05517,
-        0,
-        0.05517,
-        0.164585,
-        0,
-        0.220682,
-        0.05517,
-        0,
-        0.137926,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0.05517,
-        0,
-        0.030585,
-        0.389849,
-        0,
-        0,
-        0.05517,
-        0,
-        0,
-        0,
-        0.038022,
-        0,
-        0,
-        0.06105,
-        0.068256,
-        0,
-        0.175919,
-        0.033703,
-        0.110341,
-        0.05517,
-        0.31889,
-        0,
-        0,
-        0.063052,
-        0,
-        0,
-        0.140651,
-        0.05517,
-        0.05517,
-        0,
-        0.034975,
-        0.129941,
-        0,
-        0,
-        0,
-        0,
-        0.072806,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0.110341,
-        0.073561,
-        0.044584
-      ]
     }
   ],
   "classes": [
@@ -690,7 +584,7 @@
       "gradedCount": 0
     },
     {
-      "id": "asg-1791021360000-zu1n",
+      "id": "asg-1791022561734-jic9",
       "classId": "class-phys-301",
       "className": "PHYS-301: Advanced Quantum & Electrodynamics",
       "title": "Quantum Entanglement & Bell Inequalities Lab",
@@ -748,126 +642,7 @@
     }
   ],
   "studyArtifacts": [],
-  "auditEvents": [
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "storage-service-session",
-      "toolName": "file.upload.started",
-      "sector": "storage",
-      "args": {
-        "originalName": "Arc_Reactor_Safety_Protocol.pdf",
-        "claimedMime": "application/pdf",
-        "sizeBytes": 98,
-        "userId": "user-tony"
-      },
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791021415441-t3s2",
-      "timestamp": "2026-10-03T09:56:55.441Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "storage-service-session",
-      "toolName": "file.upload.completed",
-      "sector": "storage",
-      "args": {
-        "fileId": "file-1791021415443-31aqc",
-        "storageKey": "obj-2dada666a425-936131fc.pdf",
-        "sizeBytes": 98,
-        "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
-        "mimeType": "application/pdf",
-        "userId": "user-tony"
-      },
-      "ok": true,
-      "executionTimeMs": 2,
-      "id": "audit-1791021415443-ftr9",
-      "timestamp": "2026-10-03T09:56:55.443Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "storage-service-session",
-      "toolName": "file.upload.started",
-      "sector": "storage",
-      "args": {
-        "originalName": "Duplicate_Arc_Safety_Copy.pdf",
-        "claimedMime": "application/pdf",
-        "sizeBytes": 98,
-        "userId": "user-tony"
-      },
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791021415443-olkd",
-      "timestamp": "2026-10-03T09:56:55.443Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "storage-service-session",
-      "toolName": "file.upload.completed",
-      "sector": "storage",
-      "args": {
-        "fileId": "file-1791021415443-m0i62",
-        "storageKey": "obj-2dada666a425-936131fc.pdf",
-        "sizeBytes": 98,
-        "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
-        "mimeType": "application/pdf",
-        "userId": "user-tony"
-      },
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791021415444-97zc",
-      "timestamp": "2026-10-03T09:56:55.444Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "storage-service-session",
-      "toolName": "file.upload.started",
-      "sector": "storage",
-      "args": {
-        "originalName": "Toroidal_Field_Derivation.md",
-        "claimedMime": "text/markdown",
-        "sizeBytes": 339,
-        "userId": "user-tony"
-      },
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791021415445-4fa8",
-      "timestamp": "2026-10-03T09:56:55.445Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "storage-service-session",
-      "toolName": "file.upload.completed",
-      "sector": "storage",
-      "args": {
-        "fileId": "file-1791021415446-uqf5l",
-        "storageKey": "obj-7ad477b5e0cb-167e9628.md",
-        "sizeBytes": 339,
-        "sha256": "7ad477b5e0cbe12c66a4c561e484b6af0be599aab6fde8006b72c16e458cd482",
-        "mimeType": "text/markdown",
-        "userId": "user-tony"
-      },
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791021415446-5593",
-      "timestamp": "2026-10-03T09:56:55.446Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "storage-service-session",
-      "toolName": "file.deleted",
-      "sector": "storage",
-      "args": {
-        "fileId": "file-1791021415443-m0i62",
-        "originalName": "Duplicate_Arc_Safety_Copy.pdf",
-        "storageKey": "obj-2dada666a425-936131fc.pdf",
-        "userId": "user-tony"
-      },
-      "ok": true,
-      "executionTimeMs": 0,
-      "id": "audit-1791021415450-ly0k",
-      "timestamp": "2026-10-03T09:56:55.450Z"
-    }
-  ],
+  "auditEvents": [],
   "researchProjects": [
     {
       "id": "proj-arc-stabilization",
@@ -909,9 +684,9 @@
         "ks-quantum",
         "ks-calculus"
       ],
-      "id": "proj-1791021412901-htn7",
-      "createdAt": "2026-10-03T09:56:52.901Z",
-      "updatedAt": "2026-10-03T09:56:52.902Z"
+      "id": "proj-1791022593049-xqko",
+      "createdAt": "2026-10-03T10:16:33.049Z",
+      "updatedAt": "2026-10-03T10:16:33.050Z"
     },
     {
       "title": "Vibranium Lattice Resonance Project",
@@ -921,9 +696,9 @@
       "ownerId": "user-tony",
       "knowledgeSpaceIds": [],
       "status": "active",
-      "id": "proj-1791021413823-eetv",
-      "createdAt": "2026-10-03T09:56:53.823Z",
-      "updatedAt": "2026-10-03T09:56:53.823Z"
+      "id": "proj-1791022594038-a2gn",
+      "createdAt": "2026-10-03T10:16:34.038Z",
+      "updatedAt": "2026-10-03T10:16:34.038Z"
     }
   ],
   "researchQuestions": [
@@ -959,19 +734,19 @@
       "updatedAt": "2026-10-02T15:30:00.000Z"
     },
     {
-      "projectId": "proj-1791021412901-htn7",
+      "projectId": "proj-1791022593049-xqko",
       "workspaceId": "ws-stark-core",
       "title": "Magnetic Boundary Line Integral Equivalence",
       "question": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
       "priority": "critical",
       "status": "answered",
       "notes": "Checking against classical Stokes formulation in ks-calculus.",
-      "id": "q-1791021412902-0le9",
+      "id": "q-1791022593050-dixo",
       "linkedEvidenceIds": [
-        "ev-1791021412903-go0u"
+        "ev-1791022593051-d9xt"
       ],
-      "createdAt": "2026-10-03T09:56:52.902Z",
-      "updatedAt": "2026-10-03T09:56:52.903Z",
+      "createdAt": "2026-10-03T10:16:33.050Z",
+      "updatedAt": "2026-10-03T10:16:33.051Z",
       "answer": "Stokes theorem confirms surface integral of curl F equals closed line integral around boundary."
     }
   ],
@@ -1035,9 +810,9 @@
       "createdAt": "2026-09-24T12:00:00.000Z"
     },
     {
-      "projectId": "proj-1791021412901-htn7",
+      "projectId": "proj-1791022593049-xqko",
       "workspaceId": "ws-stark-core",
-      "questionId": "q-1791021412902-0le9",
+      "questionId": "q-1791022593050-dixo",
       "knowledgeSourceId": "src-calc-1",
       "knowledgeSpaceId": "ks-calculus",
       "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
@@ -1059,8 +834,8 @@
         "Stokes Theorem",
         "Plasma Boundary"
       ],
-      "id": "ev-1791021412903-go0u",
-      "createdAt": "2026-10-03T09:56:52.903Z"
+      "id": "ev-1791022593051-d9xt",
+      "createdAt": "2026-10-03T10:16:33.051Z"
     }
   ],
   "researchNotes": [
@@ -1086,24 +861,24 @@
       "updatedAt": "2026-09-24T14:30:00.000Z"
     },
     {
-      "projectId": "proj-1791021412901-htn7",
+      "projectId": "proj-1791022593049-xqko",
       "workspaceId": "ws-stark-core",
       "authorId": "user-tony",
       "title": "Plasma Boundary Mathematical Synthesis",
       "content": "Boundary curve integration establishes exact conservation of magnetic flux.",
       "linkedQuestionIds": [
-        "q-1791021412902-0le9"
+        "q-1791022593050-dixo"
       ],
       "linkedEvidenceIds": [
-        "ev-1791021412903-go0u"
+        "ev-1791022593051-d9xt"
       ],
       "tags": [
         "Plasma",
         "Derivations"
       ],
-      "id": "note-1791021412903-zxth",
-      "createdAt": "2026-10-03T09:56:52.903Z",
-      "updatedAt": "2026-10-03T09:56:52.903Z"
+      "id": "note-1791022593052-usiw",
+      "createdAt": "2026-10-03T10:16:33.051Z",
+      "updatedAt": "2026-10-03T10:16:33.051Z"
     }
   ],
   "researchReports": [
@@ -1142,24 +917,18 @@
       "generatedAt": "2026-10-02T16:00:00.000Z"
     },
     {
-      "projectId": "proj-1791021412901-htn7",
+      "projectId": "proj-1791022593049-xqko",
       "workspaceId": "ws-stark-core",
       "title": "Formal Technical Synthesis: Toroidal Plasma Confinement",
       "researchQuestion": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
-      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the l...",
+      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.",
       "findings": [
-        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
         "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
       ],
       "evidenceReferences": [
-        "ev-1791021412903-go0u"
+        "ev-1791022593051-d9xt"
       ],
       "sourceCitations": [
-        {
-          "sourceId": "src-mus7w2mp-rauw",
-          "sourceTitle": "Green Theorem Formulation.md",
-          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
-        },
         {
           "sourceId": "src-calc-1",
           "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
@@ -1170,28 +939,22 @@
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791021413822-lf2h",
-      "generatedAt": "2026-10-03T09:56:53.822Z"
+      "id": "rep-1791022594037-3ezw",
+      "generatedAt": "2026-10-03T10:16:34.037Z"
     },
     {
-      "projectId": "proj-1791021412901-htn7",
+      "projectId": "proj-1791022593049-xqko",
       "workspaceId": "ws-stark-core",
       "title": "Automated Brief on Harmonic Zero-Point Energy",
       "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
-      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of...",
+      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.",
       "findings": [
-        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
         "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
       ],
       "evidenceReferences": [
-        "ev-1791021412903-go0u"
+        "ev-1791022593051-d9xt"
       ],
       "sourceCitations": [
-        {
-          "sourceId": "src-mus7w2mp-rauw",
-          "sourceTitle": "Green Theorem Formulation.md",
-          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
-        },
         {
           "sourceId": "src-calc-1",
           "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
@@ -1202,8 +965,8 @@
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791021414352-qcfa",
-      "generatedAt": "2026-10-03T09:56:54.352Z"
+      "id": "rep-1791022594669-dpgz",
+      "generatedAt": "2026-10-03T10:16:34.669Z"
     }
   ],
   "files": [
@@ -1301,47 +1064,6 @@
       "isPublicInWorkspace": true,
       "createdAt": "2026-09-22T11:00:00.000Z",
       "updatedAt": "2026-09-22T11:00:00.000Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "ownerUserId": "user-tony",
-      "originalName": "Arc_Reactor_Safety_Protocol.pdf",
-      "storageKey": "obj-2dada666a425-936131fc.pdf",
-      "mimeType": "application/pdf",
-      "sizeBytes": 98,
-      "extension": "pdf",
-      "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
-      "status": "ready",
-      "classId": "class-phys-301",
-      "description": "Official safety guidelines for toroidal arc containment.",
-      "tags": [
-        "Safety",
-        "Arc Reactor"
-      ],
-      "isPublicInWorkspace": true,
-      "id": "file-1791021415443-31aqc",
-      "downloadCount": 0,
-      "createdAt": "2026-10-03T09:56:55.443Z",
-      "updatedAt": "2026-10-03T09:56:55.443Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "ownerUserId": "user-tony",
-      "originalName": "Toroidal_Field_Derivation.md",
-      "storageKey": "obj-7ad477b5e0cb-167e9628.md",
-      "mimeType": "text/markdown",
-      "sizeBytes": 339,
-      "extension": "md",
-      "sha256": "7ad477b5e0cbe12c66a4c561e484b6af0be599aab6fde8006b72c16e458cd482",
-      "status": "ready",
-      "knowledgeSpaceId": "ks-quantum",
-      "tags": [],
-      "isPublicInWorkspace": true,
-      "id": "file-1791021415446-uqf5l",
-      "downloadCount": 0,
-      "createdAt": "2026-10-03T09:56:55.446Z",
-      "updatedAt": "2026-10-03T09:56:55.449Z",
-      "knowledgeSourceId": "src-mus7wopj-hwbp"
     }
   ]
 }
