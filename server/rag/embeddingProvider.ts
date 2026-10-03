@@ -97,7 +97,7 @@ export class DeterministicLocalEmbeddingProvider implements EmbeddingProvider {
  */
 export class GeminiEmbeddingProvider implements EmbeddingProvider {
   readonly id = 'gemini-embedding';
-  readonly name = 'Google Gemini Text Embeddings (text-embedding-004)';
+  readonly name = 'Google Gemini Text Embeddings (gemini-embedding-2-preview)';
   readonly dimensions = 768;
   private client: GoogleGenAI | null = null;
   private fallbackProvider: DeterministicLocalEmbeddingProvider;
@@ -108,11 +108,11 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
   }
 
   private initClient(): void {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey && apiKey.trim().length > 0) {
+    const apiKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
+    if (apiKey.length > 0 && !apiKey.startsWith('TODO') && !apiKey.startsWith('your-')) {
       try {
         this.client = new GoogleGenAI({
-          apiKey: apiKey.trim(),
+          apiKey,
           httpOptions: { headers: { 'User-Agent': 'aistudio-build' }, timeout: 15000 }
         });
       } catch {
@@ -122,7 +122,8 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
   }
 
   isConfigured(): boolean {
-    if (!this.client && process.env.GEMINI_API_KEY) {
+    const currentKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
+    if (!this.client && currentKey.length > 0) {
       this.initClient();
     }
     return this.client !== null;
@@ -135,7 +136,7 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
 
     try {
       const response = await this.client.models.embedContent({
-        model: 'text-embedding-004',
+        model: 'gemini-embedding-2-preview',
         contents: text
       });
 

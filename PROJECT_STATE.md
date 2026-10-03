@@ -187,27 +187,32 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 ---
 
 ## 5. Current Architecture & Milestone 11 Implementation
-- **Milestone 11 (Teacher ↔ Student Real-Time Messaging + File Attachments) Complete**:
-  - **Data Model**: Extensible `ClassMessage` and `ClassConversationThread` structures persisting to core JSON store (`data/jarvis-db.json`) across reboots with zero loss.
-  - **Authorization & Security**: Class membership validation (`validateClassAccess`) and workspace isolation enforce that only enrolled teachers and students can post/read messages and access attachments; non-enrolled students and cross-workspace attempts are strictly rejected.
-  - **File Attachments**: Messages link directly to M10 `FileRecord` IDs (PDFs, images, documents) with validation of workspace boundaries, MIME types, and 25MB file size limits.
-  - **Real-Time Delivery & Notifications**: Dedicated SSE uplink stream (`/api/messages/stream`) and `messageEventBus` deliver real-time events to connected clients with deduplication safeguards and automated notifications.
-  - **Tool Engine**: 3 new deterministic tools (`messaging.thread.list`, `messaging.message.list`, `messaging.message.send`) registered to the tool registry (total 34 deterministic tools).
-  - **Frontend UI**: Integrated `ClassMessagingDeck` into `ClassesView.tsx` with live SSE connection status, thread switching, multi-file attachment badging, modal viewers, and message composition.
+- **Milestone 12 (Smart Classroom Foundation: Session Lifecycle, Presence, Smart Board & Multi-Student Remote) Complete**:
+  - **Classroom Session Model**: Persistent contracts (`ClassroomSession`, `ClassroomParticipant`, `SmartBoardState`) persisting to core store (`data/jarvis-db.json`) across cold reboots.
+  - **Session Lifecycle & Authorization**: Complete transition workflows (`create`, `start`, `pause`, `resume`, `end`, `getActiveSession`, `listSessions`) with strict teacher ownership verification and multi-tenant workspace isolation.
+  - **Student Presence & Software Remote**: Real-time join/leave, duplicate connection deduplication, and periodic heartbeat presence (`/presence`) tracking connection status (`connected`, `disconnected`, `reconnecting`) and device type (`web`, `mobile`, `tablet`, `software_remote`).
+  - **Smart Board Synchronization**: State dispatcher supporting `lesson`, `waiting`, `question`, `results`, `paused`, and `ended` states with live topic and broadcast messaging.
+  - **Real-Time EventBus**: Reusable `classroomEventBus` with session channel subscriptions emitting `classroom.session.started`, `classroom.session.paused`, `classroom.session.resumed`, `classroom.session.ended`, `classroom.student.joined`, `classroom.student.left`, `classroom.student.presence`, and `classroom.board.state.changed`.
+  - **REST API Endpoints**: `/api/classroom/sessions`, `/:id/start`, `/:id/pause`, `/:id/resume`, `/:id/end`, `/:id/join`, `/:id/leave`, `/:id/presence`, `/:id/state`, and `/api/classroom/sessions/:id/stream` (SSE).
+  - **Tool Engine (7 Classroom Tools)**: `classroom.session.create`, `classroom.session.start`, `classroom.session.pause`, `classroom.session.resume`, `classroom.session.end`, `classroom.session.status`, `classroom.session.participants` registered to the tool registry (total 41 deterministic tools).
+  - **Frontend UI (`src/sectors/education/views/SmartClassroomView.tsx`)**:
+    - **Teacher View**: Live session telemetry, session controls (start, pause, resume, end), board state dispatcher, real-time connected student roster with device badges.
+    - **Student View**: Auto-discovers active course session, one-click join, live SSE synchronization, identity display, and cadet software remote keypad placeholder.
+    - **Smart Board Mode**: High-contrast, large-display-friendly layout with large typography, pulsing live radar indicator, central topic display, and live participant ticker.
+  - **Classroom-Scale Validation**: Tested and verified with 42+ concurrent simulated connected students.
 
 ---
 
 ## 6. Current Constraints & Active Invariants
 - Zero server secrets or API keys leaked to client code or bundles.
-- No third-party cloud database or cloud object storage required for local dev (durable local storage used).
+- No physical remote hardware or Bluetooth required (software remotes on web/mobile/tablet).
+- Zero quiz question scoring logic implemented in M12 (established state and presence contracts only).
+- Strict workspace and class membership boundaries enforced across User -> Workspace -> File -> KnowledgeSpace -> Message -> ClassroomSession.
 - ₹0 local-first execution mode fully operational for offline development.
-- Zero fake or manufactured citations produced.
-- Strict workspace and class membership boundaries enforced across User -> Workspace -> File -> KnowledgeSpace -> Message.
-- Raw filesystem paths are strictly encapsulated on backend and never exposed to clients.
-- Production cloud storage (e.g. S3 / GCS) is **not yet enabled**; provider abstraction is cloud-ready.
 
 ---
 
 ## 7. Next Milestones & Roadmap
-- **M12**: Voice & Audio Interaction (Web Audio API synthesis & STT integration).
-- **M13**: Autonomous Task Agent & Multi-Sector Orchestration.
+- **M13**: Smart Quiz & Live Responses (Interactive question dispatch, real-time remote response scoring, live analytics, and Smart Board leaderboard).
+- **M14**: Voice & Audio Interaction (Web Audio API synthesis & STT integration).
+- **M15**: Autonomous Task Agent & Multi-Sector Orchestration.

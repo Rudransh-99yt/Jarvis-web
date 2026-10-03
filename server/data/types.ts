@@ -12,6 +12,7 @@ import type { FileRecord } from '../../src/types/storage.ts';
 
 export * from '../../src/types/research.ts';
 export * from '../../src/types/storage.ts';
+export * from '../../src/types/classroom.ts';
 
 // 1. User
 export type UserRole = 'admin' | 'commander' | 'teacher' | 'student' | 'guest';
@@ -174,4 +175,6 @@ export interface DatabaseSchema {
   researchNotes: ResearchNote[];
   researchReports: ResearchReport[];
   files: FileRecord[];
+  classroomSessions: import('../../src/types/classroom.ts').ClassroomSession[];
+  classroomParticipants: import('../../src/types/classroom.ts').ClassroomParticipant[];
 }

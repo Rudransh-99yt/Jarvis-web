@@ -1,13 +1,13 @@
 import React from 'react';
 import type { EducationClass, Assignment, StudentSubmission, KnowledgeSpace } from '../../../types/education.ts';
-import { BookOpen, Calendar, Clock, Award, FileText, Sparkles, ChevronRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Award, FileText, Sparkles, ChevronRight, CheckCircle, AlertCircle, Radio } from 'lucide-react';
 
 interface StudentDashboardProps {
   classes: EducationClass[];
   assignments: Assignment[];
   submissions: StudentSubmission[];
   knowledgeSpaces: KnowledgeSpace[];
-  onNavigateTab: (tab: 'classes' | 'assignments' | 'knowledge' | 'study') => void;
+  onNavigateTab: (tab: 'classes' | 'assignments' | 'knowledge' | 'study' | 'classroom') => void;
   onSelectKnowledgeSpace: (spaceId: string) => void;
 }
 
@@ -45,13 +45,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={() => onNavigateTab('study')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] self-start md:self-auto"
-          >
-            <Sparkles className="w-4 h-4 text-cyan-400 animate-spin-slow" />
-            LAUNCH STUDY AI
-          </button>
+          <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+            <button
+              onClick={() => onNavigateTab('classroom')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-cyan-400/40 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 text-xs font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            >
+              <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
+              JOIN SMART CLASSROOM
+            </button>
+            <button
+              onClick={() => onNavigateTab('study')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+            >
+              <Sparkles className="w-4 h-4 text-cyan-400 animate-spin-slow" />
+              LAUNCH STUDY AI
+            </button>
+          </div>
         </div>
       </div>
 

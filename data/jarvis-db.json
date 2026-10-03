@@ -79,6 +79,328 @@
       "userId": "student-2",
       "role": "member",
       "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-1791025210609-naif",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-rogue",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.609Z"
+    },
+    {
+      "id": "mem-1791025210611-j7l8",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-1",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-9p1u",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-2",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-m757",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-3",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-j0d8",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-4",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-lqgu",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-5",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-knk6",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-6",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-c5bg",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-7",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-r1m2",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-8",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-784o",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-9",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-htpy",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-10",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-rxug",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-11",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-zr86",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-12",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-lgxf",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-13",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-yza8",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-14",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-fiy9",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-15",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-41zp",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-16",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-2014",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-17",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-guws",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-18",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-2olj",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-19",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-df8c",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-20",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-6ndo",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-21",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-yyf9",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-22",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-oe8g",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-23",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-u5k7",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-24",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-m28k",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-25",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-0cnr",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-26",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-dgr5",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-27",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-h27t",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-28",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-99bj",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-29",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-gc3j",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-30",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-s7or",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-31",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-1duc",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-32",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-nl3g",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-33",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-7wzd",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-34",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-m7fw",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-35",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-4uoo",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-36",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-v111",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-37",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-a11r",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-38",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-fk0k",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-39",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-lhkq",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-40",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-ohky",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-41",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-xsgn",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-42",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-tckf",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-43",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-ny9g",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-44",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
+    },
+    {
+      "id": "mem-1791025210611-gruq",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-45",
+      "role": "member",
+      "joinedAt": "2026-10-03T11:00:10.611Z"
     }
   ],
   "conversations": [
@@ -108,6 +430,41 @@
       "createdAt": "2026-10-02T09:00:00.000Z",
       "updatedAt": "2026-10-02T09:30:00.000Z",
       "messageCount": 3
+    },
+    {
+      "id": "thread-class-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "userId": "teacher-1",
+      "title": "Class Discussion (class-phys-301)",
+      "sector": "education",
+      "classId": "class-phys-301",
+      "type": "class_channel",
+      "participantIds": [
+        "teacher-1",
+        "student-1"
+      ],
+      "createdAt": "2026-10-03T11:00:01.024Z",
+      "updatedAt": "2026-10-03T11:00:01.026Z",
+      "messageCount": 0,
+      "lastMessage": {
+        "id": "msg-cls-1791025201026-5pmrp",
+        "conversationId": "thread-class-phys-301-general",
+        "workspaceId": "ws-stark-core",
+        "classId": "class-phys-301",
+        "senderUserId": "teacher-1",
+        "senderName": "Dr. Sarah",
+        "senderRole": "teacher",
+        "body": "Realtime telemetry test dispatch over quantum channel.",
+        "content": "Realtime telemetry test dispatch over quantum channel.",
+        "role": "user",
+        "timestamp": "2026-10-03T11:00:01.026Z",
+        "createdAt": "2026-10-03T11:00:01.026Z",
+        "updatedAt": "2026-10-03T11:00:01.026Z",
+        "attachmentFileIds": [],
+        "readBy": [
+          "teacher-1"
+        ]
+      }
     }
   ],
   "messages": [
@@ -180,6 +537,63 @@
       "readBy": [
         "teacher-1"
       ]
+    },
+    {
+      "id": "msg-cls-1791025201024-qaz01",
+      "conversationId": "thread-class-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "senderUserId": "teacher-1",
+      "senderName": "Dr. Sarah",
+      "senderRole": "teacher",
+      "body": "Welcome to lecture 5. Today we explore quantum entanglement and Bell inequalities.",
+      "content": "Welcome to lecture 5. Today we explore quantum entanglement and Bell inequalities.",
+      "role": "user",
+      "timestamp": "2026-10-03T11:00:01.024Z",
+      "createdAt": "2026-10-03T11:00:01.024Z",
+      "updatedAt": "2026-10-03T11:00:01.024Z",
+      "attachmentFileIds": [],
+      "readBy": [
+        "teacher-1"
+      ]
+    },
+    {
+      "id": "msg-cls-1791025201026-n4ebt",
+      "conversationId": "thread-class-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "senderUserId": "student-1",
+      "senderName": "Alex Chen",
+      "senderRole": "student",
+      "body": "Dr. Sarah, does the CHSH inequality test require polarization-entangled photon pairs?",
+      "content": "Dr. Sarah, does the CHSH inequality test require polarization-entangled photon pairs?",
+      "role": "user",
+      "timestamp": "2026-10-03T11:00:01.026Z",
+      "createdAt": "2026-10-03T11:00:01.026Z",
+      "updatedAt": "2026-10-03T11:00:01.026Z",
+      "attachmentFileIds": [],
+      "readBy": [
+        "student-1"
+      ]
+    },
+    {
+      "id": "msg-cls-1791025201026-5pmrp",
+      "conversationId": "thread-class-phys-301-general",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "senderUserId": "teacher-1",
+      "senderName": "Dr. Sarah",
+      "senderRole": "teacher",
+      "body": "Realtime telemetry test dispatch over quantum channel.",
+      "content": "Realtime telemetry test dispatch over quantum channel.",
+      "role": "user",
+      "timestamp": "2026-10-03T11:00:01.026Z",
+      "createdAt": "2026-10-03T11:00:01.026Z",
+      "updatedAt": "2026-10-03T11:00:01.026Z",
+      "attachmentFileIds": [],
+      "readBy": [
+        "teacher-1"
+      ]
     }
   ],
   "knowledgeSpaces": [
@@ -203,7 +617,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-01T15:30:00.000Z"
+      "updatedAt": "2026-10-03T11:00:17.434Z"
     },
     {
       "id": "ks-calculus",
@@ -225,7 +639,7 @@
         "What is the relation between Green Theorem and the Divergence Theorem?"
       ],
       "createdAt": "2026-09-12T11:00:00.000Z",
-      "updatedAt": "2026-09-28T09:15:00.000Z"
+      "updatedAt": "2026-10-03T10:59:09.250Z"
     }
   ],
   "knowledgeSources": [
@@ -291,6 +705,27 @@
       "tokenCount": 460,
       "createdAt": "2026-09-20T16:00:00.000Z",
       "updatedAt": "2026-09-20T16:00:00.000Z"
+    },
+    {
+      "id": "src-musa4pqa-xal5",
+      "workspaceId": "ws-stark-core",
+      "knowledgeSpaceId": "ks-calculus",
+      "name": "Green Theorem Formulation.md",
+      "type": "notes",
+      "mimeType": "text/plain",
+      "size": "0.1 KB",
+      "sizeBytes": 108,
+      "status": "ready",
+      "ingestionStatus": "ready",
+      "embeddingStatus": "ready",
+      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
+      "author": "User",
+      "summary": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+      "fullText": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+      "tokenCount": 22,
+      "createdAt": "2026-10-03T10:59:09.250Z",
+      "updatedAt": "2026-10-03T10:59:09.250Z",
+      "chunkCount": 1
     }
   ],
   "knowledgeChunks": [
@@ -335,6 +770,164 @@
       "section": "Stokes Theorem on Smooth Manifolds",
       "contentHash": "a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842",
       "createdAt": "2026-09-20T16:00:00.000Z"
+    },
+    {
+      "id": "chunk-src-test-chunk-0",
+      "sourceId": "src-test-chunk",
+      "knowledgeSpaceId": "ks-quantum",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Test Doc",
+      "chunkIndex": 0,
+      "text": "Paragraph 1 statement about quantum states.",
+      "tokenCount": 8,
+      "page": 1,
+      "section": "General",
+      "contentHash": "d559f5f8f7448066528f3b65619eb7c419a0d44b1a5ca2c2a6d0bd8a75c48484",
+      "createdAt": "2026-10-03T10:59:08.850Z"
+    },
+    {
+      "id": "chunk-src-musa4pqa-xal5-0",
+      "sourceId": "src-musa4pqa-xal5",
+      "knowledgeSpaceId": "ks-calculus",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Green Theorem Formulation.md",
+      "chunkIndex": 0,
+      "text": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+      "tokenCount": 22,
+      "page": 1,
+      "section": "General Content",
+      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
+      "createdAt": "2026-10-03T10:59:09.250Z",
+      "embedding": [
+        0,
+        0.112517,
+        0,
+        0,
+        0.05517,
+        0,
+        0,
+        0,
+        0,
+        0.029723,
+        0.182499,
+        0.110341,
+        0.05517,
+        0.05517,
+        0.05517,
+        0.126461,
+        0,
+        0,
+        0,
+        0.110341,
+        0.03256,
+        0,
+        0,
+        0.05517,
+        0.05517,
+        0.05517,
+        0,
+        0.05517,
+        0,
+        0.02893,
+        0,
+        0.110341,
+        0,
+        0.05517,
+        0.144538,
+        0.110341,
+        0,
+        0,
+        0.165511,
+        0.05517,
+        0.118363,
+        0,
+        0,
+        0.110341,
+        0.165511,
+        0.083596,
+        0,
+        0.05517,
+        0.165511,
+        0,
+        0,
+        0.091574,
+        0,
+        0.192242,
+        0.118222,
+        0,
+        0,
+        0,
+        0.05517,
+        0.05517,
+        0,
+        0,
+        0.039878,
+        0,
+        0.05517,
+        0.275852,
+        0.05517,
+        0.165511,
+        0.110341,
+        0.165511,
+        0.05517,
+        0,
+        0.05517,
+        0.164585,
+        0,
+        0.220682,
+        0.05517,
+        0,
+        0.137926,
+        0,
+        0,
+        0.05517,
+        0.05517,
+        0.05517,
+        0,
+        0.030585,
+        0.389849,
+        0,
+        0,
+        0.05517,
+        0,
+        0,
+        0,
+        0.038022,
+        0,
+        0,
+        0.06105,
+        0.068256,
+        0,
+        0.175919,
+        0.033703,
+        0.110341,
+        0.05517,
+        0.31889,
+        0,
+        0,
+        0.063052,
+        0,
+        0,
+        0.140651,
+        0.05517,
+        0.05517,
+        0,
+        0.034975,
+        0.129941,
+        0,
+        0,
+        0,
+        0,
+        0.072806,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.110341,
+        0.073561,
+        0.044584
+      ]
     }
   ],
   "classes": [
@@ -350,11 +943,56 @@
       "room": "Stark Tower Lab 4A",
       "studentIds": [
         "student-1",
-        "student-2"
+        "student-2",
+        "sim-student-1",
+        "sim-student-2",
+        "sim-student-3",
+        "sim-student-4",
+        "sim-student-5",
+        "sim-student-6",
+        "sim-student-7",
+        "sim-student-8",
+        "sim-student-9",
+        "sim-student-10",
+        "sim-student-11",
+        "sim-student-12",
+        "sim-student-13",
+        "sim-student-14",
+        "sim-student-15",
+        "sim-student-16",
+        "sim-student-17",
+        "sim-student-18",
+        "sim-student-19",
+        "sim-student-20",
+        "sim-student-21",
+        "sim-student-22",
+        "sim-student-23",
+        "sim-student-24",
+        "sim-student-25",
+        "sim-student-26",
+        "sim-student-27",
+        "sim-student-28",
+        "sim-student-29",
+        "sim-student-30",
+        "sim-student-31",
+        "sim-student-32",
+        "sim-student-33",
+        "sim-student-34",
+        "sim-student-35",
+        "sim-student-36",
+        "sim-student-37",
+        "sim-student-38",
+        "sim-student-39",
+        "sim-student-40",
+        "sim-student-41",
+        "sim-student-42",
+        "sim-student-43",
+        "sim-student-44",
+        "sim-student-45"
       ],
       "studentCount": 2,
       "materialsCount": 3,
-      "assignmentsCount": 3,
+      "assignmentsCount": 4,
       "announcements": [
         {
           "id": "ann-1",
@@ -584,7 +1222,7 @@
       "gradedCount": 0
     },
     {
-      "id": "asg-1791022561734-jic9",
+      "id": "asg-1791025134463-dfag",
       "classId": "class-phys-301",
       "className": "PHYS-301: Advanced Quantum & Electrodynamics",
       "title": "Quantum Entanglement & Bell Inequalities Lab",
@@ -598,6 +1236,22 @@
       "totalEnrolled": 2,
       "submittedCount": 0,
       "gradedCount": 0
+    },
+    {
+      "id": "asg-1791025217730-x27k",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum & Electrodynamics",
+      "title": "Audit Lab: QED Loop Corrections",
+      "description": "Calculate 1-loop vertex correction.",
+      "instructions": "Compute Ward-Takahashi identity validation.",
+      "assignedDate": "2026-10-03",
+      "dueDate": "2026-11-20",
+      "maxScore": 100,
+      "category": "Lab Report",
+      "teacherId": "teacher-1",
+      "totalEnrolled": 2,
+      "submittedCount": 1,
+      "gradedCount": 1
     }
   ],
   "submissions": [
@@ -639,10 +1293,350 @@
           "size": "920 KB"
         }
       ]
+    },
+    {
+      "id": "sub-student-1-asg-1791025217730-x27k-musa66kl",
+      "assignmentId": "asg-1791025217730-x27k",
+      "assignmentTitle": "Audit Lab: QED Loop Corrections",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum & Electrodynamics",
+      "studentId": "student-1",
+      "studentName": "Alex Chen",
+      "status": "graded",
+      "submittedAt": "2026-10-03T11:00:17.733Z",
+      "content": "Completed derivation with attached notes.",
+      "attachments": [
+        {
+          "name": "Alex-Chen-QED-Lab-Report.md",
+          "size": "1.2 KB"
+        }
+      ],
+      "grade": 98,
+      "feedback": "Flawless calculation of the Ward identity.",
+      "gradedAt": "2026-10-03T11:00:17.733Z"
     }
   ],
   "studyArtifacts": [],
-  "auditEvents": [],
+  "auditEvents": [
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Arc_Reactor_Safety_Protocol.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 98,
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025188359-b0w5",
+      "timestamp": "2026-10-03T10:59:48.359Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025188361-7g9yk",
+        "storageKey": "obj-2dada666a425-aa888fe2.pdf",
+        "sizeBytes": 98,
+        "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
+        "mimeType": "application/pdf",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 2,
+      "id": "audit-1791025188361-tcgw",
+      "timestamp": "2026-10-03T10:59:48.361Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Duplicate_Arc_Safety_Copy.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 98,
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025188362-6dqv",
+      "timestamp": "2026-10-03T10:59:48.362Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025188363-eptpr",
+        "storageKey": "obj-2dada666a425-aa888fe2.pdf",
+        "sizeBytes": 98,
+        "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
+        "mimeType": "application/pdf",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025188363-xrxn",
+      "timestamp": "2026-10-03T10:59:48.363Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Toroidal_Field_Derivation.md",
+        "claimedMime": "text/markdown",
+        "sizeBytes": 339,
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025188363-9sco",
+      "timestamp": "2026-10-03T10:59:48.363Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025188365-508eu",
+        "storageKey": "obj-7ad477b5e0cb-4f2747c0.md",
+        "sizeBytes": 339,
+        "sha256": "7ad477b5e0cbe12c66a4c561e484b6af0be599aab6fde8006b72c16e458cd482",
+        "mimeType": "text/markdown",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 2,
+      "id": "audit-1791025188365-qq7u",
+      "timestamp": "2026-10-03T10:59:48.365Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.deleted",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025188363-eptpr",
+        "originalName": "Duplicate_Arc_Safety_Copy.pdf",
+        "storageKey": "obj-2dada666a425-aa888fe2.pdf",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 0,
+      "id": "audit-1791025188371-4jv5",
+      "timestamp": "2026-10-03T10:59:48.371Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "QED-Lecture-Notes.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 243,
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025217425-cm2v",
+      "timestamp": "2026-10-03T11:00:17.425Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025217429-ow287",
+        "storageKey": "obj-9dfedd548acf-c0c9a48f.pdf",
+        "sizeBytes": 243,
+        "sha256": "9dfedd548acfd5ed4c9b766ed0911592ab110d2d8a14b971e355dcb5de524b3c",
+        "mimeType": "application/pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 4,
+      "id": "audit-1791025217429-8nde",
+      "timestamp": "2026-10-03T11:00:17.429Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.downloaded",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025217429-ow287",
+        "originalName": "QED-Lecture-Notes.pdf",
+        "userId": "student-1",
+        "sizeBytes": 243
+      },
+      "ok": true,
+      "executionTimeMs": 2,
+      "id": "audit-1791025217432-i18k",
+      "timestamp": "2026-10-03T11:00:17.432Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Alex-Chen-QED-Lab-Report.md",
+        "claimedMime": "text/markdown",
+        "sizeBytes": 61,
+        "userId": "student-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025217730-73a9",
+      "timestamp": "2026-10-03T11:00:17.730Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025217732-9wev5",
+        "storageKey": "obj-49a2d3c741a0-86755c7b.md",
+        "sizeBytes": 61,
+        "sha256": "49a2d3c741a09ea76978936cf25d512995ecc0d45c484f7e467409282725d2e4",
+        "mimeType": "text/markdown",
+        "userId": "student-1"
+      },
+      "ok": true,
+      "executionTimeMs": 2,
+      "id": "audit-1791025217732-5kb1",
+      "timestamp": "2026-10-03T11:00:17.732Z"
+    },
+    {
+      "workspaceId": "ws-rogue-organization",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.rejected",
+      "sector": "storage",
+      "args": {
+        "originalName": "Secret.txt",
+        "reason": "User is not a member of the target workspace.",
+        "userId": "student-1"
+      },
+      "ok": false,
+      "executionTimeMs": 0,
+      "errorMessage": "User is not a member of the target workspace.",
+      "id": "audit-1791025217733-m2bx",
+      "timestamp": "2026-10-03T11:00:17.733Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "QED-Lecture-Duplicate.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 243,
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025217735-q0gh",
+      "timestamp": "2026-10-03T11:00:17.735Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025217735-03bo0",
+        "storageKey": "obj-9dfedd548acf-c0c9a48f.pdf",
+        "sizeBytes": 243,
+        "sha256": "9dfedd548acfd5ed4c9b766ed0911592ab110d2d8a14b971e355dcb5de524b3c",
+        "mimeType": "application/pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 0,
+      "id": "audit-1791025217735-97hq",
+      "timestamp": "2026-10-03T11:00:17.735Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.deleted",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025217735-03bo0",
+        "originalName": "QED-Lecture-Duplicate.pdf",
+        "storageKey": "obj-9dfedd548acf-c0c9a48f.pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025217737-j2nr",
+      "timestamp": "2026-10-03T11:00:17.737Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.deleted",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025217429-ow287",
+        "originalName": "QED-Lecture-Notes.pdf",
+        "storageKey": "obj-9dfedd548acf-c0c9a48f.pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 0,
+      "id": "audit-1791025217737-j5if",
+      "timestamp": "2026-10-03T11:00:17.737Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Casimir-Force.md",
+        "claimedMime": "text/markdown",
+        "sizeBytes": 58,
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025217738-fwqb",
+      "timestamp": "2026-10-03T11:00:17.738Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791025217739-cj95p",
+        "storageKey": "obj-8db4b3e9139a-d0afd610.md",
+        "sizeBytes": 58,
+        "sha256": "8db4b3e9139afa5558d0f1dc8339980883307a005b55b55be90e86f36c88f2bd",
+        "mimeType": "text/markdown",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791025217739-cdya",
+      "timestamp": "2026-10-03T11:00:17.739Z"
+    }
+  ],
   "researchProjects": [
     {
       "id": "proj-arc-stabilization",
@@ -684,9 +1678,9 @@
         "ks-quantum",
         "ks-calculus"
       ],
-      "id": "proj-1791022593049-xqko",
-      "createdAt": "2026-10-03T10:16:33.049Z",
-      "updatedAt": "2026-10-03T10:16:33.050Z"
+      "id": "proj-1791025183120-55ok",
+      "createdAt": "2026-10-03T10:59:43.120Z",
+      "updatedAt": "2026-10-03T10:59:43.121Z"
     },
     {
       "title": "Vibranium Lattice Resonance Project",
@@ -696,9 +1690,31 @@
       "ownerId": "user-tony",
       "knowledgeSpaceIds": [],
       "status": "active",
-      "id": "proj-1791022594038-a2gn",
-      "createdAt": "2026-10-03T10:16:34.038Z",
-      "updatedAt": "2026-10-03T10:16:34.038Z"
+      "id": "proj-1791025183571-hzoo",
+      "createdAt": "2026-10-03T10:59:43.571Z",
+      "updatedAt": "2026-10-03T10:59:43.571Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerId": "teacher-1",
+      "title": "Arc Reactor Plasma Confinement",
+      "description": "Stabilizing magnetohydrodynamic equilibrium.",
+      "researchQuestion": "How to suppress tearing modes in 3.2 GW core?",
+      "id": "proj-1791025217734-exxo",
+      "knowledgeSpaceIds": [],
+      "createdAt": "2026-10-03T11:00:17.734Z",
+      "updatedAt": "2026-10-03T11:00:17.734Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerId": "teacher-1",
+      "title": "Quantum Vacuum Fluctuations & Casimir Effect",
+      "description": "Analyzing Casimir force between conducting plates.",
+      "researchQuestion": "Does zero-point energy shift boundary conditions?",
+      "id": "proj-1791025217738-wlzu",
+      "knowledgeSpaceIds": [],
+      "createdAt": "2026-10-03T11:00:17.738Z",
+      "updatedAt": "2026-10-03T11:00:17.738Z"
     }
   ],
   "researchQuestions": [
@@ -734,19 +1750,19 @@
       "updatedAt": "2026-10-02T15:30:00.000Z"
     },
     {
-      "projectId": "proj-1791022593049-xqko",
+      "projectId": "proj-1791025183120-55ok",
       "workspaceId": "ws-stark-core",
       "title": "Magnetic Boundary Line Integral Equivalence",
       "question": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
       "priority": "critical",
       "status": "answered",
       "notes": "Checking against classical Stokes formulation in ks-calculus.",
-      "id": "q-1791022593050-dixo",
+      "id": "q-1791025183121-oqac",
       "linkedEvidenceIds": [
-        "ev-1791022593051-d9xt"
+        "ev-1791025183123-ebnr"
       ],
-      "createdAt": "2026-10-03T10:16:33.050Z",
-      "updatedAt": "2026-10-03T10:16:33.051Z",
+      "createdAt": "2026-10-03T10:59:43.121Z",
+      "updatedAt": "2026-10-03T10:59:43.122Z",
       "answer": "Stokes theorem confirms surface integral of curl F equals closed line integral around boundary."
     }
   ],
@@ -810,9 +1826,9 @@
       "createdAt": "2026-09-24T12:00:00.000Z"
     },
     {
-      "projectId": "proj-1791022593049-xqko",
+      "projectId": "proj-1791025183120-55ok",
       "workspaceId": "ws-stark-core",
-      "questionId": "q-1791022593050-dixo",
+      "questionId": "q-1791025183121-oqac",
       "knowledgeSourceId": "src-calc-1",
       "knowledgeSpaceId": "ks-calculus",
       "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
@@ -834,8 +1850,35 @@
         "Stokes Theorem",
         "Plasma Boundary"
       ],
-      "id": "ev-1791022593051-d9xt",
-      "createdAt": "2026-10-03T10:16:33.051Z"
+      "id": "ev-1791025183123-ebnr",
+      "createdAt": "2026-10-03T10:59:43.123Z"
+    },
+    {
+      "projectId": "proj-1791025217738-wlzu",
+      "workspaceId": "ws-stark-core",
+      "knowledgeSourceId": "src-qm-1",
+      "knowledgeSpaceId": "ks-quantum",
+      "sourceTitle": "Quantum Harmonic Oscillator & Ladder Operators",
+      "chunkId": "chunk-src-qm-1-0",
+      "chunkText": "The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). The number operator N = a_dagger a has eigenstates |n> with eigenvalues n = 0, 1, 2, ... Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.",
+      "citation": {
+        "sourceId": "src-qm-1",
+        "sourceTitle": "Quantum Harmonic Oscillator & Ladder Operators",
+        "chunkId": "chunk-src-qm-1-0",
+        "spaceId": "ks-quantum",
+        "page": 1,
+        "section": "Harmonic Oscillator & Ladder Operators",
+        "excerpt": "The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamil...",
+        "score": 0.105
+      },
+      "relevance": 0.105,
+      "userNote": "Automatically identified by Research Assistant for: Does zero-point energy shift boundary conditions?",
+      "tags": [
+        "Grounded",
+        "Automated Synthesis"
+      ],
+      "id": "ev-1791025217746-2ck5",
+      "createdAt": "2026-10-03T11:00:17.746Z"
     }
   ],
   "researchNotes": [
@@ -861,24 +1904,24 @@
       "updatedAt": "2026-09-24T14:30:00.000Z"
     },
     {
-      "projectId": "proj-1791022593049-xqko",
+      "projectId": "proj-1791025183120-55ok",
       "workspaceId": "ws-stark-core",
       "authorId": "user-tony",
       "title": "Plasma Boundary Mathematical Synthesis",
       "content": "Boundary curve integration establishes exact conservation of magnetic flux.",
       "linkedQuestionIds": [
-        "q-1791022593050-dixo"
+        "q-1791025183121-oqac"
       ],
       "linkedEvidenceIds": [
-        "ev-1791022593051-d9xt"
+        "ev-1791025183123-ebnr"
       ],
       "tags": [
         "Plasma",
         "Derivations"
       ],
-      "id": "note-1791022593052-usiw",
-      "createdAt": "2026-10-03T10:16:33.051Z",
-      "updatedAt": "2026-10-03T10:16:33.051Z"
+      "id": "note-1791025183123-cgm8",
+      "createdAt": "2026-10-03T10:59:43.123Z",
+      "updatedAt": "2026-10-03T10:59:43.123Z"
     }
   ],
   "researchReports": [
@@ -917,18 +1960,24 @@
       "generatedAt": "2026-10-02T16:00:00.000Z"
     },
     {
-      "projectId": "proj-1791022593049-xqko",
+      "projectId": "proj-1791025183120-55ok",
       "workspaceId": "ws-stark-core",
       "title": "Formal Technical Synthesis: Toroidal Plasma Confinement",
       "researchQuestion": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
-      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.",
+      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the l...",
       "findings": [
+        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
         "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
       ],
       "evidenceReferences": [
-        "ev-1791022593051-d9xt"
+        "ev-1791025183123-ebnr"
       ],
       "sourceCitations": [
+        {
+          "sourceId": "src-musa4pqa-xal5",
+          "sourceTitle": "Green Theorem Formulation.md",
+          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
+        },
         {
           "sourceId": "src-calc-1",
           "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
@@ -939,22 +1988,28 @@
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791022594037-3ezw",
-      "generatedAt": "2026-10-03T10:16:34.037Z"
+      "id": "rep-1791025183570-z39h",
+      "generatedAt": "2026-10-03T10:59:43.570Z"
     },
     {
-      "projectId": "proj-1791022593049-xqko",
+      "projectId": "proj-1791025183120-55ok",
       "workspaceId": "ws-stark-core",
       "title": "Automated Brief on Harmonic Zero-Point Energy",
       "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
-      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.",
+      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of...",
       "findings": [
+        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
         "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
       ],
       "evidenceReferences": [
-        "ev-1791022593051-d9xt"
+        "ev-1791025183123-ebnr"
       ],
       "sourceCitations": [
+        {
+          "sourceId": "src-musa4pqa-xal5",
+          "sourceTitle": "Green Theorem Formulation.md",
+          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
+        },
         {
           "sourceId": "src-calc-1",
           "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
@@ -965,8 +2020,34 @@
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791022594669-dpgz",
-      "generatedAt": "2026-10-03T10:16:34.669Z"
+      "id": "rep-1791025183573-xei1",
+      "generatedAt": "2026-10-03T10:59:43.573Z"
+    },
+    {
+      "projectId": "proj-1791025217738-wlzu",
+      "workspaceId": "ws-stark-core",
+      "title": "Synthesis of Casimir Boundary States",
+      "researchQuestion": "Does zero-point energy shift boundary conditions?",
+      "executiveSummary": "Grounded investigation for \"Does zero-point energy shift boundary conditions?\" in \"Quantum Vacuum Fluctuations & Casimir Effect\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Quantum Harmonic Oscillator & Ladder Operators**: The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2.",
+      "findings": [
+        "According to \"Quantum Harmonic Oscillator & Ladder Operators\" (Harmonic Oscillator & Ladder Operators): The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamil..."
+      ],
+      "evidenceReferences": [
+        "ev-1791025217746-2ck5"
+      ],
+      "sourceCitations": [
+        {
+          "sourceId": "src-qm-1",
+          "sourceTitle": "Quantum Harmonic Oscillator & Ladder Operators",
+          "excerpt": "The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamil..."
+        }
+      ],
+      "limitations": [
+        "Grounded solely on currently ingested and indexed Knowledge Space records.",
+        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
+      ],
+      "id": "rep-1791025217747-v6cu",
+      "generatedAt": "2026-10-03T11:00:17.747Z"
     }
   ],
   "files": [
@@ -1064,6 +2145,766 @@
       "isPublicInWorkspace": true,
       "createdAt": "2026-09-22T11:00:00.000Z",
       "updatedAt": "2026-09-22T11:00:00.000Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "user-tony",
+      "originalName": "Arc_Reactor_Safety_Protocol.pdf",
+      "storageKey": "obj-2dada666a425-aa888fe2.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 98,
+      "extension": "pdf",
+      "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
+      "status": "ready",
+      "classId": "class-phys-301",
+      "description": "Official safety guidelines for toroidal arc containment.",
+      "tags": [
+        "Safety",
+        "Arc Reactor"
+      ],
+      "isPublicInWorkspace": true,
+      "id": "file-1791025188361-7g9yk",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T10:59:48.361Z",
+      "updatedAt": "2026-10-03T10:59:48.361Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "user-tony",
+      "originalName": "Toroidal_Field_Derivation.md",
+      "storageKey": "obj-7ad477b5e0cb-4f2747c0.md",
+      "mimeType": "text/markdown",
+      "sizeBytes": 339,
+      "extension": "md",
+      "sha256": "7ad477b5e0cbe12c66a4c561e484b6af0be599aab6fde8006b72c16e458cd482",
+      "status": "ready",
+      "knowledgeSpaceId": "ks-quantum",
+      "tags": [],
+      "isPublicInWorkspace": true,
+      "id": "file-1791025188365-508eu",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T10:59:48.365Z",
+      "updatedAt": "2026-10-03T10:59:48.369Z",
+      "knowledgeSourceId": "src-musa5jwv-5pr8"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "student-1",
+      "originalName": "Alex-Chen-QED-Lab-Report.md",
+      "storageKey": "obj-49a2d3c741a0-86755c7b.md",
+      "mimeType": "text/markdown",
+      "sizeBytes": 61,
+      "extension": "md",
+      "sha256": "49a2d3c741a09ea76978936cf25d512995ecc0d45c484f7e467409282725d2e4",
+      "status": "ready",
+      "classId": "class-phys-301",
+      "assignmentId": "asg-1791025217730-x27k",
+      "submissionId": "sub-student-1-asg-1791025217730-x27k",
+      "tags": [],
+      "isPublicInWorkspace": true,
+      "id": "file-1791025217732-9wev5",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T11:00:17.732Z",
+      "updatedAt": "2026-10-03T11:00:17.732Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "teacher-1",
+      "originalName": "Casimir-Force.md",
+      "storageKey": "obj-8db4b3e9139a-d0afd610.md",
+      "mimeType": "text/markdown",
+      "sizeBytes": 58,
+      "extension": "md",
+      "sha256": "8db4b3e9139afa5558d0f1dc8339980883307a005b55b55be90e86f36c88f2bd",
+      "status": "ready",
+      "researchProjectId": "proj-1791025217738-wlzu",
+      "tags": [],
+      "isPublicInWorkspace": true,
+      "id": "file-1791025217739-cj95p",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T11:00:17.739Z",
+      "updatedAt": "2026-10-03T11:00:17.739Z"
+    }
+  ],
+  "classroomSessions": [
+    {
+      "id": "session-seed-phys-1",
+      "sessionId": "session-seed-phys-1",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "teacherId": "teacher-1",
+      "title": "Quantum Electrodynamics & Wavefunction Collapse",
+      "status": "scheduled",
+      "boardState": {
+        "state": "waiting",
+        "currentTopic": "Quantum Mechanics Review & Unit 4 Preview",
+        "activeSlideIndex": 0,
+        "message": "Classroom session scheduled. Awaiting instructor live initiation.",
+        "updatedAt": "2026-10-02T10:00:00.000Z"
+      },
+      "activeStudentCount": 0,
+      "createdAt": "2026-10-02T10:00:00.000Z",
+      "updatedAt": "2026-10-02T10:00:00.000Z"
+    },
+    {
+      "id": "session-1791025210550-n16k7",
+      "sessionId": "session-1791025210550-n16k7",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "teacherId": "teacher-1",
+      "title": "PHYS-301: Wave Mechanics & Hilbert Spaces",
+      "status": "ended",
+      "boardState": {
+        "state": "ended",
+        "currentTopic": "Live Poll: Wavefunction Collapse Probability",
+        "activeSlideIndex": 0,
+        "message": "Classroom session concluded.",
+        "updatedAt": "2026-10-03T11:00:10.632Z"
+      },
+      "activeStudentCount": 0,
+      "createdAt": "2026-10-03T11:00:10.550Z",
+      "updatedAt": "2026-10-03T11:00:10.632Z",
+      "startedAt": "2026-10-03T11:00:10.563Z",
+      "endedAt": "2026-10-03T11:00:10.632Z"
+    },
+    {
+      "id": "session-1791025210735-hauli",
+      "sessionId": "session-1791025210735-hauli",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-math-240",
+      "teacherId": "teacher-1",
+      "title": "MATH-240 Differential Geometry Lecture",
+      "status": "ended",
+      "boardState": {
+        "state": "ended",
+        "currentTopic": "Stokes Theorem & Manifold Curvature",
+        "activeSlideIndex": 0,
+        "message": "Classroom session concluded.",
+        "updatedAt": "2026-10-03T11:00:10.741Z"
+      },
+      "startedAt": "2026-10-03T11:00:10.735Z",
+      "activeStudentCount": 0,
+      "createdAt": "2026-10-03T11:00:10.735Z",
+      "updatedAt": "2026-10-03T11:00:10.741Z",
+      "endedAt": "2026-10-03T11:00:10.741Z"
+    }
+  ],
+  "classroomParticipants": [
+    {
+      "id": "session-1791025210550-n16k7:student-1",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "student-1",
+      "displayName": "Alex Chen",
+      "joinedAt": "2026-10-03T11:00:10.588Z",
+      "lastSeenAt": "2026-10-03T11:00:10.634Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "alex.chen@stark.edu",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:student-2",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "student-2",
+      "displayName": "Maya Lin",
+      "joinedAt": "2026-10-03T11:00:10.591Z",
+      "lastSeenAt": "2026-10-03T11:00:10.635Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "maya.lin@stark.edu",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-1",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-1",
+      "displayName": "Cadet Unit 1",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.637Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-1@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-2",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-2",
+      "displayName": "Cadet Unit 2",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.639Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-2@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-3",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-3",
+      "displayName": "Cadet Unit 3",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.641Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-3@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-4",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-4",
+      "displayName": "Cadet Unit 4",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.642Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-4@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-5",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-5",
+      "displayName": "Cadet Unit 5",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.644Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-5@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-6",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-6",
+      "displayName": "Cadet Unit 6",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.645Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-6@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-7",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-7",
+      "displayName": "Cadet Unit 7",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.647Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-7@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-8",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-8",
+      "displayName": "Cadet Unit 8",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.649Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-8@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-9",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-9",
+      "displayName": "Cadet Unit 9",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.650Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-9@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-10",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-10",
+      "displayName": "Cadet Unit 10",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.652Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-10@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-11",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-11",
+      "displayName": "Cadet Unit 11",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.654Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-11@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-12",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-12",
+      "displayName": "Cadet Unit 12",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.656Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-12@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-13",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-13",
+      "displayName": "Cadet Unit 13",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.658Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-13@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-14",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-14",
+      "displayName": "Cadet Unit 14",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.661Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-14@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-15",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-15",
+      "displayName": "Cadet Unit 15",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.663Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-15@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-16",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-16",
+      "displayName": "Cadet Unit 16",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.665Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-16@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-17",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-17",
+      "displayName": "Cadet Unit 17",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.667Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-17@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-18",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-18",
+      "displayName": "Cadet Unit 18",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.670Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-18@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-19",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-19",
+      "displayName": "Cadet Unit 19",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.672Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-19@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-20",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-20",
+      "displayName": "Cadet Unit 20",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.674Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-20@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-21",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-21",
+      "displayName": "Cadet Unit 21",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.676Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-21@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-22",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-22",
+      "displayName": "Cadet Unit 22",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.679Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-22@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-23",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-23",
+      "displayName": "Cadet Unit 23",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.681Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-23@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-24",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-24",
+      "displayName": "Cadet Unit 24",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.684Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-24@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-25",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-25",
+      "displayName": "Cadet Unit 25",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.686Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-25@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-26",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-26",
+      "displayName": "Cadet Unit 26",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.691Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-26@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-27",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-27",
+      "displayName": "Cadet Unit 27",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.694Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-27@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-28",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-28",
+      "displayName": "Cadet Unit 28",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.703Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-28@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-29",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-29",
+      "displayName": "Cadet Unit 29",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.704Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-29@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-30",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-30",
+      "displayName": "Cadet Unit 30",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.705Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-30@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-31",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-31",
+      "displayName": "Cadet Unit 31",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.707Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-31@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-32",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-32",
+      "displayName": "Cadet Unit 32",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.708Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-32@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-33",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-33",
+      "displayName": "Cadet Unit 33",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.710Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-33@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-34",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-34",
+      "displayName": "Cadet Unit 34",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.712Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-34@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-35",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-35",
+      "displayName": "Cadet Unit 35",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.714Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-35@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-36",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-36",
+      "displayName": "Cadet Unit 36",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.715Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-36@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-37",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-37",
+      "displayName": "Cadet Unit 37",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.718Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-37@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-38",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-38",
+      "displayName": "Cadet Unit 38",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.719Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-38@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-39",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-39",
+      "displayName": "Cadet Unit 39",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.721Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-39@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-40",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-40",
+      "displayName": "Cadet Unit 40",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.723Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-40@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-41",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-41",
+      "displayName": "Cadet Unit 41",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.725Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-41@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791025210550-n16k7:sim-student-42",
+      "sessionId": "session-1791025210550-n16k7",
+      "studentId": "sim-student-42",
+      "displayName": "Cadet Unit 42",
+      "joinedAt": "2026-10-03T11:00:10.613Z",
+      "lastSeenAt": "2026-10-03T11:00:10.727Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-42@stark.local",
+        "role": "student"
+      }
     }
   ]
 }

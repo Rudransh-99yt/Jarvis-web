@@ -14,31 +14,50 @@ export class GeminiProvider implements AiProvider {
   readonly id = 'gemini';
   readonly name = 'Google Gemini (gemini-3.8-flash)';
   private client: GoogleGenAI | null = null;
+  private lastConfiguredKey: string = '';
+  private isKeyInvalid: boolean = false;
+  private quotaExhaustedUntil: number = 0;
 
   constructor() {
     this.initClient();
   }
 
   private initClient(): void {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey && apiKey.trim().length > 0) {
-      this.client = new GoogleGenAI({
-        apiKey: apiKey.trim(),
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build'
-          },
-          timeout: 30000
-        }
-      });
+    const rawKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
+    this.lastConfiguredKey = rawKey;
+
+    if (rawKey.length > 0 && !rawKey.startsWith('TODO') && !rawKey.startsWith('your-')) {
+      try {
+        this.client = new GoogleGenAI({
+          apiKey: rawKey,
+          httpOptions: {
+            headers: {
+              'User-Agent': 'aistudio-build'
+            },
+            timeout: 30000
+          }
+        });
+        this.isKeyInvalid = false;
+      } catch {
+        this.client = null;
+        this.isKeyInvalid = true;
+      }
     } else {
       this.client = null;
+      this.isKeyInvalid = false;
     }
   }
 
   isConfigured(): boolean {
-    if (!this.client && process.env.GEMINI_API_KEY) {
+    const currentKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
+    if (currentKey !== this.lastConfiguredKey) {
       this.initClient();
+    }
+    if (this.isKeyInvalid) {
+      return false;
+    }
+    if (this.quotaExhaustedUntil > 0 && Date.now() < this.quotaExhaustedUntil) {
+      return false;
     }
     return this.client !== null;
   }
@@ -118,7 +137,14 @@ export class GeminiProvider implements AiProvider {
         rawCandidateContent: response.candidates?.[0]?.content
       };
     } catch (err: any) {
-      const safeMessage = err?.message?.replace(/key=[^&\s]+/gi, 'key=[REDACTED]') || 'Gemini inference failed';
+      const errMsg = err?.message || '';
+      if (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID')) {
+        this.isKeyInvalid = true;
+      }
+      if (errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429')) {
+        this.quotaExhaustedUntil = Date.now() + 60000;
+      }
+      const safeMessage = errMsg.replace(/key=[^&\s]+/gi, 'key=[REDACTED]') || 'Gemini inference failed';
       throw new Error(`Gemini Provider Error: ${safeMessage}`);
     }
   }
@@ -179,7 +205,14 @@ export class GeminiProvider implements AiProvider {
       if (abortSignal?.aborted) {
         return { reply: fullReply, speechText: fullReply };
       }
-      const safeMessage = err?.message?.replace(/key=[^&\s]+/gi, 'key=[REDACTED]') || 'Gemini stream failed';
+      const errMsg = err?.message || '';
+      if (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID')) {
+        this.isKeyInvalid = true;
+      }
+      if (errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429')) {
+        this.quotaExhaustedUntil = Date.now() + 60000;
+      }
+      const safeMessage = errMsg.replace(/key=[^&\s]+/gi, 'key=[REDACTED]') || 'Gemini stream failed';
       throw new Error(`Gemini Provider Stream Error: ${safeMessage}`);
     }
   }

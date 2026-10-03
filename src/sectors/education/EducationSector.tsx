@@ -6,7 +6,8 @@ import { ClassesView } from './views/ClassesView.tsx';
 import { AssignmentsView } from './views/AssignmentsView.tsx';
 import { KnowledgeWorkspaceView } from './views/KnowledgeWorkspaceView.tsx';
 import { StudyAssistantView } from './views/StudyAssistantView.tsx';
-import { LayoutDashboard, BookOpen, FileCheck2, Sparkles, Brain, UserCheck, RefreshCw } from 'lucide-react';
+import { SmartClassroomView } from './views/SmartClassroomView.tsx';
+import { LayoutDashboard, BookOpen, FileCheck2, Sparkles, Brain, UserCheck, RefreshCw, Radio } from 'lucide-react';
 
 interface EducationSectorProps {
   currentRole: EducationRole;
@@ -14,7 +15,7 @@ interface EducationSectorProps {
   onSendChatMessage: (message: string, context?: any) => Promise<string>;
 }
 
-export type EducationTab = 'overview' | 'classes' | 'assignments' | 'knowledge' | 'study';
+export type EducationTab = 'overview' | 'classes' | 'assignments' | 'knowledge' | 'study' | 'classroom';
 
 export const EducationSector: React.FC<EducationSectorProps> = ({
   currentRole,
@@ -213,6 +214,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+    { id: 'classroom' as const, label: 'Smart Classroom', icon: Radio },
     { id: 'classes' as const, label: 'Classes & Syllabi', icon: BookOpen },
     { id: 'assignments' as const, label: 'Assignments', icon: FileCheck2 },
     { id: 'knowledge' as const, label: 'NotebookLM / Knowledge', icon: Sparkles },
@@ -302,6 +304,10 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             }}
           />
         )
+      )}
+
+      {activeTab === 'classroom' && (
+        <SmartClassroomView classes={classes} currentRole={currentRole} />
       )}
 
       {activeTab === 'classes' && (

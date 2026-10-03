@@ -164,7 +164,7 @@ export function FileUploadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-lg rounded-xl border border-cyan-500/30 bg-slate-950 p-6 shadow-2xl shadow-cyan-950/50 flex flex-col gap-4 text-slate-100">
+      <div className="relative w-full max-w-lg rounded-xl border border-cyan-500/30 bg-slate-950 p-6 shadow-2xl shadow-cyan-950/50 flex flex-col gap-4 text-slate-100 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
           <div className="flex items-center gap-2.5">

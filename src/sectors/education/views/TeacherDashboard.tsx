@@ -1,12 +1,12 @@
 import React from 'react';
 import type { EducationClass, Assignment, StudentSubmission } from '../../../types/education.ts';
-import { Users, BookOpen, PlusCircle, CheckCircle, Clock, Award, ChevronRight, FileSpreadsheet } from 'lucide-react';
+import { Users, BookOpen, PlusCircle, CheckCircle, Clock, Award, ChevronRight, FileSpreadsheet, Radio } from 'lucide-react';
 
 interface TeacherDashboardProps {
   classes: EducationClass[];
   assignments: Assignment[];
   submissions: StudentSubmission[];
-  onNavigateTab: (tab: 'classes' | 'assignments' | 'knowledge' | 'study') => void;
+  onNavigateTab: (tab: 'classes' | 'assignments' | 'knowledge' | 'study' | 'classroom') => void;
   onOpenCreateAssignmentModal: () => void;
   onSelectSubmissionForGrading: (submission: StudentSubmission) => void;
 }
@@ -40,13 +40,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={onOpenCreateAssignmentModal}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] self-start md:self-auto"
-          >
-            <PlusCircle className="w-4 h-4 text-cyan-400" />
-            CREATE NEW ASSIGNMENT
-          </button>
+          <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+            <button
+              onClick={() => onNavigateTab('classroom')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-emerald-400/40 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            >
+              <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+              START CLASSROOM
+            </button>
+            <button
+              onClick={onOpenCreateAssignmentModal}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+            >
+              <PlusCircle className="w-4 h-4 text-cyan-400" />
+              CREATE ASSIGNMENT
+            </button>
+          </div>
         </div>
       </div>
 

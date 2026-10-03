@@ -9,6 +9,7 @@ import type {
   IAuditRepository,
   IResearchRepository,
   IFileRepository,
+  IClassroomRepository,
   CreateMessageInput,
   MessageFilter
 } from './repository.ts';
@@ -31,7 +32,12 @@ import type {
   ResearchProjectStatus,
   ResearchQuestionStatus,
   FileRecord,
-  FileListFilter
+  FileListFilter,
+  ClassroomSession,
+  ClassroomParticipant,
+  ClassroomSessionStatus,
+  ParticipantConnectionStatus,
+  CreateClassroomSessionInput
 } from './types.ts';
 import type {
   EducationClass,
@@ -54,6 +60,7 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
   public audit: IAuditRepository;
   public research: IResearchRepository;
   public files: IFileRepository;
+  public classroom: IClassroomRepository;
 
   constructor() {
     this.state = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA));
@@ -1073,6 +1080,153 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
           file.downloadCount = (file.downloadCount || 0) + 1;
           file.updatedAt = new Date().toISOString();
         }
+      }
+    };
+
+    this.classroom = {
+      getSessionById: async (id: string, workspaceId?: string): Promise<ClassroomSession | null> => {
+        if (!this.state.classroomSessions) this.state.classroomSessions = [];
+        const session = this.state.classroomSessions.find(
+          (s) => (s.id === id || s.sessionId === id) && (!workspaceId || s.workspaceId === workspaceId)
+        );
+        return session ? { ...session } : null;
+      },
+
+      getActiveSessionForClass: async (classId: string, workspaceId?: string): Promise<ClassroomSession | null> => {
+        if (!this.state.classroomSessions) this.state.classroomSessions = [];
+        const activeSessions = this.state.classroomSessions.filter(
+          (s) => s.classId === classId && (s.status === 'live' || s.status === 'paused') && (!workspaceId || s.workspaceId === workspaceId)
+        );
+        if (activeSessions.length === 0) return null;
+        const live = activeSessions.slice().reverse().find((s) => s.status === 'live');
+        const session = live || activeSessions[activeSessions.length - 1];
+        return session ? { ...session } : null;
+      },
+
+      listSessions: async (classId?: string, workspaceId?: string, status?: ClassroomSessionStatus): Promise<ClassroomSession[]> => {
+        if (!this.state.classroomSessions) this.state.classroomSessions = [];
+        return this.state.classroomSessions
+          .filter((s) => {
+            if (classId && s.classId !== classId) return false;
+            if (workspaceId && s.workspaceId !== workspaceId) return false;
+            if (status && s.status !== status) return false;
+            return true;
+          })
+          .map((s) => ({ ...s }));
+      },
+
+      createSession: async (input: CreateClassroomSessionInput): Promise<ClassroomSession> => {
+        if (!this.state.classroomSessions) this.state.classroomSessions = [];
+        const id = input.id || `session-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const now = new Date().toISOString();
+        const session: ClassroomSession = {
+          id,
+          sessionId: id,
+          workspaceId: input.workspaceId,
+          classId: input.classId,
+          teacherId: input.teacherId,
+          title: input.title || `Classroom Session ${new Date().toLocaleDateString()}`,
+          status: input.status || 'scheduled',
+          boardState: {
+            state: input.boardState?.state || 'waiting',
+            currentTopic: input.boardState?.currentTopic || 'Session Initialized',
+            activeSlideIndex: input.boardState?.activeSlideIndex || 0,
+            message: input.boardState?.message || 'Smart board ready.',
+            updatedAt: now
+          },
+          startedAt: input.status === 'live' ? now : undefined,
+          activeStudentCount: 0,
+          createdAt: now,
+          updatedAt: now
+        };
+        this.state.classroomSessions.push(session);
+        return { ...session };
+      },
+
+      updateSession: async (id: string, updates: Partial<ClassroomSession>, workspaceId?: string): Promise<ClassroomSession | null> => {
+        if (!this.state.classroomSessions) this.state.classroomSessions = [];
+        const idx = this.state.classroomSessions.findIndex(
+          (s) => (s.id === id || s.sessionId === id) && (!workspaceId || s.workspaceId === workspaceId)
+        );
+        if (idx === -1) return null;
+        const now = new Date().toISOString();
+        this.state.classroomSessions[idx] = {
+          ...this.state.classroomSessions[idx],
+          ...updates,
+          updatedAt: now
+        };
+        return { ...this.state.classroomSessions[idx] };
+      },
+
+      deleteSession: async (id: string, workspaceId?: string): Promise<boolean> => {
+        if (!this.state.classroomSessions) return false;
+        const prevLen = this.state.classroomSessions.length;
+        this.state.classroomSessions = this.state.classroomSessions.filter(
+          (s) => !((s.id === id || s.sessionId === id) && (!workspaceId || s.workspaceId === workspaceId))
+        );
+        return this.state.classroomSessions.length < prevLen;
+      },
+
+      upsertParticipant: async (participant: ClassroomParticipant): Promise<ClassroomParticipant> => {
+        if (!this.state.classroomParticipants) this.state.classroomParticipants = [];
+        const compositeId = participant.id || `${participant.sessionId}:${participant.studentId}`;
+        const pRecord = { ...participant, id: compositeId };
+        const idx = this.state.classroomParticipants.findIndex(
+          (p) => p.sessionId === participant.sessionId && p.studentId === participant.studentId
+        );
+        if (idx !== -1) {
+          this.state.classroomParticipants[idx] = {
+            ...this.state.classroomParticipants[idx],
+            ...pRecord,
+            joinedAt: this.state.classroomParticipants[idx].joinedAt || pRecord.joinedAt
+          };
+          return { ...this.state.classroomParticipants[idx] };
+        } else {
+          this.state.classroomParticipants.push(pRecord);
+          return { ...pRecord };
+        }
+      },
+
+      getParticipant: async (sessionId: string, studentId: string): Promise<ClassroomParticipant | null> => {
+        if (!this.state.classroomParticipants) return null;
+        const p = this.state.classroomParticipants.find(
+          (item) => item.sessionId === sessionId && item.studentId === studentId
+        );
+        return p ? { ...p } : null;
+      },
+
+      listParticipants: async (sessionId: string, onlyConnected?: boolean): Promise<ClassroomParticipant[]> => {
+        if (!this.state.classroomParticipants) return [];
+        return this.state.classroomParticipants
+          .filter((p) => p.sessionId === sessionId && (!onlyConnected || p.connectionStatus === 'connected'))
+          .map((p) => ({ ...p }));
+      },
+
+      updateParticipantStatus: async (
+        sessionId: string,
+        studentId: string,
+        status: ParticipantConnectionStatus
+      ): Promise<ClassroomParticipant | null> => {
+        if (!this.state.classroomParticipants) return null;
+        const idx = this.state.classroomParticipants.findIndex(
+          (p) => p.sessionId === sessionId && p.studentId === studentId
+        );
+        if (idx === -1) return null;
+        this.state.classroomParticipants[idx] = {
+          ...this.state.classroomParticipants[idx],
+          connectionStatus: status,
+          lastSeenAt: new Date().toISOString()
+        };
+        return { ...this.state.classroomParticipants[idx] };
+      },
+
+      removeParticipant: async (sessionId: string, studentId: string): Promise<boolean> => {
+        if (!this.state.classroomParticipants) return false;
+        const prev = this.state.classroomParticipants.length;
+        this.state.classroomParticipants = this.state.classroomParticipants.filter(
+          (p) => !(p.sessionId === sessionId && p.studentId === studentId)
+        );
+        return this.state.classroomParticipants.length < prev;
       }
     };
   }

@@ -205,6 +205,22 @@ export interface IFileRepository {
   incrementDownloadCount(id: string): Promise<void>;
 }
 
+// Milestone 12: Smart Classroom Session & Presence Repository
+export interface IClassroomRepository {
+  getSessionById(id: string, workspaceId?: string): Promise<import('../../src/types/classroom.ts').ClassroomSession | null>;
+  getActiveSessionForClass(classId: string, workspaceId?: string): Promise<import('../../src/types/classroom.ts').ClassroomSession | null>;
+  listSessions(classId?: string, workspaceId?: string, status?: import('../../src/types/classroom.ts').ClassroomSessionStatus): Promise<import('../../src/types/classroom.ts').ClassroomSession[]>;
+  createSession(input: import('../../src/types/classroom.ts').CreateClassroomSessionInput): Promise<import('../../src/types/classroom.ts').ClassroomSession>;
+  updateSession(id: string, updates: Partial<import('../../src/types/classroom.ts').ClassroomSession>, workspaceId?: string): Promise<import('../../src/types/classroom.ts').ClassroomSession | null>;
+  deleteSession(id: string, workspaceId?: string): Promise<boolean>;
+
+  upsertParticipant(participant: import('../../src/types/classroom.ts').ClassroomParticipant): Promise<import('../../src/types/classroom.ts').ClassroomParticipant>;
+  getParticipant(sessionId: string, studentId: string): Promise<import('../../src/types/classroom.ts').ClassroomParticipant | null>;
+  listParticipants(sessionId: string, onlyConnected?: boolean): Promise<import('../../src/types/classroom.ts').ClassroomParticipant[]>;
+  updateParticipantStatus(sessionId: string, studentId: string, status: import('../../src/types/classroom.ts').ParticipantConnectionStatus): Promise<import('../../src/types/classroom.ts').ClassroomParticipant | null>;
+  removeParticipant(sessionId: string, studentId: string): Promise<boolean>;
+}
+
 export interface IJarvisDataRepository {
   readonly isPersistent: boolean;
   readonly storagePath?: string;
@@ -217,6 +233,7 @@ export interface IJarvisDataRepository {
   audit: IAuditRepository;
   research: IResearchRepository;
   files: IFileRepository;
+  classroom: IClassroomRepository;
 
   init(): Promise<void>;
   seed(force?: boolean): Promise<void>;

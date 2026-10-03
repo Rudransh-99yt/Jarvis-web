@@ -256,7 +256,7 @@ export const ProjectsOverviewView: React.FC<ProjectsOverviewViewProps> = ({
       {/* Create Project Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in font-mono">
-          <div className="relative w-full max-w-xl rounded-2xl border border-cyan-500/40 bg-slate-950 p-6 shadow-2xl">
+          <div className="relative w-full max-w-xl rounded-2xl border border-cyan-500/40 bg-slate-950 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-cyan-500/20">
               <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
                 <FlaskConical className="w-4 h-4" />

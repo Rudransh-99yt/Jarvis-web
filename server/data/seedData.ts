@@ -855,5 +855,27 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       createdAt: '2026-09-22T11:00:00.000Z',
       updatedAt: '2026-09-22T11:00:00.000Z'
     }
-  ]
+  ],
+  classroomSessions: [
+    {
+      id: 'session-seed-phys-1',
+      sessionId: 'session-seed-phys-1',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      teacherId: 'teacher-1',
+      title: 'Quantum Electrodynamics & Wavefunction Collapse',
+      status: 'scheduled',
+      boardState: {
+        state: 'waiting',
+        currentTopic: 'Quantum Mechanics Review & Unit 4 Preview',
+        activeSlideIndex: 0,
+        message: 'Classroom session scheduled. Awaiting instructor live initiation.',
+        updatedAt: '2026-10-02T10:00:00.000Z'
+      },
+      activeStudentCount: 0,
+      createdAt: '2026-10-02T10:00:00.000Z',
+      updatedAt: '2026-10-02T10:00:00.000Z'
+    }
+  ],
+  classroomParticipants: []
 };

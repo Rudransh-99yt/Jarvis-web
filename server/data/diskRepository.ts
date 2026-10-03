@@ -10,6 +10,7 @@ import type {
   IAuditRepository,
   IResearchRepository,
   IFileRepository,
+  IClassroomRepository,
   CreateMessageInput,
   MessageFilter
 } from './repository.ts';
@@ -31,7 +32,12 @@ import type {
   ResearchProjectStatus,
   ResearchQuestionStatus,
   FileRecord,
-  FileListFilter
+  FileListFilter,
+  ClassroomSession,
+  ClassroomParticipant,
+  ClassroomSessionStatus,
+  ParticipantConnectionStatus,
+  CreateClassroomSessionInput
 } from './types.ts';
 import type {
   EducationClass,
@@ -55,6 +61,7 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
   public audit: IAuditRepository;
   public research: IResearchRepository;
   public files: IFileRepository;
+  public classroom: IClassroomRepository;
 
   constructor(filePath?: string) {
     this.store = new JsonFileStore({ filePath });
@@ -1203,6 +1210,184 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
         });
       }
     };
+
+    this.classroom = {
+      getSessionById: async (id: string, workspaceId?: string): Promise<ClassroomSession | null> => {
+        const state = this.store.getState();
+        const session = (state.classroomSessions || []).find(
+          (s) => (s.id === id || s.sessionId === id) && (!workspaceId || s.workspaceId === workspaceId)
+        );
+        return session ? JSON.parse(JSON.stringify(session)) : null;
+      },
+
+      getActiveSessionForClass: async (classId: string, workspaceId?: string): Promise<ClassroomSession | null> => {
+        const state = this.store.getState();
+        const activeSessions = (state.classroomSessions || []).filter(
+          (s) => s.classId === classId && (s.status === 'live' || s.status === 'paused') && (!workspaceId || s.workspaceId === workspaceId)
+        );
+        if (activeSessions.length === 0) return null;
+        const live = activeSessions.slice().reverse().find((s) => s.status === 'live');
+        const session = live || activeSessions[activeSessions.length - 1];
+        return session ? JSON.parse(JSON.stringify(session)) : null;
+      },
+
+      listSessions: async (classId?: string, workspaceId?: string, status?: ClassroomSessionStatus): Promise<ClassroomSession[]> => {
+        const state = this.store.getState();
+        return (state.classroomSessions || [])
+          .filter((s) => {
+            if (classId && s.classId !== classId) return false;
+            if (workspaceId && s.workspaceId !== workspaceId) return false;
+            if (status && s.status !== status) return false;
+            return true;
+          })
+          .map((s) => JSON.parse(JSON.stringify(s)));
+      },
+
+      createSession: async (input: CreateClassroomSessionInput): Promise<ClassroomSession> => {
+        const id = input.id || `session-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const now = new Date().toISOString();
+        const session: ClassroomSession = {
+          id,
+          sessionId: id,
+          workspaceId: input.workspaceId,
+          classId: input.classId,
+          teacherId: input.teacherId,
+          title: input.title || `Classroom Session ${new Date().toLocaleDateString()}`,
+          status: input.status || 'scheduled',
+          boardState: {
+            state: input.boardState?.state || 'waiting',
+            currentTopic: input.boardState?.currentTopic || 'Session Initialized',
+            activeSlideIndex: input.boardState?.activeSlideIndex || 0,
+            message: input.boardState?.message || 'Smart board ready.',
+            updatedAt: now
+          },
+          startedAt: input.status === 'live' ? now : undefined,
+          activeStudentCount: 0,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        this.store.mutate((st) => {
+          if (!st.classroomSessions) st.classroomSessions = [];
+          st.classroomSessions.push(JSON.parse(JSON.stringify(session)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(session));
+      },
+
+      updateSession: async (id: string, updates: Partial<ClassroomSession>, workspaceId?: string): Promise<ClassroomSession | null> => {
+        let updated: ClassroomSession | null = null;
+        this.store.mutate((st) => {
+          if (!st.classroomSessions) st.classroomSessions = [];
+          const idx = st.classroomSessions.findIndex(
+            (s) => (s.id === id || s.sessionId === id) && (!workspaceId || s.workspaceId === workspaceId)
+          );
+          if (idx !== -1) {
+            st.classroomSessions[idx] = {
+              ...st.classroomSessions[idx],
+              ...updates,
+              updatedAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.classroomSessions[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+
+      deleteSession: async (id: string, workspaceId?: string): Promise<boolean> => {
+        let deleted = false;
+        this.store.mutate((st) => {
+          if (!st.classroomSessions) return;
+          const prev = st.classroomSessions.length;
+          st.classroomSessions = st.classroomSessions.filter(
+            (s) => !((s.id === id || s.sessionId === id) && (!workspaceId || s.workspaceId === workspaceId))
+          );
+          deleted = st.classroomSessions.length < prev;
+        });
+        if (deleted) await this.store.flush();
+        return deleted;
+      },
+
+      upsertParticipant: async (participant: ClassroomParticipant): Promise<ClassroomParticipant> => {
+        let result: ClassroomParticipant;
+        const compositeId = participant.id || `${participant.sessionId}:${participant.studentId}`;
+        const record = { ...participant, id: compositeId };
+
+        this.store.mutate((st) => {
+          if (!st.classroomParticipants) st.classroomParticipants = [];
+          const idx = st.classroomParticipants.findIndex(
+            (p) => p.sessionId === participant.sessionId && p.studentId === participant.studentId
+          );
+          if (idx !== -1) {
+            st.classroomParticipants[idx] = {
+              ...st.classroomParticipants[idx],
+              ...record,
+              joinedAt: st.classroomParticipants[idx].joinedAt || record.joinedAt
+            };
+            result = JSON.parse(JSON.stringify(st.classroomParticipants[idx]));
+          } else {
+            st.classroomParticipants.push(JSON.parse(JSON.stringify(record)));
+            result = JSON.parse(JSON.stringify(record));
+          }
+        });
+        await this.store.flush();
+        return result!;
+      },
+
+      getParticipant: async (sessionId: string, studentId: string): Promise<ClassroomParticipant | null> => {
+        const state = this.store.getState();
+        const p = (state.classroomParticipants || []).find(
+          (item) => item.sessionId === sessionId && item.studentId === studentId
+        );
+        return p ? JSON.parse(JSON.stringify(p)) : null;
+      },
+
+      listParticipants: async (sessionId: string, onlyConnected?: boolean): Promise<ClassroomParticipant[]> => {
+        const state = this.store.getState();
+        return (state.classroomParticipants || [])
+          .filter((p) => p.sessionId === sessionId && (!onlyConnected || p.connectionStatus === 'connected'))
+          .map((p) => JSON.parse(JSON.stringify(p)));
+      },
+
+      updateParticipantStatus: async (
+        sessionId: string,
+        studentId: string,
+        status: ParticipantConnectionStatus
+      ): Promise<ClassroomParticipant | null> => {
+        let updated: ClassroomParticipant | null = null;
+        this.store.mutate((st) => {
+          if (!st.classroomParticipants) return;
+          const idx = st.classroomParticipants.findIndex(
+            (p) => p.sessionId === sessionId && p.studentId === studentId
+          );
+          if (idx !== -1) {
+            st.classroomParticipants[idx] = {
+              ...st.classroomParticipants[idx],
+              connectionStatus: status,
+              lastSeenAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.classroomParticipants[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+
+      removeParticipant: async (sessionId: string, studentId: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.classroomParticipants) return;
+          const prev = st.classroomParticipants.length;
+          st.classroomParticipants = st.classroomParticipants.filter(
+            (p) => !(p.sessionId === sessionId && p.studentId === studentId)
+          );
+          removed = st.classroomParticipants.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      }
+    };
   }
 
   get storagePath(): string {
@@ -1238,6 +1423,14 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
     if (!state.files || state.files.length === 0) {
       this.store.mutate((st) => {
         st.files = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.files || []));
+      });
+      await this.store.flush();
+    }
+    // Seed classroom session data if not present in existing database
+    if (!state.classroomSessions || state.classroomSessions.length === 0) {
+      this.store.mutate((st) => {
+        st.classroomSessions = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.classroomSessions || []));
+        st.classroomParticipants = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.classroomParticipants || []));
       });
       await this.store.flush();
     }

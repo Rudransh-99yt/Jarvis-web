@@ -22,6 +22,7 @@ export interface ToolExecutionContext {
   sector?: string;
   userId?: string;
   role?: string;
+  workspaceId?: string;
 }
 
 export interface ValidationSuccess<T = Record<string, unknown>> {

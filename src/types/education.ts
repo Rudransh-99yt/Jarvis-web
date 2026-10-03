@@ -175,3 +175,6 @@ export interface MessagingNotification {
   timestamp: string;
 }
 
+// Milestone 12: Smart Classroom Foundation Re-export
+export * from './classroom.ts';
+

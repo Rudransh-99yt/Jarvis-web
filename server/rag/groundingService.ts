@@ -124,7 +124,7 @@ export class GroundingService {
           retrievedChunksCount: retrievedChunks.length,
           sourcesUsed,
           timestamp,
-          modelUsed: 'gemini-3.7-flash'
+          modelUsed: 'gemini-3.8-flash'
         };
       } catch (err) {
         console.warn('[GroundingService] Gemini synthesis error, falling back to local synthesizer:', err);

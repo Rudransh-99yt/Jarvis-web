@@ -2,5 +2,6 @@
   "name": "J.A.R.V.I.S. Web",
   "description": "Futuristic cybernetic AI HUD interface and voice assistant inspired by Stark Industries J.A.R.V.I.S., featuring interactive holographic telemetry, arc reactor core, voice recognition, and diagnostic protocols.",
   "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"],
   "permissions": []
 }

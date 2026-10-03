@@ -228,7 +228,7 @@ export const ClassMessagingDeck: React.FC<ClassMessagingDeckProps> = ({
   };
 
   return (
-    <div className="rounded-xl border border-cyan-500/25 bg-black/60 backdrop-blur-md overflow-hidden shadow-2xl flex flex-col h-[640px]">
+    <div className="rounded-xl border border-cyan-500/25 bg-black/60 backdrop-blur-md overflow-hidden shadow-2xl flex flex-col min-h-[460px] h-[560px] md:h-[640px]">
       {/* 1. Header Tactical Bar */}
       <div className="p-4 border-b border-cyan-500/20 bg-gradient-to-r from-cyan-950/40 via-black to-slate-950 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">

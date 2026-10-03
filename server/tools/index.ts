@@ -86,6 +86,12 @@ toolRegistry.register(getFileTool);
 toolRegistry.register(deleteFileTool);
 toolRegistry.register(ingestFileTool);
 
+// 6. Register Smart Classroom Tools (Milestone 12)
+import { CLASSROOM_TOOLS } from '../sectors/education/classroomTools.ts';
+for (const tool of CLASSROOM_TOOLS) {
+  toolRegistry.register(tool);
+}
+
 console.log(`[ToolRegistry] Initialized with ${toolRegistry.list().length} registered tools across sectors: ${toolRegistry.list().map(t => t.name).join(', ')}`);
 
 export * from './types.ts';
@@ -97,6 +103,7 @@ export * from './telemetry.ts';
 export * from './ragTools.ts';
 export * from '../sectors/education/tools.ts';
 export * from '../sectors/education/messagingTools.ts';
+export * from '../sectors/education/classroomTools.ts';
 export * from '../sectors/research/tools.ts';
 export * from '../storage/tools.ts';
 export { serverProtocolStore };

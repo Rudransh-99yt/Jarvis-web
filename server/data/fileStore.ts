@@ -60,7 +60,9 @@ export class JsonFileStore {
             evidenceRecords: Array.isArray(parsed.evidenceRecords) && parsed.evidenceRecords.length > 0 ? parsed.evidenceRecords : (INITIAL_DATABASE_SCHEMA.evidenceRecords || []),
             researchNotes: Array.isArray(parsed.researchNotes) && parsed.researchNotes.length > 0 ? parsed.researchNotes : (INITIAL_DATABASE_SCHEMA.researchNotes || []),
             researchReports: Array.isArray(parsed.researchReports) && parsed.researchReports.length > 0 ? parsed.researchReports : (INITIAL_DATABASE_SCHEMA.researchReports || []),
-            files: Array.isArray(parsed.files) && parsed.files.length > 0 ? parsed.files : (INITIAL_DATABASE_SCHEMA.files || [])
+            files: Array.isArray(parsed.files) && parsed.files.length > 0 ? parsed.files : (INITIAL_DATABASE_SCHEMA.files || []),
+            classroomSessions: Array.isArray(parsed.classroomSessions) && parsed.classroomSessions.length > 0 ? parsed.classroomSessions : (INITIAL_DATABASE_SCHEMA.classroomSessions || []),
+            classroomParticipants: Array.isArray(parsed.classroomParticipants) ? parsed.classroomParticipants : []
           };
           return;
         }

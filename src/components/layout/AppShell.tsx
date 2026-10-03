@@ -97,7 +97,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   const activeSectorDef = sectors.find((s) => s.id === currentSector) || sectors[0];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="h-screen h-[100dvh] bg-slate-950 text-slate-100 flex flex-col overflow-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Background Cyber Ambient Glows */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-900/10 rounded-full blur-[140px]" />
@@ -105,8 +105,8 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div className="absolute bottom-[-10%] left-[30%] w-[30%] h-[30%] bg-indigo-900/10 rounded-full blur-[120px]" />
       </div>
 
-      {/* Main Top Header Navigation Bar */}
-      <header className="sticky top-0 z-40 border-b border-cyan-500/20 bg-black/75 backdrop-blur-xl">
+      {/* Main Top Header Navigation Bar (Fixed at top) */}
+      <header className="shrink-0 z-40 border-b border-cyan-500/20 bg-black/85 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Left: Brand Identity */}
@@ -242,20 +242,23 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
       </header>
 
-      {/* Main App Content Viewport */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        {children}
-      </main>
+      {/* Scrollable Application Content Region */}
+      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col overscroll-contain">
+        {/* Main App Content Viewport */}
+        <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 relative z-10 min-h-0">
+          {children}
+        </main>
 
-      {/* Footer Bar */}
-      <footer className="border-t border-cyan-500/10 bg-black/60 py-4 text-center text-xs font-mono text-cyan-400/40 backdrop-blur-sm relative z-10">
-        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div>JARVIS MULTI-SECTOR INTELLIGENT PLATFORM // STARK ENTERPRISES</div>
-          <div className="text-[11px] text-cyan-400/60">
-            Active Core: <strong className="text-cyan-300">{activeSectorDef.name.toUpperCase()}</strong> • Gemini 3.8 Flash Streaming
+        {/* Footer Bar */}
+        <footer className="shrink-0 border-t border-cyan-500/10 bg-black/60 py-4 text-center text-xs font-mono text-cyan-400/40 backdrop-blur-sm relative z-10">
+          <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>JARVIS MULTI-SECTOR INTELLIGENT PLATFORM // STARK ENTERPRISES</div>
+            <div className="text-[11px] text-cyan-400/60">
+              Active Core: <strong className="text-cyan-300">{activeSectorDef.name.toUpperCase()}</strong> • Gemini 3.8 Flash Streaming
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 };

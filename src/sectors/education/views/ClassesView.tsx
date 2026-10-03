@@ -70,9 +70,9 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ classes, currentRole }
       )}
 
       {/* Main Grid: Class Selector & Detail View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
         {/* Left Column (4 cols): Course List */}
-        <div className="space-y-3 lg:col-span-4">
+        <div className="space-y-3 lg:col-span-4 min-w-0">
           <h2 className="text-xs font-mono tracking-widest text-cyan-400 font-bold uppercase px-1">
             Available Courses ({classes.length})
           </h2>
@@ -107,7 +107,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ classes, currentRole }
 
         {/* Right Column (8 cols): Selected Course Detail */}
         {selectedClass && (
-          <div className="space-y-6 lg:col-span-8">
+          <div className="space-y-6 lg:col-span-8 min-w-0">
             {/* Course Summary Card */}
             <div className="p-6 rounded-xl border border-cyan-500/20 bg-black/40 backdrop-blur-sm space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-500/10 pb-4">
