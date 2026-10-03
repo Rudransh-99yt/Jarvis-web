@@ -1,0 +1,517 @@
+{
+  "version": 1,
+  "users": [
+    {
+      "id": "user-tony",
+      "displayName": "Tony Stark",
+      "email": "tony@starkindustries.com",
+      "role": "commander",
+      "department": "Executive Engineering & Defense",
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "teacher-1",
+      "displayName": "Dr. Sarah",
+      "email": "sarah.quantum@stark.edu",
+      "role": "teacher",
+      "department": "Theoretical Physics & Applied Mathematics",
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "student-1",
+      "displayName": "Alex Chen",
+      "email": "alex.chen@stark.edu",
+      "role": "student",
+      "department": "Autonomous Robotics & Quantum Systems",
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "student-2",
+      "displayName": "Maya Lin",
+      "email": "maya.lin@stark.edu",
+      "role": "student",
+      "department": "Applied Mathematics",
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    }
+  ],
+  "workspaces": [
+    {
+      "id": "ws-stark-core",
+      "name": "Stark Industries Master Workspace",
+      "description": "Primary sovereign intelligent operating environment for tactical operations, academic research, and cybernetics.",
+      "ownerId": "user-tony",
+      "activeSectors": [
+        "command",
+        "education",
+        "research",
+        "finance",
+        "home"
+      ],
+      "createdAt": "2026-09-01T08:00:00.000Z",
+      "updatedAt": "2026-10-02T12:00:00.000Z"
+    }
+  ],
+  "memberships": [
+    {
+      "id": "mem-1",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "role": "owner",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-2",
+      "workspaceId": "ws-stark-core",
+      "userId": "teacher-1",
+      "role": "admin",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-3",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-1",
+      "role": "member",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-4",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-2",
+      "role": "member",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv-init-1",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Initial System Handshake & Status Review",
+      "sector": "command",
+      "createdAt": "2026-10-02T08:00:00.000Z",
+      "updatedAt": "2026-10-02T08:00:05.000Z",
+      "messageCount": 2
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-seed-1",
+      "conversationId": "conv-init-1",
+      "role": "system",
+      "content": "J.A.R.V.I.S. neural interface initialized. Core telemetry and sector bridges online.",
+      "timestamp": "2026-10-02T08:00:00.000Z"
+    },
+    {
+      "id": "msg-seed-2",
+      "conversationId": "conv-init-1",
+      "role": "assistant",
+      "content": "At your service, sir. All multi-sector data repositories and persistent bridges are fully initialized and nominal.",
+      "timestamp": "2026-10-02T08:00:05.000Z"
+    }
+  ],
+  "knowledgeSpaces": [
+    {
+      "id": "ks-quantum",
+      "workspaceId": "ws-stark-core",
+      "name": "Quantum Mechanics & Electrodynamics",
+      "description": "Grounded theoretical physics repository covering Schrödinger dynamics, operator algebra, and electromagnetic quantization.",
+      "category": "Physics & Engineering",
+      "ownerId": "teacher-1",
+      "classId": "class-phys-301",
+      "tags": [
+        "Quantum",
+        "Physics",
+        "Hamiltonian",
+        "Schrödinger"
+      ],
+      "suggestedQuestions": [
+        "How are creation and annihilation operators derived for harmonic oscillators?",
+        "What is the physical interpretation of the wave function collapse?",
+        "Explain the quantization of electromagnetic vector potentials."
+      ],
+      "createdAt": "2026-09-10T10:00:00.000Z",
+      "updatedAt": "2026-10-01T15:30:00.000Z"
+    },
+    {
+      "id": "ks-calculus",
+      "workspaceId": "ws-stark-core",
+      "name": "Multivariable Calculus & Differential Geometry",
+      "description": "Rigorous vector field theorems, differential forms, flux integrals, and curvature manifolds.",
+      "category": "Mathematics",
+      "ownerId": "teacher-1",
+      "classId": "class-math-240",
+      "tags": [
+        "Calculus",
+        "Stokes",
+        "Differential Forms",
+        "Integrals"
+      ],
+      "suggestedQuestions": [
+        "State Stokes Theorem and give its geometric intuition.",
+        "How do differential forms generalize line and surface integrals?",
+        "What is the relation between Green Theorem and the Divergence Theorem?"
+      ],
+      "createdAt": "2026-09-12T11:00:00.000Z",
+      "updatedAt": "2026-09-28T09:15:00.000Z"
+    }
+  ],
+  "knowledgeSources": [
+    {
+      "id": "src-qm-1",
+      "workspaceId": "ws-stark-core",
+      "knowledgeSpaceId": "ks-quantum",
+      "name": "Quantum Harmonic Oscillator & Ladder Operators",
+      "type": "notes",
+      "mimeType": "text/markdown",
+      "size": "2.4 MB",
+      "sizeBytes": 2516582,
+      "status": "ready",
+      "author": "Dr. Sarah",
+      "summary": "Algebraic treatment of the 1D quantum harmonic oscillator using lowering (a) and raising (a-dagger) operators.",
+      "fullText": "The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). The number operator N = a_dagger a has eigenstates |n> with eigenvalues n = 0, 1, 2, ... Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.",
+      "tokenCount": 420,
+      "createdAt": "2026-09-15T12:00:00.000Z",
+      "updatedAt": "2026-09-15T12:00:00.000Z"
+    },
+    {
+      "id": "src-qm-2",
+      "workspaceId": "ws-stark-core",
+      "knowledgeSpaceId": "ks-quantum",
+      "name": "Schrödinger Wave Equation & Wave Mechanics",
+      "type": "pdf",
+      "mimeType": "application/pdf",
+      "size": "3.8 MB",
+      "sizeBytes": 3984588,
+      "status": "ready",
+      "author": "Stark Physics Archive",
+      "summary": "Time-dependent and time-independent Schrödinger equations, probability density conservation, and Hermitian operators.",
+      "fullText": "The time-dependent Schrödinger equation i hbar d/dt Psi(x,t) = H Psi(x,t) governs the deterministic evolution of non-relativistic state vectors. For time-independent potentials, separation of variables yields H psi_n(x) = E_n psi_n(x). The Born rule dictates that |Psi(x,t)|^2 represents probability density, satisfying the continuity equation d rho / dt + div J = 0 where J is the probability current vector. Wave function collapse occurs upon projective measurement by Hermitian observables.",
+      "tokenCount": 510,
+      "createdAt": "2026-09-18T14:00:00.000Z",
+      "updatedAt": "2026-09-18T14:00:00.000Z"
+    },
+    {
+      "id": "src-calc-1",
+      "workspaceId": "ws-stark-core",
+      "knowledgeSpaceId": "ks-calculus",
+      "name": "Stokes Theorem & Surface Integrals Guide",
+      "type": "pdf",
+      "mimeType": "application/pdf",
+      "size": "1.9 MB",
+      "sizeBytes": 1992294,
+      "status": "ready",
+      "author": "Dr. Sarah",
+      "summary": "Unified formulation of generalized Stokes theorem on oriented smooth manifolds and vector field curl relations.",
+      "fullText": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.",
+      "tokenCount": 460,
+      "createdAt": "2026-09-20T16:00:00.000Z",
+      "updatedAt": "2026-09-20T16:00:00.000Z"
+    }
+  ],
+  "classes": [
+    {
+      "id": "class-phys-301",
+      "code": "PHYS-301",
+      "name": "Advanced Quantum & Electrodynamics",
+      "description": "Foundations of non-relativistic quantum mechanics, Schrödinger equation, wave mechanics, and electromagnetic field quantization.",
+      "instructorId": "teacher-1",
+      "instructorName": "Dr. Sarah (Lead Physicist)",
+      "term": "Fall 2026",
+      "schedule": "Mon / Wed 10:00 AM - 11:30 AM",
+      "room": "Stark Tower Lab 4A",
+      "studentIds": [
+        "student-1",
+        "student-2"
+      ],
+      "studentCount": 2,
+      "materialsCount": 3,
+      "assignmentsCount": 3,
+      "announcements": [
+        {
+          "id": "ann-1",
+          "title": "Quantum Oscillator Problem Set Released",
+          "content": "Problem Set 3 is now available. Focus on ladder operator derivations in section 4.",
+          "date": "2026-10-01",
+          "author": "Dr. Sarah"
+        },
+        {
+          "id": "ann-2",
+          "title": "Lab Session Rescheduled",
+          "content": "Wednesday magnetic levitation lab will start at 10:30 AM due to particle accelerator calibration.",
+          "date": "2026-09-28",
+          "author": "Dr. Sarah"
+        }
+      ],
+      "materials": [
+        {
+          "id": "mat-1",
+          "title": "Lecture 04: Harmonic Oscillators & Creation Operators.pdf",
+          "type": "pdf",
+          "size": "3.4 MB",
+          "uploadedAt": "2026-09-24"
+        },
+        {
+          "id": "mat-2",
+          "title": "Maxwell-Dirac Interaction Formulary.pdf",
+          "type": "pdf",
+          "size": "1.8 MB",
+          "uploadedAt": "2026-09-20"
+        },
+        {
+          "id": "mat-3",
+          "title": "Quantum Telemetry Reference Data.dataset",
+          "type": "dataset",
+          "size": "520 KB",
+          "uploadedAt": "2026-09-18"
+        }
+      ]
+    },
+    {
+      "id": "class-math-240",
+      "code": "MATH-240",
+      "name": "Multivariable Calculus & Differential Forms",
+      "description": "Vector calculus, line and surface integrals, Green theorem, Stokes theorem, and the divergence theorem.",
+      "instructorId": "teacher-1",
+      "instructorName": "Dr. Sarah",
+      "term": "Fall 2026",
+      "schedule": "Tue / Thu 01:00 PM - 02:30 PM",
+      "room": "Main Campus Hall B",
+      "studentIds": [
+        "student-1",
+        "student-2"
+      ],
+      "studentCount": 2,
+      "materialsCount": 2,
+      "assignmentsCount": 1,
+      "announcements": [
+        {
+          "id": "ann-3",
+          "title": "Stokes Theorem Visualizer Notes",
+          "content": "Review the circulation-flux duality notes before recitations.",
+          "date": "2026-09-30",
+          "author": "Dr. Sarah"
+        }
+      ],
+      "materials": [
+        {
+          "id": "mat-4",
+          "title": "Vector Field Curvature & Curl Manual.pdf",
+          "type": "pdf",
+          "size": "2.1 MB",
+          "uploadedAt": "2026-09-22"
+        },
+        {
+          "id": "mat-5",
+          "title": "Differential Forms & Stokes Theorem Guide.notes",
+          "type": "notes",
+          "size": "410 KB",
+          "uploadedAt": "2026-09-26"
+        }
+      ]
+    },
+    {
+      "id": "class-cs-420",
+      "code": "CS-420",
+      "name": "Autonomous AI & Neural Architecture",
+      "description": "Transformer models, multi-agent reinforcement learning, attention mechanisms, and tool orchestration in intelligent operating systems.",
+      "instructorId": "teacher-1",
+      "instructorName": "Dr. Sarah",
+      "term": "Fall 2026",
+      "schedule": "Mon / Fri 02:00 PM - 03:30 PM",
+      "room": "Stark Cybernetics Wing 2",
+      "studentIds": [
+        "student-1"
+      ],
+      "studentCount": 1,
+      "materialsCount": 1,
+      "assignmentsCount": 1,
+      "announcements": [
+        {
+          "id": "ann-4",
+          "title": "Agent Tool Invocation Rubric",
+          "content": "Benchmark test vectors for custom tool execution loops are now published.",
+          "date": "2026-10-02",
+          "author": "Dr. Sarah"
+        }
+      ],
+      "materials": [
+        {
+          "id": "mat-6",
+          "title": "Attention Mechanism & Tensor Worksheets.pdf",
+          "type": "pdf",
+          "size": "4.1 MB",
+          "uploadedAt": "2026-09-28"
+        }
+      ]
+    },
+    {
+      "id": "class-eng-510",
+      "code": "ENG-510",
+      "name": "Orbital Dynamics & Hypersonic Propulsion",
+      "description": "Keplerian orbital mechanics, gravitational assist trajectories, hypersonic thermal dissipation, and sub-orbital entry vectors.",
+      "instructorId": "teacher-1",
+      "instructorName": "Dr. Sarah",
+      "term": "Fall 2026",
+      "schedule": "Wed / Fri 04:00 PM - 05:30 PM",
+      "room": "Aero-Astro Center Hangar 7",
+      "studentIds": [
+        "student-1",
+        "student-2"
+      ],
+      "studentCount": 2,
+      "materialsCount": 1,
+      "assignmentsCount": 0,
+      "announcements": [],
+      "materials": [
+        {
+          "id": "mat-7",
+          "title": "Hohmann Transfer Trajectory Formulations.pdf",
+          "type": "pdf",
+          "size": "2.8 MB",
+          "uploadedAt": "2026-09-27"
+        }
+      ]
+    }
+  ],
+  "assignments": [
+    {
+      "id": "asg-101",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum",
+      "title": "Quantum Harmonic Oscillator Problem Set",
+      "description": "Derive stationary state energies using ladder operators and compute wave function probability densities for n=0,1,2.",
+      "instructions": "1. Write the Hamiltonian in terms of a and a-dagger.\n2. Prove the commutator [a, a^dagger] = 1.\n3. Compute expectation values of position and momentum.\n4. Attach numerical derivations or handwritten PDF scan.",
+      "assignedDate": "2026-10-01",
+      "dueDate": "2026-10-12",
+      "maxScore": 100,
+      "category": "Worksheet",
+      "teacherId": "teacher-1",
+      "totalEnrolled": 2,
+      "submittedCount": 1,
+      "gradedCount": 1,
+      "attachments": [
+        {
+          "id": "att-1",
+          "name": "Oscillator_Problem_Set_3.pdf",
+          "type": "pdf",
+          "size": "1.2 MB"
+        }
+      ]
+    },
+    {
+      "id": "asg-102",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum",
+      "title": "Maxwell Equations & Vector Fields Lab Report",
+      "description": "Synthesize simulation data of oscillating dipole radiation and analyze Poynting vector flux through spherical boundary.",
+      "instructions": "Submit a 3-page lab report with graphs of energy density, radiation resistance calculation, and error analysis.",
+      "assignedDate": "2026-10-02",
+      "dueDate": "2026-10-18",
+      "maxScore": 100,
+      "category": "Lab Report",
+      "teacherId": "teacher-1",
+      "totalEnrolled": 2,
+      "submittedCount": 0,
+      "gradedCount": 0,
+      "attachments": [
+        {
+          "id": "att-2",
+          "name": "Dipole_Radiation_Lab_Rubric.pdf",
+          "type": "pdf",
+          "size": "850 KB"
+        }
+      ]
+    },
+    {
+      "id": "asg-103",
+      "classId": "class-math-240",
+      "className": "MATH-240: Multivariable Calculus",
+      "title": "Stokes Theorem & Surface Integrals Practice",
+      "description": "Verify Stokes theorem for parabolic vector fields over hemispherical surfaces bounded by unit circle.",
+      "instructions": "Solve problems 1 through 8 from chapter 16. Show step-by-step surface parameterization.",
+      "assignedDate": "2026-09-28",
+      "dueDate": "2026-10-09",
+      "maxScore": 50,
+      "category": "Worksheet",
+      "teacherId": "teacher-1",
+      "totalEnrolled": 2,
+      "submittedCount": 1,
+      "gradedCount": 0
+    },
+    {
+      "id": "asg-104",
+      "classId": "class-cs-420",
+      "className": "CS-420: Autonomous AI & Neural Architecture",
+      "title": "Multi-Agent Tool Orchestration Benchmark",
+      "description": "Implement a bounded tool-calling loop that handles function declarations, error fallbacks, and multi-round verification.",
+      "instructions": "1. Configure tool declarations matching OpenAPI schemas.\n2. Implement retry logic and fallback provider routing.\n3. Verify token usage and rate limits.",
+      "assignedDate": "2026-10-02",
+      "dueDate": "2026-10-22",
+      "maxScore": 100,
+      "category": "Project",
+      "teacherId": "teacher-1",
+      "totalEnrolled": 1,
+      "submittedCount": 0,
+      "gradedCount": 0
+    },
+    {
+      "id": "asg-1791000146480-sdz1",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum & Electrodynamics",
+      "title": "Quantum Entanglement & Bell Inequalities Lab",
+      "description": "Analyze experimental Bell state correlations.",
+      "instructions": "Submit lab observations and Bell parameter S calculations.",
+      "assignedDate": "2026-10-03",
+      "dueDate": "2026-11-15",
+      "maxScore": 100,
+      "category": "Lab Report",
+      "teacherId": "teacher-1",
+      "totalEnrolled": 2,
+      "submittedCount": 0,
+      "gradedCount": 0
+    }
+  ],
+  "submissions": [
+    {
+      "id": "sub-alex-101",
+      "assignmentId": "asg-101",
+      "assignmentTitle": "Quantum Harmonic Oscillator Problem Set",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum",
+      "studentId": "student-1",
+      "studentName": "Alex Chen",
+      "status": "graded",
+      "submittedAt": "2026-10-03T09:14:00.000Z",
+      "content": "Ladder operator commutator [a, a^dagger] = 1 derivation completed. Ground state wave function Psi_0(x) = (m omega / pi hbar)^(1/4) exp(- m omega x^2 / (2 hbar)) matches analytical expectation.",
+      "attachments": [
+        {
+          "name": "AlexChen_ProblemSet3_Solution.pdf",
+          "size": "1.4 MB"
+        }
+      ],
+      "grade": 96,
+      "feedback": "Excellent rigor in the ladder commutation proof. Outstanding step-by-step normalization.",
+      "gradedAt": "2026-10-03T11:20:00.000Z"
+    },
+    {
+      "id": "sub-alex-103",
+      "assignmentId": "asg-103",
+      "assignmentTitle": "Stokes Theorem & Surface Integrals Practice",
+      "classId": "class-math-240",
+      "className": "MATH-240: Multivariable Calculus",
+      "studentId": "student-1",
+      "studentName": "Alex Chen",
+      "status": "submitted",
+      "submittedAt": "2026-10-02T14:30:00.000Z",
+      "content": "Calculated surface curl for paraboloid z = 1 - x^2 - y^2 bounded by z=0. Result = 2 pi, verifying line integral around unit circle boundary.",
+      "attachments": [
+        {
+          "name": "AlexChen_Stokes_Practice.pdf",
+          "size": "920 KB"
+        }
+      ]
+    }
+  ],
+  "studyArtifacts": [],
+  "auditEvents": []
+}
