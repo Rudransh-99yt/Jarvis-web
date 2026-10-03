@@ -6,6 +6,7 @@ import type {
   SmartBoardStateType,
   RemoteDeviceType
 } from '../../../types/classroom.ts';
+import type { ClassSession, PresentationSlide } from '../../../types/classSession.ts';
 import type { Quiz, QuizQuestion, QuestionAggregate, QuizResults } from '../../../types/quiz.ts';
 import { SmartQuizTeacherPanel } from '../components/SmartQuizTeacherPanel.tsx';
 import { SmartQuizSmartBoardView } from '../components/SmartQuizSmartBoardView.tsx';
@@ -79,6 +80,10 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
   const [activeQuizAggregate, setActiveQuizAggregate] = useState<QuestionAggregate | null>(null);
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
 
+  // AI Teacher Prepared Session State
+  const [preparedSession, setPreparedSession] = useState<ClassSession | null>(null);
+  const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0);
+
   // EventSource stream ref
   const eventSourceRef = useRef<EventSource | null>(null);
   const presenceIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -103,6 +108,24 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     setIsLoading(true);
     setErrorMessage(null);
     try {
+      // Query SmartBoard for AI prepared session for this class
+      try {
+        const prepRes = await fetch(`/api/education/sessions/smartboard/active?classId=${selectedClassId}`, {
+          headers: {
+            'x-user-id': currentUser.id,
+            'x-user-role': currentUser.role
+          }
+        });
+        if (prepRes.ok) {
+          const prepData = await prepRes.json();
+          setPreparedSession(prepData.session);
+        } else {
+          setPreparedSession(null);
+        }
+      } catch {
+        setPreparedSession(null);
+      }
+
       const res = await fetch(`/api/classroom/sessions/active?classId=${selectedClassId}&workspaceId=ws-stark-core`, {
         headers: {
           'x-user-id': currentUser.id,
@@ -999,6 +1022,49 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
                 </button>
               </div>
             </div>
+
+            {/* AI Prepared Session Spotlight */}
+            {preparedSession && (
+              <div className="rounded-xl border border-cyan-400/50 bg-gradient-to-r from-cyan-950/70 via-blue-950/40 to-black/80 p-4 shadow-xl space-y-3 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-300" />
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      AI Prepared Session Available
+                    </span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-400/40 text-cyan-300 font-bold">
+                    {preparedSession.status}
+                  </span>
+                </div>
+
+                <div className="text-xs font-semibold text-cyan-100 font-mono">
+                  {preparedSession.topic}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-cyan-500/15 text-[11px] text-cyan-300/80">
+                  <span>
+                    {preparedSession.presentation ? `${preparedSession.presentation.slides.length} Slides` : ''} ·{' '}
+                    {preparedSession.quiz ? `${preparedSession.quiz.questions.length}Q Quiz` : ''}
+                  </span>
+
+                  <button
+                    onClick={() => {
+                      setNewTopic(preparedSession.topic);
+                      if (preparedSession.presentation && preparedSession.presentation.slides.length > 0) {
+                        setNewMessage(preparedSession.presentation.slides[0].bulletPoints.join(' • '));
+                      }
+                      setSelectedStateType('lesson');
+                      showNotice(`Loaded prepared session '${preparedSession.topic}' onto board.`);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400/40 hover:bg-cyan-500/30 text-cyan-200 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <span>Load to Board</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Smart Board State Dispatcher */}
             <div className="rounded-xl border border-cyan-500/25 bg-slate-950/70 p-5 shadow-xl space-y-4">

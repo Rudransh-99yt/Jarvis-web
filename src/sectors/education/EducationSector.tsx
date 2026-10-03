@@ -28,6 +28,7 @@ import { EducationCalendarView } from './views/EducationCalendarView.tsx';
 import { TeacherHomeView } from './views/TeacherHomeView.tsx';
 import { TeacherClassDetailView } from './views/TeacherClassDetailView.tsx';
 import { TeacherCurriculumModal } from './views/TeacherCurriculumModal.tsx';
+import { TeacherSessionPrepView } from './views/TeacherSessionPrepView.tsx';
 
 // Principal View
 import { PrincipalExecutiveView } from './views/PrincipalExecutiveView.tsx';
@@ -56,6 +57,7 @@ export type DeepEducationView =
   | 'lesson_workspace'
   | 'teacher_home'
   | 'teacher_class_detail'
+  | 'teacher_session_prep'
   | 'principal_home'
   | 'classroom'
   | 'videos'
@@ -464,6 +466,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (currentView === 'community') return 'community';
     if (currentView === 'knowledge') return 'knowledge';
     if (currentView === 'videos') return 'videos';
+    if (currentView === 'teacher_session_prep') return 'teacher_prep';
     if (currentView === 'classroom') return 'classroom';
     if (currentView === 'principal_home') return 'principal_overview';
     return 'home';
@@ -473,6 +476,9 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     switch (section) {
       case 'home':
         setCurrentView(currentRole === 'student' ? 'student_home' : currentRole === 'teacher' ? 'teacher_home' : 'principal_home');
+        break;
+      case 'teacher_prep':
+        setCurrentView('teacher_session_prep');
         break;
       case 'my_learning':
         setCurrentView('student_my_learning');
@@ -824,6 +830,17 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             />
           )}
 
+          {/* Teacher AI Session Prep */}
+          {currentView === 'teacher_session_prep' && (
+            <TeacherSessionPrepView
+              classes={classes}
+              onNavigateTab={(t) => setCurrentView(t as any)}
+              onLaunchSmartboard={(sessionId) => {
+                setCurrentView('classroom');
+              }}
+            />
+          )}
+
           {/* Principal View */}
           {currentView === 'principal_home' && (
             <PrincipalExecutiveView
@@ -873,6 +890,14 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onDeleteSource={handleDeleteSource}
               onReindexSource={handleReindexSource}
               onQueryGrounded={handleQueryGrounded}
+            />
+          )}
+
+          {currentView === 'community' && (
+            <EducationCommunityView
+              classes={classes}
+              currentRole={currentRole}
+              onNavigateTab={(t) => setCurrentView(t as any)}
             />
           )}
 

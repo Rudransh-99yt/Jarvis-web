@@ -34,7 +34,8 @@ export type EducationSidebarSection =
   | 'knowledge'
   | 'videos'
   | 'classroom'
-  | 'principal_overview';
+  | 'principal_overview'
+  | 'teacher_prep';
 
 interface EducationSidebarProps {
   currentRole: EducationRole;
@@ -183,6 +184,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           {currentRole === 'teacher' && (
             <>
               {renderNavButton('home', 'Teaching Hub', Home)}
+              {renderNavButton('teacher_prep', 'AI Session Prep', Sparkles, 'AI')}
               {renderNavButton('classes', 'Managed Classes', BookOpen, classes.length)}
               {renderNavButton('assignments', 'Assignments & Grading', FileCheck2, '2 pending')}
               {renderNavButton('calendar', 'Class Schedule', Calendar)}
@@ -192,6 +194,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           {currentRole === 'principal' && (
             <>
               {renderNavButton('principal_overview', 'Executive Overview', ShieldAlert)}
+              {renderNavButton('teacher_prep', 'Lesson Prep Hub', Sparkles)}
               {renderNavButton('classes', 'All School Classes', BookOpen, classes.length)}
               {renderNavButton('assignments', 'Assessment Health', FileCheck2)}
               {renderNavButton('calendar', 'Institution Calendar', Calendar)}

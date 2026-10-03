@@ -4,6 +4,8 @@ import type { SourceReference } from './platform.ts';
 
 export type EducationRole = 'student' | 'teacher' | 'principal';
 export * from './workspace.ts';
+export * from './classSession.ts';
+export * from './community.ts';
 
 // --- Hierarchical Institution & Academic Hierarchy Types ---
 

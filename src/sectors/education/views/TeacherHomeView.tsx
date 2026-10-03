@@ -22,7 +22,7 @@ interface TeacherHomeViewProps {
   onSelectClass: (classId: string) => void;
   onOpenCreateAssignmentModal: () => void;
   onSelectSubmissionForGrading: (submission: StudentSubmission) => void;
-  onNavigateTab: (tab: 'classes' | 'classroom' | 'videos' | 'assignments' | 'knowledge') => void;
+  onNavigateTab: (tab: 'classes' | 'classroom' | 'videos' | 'assignments' | 'knowledge' | 'teacher_session_prep') => void;
 }
 
 export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
@@ -71,18 +71,18 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <button
-              onClick={() => onNavigateTab('classroom')}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl border border-emerald-400/50 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 text-xs font-mono font-bold tracking-wider transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)] cursor-pointer"
+              onClick={() => onNavigateTab('teacher_session_prep')}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-cyan-400/60 bg-gradient-to-r from-cyan-500/30 to-blue-600/30 hover:from-cyan-500/40 hover:to-blue-600/40 text-white text-xs font-mono font-bold tracking-wider transition-all shadow-lg hover:shadow-cyan-500/20 cursor-pointer"
             >
-              <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
-              LAUNCH LIVE CLASSROOM
+              <Sparkles className="w-4 h-4 text-cyan-300" />
+              PREPARE TOMORROW'S CLASS
             </button>
             <button
-              onClick={onOpenCreateAssignmentModal}
-              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono tracking-wider transition-all cursor-pointer"
+              onClick={() => onNavigateTab('classroom')}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-emerald-400/50 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 text-xs font-mono font-bold tracking-wider transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)] cursor-pointer"
             >
-              <PlusCircle className="w-4 h-4 text-cyan-400" />
-              NEW ASSIGNMENT
+              <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+              LAUNCH SMARTBOARD
             </button>
           </div>
         </div>

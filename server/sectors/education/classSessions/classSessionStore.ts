@@ -1,0 +1,779 @@
+// Centralized In-Memory & Persistent Store for ClassSession Domain Objects
+import type {
+  ClassSession,
+  SessionState,
+  SessionReleaseControls,
+  SessionLessonPlan,
+  SessionPresentation,
+  SessionQuiz,
+  SessionFlashcards,
+  SessionHomework,
+  SessionAnswerKey,
+  SessionTeacherNotes,
+  SessionStudentMaterials,
+  SourceMaterialRef
+} from '../../../../src/types/classSession.ts';
+
+// Initial pre-seeded realistic ClassSession for "Class 12 Physics: Electrostatics"
+const INITIAL_SEEDED_SESSIONS: ClassSession[] = [
+  {
+    id: 'session-phys-101',
+    workspaceId: 'ws-stark-core',
+    schoolId: 'inst-stark-academy',
+    classId: 'class-phys-301',
+    courseCode: 'PHYS-301',
+    courseName: 'Advanced Quantum & Classical Electrodynamics',
+    subject: 'Physics',
+    unitId: 'unit-em-maxwell',
+    unitTitle: 'Unit 1: Electrostatics & Field Potentials',
+    lessonId: 'les-em-1',
+    lessonTitle: "Coulomb's Law, Electric Fields & Gauss Surface Flux",
+    topic: 'Electrostatics & Electric Field Formulations',
+    teacherId: 'teacher-1',
+    teacherName: 'Dr. Helen Cho',
+    scheduledAt: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+    durationMinutes: 45,
+    status: 'APPROVED',
+    generationConfig: {
+      targetDurationMinutes: 45,
+      targetGradeLevel: 'Class 12 / Senior Level',
+      desiredOutputs: {
+        lessonPlan: true,
+        presentation: true,
+        quiz: true,
+        flashcards: true,
+        homework: true,
+        teacherNotes: true,
+        studentNotes: true,
+        answerKey: true
+      },
+      quizConfig: {
+        count: 5,
+        types: ['mcq', 'numerical', 'short_answer'],
+        difficulty: 'medium'
+      },
+      flashcardCount: 6,
+      homeworkConfig: {
+        count: 4,
+        difficulty: 'medium',
+        types: ['practice', 'numerical', 'conceptual', 'application']
+      }
+    },
+    sourceMaterials: [
+      {
+        id: 'src-ncert-ch1',
+        title: 'NCERT Physics Class 12 - Chapter 1: Electric Charges and Fields.pdf',
+        type: 'ncert_pdf',
+        fileSize: '4.2 MB',
+        pageCount: 38,
+        extractedTextSnippet: 'Coulomb’s Law states that force between two point charges q1 and q2 varies inversely with square of distance r and directly as product of their magnitudes: F = (1 / 4πε₀) · (|q1 q2| / r²). Gauss’s Law gives the total electric flux through a closed surface S equal to q_enclosed / ε₀.',
+        uploadedAt: '2026-10-02T14:30:00.000Z'
+      },
+      {
+        id: 'src-pyq-2025',
+        title: 'CBSE & National Board Past Year Question Paper (2024-2025).pdf',
+        type: 'question_paper',
+        fileSize: '1.8 MB',
+        pageCount: 12,
+        extractedTextSnippet: 'Section B (3 Marks): Derive the expression for electric field intensity due to an infinitely long straight uniformly charged wire using Gauss theorem. State the direction of the field vector.',
+        uploadedAt: '2026-10-02T15:00:00.000Z'
+      }
+    ],
+    lessonPlan: {
+      id: 'lp-phys-101',
+      title: 'Lesson Plan: Electrostatics, Coulomb Interactions & Gauss Flux',
+      targetDurationMinutes: 45,
+      learningObjectives: [
+        'Formulate and calculate electrostatic forces between multiple discrete point charges using vector superposition.',
+        'Define electric field intensity E and sketch field line geometry for symmetric charge configurations.',
+        'Apply Gauss’s Law (∮ E · dA = q_enc / ε₀) to calculate electric fields around spherical and cylindrical charge distributions.'
+      ],
+      prerequisiteKnowledge: [
+        'Newtonian vector mechanics and inverse-square laws',
+        'Basic surface integrals and symmetry principles',
+        'Elementary charge quantization (e = 1.602 × 10⁻¹⁹ C)'
+      ],
+      openingWarmup: {
+        title: '5-Minute Diagnostic Warmup & Spark',
+        durationMinutes: 5,
+        instructions: 'Display two charged balloons suspended by silk threads on the SmartBoard. Ask students why distance increases repulsive angle non-linearly.',
+        prompt: 'If the distance between two like charges is halved, by what factor does the mutual repulsive electrostatic force increase?'
+      },
+      teachingSequence: [
+        {
+          stage: '1. Direct Instruction: Coulomb’s Law & Superposition',
+          durationMinutes: 12,
+          teacherActivity: 'Derive vector form of Coulomb’s law on SmartBoard, emphasizing unit vector r̂ and permittivity constant ε₀ = 8.854 × 10⁻¹² C²/(N·m²).',
+          studentActivity: 'Take structured Cornell notes and write down component breakdown for 3 collinear charges.',
+          checkPoint: 'Can students explain why electrostatic force is conservative?',
+          sourceCitation: 'NCERT Ch. 1, Section 1.6'
+        },
+        {
+          stage: '2. Guided Conceptual Modeling: Gauss Surface Geometry',
+          durationMinutes: 15,
+          teacherActivity: 'Construct cylindrical Gaussian surface around an infinite line of linear charge density λ. Show why flux through circular end-caps is zero.',
+          studentActivity: 'Solve for flux dot product E · dA on side surface with partner on desk tablets.',
+          checkPoint: 'Are students correctly identifying the angle θ between E and normal vector dA?',
+          sourceCitation: 'NCERT Ch. 1, Section 1.15'
+        },
+        {
+          stage: '3. Interactive Classroom Quiz & Formative Check',
+          durationMinutes: 8,
+          teacherActivity: 'Trigger live SmartBoard 3-question pulse quiz. Monitor aggregate heat map in real time.',
+          studentActivity: 'Submit responses on Jarvis Student Workspace.',
+          checkPoint: 'Ensure >85% class accuracy before concluding session.',
+          sourceCitation: 'Past Year Paper 2024, Q4-Q6'
+        },
+        {
+          stage: '4. Summary & Exit Ticket',
+          durationMinutes: 5,
+          teacherActivity: 'Highlight main takeaway formulas and assign numerical homework set.',
+          studentActivity: 'Complete 60-second exit ticket on electric flux dimensional formula.',
+          checkPoint: 'Exit ticket submission verification.',
+          sourceCitation: 'Lesson Plan Standard'
+        }
+      ],
+      workedExamples: [
+        {
+          id: 'ex-1',
+          problem: 'Two point charges q1 = +2.0 μC and q2 = -6.0 μC are located 0.30 m apart in vacuum. Find the magnitude and direction of the electrostatic force exerted on q1.',
+          solution: 'F = (1 / 4πε₀) · (|q1 q2| / r²) = (8.99 × 10⁹ N·m²/C²) · ((2.0 × 10⁻⁶)(6.0 × 10⁻⁶) / (0.30)²) = (8.99 × 10⁹) · (1.2 × 10⁻¹¹ / 0.09) = 1.20 N (Attractive towards q2).',
+          keyIntuition: 'Always treat magnitudes in the formula and determine direction visually through charge polarity.',
+          commonMistakes: [
+            'Forgetting to convert micro-coulombs (μC) to Coulombs (× 10⁻⁶)',
+            'Squaring r incorrectly (0.3² = 0.09, not 0.9)'
+          ],
+          latexFormula: 'F = \\frac{1}{4\\pi \\varepsilon_0} \\frac{|q_1 q_2|}{r^2}'
+        }
+      ],
+      misconceptions: [
+        {
+          id: 'misc-1',
+          misconception: 'Electric field lines can cross each other when multiple charges interact.',
+          correction: 'Electric field is unique at every point in space. If lines crossed, a test charge would experience two distinct resultant forces, which is physically impossible.',
+          diagnosticQuestion: 'Why can two electric field lines never intersect in a static configuration?'
+        }
+      ],
+      checksForUnderstanding: [
+        'Why does Gauss’s Law hold true for any arbitrary closed surface enclosing charge q?',
+        'How does electric field scale with distance r for a point charge vs an infinite line charge?'
+      ],
+      recap: 'Electrostatic force follows an inverse-square law. Field is force per unit charge. Gauss’s law simplifies field calculation when spatial symmetry exists.',
+      exitTicket: {
+        prompt: 'State the SI unit and dimensional formula of Electric Flux (Φ_E).',
+        expectedCriteria: 'Unit: N·m²/C or V·m; Dimensions: [M L³ T⁻³ A⁻¹]'
+      },
+      isApproved: true,
+      updatedAt: '2026-10-02T16:00:00.000Z'
+    },
+    presentation: {
+      id: 'pres-phys-101',
+      title: 'Classroom Slides: Electrostatics & Field Theory',
+      totalSlides: 6,
+      isApproved: true,
+      updatedAt: '2026-10-02T16:10:00.000Z',
+      slides: [
+        {
+          id: 'slide-1',
+          slideNumber: 1,
+          title: 'Electrostatics & Electric Field Formulations',
+          bulletPoints: [
+            'Class 12 Advanced Physics · Unit 1',
+            'Instructor: Dr. Helen Cho',
+            'Jarvis SmartBoard Interactive Module'
+          ],
+          visualInstruction: 'Title banner with Stark Academy emblem and 3D electric dipole vector simulation.',
+          teacherNotes: 'Welcome students and verify all desk tablets are linked to the session.',
+          sourceReferences: ['NCERT Physics Class 12, Chapter 1']
+        },
+        {
+          id: 'slide-2',
+          slideNumber: 2,
+          title: 'Learning Objectives & Session Roadmap',
+          bulletPoints: [
+            'Master Coulomb force calculations for discrete & continuous charges',
+            'Understand Electric Field vector fields and flux geometry',
+            'Apply Gauss’s Theorem to cylindrical and planar geometries'
+          ],
+          visualInstruction: 'Roadmap timeline with 3 numbered milestones.',
+          teacherNotes: 'Emphasize that this topic carries 8-10 marks in board examinations.',
+          sourceReferences: ['NCERT Ch. 1 Learning Outcomes']
+        },
+        {
+          id: 'slide-3',
+          slideNumber: 3,
+          title: 'Coulomb’s Law in Vector Notation',
+          bulletPoints: [
+            'Electrostatic force between point charges in vacuum',
+            'Permittivity of free space: ε₀ = 8.854 × 10⁻¹² C²·N⁻¹·m⁻²',
+            'Superposition: F_net = Σ F_i'
+          ],
+          latexFormula: '\\mathbf{F}_{12} = \\frac{1}{4\\pi \\varepsilon_0} \\frac{q_1 q_2}{r^2} \\hat{\\mathbf{r}}_{12}',
+          visualInstruction: 'Diagram showing two positive charges repelling with equal and opposite force vectors.',
+          teacherNotes: 'Highlight that Newton’s third law is strictly obeyed.',
+          sourceReferences: ['NCERT Section 1.6']
+        },
+        {
+          id: 'slide-4',
+          slideNumber: 4,
+          title: 'Gauss’s Law & Total Flux',
+          bulletPoints: [
+            'Total flux through any closed surface is proportional to enclosed charge',
+            'Flux Φ_E = ∮ E · dA = q_enc / ε₀',
+            'Independent of surface shape or size'
+          ],
+          latexFormula: '\\Phi_E = \\oint_{\\mathcal{S}} \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{q_{\\text{enclosed}}}{\\varepsilon_0}',
+          visualInstruction: 'Closed Gaussian sphere enclosing charge +Q with outwards normal vectors dA.',
+          teacherNotes: 'Point out that external charges contribute zero net flux.',
+          sourceReferences: ['NCERT Section 1.14']
+        },
+        {
+          id: 'slide-5',
+          slideNumber: 5,
+          title: 'Worked Example: Infinite Line Charge',
+          bulletPoints: [
+            'Linear charge density: λ = Q / L',
+            'Cylindrical Gaussian surface of radius r and length L',
+            'Radial field: E = λ / (2πε₀ r)'
+          ],
+          latexFormula: 'E(r) = \\frac{\\lambda}{2\\pi \\varepsilon_0 r}',
+          visualInstruction: 'Cylinder aligned coaxially with infinite wire showing radial electric field vectors.',
+          teacherNotes: 'Walk through why top and bottom end cap integrals evaluate to zero.',
+          sourceReferences: ['Past Year Board Paper 2024, Q14']
+        },
+        {
+          id: 'slide-6',
+          slideNumber: 6,
+          title: 'Recap & Homework Assignment',
+          bulletPoints: [
+            'Key Formula 1: F = (1/4πε₀) · (q₁q₂ / r²)',
+            'Key Formula 2: E = λ / (2πε₀ r)',
+            'Homework Set #1 available on Jarvis Workspace'
+          ],
+          visualInstruction: 'Summary matrix with checkmarks and homework due date badge.',
+          teacherNotes: 'Direct students to open the Flashcards review module before tomorrow’s lab.',
+          sourceReferences: ['CBSE Curriculum Syllabus']
+        }
+      ]
+    },
+    quiz: {
+      id: 'quiz-phys-101',
+      title: 'Electrostatics Formative Pulse Quiz',
+      targetMinutes: 8,
+      isApproved: true,
+      updatedAt: '2026-10-02T16:15:00.000Z',
+      questions: [
+        {
+          id: 'q-1',
+          questionNumber: 1,
+          type: 'mcq',
+          question: 'What is the SI unit of Electric Flux (Φ_E)?',
+          options: ['N / C', 'N · m² / C', 'C / m²', 'J · m'],
+          correctAnswer: 'B',
+          explanation: 'Electric flux Φ_E = E · A = (N/C) · (m²) = N·m²/C, also expressed as Volt-meters (V·m).',
+          difficulty: 'easy',
+          points: 1,
+          sourceReference: 'NCERT Ch. 1, Page 24'
+        },
+        {
+          id: 'q-2',
+          questionNumber: 2,
+          type: 'mcq',
+          question: 'If a closed Gaussian surface encloses zero net charge, which of the following statements must be true?',
+          options: [
+            'Electric field must be zero everywhere on the surface',
+            'Total electric flux through the surface is zero',
+            'No charges exist outside the surface',
+            'The surface must be spherical'
+          ],
+          correctAnswer: 'B',
+          explanation: 'Gauss’s Law states ∮ E · dA = q_enc / ε₀. If q_enc = 0, the net flux is zero, though individual local field E may be non-zero due to external charges.',
+          difficulty: 'medium',
+          points: 1,
+          sourceReference: 'NCERT Ch. 1, Page 32'
+        },
+        {
+          id: 'q-3',
+          questionNumber: 3,
+          type: 'numerical',
+          question: 'Calculate the electrostatic force (in Newtons) between two charges of +1.0 C separated by a distance of 1.0 km in vacuum (use 1/4πε₀ = 9.0 × 10⁹ N·m²/C²).',
+          correctAnswer: '9000',
+          explanation: 'F = (9.0 × 10⁹) · (1.0 × 1.0) / (1000)² = (9.0 × 10⁹) / (10⁶) = 9.0 × 10³ = 9000 N.',
+          difficulty: 'medium',
+          points: 2,
+          sourceReference: 'Past Year Question Paper 2024'
+        },
+        {
+          id: 'q-4',
+          questionNumber: 4,
+          type: 'short_answer',
+          question: 'Why can two electrostatic field lines never intersect each other?',
+          correctAnswer: 'Because if they intersect, there would be two different directions of the electric field at that single point, which is physically impossible.',
+          explanation: 'At any given point in space, the electric field vector is unique. Two tangents would imply two directions for net force.',
+          difficulty: 'easy',
+          points: 1,
+          sourceReference: 'NCERT Section 1.8'
+        },
+        {
+          id: 'q-5',
+          questionNumber: 5,
+          type: 'mcq',
+          question: 'How does the electric field intensity E vary with distance r from an infinitely long uniformly charged straight wire?',
+          options: ['E ∝ 1 / r²', 'E ∝ 1 / r', 'E ∝ r', 'E is independent of r'],
+          correctAnswer: 'B',
+          explanation: 'Using Gauss theorem for a cylindrical surface, E = λ / (2πε₀ r), which shows E is inversely proportional to r (E ∝ 1/r).',
+          difficulty: 'hard',
+          points: 2,
+          sourceReference: 'Past Year Paper 2025'
+        }
+      ]
+    },
+    flashcards: {
+      id: 'fc-phys-101',
+      title: 'Electrostatics Core Mastery Cards',
+      isApproved: true,
+      updatedAt: '2026-10-02T16:20:00.000Z',
+      cards: [
+        {
+          id: 'card-1',
+          front: "Coulomb's Law Formula (Vector Form)",
+          back: 'F₁₂ = (1 / 4πε₀) · (q₁ q₂ / r²) · r̂₁₂\nForce between two point charges in vacuum.',
+          category: 'Formulas',
+          difficulty: 'easy',
+          sourceReference: 'NCERT Ch. 1'
+        },
+        {
+          id: 'card-2',
+          front: "Permittivity of Free Space (ε₀)",
+          back: 'ε₀ = 8.854 × 10⁻¹² C²/(N·m²)\n1/(4πε₀) ≈ 8.988 × 10⁹ N·m²/C²',
+          category: 'Constants',
+          difficulty: 'easy',
+          sourceReference: 'NCERT Reference Table'
+        },
+        {
+          id: 'card-3',
+          front: "Gauss's Law Formula",
+          back: 'Φ_E = ∮ E · dA = q_enclosed / ε₀\nValid for any closed surface of any arbitrary shape.',
+          category: 'Theorems',
+          difficulty: 'medium',
+          sourceReference: 'NCERT Section 1.14'
+        },
+        {
+          id: 'card-4',
+          front: 'Electric Field of Infinite Line Charge',
+          back: 'E = λ / (2πε₀ r)\nwhere λ is linear charge density (Q/L).',
+          category: 'Standard Results',
+          difficulty: 'medium',
+          sourceReference: 'NCERT Section 1.15'
+        },
+        {
+          id: 'card-5',
+          front: 'Electric Field of Infinite Uniform Plane Sheet',
+          back: 'E = σ / (2ε₀)\nwhere σ is surface charge density (Q/A). Independent of distance r.',
+          category: 'Standard Results',
+          difficulty: 'hard',
+          sourceReference: 'NCERT Section 1.15'
+        },
+        {
+          id: 'card-6',
+          front: 'Dimension of Electric Flux (Φ_E)',
+          back: '[M L³ T⁻³ A⁻¹]\nUnits: N·m²/C or V·m',
+          category: 'Dimensional Analysis',
+          difficulty: 'medium',
+          sourceReference: 'CBSE Exam Guide'
+        }
+      ]
+    },
+    homework: {
+      id: 'hw-phys-101',
+      title: 'Homework Problem Set: Electrostatics & Gauss Applications',
+      dueDate: new Date(Date.now() + 3 * 86400000).toISOString(),
+      instructions: 'Solve all 4 problems showing step-by-step mathematical reasoning. Upload handwritten or LaTeX solutions to Jarvis Workspace.',
+      totalMarks: 20,
+      isApproved: true,
+      releasedToStudents: true,
+      updatedAt: '2026-10-02T16:25:00.000Z',
+      questions: [
+        {
+          id: 'hw-q1',
+          questionNumber: 1,
+          type: 'practice',
+          prompt: 'State Coulomb’s Law in electrostatics. Derive its vector form and explain the principle of superposition for a system of N discrete point charges.',
+          marks: 4,
+          rubric: '2 marks for statement & formula; 2 marks for vector notation and superposition diagram.',
+          sourceReference: 'NCERT Ch. 1, Q1.1'
+        },
+        {
+          id: 'hw-q2',
+          questionNumber: 2,
+          type: 'numerical',
+          prompt: 'An infinite line charge produces an electric field of 9.0 × 10⁴ N/C at a perpendicular distance of 2.0 cm. Calculate the linear charge density λ.',
+          marks: 5,
+          rubric: '1 mark for formula E = λ/(2πε₀r); 2 marks for substituting SI units (r = 0.02 m); 2 marks for final answer with unit (μC/m).',
+          latexFormula: 'E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r}',
+          sourceReference: 'Past Year Paper 2024'
+        },
+        {
+          id: 'hw-q3',
+          questionNumber: 3,
+          type: 'conceptual',
+          prompt: 'A hollow charged spherical conductor of radius R carries a total charge +Q. Find the electric field intensity E at: (a) r < R (inside), (b) r = R (on surface), and (c) r > R (outside). Sketch the graph of E vs r.',
+          marks: 6,
+          rubric: '2 marks for inside E=0; 2 marks for outside derivation E=Q/(4πε₀r²); 2 marks for graph showing discontinuity at r=R.',
+          sourceReference: 'NCERT Section 1.15.3'
+        },
+        {
+          id: 'hw-q4',
+          questionNumber: 4,
+          type: 'application',
+          prompt: 'Explain the working principle of electrostatic shielding. Describe one practical real-world engineering application where electrostatic shielding is critical.',
+          marks: 5,
+          rubric: '3 marks for explaining Faraday cage physics (E=0 inside cavity); 2 marks for real-world example (coaxial cable, aircraft in thunderstorm).',
+          sourceReference: 'NCERT Application Section'
+        }
+      ]
+    },
+    answerKey: {
+      id: 'ak-phys-101',
+      teacherOnly: true,
+      updatedAt: '2026-10-02T16:30:00.000Z',
+      quizAnswerMap: {
+        'q-1': 'B: N·m²/C',
+        'q-2': 'B: Total flux is zero (Gauss Law)',
+        'q-3': '9000 N',
+        'q-4': 'Electric field vectors cannot have two directions at one point',
+        'q-5': 'B: E is inversely proportional to r (1/r)'
+      },
+      homeworkSolutions: [
+        {
+          questionId: 'hw-q1',
+          stepByStepSolution: '1. Statement: Force between charges is directly proportional to product and inversely proportional to square of distance.\n2. Vector form: F_12 = (1/4πε₀) (q1 q2 / r²) r̂_12.\n3. Superposition: Net force on charge q0 is vector sum: F_net = Σ F_i0.',
+          finalAnswer: 'F_net = (q0 / 4πε₀) Σ (q_i / r_i0²) r̂_i0',
+          markingCriteria: 'Full marks if vector arrows and r̂ unit vector are clearly designated.'
+        },
+        {
+          questionId: 'hw-q2',
+          stepByStepSolution: 'Formula: E = λ / (2πε₀ r) => λ = 2πε₀ r E\nGiven: E = 9.0 × 10⁴ N/C, r = 2.0 cm = 0.02 m, 1/(4πε₀) = 9.0 × 10⁹ => 2πε₀ = 1 / (18 × 10⁹)\nλ = (0.02 × 9.0 × 10⁴) / (18 × 10⁹) = (1800) / (18 × 10⁹) = 10⁻⁷ C/m = 0.10 μC/m.',
+          finalAnswer: 'λ = 1.0 × 10⁻⁷ C/m (or 0.10 μC/m)',
+          markingCriteria: 'Deduct 1 mark if radius was left in centimeters.'
+        },
+        {
+          questionId: 'hw-q3',
+          stepByStepSolution: '(a) For r < R: Gaussian surface inside conductor encloses q_enc = 0 => E = 0.\n(b) For r = R: E = (1/4πε₀) (Q / R²).\n(c) For r > R: E = (1/4πε₀) (Q / r²).\nGraph: E = 0 from r=0 to R; jumps to max at r=R; decays as 1/r² for r > R.',
+          finalAnswer: 'E_inside = 0, E_outside = Q / (4πε₀ r²)',
+          markingCriteria: 'Verify graph shows step discontinuity at r=R.'
+        },
+        {
+          questionId: 'hw-q4',
+          stepByStepSolution: 'Free electrons in conductor redistribute on outer boundary until internal field is zero. Any interior cavity remains completely shielded from external fields. Applications: Coaxial TV cables, MRI scanning room shielding, lightning protection in passenger aircraft.',
+          finalAnswer: 'Cavity field E=0 due to charge redistribution; protects delicate electronics.',
+          markingCriteria: 'Accept either aircraft, coaxial cable, or electronic enclosure examples.'
+        }
+      ]
+    },
+    teacherNotes: {
+      id: 'tn-phys-101',
+      overview: 'High-yield conceptual lesson bridging discrete Newtonian forces with field theory. Critical foundation for Gauss Law applications in Unit 2.',
+      pacingTips: [
+        'Spend no more than 12 mins on Coulomb derivation to preserve time for Gauss cylinder geometry.',
+        'Use the desk tablet pulse quiz right after the line charge derivation to catch integration confusion early.'
+      ],
+      blackboardLayouts: [
+        'Left Board: Discrete Charge Vector Diagram & Superposition Equation',
+        'Center Board: Gaussian Cylinder Surface Integrals (End Caps vs Curved Surface)',
+        'Right Board: Standard Results Box (Point Charge vs Line vs Sheet)'
+      ],
+      labEquipmentNeeded: [
+        'SmartBoard Interactive Stylus',
+        'Electrostatic Pith Balls & PVC Rod demonstration kit'
+      ],
+      isApproved: true,
+      updatedAt: '2026-10-02T16:35:00.000Z'
+    },
+    studentMaterials: {
+      id: 'sm-phys-101',
+      handoutMarkdown: '# Class 12 Physics · Electrostatics Quick Reference\n\n## 1. Governing Laws\n- **Coulomb\'s Law**: $F = \\frac{1}{4\\pi \\varepsilon_0} \\frac{q_1 q_2}{r^2}$\n- **Gauss\'s Law**: $\\Phi_E = \\oint \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{q_{enc}}{\\varepsilon_0}$\n\n## 2. Standard Geometries\n- **Infinite Line Charge**: $E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r}$\n- **Infinite Sheet**: $E = \\frac{\\sigma}{2\\varepsilon_0}$',
+      formulaSheet: 'F = (1/4πε₀)(q1 q2 / r²)\nE = F / q\nΦ_E = ∮ E · dA = q_enc / ε₀\nE_line = λ / (2πε₀ r)\nE_sheet = σ / (2ε₀)\nE_sphere(r > R) = Q / (4πε₀ r²)',
+      practiceWorksheet: 'Complete problems 1 through 5 in the Jarvis Student Workspace prior to next laboratory session.',
+      isApproved: true,
+      released: true,
+      updatedAt: '2026-10-02T16:40:00.000Z'
+    },
+    releaseControls: {
+      presentationReleased: true,
+      studentNotesReleased: true,
+      quizReleased: false,
+      homeworkReleased: true,
+      flashcardsReleased: true
+    },
+    createdAt: '2026-10-02T14:00:00.000Z',
+    updatedAt: '2026-10-02T16:45:00.000Z'
+  }
+];
+
+export class ClassSessionStore {
+  private sessions: Map<string, ClassSession> = new Map();
+
+  constructor() {
+    // Seed initial session
+    INITIAL_SEEDED_SESSIONS.forEach((s) => {
+      this.sessions.set(s.id, s);
+    });
+  }
+
+  async getSession(id: string): Promise<ClassSession | null> {
+    const session = this.sessions.get(id);
+    return session ? JSON.parse(JSON.stringify(session)) : null;
+  }
+
+  async listSessions(filters?: {
+    workspaceId?: string;
+    schoolId?: string;
+    classId?: string;
+    teacherId?: string;
+    status?: SessionState;
+  }): Promise<ClassSession[]> {
+    let result = Array.from(this.sessions.values());
+
+    if (filters?.workspaceId) {
+      result = result.filter((s) => s.workspaceId === filters.workspaceId);
+    }
+    if (filters?.schoolId) {
+      result = result.filter((s) => s.schoolId === filters.schoolId);
+    }
+    if (filters?.classId) {
+      result = result.filter((s) => s.classId === filters.classId);
+    }
+    if (filters?.teacherId) {
+      result = result.filter((s) => s.teacherId === filters.teacherId);
+    }
+    if (filters?.status) {
+      result = result.filter((s) => s.status === filters.status);
+    }
+
+    // Sort newest first
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return JSON.parse(JSON.stringify(result));
+  }
+
+  async createSession(data: Partial<ClassSession>): Promise<ClassSession> {
+    const id = data.id || `session-${Date.now()}`;
+    const now = new Date().toISOString();
+
+    const newSession: ClassSession = {
+      id,
+      workspaceId: data.workspaceId || 'ws-stark-core',
+      schoolId: data.schoolId || 'inst-stark-academy',
+      classId: data.classId || 'class-phys-301',
+      courseCode: data.courseCode || 'PHYS-301',
+      courseName: data.courseName || 'Physics',
+      subject: data.subject || 'Physics',
+      unitId: data.unitId,
+      unitTitle: data.unitTitle,
+      lessonId: data.lessonId,
+      lessonTitle: data.lessonTitle,
+      topic: data.topic || 'Class Session Topic',
+      teacherId: data.teacherId || 'teacher-1',
+      teacherName: data.teacherName || 'Instructor',
+      scheduledAt: data.scheduledAt,
+      durationMinutes: data.durationMinutes || 45,
+      status: data.status || 'DRAFT',
+      generationConfig: data.generationConfig || {
+        targetDurationMinutes: 45,
+        desiredOutputs: {
+          lessonPlan: true,
+          presentation: true,
+          quiz: true,
+          flashcards: true,
+          homework: true,
+          teacherNotes: true,
+          studentNotes: true,
+          answerKey: true
+        }
+      },
+      sourceMaterials: data.sourceMaterials || [],
+      lessonPlan: data.lessonPlan,
+      presentation: data.presentation,
+      quiz: data.quiz,
+      flashcards: data.flashcards,
+      homework: data.homework,
+      answerKey: data.answerKey,
+      teacherNotes: data.teacherNotes,
+      studentMaterials: data.studentMaterials,
+      releaseControls: data.releaseControls || {
+        presentationReleased: false,
+        studentNotesReleased: false,
+        quizReleased: false,
+        homeworkReleased: false,
+        flashcardsReleased: false
+      },
+      classroomSessionId: data.classroomSessionId,
+      createdAt: data.createdAt || now,
+      updatedAt: now
+    };
+
+    this.sessions.set(id, newSession);
+    return JSON.parse(JSON.stringify(newSession));
+  }
+
+  async updateSession(id: string, updates: Partial<ClassSession>): Promise<ClassSession> {
+    const existing = this.sessions.get(id);
+    if (!existing) {
+      throw new Error(`ClassSession '${id}' not found.`);
+    }
+
+    const updated: ClassSession = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.sessions.set(id, updated);
+    return JSON.parse(JSON.stringify(updated));
+  }
+
+  async updateSection(id: string, section: string, data: any): Promise<ClassSession> {
+    const existing = this.sessions.get(id);
+    if (!existing) {
+      throw new Error(`ClassSession '${id}' not found.`);
+    }
+
+    const updated = { ...existing, updatedAt: new Date().toISOString() };
+
+    switch (section) {
+      case 'lessonPlan':
+        updated.lessonPlan = { ...updated.lessonPlan, ...data, updatedAt: new Date().toISOString() };
+        break;
+      case 'presentation':
+        updated.presentation = { ...updated.presentation, ...data, updatedAt: new Date().toISOString() };
+        break;
+      case 'quiz':
+        updated.quiz = { ...updated.quiz, ...data, updatedAt: new Date().toISOString() };
+        break;
+      case 'flashcards':
+        updated.flashcards = { ...updated.flashcards, ...data, updatedAt: new Date().toISOString() };
+        break;
+      case 'homework':
+        updated.homework = { ...updated.homework, ...data, updatedAt: new Date().toISOString() };
+        break;
+      case 'answerKey':
+        updated.answerKey = { ...updated.answerKey, ...data, updatedAt: new Date().toISOString() };
+        break;
+      case 'teacherNotes':
+        updated.teacherNotes = { ...updated.teacherNotes, ...data, updatedAt: new Date().toISOString() };
+        break;
+      case 'studentMaterials':
+        updated.studentMaterials = { ...updated.studentMaterials, ...data, updatedAt: new Date().toISOString() };
+        break;
+      default:
+        throw new Error(`Invalid section name '${section}'.`);
+    }
+
+    this.sessions.set(id, updated);
+    return JSON.parse(JSON.stringify(updated));
+  }
+
+  async approveSection(id: string, section: string): Promise<ClassSession> {
+    const existing = this.sessions.get(id);
+    if (!existing) {
+      throw new Error(`ClassSession '${id}' not found.`);
+    }
+
+    const updated = { ...existing, updatedAt: new Date().toISOString() };
+
+    if (section === 'lessonPlan' && updated.lessonPlan) {
+      updated.lessonPlan.isApproved = true;
+    } else if (section === 'presentation' && updated.presentation) {
+      updated.presentation.isApproved = true;
+    } else if (section === 'quiz' && updated.quiz) {
+      updated.quiz.isApproved = true;
+    } else if (section === 'flashcards' && updated.flashcards) {
+      updated.flashcards.isApproved = true;
+    } else if (section === 'homework' && updated.homework) {
+      updated.homework.isApproved = true;
+    } else if (section === 'teacherNotes' && updated.teacherNotes) {
+      updated.teacherNotes.isApproved = true;
+    } else if (section === 'studentMaterials' && updated.studentMaterials) {
+      updated.studentMaterials.isApproved = true;
+    }
+
+    this.sessions.set(id, updated);
+    return JSON.parse(JSON.stringify(updated));
+  }
+
+  async approveAll(id: string): Promise<ClassSession> {
+    const existing = this.sessions.get(id);
+    if (!existing) {
+      throw new Error(`ClassSession '${id}' not found.`);
+    }
+
+    const updated = { ...existing, updatedAt: new Date().toISOString(), status: 'APPROVED' as SessionState };
+    if (updated.lessonPlan) updated.lessonPlan.isApproved = true;
+    if (updated.presentation) updated.presentation.isApproved = true;
+    if (updated.quiz) updated.quiz.isApproved = true;
+    if (updated.flashcards) updated.flashcards.isApproved = true;
+    if (updated.homework) updated.homework.isApproved = true;
+    if (updated.teacherNotes) updated.teacherNotes.isApproved = true;
+    if (updated.studentMaterials) updated.studentMaterials.isApproved = true;
+
+    this.sessions.set(id, updated);
+    return JSON.parse(JSON.stringify(updated));
+  }
+
+  async scheduleSession(id: string, scheduledAt: string): Promise<ClassSession> {
+    const existing = this.sessions.get(id);
+    if (!existing) {
+      throw new Error(`ClassSession '${id}' not found.`);
+    }
+
+    const updated: ClassSession = {
+      ...existing,
+      scheduledAt,
+      status: 'SCHEDULED',
+      updatedAt: new Date().toISOString()
+    };
+
+    this.sessions.set(id, updated);
+    return JSON.parse(JSON.stringify(updated));
+  }
+
+  async updateReleaseControls(id: string, controls: Partial<SessionReleaseControls>): Promise<ClassSession> {
+    const existing = this.sessions.get(id);
+    if (!existing) {
+      throw new Error(`ClassSession '${id}' not found.`);
+    }
+
+    const updated: ClassSession = {
+      ...existing,
+      releaseControls: {
+        ...existing.releaseControls,
+        ...controls
+      },
+      updatedAt: new Date().toISOString()
+    };
+
+    this.sessions.set(id, updated);
+    return JSON.parse(JSON.stringify(updated));
+  }
+
+  async getActiveSmartboardSession(teacherId: string, classId?: string): Promise<ClassSession | null> {
+    const list = Array.from(this.sessions.values()).filter((s) => {
+      const matchTeacher = s.teacherId === teacherId;
+      const matchClass = !classId || s.classId === classId;
+      const isApprovedOrScheduled = ['APPROVED', 'SCHEDULED', 'LIVE'].includes(s.status);
+      return matchTeacher && matchClass && isApprovedOrScheduled;
+    });
+
+    if (list.length === 0) return null;
+
+    // Pick first matching scheduled or approved session
+    return JSON.parse(JSON.stringify(list[0]));
+  }
+
+  async deleteSession(id: string): Promise<boolean> {
+    return this.sessions.delete(id);
+  }
+}
+
+export const classSessionStore = new ClassSessionStore();

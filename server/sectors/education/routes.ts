@@ -1,8 +1,16 @@
 import { Router, Request, Response } from 'express';
 import { educationStore } from './educationStore.ts';
 import { videoRouter } from './videoRoutes.ts';
+import { classSessionRouter } from './classSessions/classSessionRoutes.ts';
+import { communityRouter } from './community/communityRoutes.ts';
 
 export const educationRouter = Router();
+
+// Discord-Style Academic Community Routes
+educationRouter.use('/community', communityRouter);
+
+// AI Teacher Preparation & Class Session Routes
+educationRouter.use('/sessions', classSessionRouter);
 
 // Milestone 14: Video Library & Media Knowledge Routes
 educationRouter.use('/videos', videoRouter);
