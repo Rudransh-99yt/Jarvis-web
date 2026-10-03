@@ -6,7 +6,9 @@ import type {
   IConversationRepository,
   IKnowledgeRepository,
   IEducationRepository,
-  IAuditRepository
+  IAuditRepository,
+  IResearchRepository,
+  IFileRepository
 } from './repository.ts';
 import type {
   User,
@@ -17,7 +19,16 @@ import type {
   KnowledgeSpaceRecord,
   KnowledgeSourceRecord,
   ToolAuditEvent,
-  DatabaseSchema
+  DatabaseSchema,
+  ResearchProject,
+  ResearchQuestion,
+  EvidenceRecord,
+  ResearchNote,
+  ResearchReport,
+  ResearchProjectStatus,
+  ResearchQuestionStatus,
+  FileRecord,
+  FileListFilter
 } from './types.ts';
 import type {
   EducationClass,
@@ -38,6 +49,8 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
   public knowledge: IKnowledgeRepository;
   public education: IEducationRepository;
   public audit: IAuditRepository;
+  public research: IResearchRepository;
+  public files: IFileRepository;
 
   constructor() {
     this.state = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA));
@@ -279,11 +292,17 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
       deleteSpace: async (id: string, workspaceId?: string): Promise<boolean> => {
         const prev = this.state.knowledgeSpaces.length;
         this.state.knowledgeSpaces = this.state.knowledgeSpaces.filter((s) => !(s.id === id && (!workspaceId || s.workspaceId === workspaceId)));
+        const deletedSourceIds = new Set(this.state.knowledgeSources.filter((src) => src.knowledgeSpaceId === id).map((s) => s.id));
         this.state.knowledgeSources = this.state.knowledgeSources.filter((src) => src.knowledgeSpaceId !== id);
+        this.state.knowledgeChunks = (this.state.knowledgeChunks || []).filter((c) => c.knowledgeSpaceId !== id && !deletedSourceIds.has(c.sourceId));
         return this.state.knowledgeSpaces.length < prev;
       },
       getSourceById: async (id: string): Promise<KnowledgeSourceRecord | null> => {
         const src = this.state.knowledgeSources.find((s) => s.id === id);
+        return src ? { ...src } : null;
+      },
+      getSourceByHash: async (contentHash: string, spaceId?: string): Promise<KnowledgeSourceRecord | null> => {
+        const src = this.state.knowledgeSources.find((s) => s.contentHash === contentHash && (!spaceId || s.knowledgeSpaceId === spaceId));
         return src ? { ...src } : null;
       },
       listSourcesForSpace: async (spaceId: string, workspaceId?: string): Promise<KnowledgeSourceRecord[]> => {
@@ -301,12 +320,23 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
         if (space) space.updatedAt = now;
         return { ...record };
       },
+      updateSource: async (id: string, updates: Partial<Omit<KnowledgeSourceRecord, 'id' | 'createdAt'>>): Promise<KnowledgeSourceRecord | null> => {
+        const index = this.state.knowledgeSources.findIndex((s) => s.id === id);
+        if (index === -1) return null;
+        this.state.knowledgeSources[index] = {
+          ...this.state.knowledgeSources[index],
+          ...updates,
+          updatedAt: new Date().toISOString()
+        };
+        return { ...this.state.knowledgeSources[index] };
+      },
       updateSourceStatus: async (id: string, status: KnowledgeSourceRecord['status'], errorMessage?: string): Promise<KnowledgeSourceRecord | null> => {
         const index = this.state.knowledgeSources.findIndex((s) => s.id === id);
         if (index === -1) return null;
         this.state.knowledgeSources[index] = {
           ...this.state.knowledgeSources[index],
           status,
+          ingestionStatus: status,
           errorMessage,
           updatedAt: new Date().toISOString()
         };
@@ -315,7 +345,39 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
       deleteSource: async (id: string): Promise<boolean> => {
         const prev = this.state.knowledgeSources.length;
         this.state.knowledgeSources = this.state.knowledgeSources.filter((s) => s.id !== id);
+        this.state.knowledgeChunks = (this.state.knowledgeChunks || []).filter((c) => c.sourceId !== id);
         return this.state.knowledgeSources.length < prev;
+      },
+      upsertChunks: async (chunks: import('./types.ts').KnowledgeChunkRecord[]): Promise<void> => {
+        if (!chunks || chunks.length === 0) return;
+        if (!this.state.knowledgeChunks) {
+          this.state.knowledgeChunks = [];
+        }
+        const chunkMap = new Map(this.state.knowledgeChunks.map((c) => [c.id, c]));
+        for (const chunk of chunks) {
+          chunkMap.set(chunk.id, chunk);
+        }
+        this.state.knowledgeChunks = Array.from(chunkMap.values());
+      },
+      getChunksForSource: async (sourceId: string): Promise<import('./types.ts').KnowledgeChunkRecord[]> => {
+        const chunks = (this.state.knowledgeChunks || []).filter((c) => c.sourceId === sourceId);
+        return chunks.map((c) => ({ ...c }));
+      },
+      getChunksForSpace: async (spaceId: string, workspaceId?: string): Promise<import('./types.ts').KnowledgeChunkRecord[]> => {
+        const chunks = (this.state.knowledgeChunks || []).filter(
+          (c) => (!spaceId || c.knowledgeSpaceId === spaceId) && (!workspaceId || c.workspaceId === workspaceId)
+        );
+        return chunks.map((c) => ({ ...c }));
+      },
+      deleteChunksBySourceId: async (sourceId: string): Promise<number> => {
+        const prev = (this.state.knowledgeChunks || []).length;
+        this.state.knowledgeChunks = (this.state.knowledgeChunks || []).filter((c) => c.sourceId !== sourceId);
+        return prev - this.state.knowledgeChunks.length;
+      },
+      deleteChunksBySpaceId: async (spaceId: string): Promise<number> => {
+        const prev = (this.state.knowledgeChunks || []).length;
+        this.state.knowledgeChunks = (this.state.knowledgeChunks || []).filter((c) => c.knowledgeSpaceId !== spaceId);
+        return prev - this.state.knowledgeChunks.length;
       },
       queryGrounded: async (spaceId: string, query: string, workspaceId?: string): Promise<GroundedQueryResponse> => {
         const space = this.state.knowledgeSpaces.find((s) => s.id === spaceId && (!workspaceId || s.workspaceId === workspaceId));
@@ -504,6 +566,325 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
         const events = this.state.auditEvents.filter((e) => !workspaceId || e.workspaceId === workspaceId);
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         return events.slice(0, limit).map((e) => ({ ...e }));
+      }
+    };
+
+    // 7. Research Sub-Repository (Milestone 9)
+    this.research = {
+      // Projects
+      getProjectById: async (id: string, workspaceId?: string): Promise<ResearchProject | null> => {
+        const p = (this.state.researchProjects || []).find(
+          (proj) => proj.id === id && (!workspaceId || proj.workspaceId === workspaceId)
+        );
+        return p ? { ...p } : null;
+      },
+      listProjects: async (workspaceId?: string, status?: ResearchProjectStatus): Promise<ResearchProject[]> => {
+        return (this.state.researchProjects || [])
+          .filter((p) => (!workspaceId || p.workspaceId === workspaceId) && (!status || p.status === status))
+          .map((p) => ({ ...p }));
+      },
+      createProject: async (project: Omit<ResearchProject, 'createdAt' | 'updatedAt'>): Promise<ResearchProject> => {
+        const now = new Date().toISOString();
+        const record: ResearchProject = {
+          ...project,
+          id: project.id || `proj-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          knowledgeSpaceIds: project.knowledgeSpaceIds || [],
+          createdAt: now,
+          updatedAt: now
+        };
+        if (!this.state.researchProjects) this.state.researchProjects = [];
+        this.state.researchProjects.push(record);
+        return { ...record };
+      },
+      updateProject: async (
+        id: string,
+        updates: Partial<Omit<ResearchProject, 'id' | 'workspaceId' | 'createdAt'>>,
+        workspaceId?: string
+      ): Promise<ResearchProject | null> => {
+        if (!this.state.researchProjects) return null;
+        const idx = this.state.researchProjects.findIndex(
+          (p) => p.id === id && (!workspaceId || p.workspaceId === workspaceId)
+        );
+        if (idx === -1) return null;
+        this.state.researchProjects[idx] = {
+          ...this.state.researchProjects[idx],
+          ...updates,
+          updatedAt: new Date().toISOString()
+        };
+        return { ...this.state.researchProjects[idx] };
+      },
+      deleteProject: async (id: string, workspaceId?: string): Promise<boolean> => {
+        if (!this.state.researchProjects) return false;
+        const prevLen = this.state.researchProjects.length;
+        this.state.researchProjects = this.state.researchProjects.filter(
+          (p) => !(p.id === id && (!workspaceId || p.workspaceId === workspaceId))
+        );
+        const deleted = this.state.researchProjects.length < prevLen;
+        if (deleted) {
+          if (this.state.researchQuestions) this.state.researchQuestions = this.state.researchQuestions.filter((q) => q.projectId !== id);
+          if (this.state.evidenceRecords) this.state.evidenceRecords = this.state.evidenceRecords.filter((e) => e.projectId !== id);
+          if (this.state.researchNotes) this.state.researchNotes = this.state.researchNotes.filter((n) => n.projectId !== id);
+          if (this.state.researchReports) this.state.researchReports = this.state.researchReports.filter((r) => r.projectId !== id);
+        }
+        return deleted;
+      },
+
+      // Questions
+      getQuestionById: async (id: string, projectId?: string): Promise<ResearchQuestion | null> => {
+        const q = (this.state.researchQuestions || []).find(
+          (item) => item.id === id && (!projectId || item.projectId === projectId)
+        );
+        return q ? { ...q } : null;
+      },
+      listQuestions: async (projectId: string, workspaceId?: string): Promise<ResearchQuestion[]> => {
+        return (this.state.researchQuestions || [])
+          .filter((q) => q.projectId === projectId && (!workspaceId || q.workspaceId === workspaceId))
+          .map((q) => ({ ...q }));
+      },
+      createQuestion: async (question: Omit<ResearchQuestion, 'createdAt' | 'updatedAt'>): Promise<ResearchQuestion> => {
+        const now = new Date().toISOString();
+        const record: ResearchQuestion = {
+          ...question,
+          id: question.id || `q-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          linkedEvidenceIds: question.linkedEvidenceIds || [],
+          createdAt: now,
+          updatedAt: now
+        };
+        if (!this.state.researchQuestions) this.state.researchQuestions = [];
+        this.state.researchQuestions.push(record);
+        return { ...record };
+      },
+      updateQuestion: async (
+        id: string,
+        updates: Partial<Omit<ResearchQuestion, 'id' | 'projectId' | 'workspaceId' | 'createdAt'>>
+      ): Promise<ResearchQuestion | null> => {
+        if (!this.state.researchQuestions) return null;
+        const idx = this.state.researchQuestions.findIndex((q) => q.id === id);
+        if (idx === -1) return null;
+        this.state.researchQuestions[idx] = {
+          ...this.state.researchQuestions[idx],
+          ...updates,
+          updatedAt: new Date().toISOString()
+        };
+        return { ...this.state.researchQuestions[idx] };
+      },
+      deleteQuestion: async (id: string): Promise<boolean> => {
+        if (!this.state.researchQuestions) return false;
+        const prevLen = this.state.researchQuestions.length;
+        this.state.researchQuestions = this.state.researchQuestions.filter((q) => q.id !== id);
+        return this.state.researchQuestions.length < prevLen;
+      },
+
+      // Evidence
+      getEvidenceById: async (id: string): Promise<EvidenceRecord | null> => {
+        const e = (this.state.evidenceRecords || []).find((item) => item.id === id);
+        return e ? { ...e } : null;
+      },
+      listEvidence: async (projectId: string, questionId?: string): Promise<EvidenceRecord[]> => {
+        return (this.state.evidenceRecords || [])
+          .filter((e) => e.projectId === projectId && (!questionId || e.questionId === questionId))
+          .map((e) => ({ ...e }));
+      },
+      createEvidence: async (evidence: Omit<EvidenceRecord, 'id' | 'createdAt'>): Promise<EvidenceRecord> => {
+        const now = new Date().toISOString();
+        const record: EvidenceRecord = {
+          ...evidence,
+          id: `ev-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          createdAt: now
+        };
+        if (!this.state.evidenceRecords) this.state.evidenceRecords = [];
+        this.state.evidenceRecords.push(record);
+        if (record.questionId && this.state.researchQuestions) {
+          const q = this.state.researchQuestions.find((item) => item.id === record.questionId);
+          if (q && !q.linkedEvidenceIds.includes(record.id)) {
+            q.linkedEvidenceIds.push(record.id);
+          }
+        }
+        return { ...record };
+      },
+      deleteEvidence: async (id: string): Promise<boolean> => {
+        if (!this.state.evidenceRecords) return false;
+        const prevLen = this.state.evidenceRecords.length;
+        this.state.evidenceRecords = this.state.evidenceRecords.filter((e) => e.id !== id);
+        const deleted = this.state.evidenceRecords.length < prevLen;
+        if (deleted && this.state.researchQuestions) {
+          for (const q of this.state.researchQuestions) {
+            q.linkedEvidenceIds = q.linkedEvidenceIds.filter((evId) => evId !== id);
+          }
+        }
+        return deleted;
+      },
+
+      // Notes
+      getNoteById: async (id: string): Promise<ResearchNote | null> => {
+        const n = (this.state.researchNotes || []).find((item) => item.id === id);
+        return n ? { ...n } : null;
+      },
+      listNotes: async (projectId: string): Promise<ResearchNote[]> => {
+        return (this.state.researchNotes || [])
+          .filter((n) => n.projectId === projectId)
+          .map((n) => ({ ...n }));
+      },
+      createNote: async (note: Omit<ResearchNote, 'id' | 'createdAt' | 'updatedAt'>): Promise<ResearchNote> => {
+        const now = new Date().toISOString();
+        const record: ResearchNote = {
+          ...note,
+          id: `note-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          linkedQuestionIds: note.linkedQuestionIds || [],
+          linkedEvidenceIds: note.linkedEvidenceIds || [],
+          tags: note.tags || [],
+          createdAt: now,
+          updatedAt: now
+        };
+        if (!this.state.researchNotes) this.state.researchNotes = [];
+        this.state.researchNotes.push(record);
+        return { ...record };
+      },
+      updateNote: async (
+        id: string,
+        updates: Partial<Omit<ResearchNote, 'id' | 'projectId' | 'workspaceId' | 'createdAt'>>
+      ): Promise<ResearchNote | null> => {
+        if (!this.state.researchNotes) return null;
+        const idx = this.state.researchNotes.findIndex((n) => n.id === id);
+        if (idx === -1) return null;
+        this.state.researchNotes[idx] = {
+          ...this.state.researchNotes[idx],
+          ...updates,
+          updatedAt: new Date().toISOString()
+        };
+        return { ...this.state.researchNotes[idx] };
+      },
+      deleteNote: async (id: string): Promise<boolean> => {
+        if (!this.state.researchNotes) return false;
+        const prevLen = this.state.researchNotes.length;
+        this.state.researchNotes = this.state.researchNotes.filter((n) => n.id !== id);
+        return this.state.researchNotes.length < prevLen;
+      },
+
+      // Reports
+      getReportById: async (id: string): Promise<ResearchReport | null> => {
+        const r = (this.state.researchReports || []).find((item) => item.id === id);
+        return r ? { ...r } : null;
+      },
+      listReports: async (projectId: string): Promise<ResearchReport[]> => {
+        return (this.state.researchReports || [])
+          .filter((r) => r.projectId === projectId)
+          .map((r) => ({ ...r }));
+      },
+      createReport: async (report: Omit<ResearchReport, 'id' | 'generatedAt'>): Promise<ResearchReport> => {
+        const now = new Date().toISOString();
+        const record: ResearchReport = {
+          ...report,
+          id: `rep-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          findings: report.findings || [],
+          evidenceReferences: report.evidenceReferences || [],
+          sourceCitations: report.sourceCitations || [],
+          limitations: report.limitations || [],
+          generatedAt: now
+        };
+        if (!this.state.researchReports) this.state.researchReports = [];
+        this.state.researchReports.push(record);
+        return { ...record };
+      },
+      deleteReport: async (id: string): Promise<boolean> => {
+        if (!this.state.researchReports) return false;
+        const prevLen = this.state.researchReports.length;
+        this.state.researchReports = this.state.researchReports.filter((r) => r.id !== id);
+        return this.state.researchReports.length < prevLen;
+      }
+    };
+
+    // 8. Files Sub-Repository (Milestone 10)
+    this.files = {
+      getById: async (id: string, workspaceId?: string): Promise<FileRecord | null> => {
+        const f = (this.state.files || []).find((file) => file.id === id && (!workspaceId || file.workspaceId === workspaceId));
+        return f ? { ...f } : null;
+      },
+      getByStorageKey: async (storageKey: string): Promise<FileRecord | null> => {
+        const f = (this.state.files || []).find((file) => file.storageKey === storageKey);
+        return f ? { ...f } : null;
+      },
+      list: async (filter?: FileListFilter): Promise<FileRecord[]> => {
+        let all = (this.state.files || []).map((f) => ({ ...f }));
+        if (filter?.workspaceId) {
+          all = all.filter((f) => f.workspaceId === filter.workspaceId);
+        }
+        if (filter?.ownerUserId) {
+          all = all.filter((f) => f.ownerUserId === filter.ownerUserId);
+        }
+        if (filter?.classId) {
+          all = all.filter((f) => f.classId === filter.classId);
+        }
+        if (filter?.assignmentId) {
+          all = all.filter((f) => f.assignmentId === filter.assignmentId);
+        }
+        if (filter?.submissionId) {
+          all = all.filter((f) => f.submissionId === filter.submissionId);
+        }
+        if (filter?.knowledgeSpaceId) {
+          all = all.filter((f) => f.knowledgeSpaceId === filter.knowledgeSpaceId);
+        }
+        if (filter?.researchProjectId) {
+          all = all.filter((f) => f.researchProjectId === filter.researchProjectId);
+        }
+        if (filter?.conversationId) {
+          all = all.filter((f) => f.conversationId === filter.conversationId);
+        }
+        if (filter?.status) {
+          all = all.filter((f) => f.status === filter.status);
+        }
+        if (filter?.extension) {
+          const extLower = filter.extension.toLowerCase().replace(/^\./, '');
+          all = all.filter((f) => f.extension.toLowerCase() === extLower);
+        }
+        all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return all;
+      },
+      create: async (file: Omit<FileRecord, 'id' | 'createdAt' | 'updatedAt' | 'downloadCount'> & { id?: string }): Promise<FileRecord> => {
+        const now = new Date().toISOString();
+        const record: FileRecord = {
+          ...file,
+          id: file.id || `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          downloadCount: 0,
+          createdAt: now,
+          updatedAt: now
+        };
+        if (!this.state.files) this.state.files = [];
+        this.state.files.push(record);
+        return { ...record };
+      },
+      update: async (
+        id: string,
+        updates: Partial<Omit<FileRecord, 'id' | 'workspaceId' | 'createdAt'>>,
+        workspaceId?: string
+      ): Promise<FileRecord | null> => {
+        if (!this.state.files) return null;
+        const idx = this.state.files.findIndex((f) => f.id === id && (!workspaceId || f.workspaceId === workspaceId));
+        if (idx === -1) return null;
+        this.state.files[idx] = {
+          ...this.state.files[idx],
+          ...updates,
+          updatedAt: new Date().toISOString()
+        };
+        return { ...this.state.files[idx] };
+      },
+      delete: async (id: string, workspaceId?: string): Promise<boolean> => {
+        if (!this.state.files) return false;
+        const prevLen = this.state.files.length;
+        this.state.files = this.state.files.filter((f) => !(f.id === id && (!workspaceId || f.workspaceId === workspaceId)));
+        return this.state.files.length < prevLen;
+      },
+      findBySha256: async (sha256: string, workspaceId: string): Promise<FileRecord | null> => {
+        const f = (this.state.files || []).find((file) => file.sha256 === sha256 && file.workspaceId === workspaceId && file.status !== 'deleted');
+        return f ? { ...f } : null;
+      },
+      incrementDownloadCount: async (id: string): Promise<void> => {
+        if (!this.state.files) return;
+        const file = this.state.files.find((f) => f.id === id);
+        if (file) {
+          file.downloadCount = (file.downloadCount || 0) + 1;
+          file.updatedAt = new Date().toISOString();
+        }
       }
     };
   }

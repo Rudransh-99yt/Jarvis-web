@@ -130,7 +130,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-01T15:30:00.000Z"
+      "updatedAt": "2026-10-03T09:56:55.447Z"
     },
     {
       "id": "ks-calculus",
@@ -152,7 +152,7 @@
         "What is the relation between Green Theorem and the Divergence Theorem?"
       ],
       "createdAt": "2026-09-12T11:00:00.000Z",
-      "updatedAt": "2026-09-28T09:15:00.000Z"
+      "updatedAt": "2026-10-03T09:56:26.833Z"
     }
   ],
   "knowledgeSources": [
@@ -166,6 +166,10 @@
       "size": "2.4 MB",
       "sizeBytes": 2516582,
       "status": "ready",
+      "ingestionStatus": "ready",
+      "chunkCount": 1,
+      "embeddingStatus": "ready",
+      "contentHash": "f45ab289cd3e8a64917036d6d84a71ef2807f4337b58793010b91df13838491d",
       "author": "Dr. Sarah",
       "summary": "Algebraic treatment of the 1D quantum harmonic oscillator using lowering (a) and raising (a-dagger) operators.",
       "fullText": "The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). The number operator N = a_dagger a has eigenstates |n> with eigenvalues n = 0, 1, 2, ... Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.",
@@ -183,6 +187,10 @@
       "size": "3.8 MB",
       "sizeBytes": 3984588,
       "status": "ready",
+      "ingestionStatus": "ready",
+      "chunkCount": 1,
+      "embeddingStatus": "ready",
+      "contentHash": "9c55b6eb2d6092fe6c3e74ffc8e96bf1153fa8ecf937d2f9d6c382f7bb7d5d71",
       "author": "Stark Physics Archive",
       "summary": "Time-dependent and time-independent Schrödinger equations, probability density conservation, and Hermitian operators.",
       "fullText": "The time-dependent Schrödinger equation i hbar d/dt Psi(x,t) = H Psi(x,t) governs the deterministic evolution of non-relativistic state vectors. For time-independent potentials, separation of variables yields H psi_n(x) = E_n psi_n(x). The Born rule dictates that |Psi(x,t)|^2 represents probability density, satisfying the continuity equation d rho / dt + div J = 0 where J is the probability current vector. Wave function collapse occurs upon projective measurement by Hermitian observables.",
@@ -200,12 +208,239 @@
       "size": "1.9 MB",
       "sizeBytes": 1992294,
       "status": "ready",
+      "ingestionStatus": "ready",
+      "chunkCount": 1,
+      "embeddingStatus": "ready",
+      "contentHash": "a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842",
       "author": "Dr. Sarah",
       "summary": "Unified formulation of generalized Stokes theorem on oriented smooth manifolds and vector field curl relations.",
       "fullText": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.",
       "tokenCount": 460,
       "createdAt": "2026-09-20T16:00:00.000Z",
       "updatedAt": "2026-09-20T16:00:00.000Z"
+    },
+    {
+      "id": "src-mus7w2mp-rauw",
+      "workspaceId": "ws-stark-core",
+      "knowledgeSpaceId": "ks-calculus",
+      "name": "Green Theorem Formulation.md",
+      "type": "notes",
+      "mimeType": "text/plain",
+      "size": "0.1 KB",
+      "sizeBytes": 108,
+      "status": "ready",
+      "ingestionStatus": "ready",
+      "embeddingStatus": "ready",
+      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
+      "author": "User",
+      "summary": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+      "fullText": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+      "tokenCount": 22,
+      "createdAt": "2026-10-03T09:56:26.833Z",
+      "updatedAt": "2026-10-03T09:56:26.833Z",
+      "chunkCount": 1
+    }
+  ],
+  "knowledgeChunks": [
+    {
+      "id": "chunk-src-qm-1-0",
+      "sourceId": "src-qm-1",
+      "knowledgeSpaceId": "ks-quantum",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Quantum Harmonic Oscillator & Ladder Operators",
+      "chunkIndex": 0,
+      "text": "The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). The number operator N = a_dagger a has eigenstates |n> with eigenvalues n = 0, 1, 2, ... Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.",
+      "tokenCount": 420,
+      "page": 1,
+      "section": "Harmonic Oscillator & Ladder Operators",
+      "contentHash": "f45ab289cd3e8a64917036d6d84a71ef2807f4337b58793010b91df13838491d",
+      "createdAt": "2026-09-15T12:00:00.000Z"
+    },
+    {
+      "id": "chunk-src-qm-2-0",
+      "sourceId": "src-qm-2",
+      "knowledgeSpaceId": "ks-quantum",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Schrödinger Wave Equation & Wave Mechanics",
+      "chunkIndex": 0,
+      "text": "The time-dependent Schrödinger equation i hbar d/dt Psi(x,t) = H Psi(x,t) governs the deterministic evolution of non-relativistic state vectors. For time-independent potentials, separation of variables yields H psi_n(x) = E_n psi_n(x). The Born rule dictates that |Psi(x,t)|^2 represents probability density, satisfying the continuity equation d rho / dt + div J = 0 where J is the probability current vector. Wave function collapse occurs upon projective measurement by Hermitian observables.",
+      "tokenCount": 510,
+      "page": 1,
+      "section": "Wave Mechanics & Probability Density",
+      "contentHash": "9c55b6eb2d6092fe6c3e74ffc8e96bf1153fa8ecf937d2f9d6c382f7bb7d5d71",
+      "createdAt": "2026-09-18T14:00:00.000Z"
+    },
+    {
+      "id": "chunk-src-calc-1-0",
+      "sourceId": "src-calc-1",
+      "knowledgeSpaceId": "ks-calculus",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+      "chunkIndex": 0,
+      "text": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.",
+      "tokenCount": 460,
+      "page": 1,
+      "section": "Stokes Theorem on Smooth Manifolds",
+      "contentHash": "a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842",
+      "createdAt": "2026-09-20T16:00:00.000Z"
+    },
+    {
+      "id": "chunk-src-test-chunk-0",
+      "sourceId": "src-test-chunk",
+      "knowledgeSpaceId": "ks-quantum",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Test Doc",
+      "chunkIndex": 0,
+      "text": "Paragraph 1 statement about quantum states.",
+      "tokenCount": 8,
+      "page": 1,
+      "section": "General",
+      "contentHash": "d559f5f8f7448066528f3b65619eb7c419a0d44b1a5ca2c2a6d0bd8a75c48484",
+      "createdAt": "2026-10-03T09:56:26.171Z"
+    },
+    {
+      "id": "chunk-src-mus7w2mp-rauw-0",
+      "sourceId": "src-mus7w2mp-rauw",
+      "knowledgeSpaceId": "ks-calculus",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Green Theorem Formulation.md",
+      "chunkIndex": 0,
+      "text": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+      "tokenCount": 22,
+      "page": 1,
+      "section": "General Content",
+      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
+      "createdAt": "2026-10-03T09:56:26.833Z",
+      "embedding": [
+        0,
+        0.112517,
+        0,
+        0,
+        0.05517,
+        0,
+        0,
+        0,
+        0,
+        0.029723,
+        0.182499,
+        0.110341,
+        0.05517,
+        0.05517,
+        0.05517,
+        0.126461,
+        0,
+        0,
+        0,
+        0.110341,
+        0.03256,
+        0,
+        0,
+        0.05517,
+        0.05517,
+        0.05517,
+        0,
+        0.05517,
+        0,
+        0.02893,
+        0,
+        0.110341,
+        0,
+        0.05517,
+        0.144538,
+        0.110341,
+        0,
+        0,
+        0.165511,
+        0.05517,
+        0.118363,
+        0,
+        0,
+        0.110341,
+        0.165511,
+        0.083596,
+        0,
+        0.05517,
+        0.165511,
+        0,
+        0,
+        0.091574,
+        0,
+        0.192242,
+        0.118222,
+        0,
+        0,
+        0,
+        0.05517,
+        0.05517,
+        0,
+        0,
+        0.039878,
+        0,
+        0.05517,
+        0.275852,
+        0.05517,
+        0.165511,
+        0.110341,
+        0.165511,
+        0.05517,
+        0,
+        0.05517,
+        0.164585,
+        0,
+        0.220682,
+        0.05517,
+        0,
+        0.137926,
+        0,
+        0,
+        0.05517,
+        0.05517,
+        0.05517,
+        0,
+        0.030585,
+        0.389849,
+        0,
+        0,
+        0.05517,
+        0,
+        0,
+        0,
+        0.038022,
+        0,
+        0,
+        0.06105,
+        0.068256,
+        0,
+        0.175919,
+        0.033703,
+        0.110341,
+        0.05517,
+        0.31889,
+        0,
+        0,
+        0.063052,
+        0,
+        0,
+        0.140651,
+        0.05517,
+        0.05517,
+        0,
+        0.034975,
+        0.129941,
+        0,
+        0,
+        0,
+        0,
+        0.072806,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.110341,
+        0.073561,
+        0.044584
+      ]
     }
   ],
   "classes": [
@@ -455,7 +690,7 @@
       "gradedCount": 0
     },
     {
-      "id": "asg-1791000146480-sdz1",
+      "id": "asg-1791021360000-zu1n",
       "classId": "class-phys-301",
       "className": "PHYS-301: Advanced Quantum & Electrodynamics",
       "title": "Quantum Entanglement & Bell Inequalities Lab",
@@ -513,5 +748,600 @@
     }
   ],
   "studyArtifacts": [],
-  "auditEvents": []
+  "auditEvents": [
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Arc_Reactor_Safety_Protocol.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 98,
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791021415441-t3s2",
+      "timestamp": "2026-10-03T09:56:55.441Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791021415443-31aqc",
+        "storageKey": "obj-2dada666a425-936131fc.pdf",
+        "sizeBytes": 98,
+        "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
+        "mimeType": "application/pdf",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 2,
+      "id": "audit-1791021415443-ftr9",
+      "timestamp": "2026-10-03T09:56:55.443Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Duplicate_Arc_Safety_Copy.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 98,
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791021415443-olkd",
+      "timestamp": "2026-10-03T09:56:55.443Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791021415443-m0i62",
+        "storageKey": "obj-2dada666a425-936131fc.pdf",
+        "sizeBytes": 98,
+        "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
+        "mimeType": "application/pdf",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791021415444-97zc",
+      "timestamp": "2026-10-03T09:56:55.444Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Toroidal_Field_Derivation.md",
+        "claimedMime": "text/markdown",
+        "sizeBytes": 339,
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791021415445-4fa8",
+      "timestamp": "2026-10-03T09:56:55.445Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791021415446-uqf5l",
+        "storageKey": "obj-7ad477b5e0cb-167e9628.md",
+        "sizeBytes": 339,
+        "sha256": "7ad477b5e0cbe12c66a4c561e484b6af0be599aab6fde8006b72c16e458cd482",
+        "mimeType": "text/markdown",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791021415446-5593",
+      "timestamp": "2026-10-03T09:56:55.446Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.deleted",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791021415443-m0i62",
+        "originalName": "Duplicate_Arc_Safety_Copy.pdf",
+        "storageKey": "obj-2dada666a425-936131fc.pdf",
+        "userId": "user-tony"
+      },
+      "ok": true,
+      "executionTimeMs": 0,
+      "id": "audit-1791021415450-ly0k",
+      "timestamp": "2026-10-03T09:56:55.450Z"
+    }
+  ],
+  "researchProjects": [
+    {
+      "id": "proj-arc-stabilization",
+      "workspaceId": "ws-stark-core",
+      "ownerId": "user-tony",
+      "title": "Arc Reactor Core Plasma Stabilization & Quantum Zero-Point Tapping",
+      "description": "Theoretical and experimental investigation into containment geometry and zero-point harmonic energy extraction for Mark-series arc power cores.",
+      "status": "active",
+      "researchQuestion": "Can quantum harmonic oscillator zero-point energy fluctuations be stabilized and harvested in compact toroidal magnetic fields?",
+      "knowledgeSpaceIds": [
+        "ks-quantum",
+        "ks-calculus"
+      ],
+      "createdAt": "2026-09-22T08:00:00.000Z",
+      "updatedAt": "2026-10-02T16:00:00.000Z"
+    },
+    {
+      "id": "proj-nanotech-alloys",
+      "workspaceId": "ws-stark-core",
+      "ownerId": "user-tony",
+      "title": "Vibranium-Titanium Nanocrystalline Matrix Cohesion",
+      "description": "Analyzing microscopic boundary conditions and surface curl distributions in polymorphic armor chasses.",
+      "status": "active",
+      "researchQuestion": "What differential geometry metrics guarantee boundary stability under supersonic aerodynamic shear?",
+      "knowledgeSpaceIds": [
+        "ks-calculus"
+      ],
+      "createdAt": "2026-09-25T11:00:00.000Z",
+      "updatedAt": "2026-10-01T12:00:00.000Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerId": "user-tony",
+      "title": "Arc Reactor Plasma Toroidal Boundary Study",
+      "description": "Temporarily paused for sensor recalibration.",
+      "status": "paused",
+      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
+      "knowledgeSpaceIds": [
+        "ks-quantum",
+        "ks-calculus"
+      ],
+      "id": "proj-1791021412901-htn7",
+      "createdAt": "2026-10-03T09:56:52.901Z",
+      "updatedAt": "2026-10-03T09:56:52.902Z"
+    },
+    {
+      "title": "Vibranium Lattice Resonance Project",
+      "researchQuestion": "What vibrational modes produce constructive acoustic interference in vibranium?",
+      "description": "",
+      "workspaceId": "ws-stark-core",
+      "ownerId": "user-tony",
+      "knowledgeSpaceIds": [],
+      "status": "active",
+      "id": "proj-1791021413823-eetv",
+      "createdAt": "2026-10-03T09:56:53.823Z",
+      "updatedAt": "2026-10-03T09:56:53.823Z"
+    }
+  ],
+  "researchQuestions": [
+    {
+      "id": "q-zero-point-harmonics",
+      "projectId": "proj-arc-stabilization",
+      "workspaceId": "ws-stark-core",
+      "title": "Zero-Point Energy Scaling in Ladder Ground States",
+      "question": "How do zero-point ground state fluctuations E_0 = 1/2 hbar omega interact with quantized magnetic vector potentials in toroidal cavities?",
+      "status": "investigating",
+      "priority": "high",
+      "notes": "Evaluating ladder operator commutators [a, a^dagger] = 1 within electromagnetic cavities.",
+      "linkedEvidenceIds": [
+        "ev-qm-ladder-1"
+      ],
+      "createdAt": "2026-09-23T09:00:00.000Z",
+      "updatedAt": "2026-10-02T14:00:00.000Z"
+    },
+    {
+      "id": "q-flux-containment-stokes",
+      "projectId": "proj-arc-stabilization",
+      "workspaceId": "ws-stark-core",
+      "title": "Toroidal Boundary Flux Containment via Stokes Theorem",
+      "question": "How does generalized Stokes theorem guarantee total magnetic curl flux is conserved across the open manifold boundary?",
+      "status": "answered",
+      "priority": "critical",
+      "notes": "Confirmed by analytical derivation of line integral over bounding curve.",
+      "linkedEvidenceIds": [
+        "ev-calc-stokes-1"
+      ],
+      "answer": "Stokes theorem confirms that the surface integral of the curl of the magnetic vector field equals the closed line integral around the bounding perimeter, proving zero uncontrolled plasma boundary leakage.",
+      "createdAt": "2026-09-24T10:00:00.000Z",
+      "updatedAt": "2026-10-02T15:30:00.000Z"
+    },
+    {
+      "projectId": "proj-1791021412901-htn7",
+      "workspaceId": "ws-stark-core",
+      "title": "Magnetic Boundary Line Integral Equivalence",
+      "question": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
+      "priority": "critical",
+      "status": "answered",
+      "notes": "Checking against classical Stokes formulation in ks-calculus.",
+      "id": "q-1791021412902-0le9",
+      "linkedEvidenceIds": [
+        "ev-1791021412903-go0u"
+      ],
+      "createdAt": "2026-10-03T09:56:52.902Z",
+      "updatedAt": "2026-10-03T09:56:52.903Z",
+      "answer": "Stokes theorem confirms surface integral of curl F equals closed line integral around boundary."
+    }
+  ],
+  "evidenceRecords": [
+    {
+      "id": "ev-qm-ladder-1",
+      "projectId": "proj-arc-stabilization",
+      "workspaceId": "ws-stark-core",
+      "questionId": "q-zero-point-harmonics",
+      "knowledgeSourceId": "src-qm-1",
+      "knowledgeSpaceId": "ks-quantum",
+      "sourceTitle": "Quantum Harmonic Oscillator & Ladder Operators",
+      "chunkId": "chunk-src-qm-1-0",
+      "chunkText": "The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.",
+      "citation": {
+        "sourceId": "src-qm-1",
+        "sourceTitle": "Quantum Harmonic Oscillator & Ladder Operators",
+        "chunkId": "chunk-src-qm-1-0",
+        "spaceId": "ks-quantum",
+        "page": 1,
+        "section": "Harmonic Oscillator & Ladder Operators",
+        "excerpt": "Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.",
+        "score": 0.94
+      },
+      "relevance": 0.94,
+      "userNote": "Definitive analytical confirmation of persistent non-zero ground state oscillation energy.",
+      "tags": [
+        "Quantum",
+        "Harmonic Oscillator",
+        "Zero-Point"
+      ],
+      "createdAt": "2026-09-23T11:00:00.000Z"
+    },
+    {
+      "id": "ev-calc-stokes-1",
+      "projectId": "proj-arc-stabilization",
+      "workspaceId": "ws-stark-core",
+      "questionId": "q-flux-containment-stokes",
+      "knowledgeSourceId": "src-calc-1",
+      "knowledgeSpaceId": "ks-calculus",
+      "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+      "chunkId": "chunk-src-calc-1-0",
+      "chunkText": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.",
+      "citation": {
+        "sourceId": "src-calc-1",
+        "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+        "chunkId": "chunk-src-calc-1-0",
+        "spaceId": "ks-calculus",
+        "page": 1,
+        "section": "Stokes Theorem & Manifold Boundaries",
+        "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.",
+        "score": 0.92
+      },
+      "relevance": 0.92,
+      "userNote": "Mathematical foundation for magnetic toroidal plasma boundary containment proof.",
+      "tags": [
+        "Calculus",
+        "Stokes Theorem",
+        "Containment"
+      ],
+      "createdAt": "2026-09-24T12:00:00.000Z"
+    },
+    {
+      "projectId": "proj-1791021412901-htn7",
+      "workspaceId": "ws-stark-core",
+      "questionId": "q-1791021412902-0le9",
+      "knowledgeSourceId": "src-calc-1",
+      "knowledgeSpaceId": "ks-calculus",
+      "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+      "chunkId": "chunk-src-calc-1-0",
+      "chunkText": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.",
+      "citation": {
+        "sourceId": "src-calc-1",
+        "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+        "chunkId": "chunk-src-calc-1-0",
+        "spaceId": "ks-calculus",
+        "page": 1,
+        "section": "Stokes Theorem on Smooth Manifolds",
+        "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around",
+        "score": 0.95
+      },
+      "relevance": 0.95,
+      "userNote": "Definitive analytical proof of surface curl boundary line equivalence.",
+      "tags": [
+        "Stokes Theorem",
+        "Plasma Boundary"
+      ],
+      "id": "ev-1791021412903-go0u",
+      "createdAt": "2026-10-03T09:56:52.903Z"
+    }
+  ],
+  "researchNotes": [
+    {
+      "id": "note-ladder-operators",
+      "projectId": "proj-arc-stabilization",
+      "workspaceId": "ws-stark-core",
+      "authorId": "user-tony",
+      "title": "Containment Field Harmonic Synthesis",
+      "content": "Using ladder operators a and a_dagger, the number operator N = a_dagger a provides quantized energy levels. The zero-point energy E_0 = 1/2 hbar omega is unavoidable but can be phase-locked using high-frequency magnetic coils.",
+      "linkedQuestionIds": [
+        "q-zero-point-harmonics"
+      ],
+      "linkedEvidenceIds": [
+        "ev-qm-ladder-1"
+      ],
+      "tags": [
+        "Quantum",
+        "Plasma",
+        "Core Engineering"
+      ],
+      "createdAt": "2026-09-24T14:00:00.000Z",
+      "updatedAt": "2026-09-24T14:30:00.000Z"
+    },
+    {
+      "projectId": "proj-1791021412901-htn7",
+      "workspaceId": "ws-stark-core",
+      "authorId": "user-tony",
+      "title": "Plasma Boundary Mathematical Synthesis",
+      "content": "Boundary curve integration establishes exact conservation of magnetic flux.",
+      "linkedQuestionIds": [
+        "q-1791021412902-0le9"
+      ],
+      "linkedEvidenceIds": [
+        "ev-1791021412903-go0u"
+      ],
+      "tags": [
+        "Plasma",
+        "Derivations"
+      ],
+      "id": "note-1791021412903-zxth",
+      "createdAt": "2026-10-03T09:56:52.903Z",
+      "updatedAt": "2026-10-03T09:56:52.903Z"
+    }
+  ],
+  "researchReports": [
+    {
+      "id": "rep-arc-phase1",
+      "projectId": "proj-arc-stabilization",
+      "workspaceId": "ws-stark-core",
+      "title": "Phase I Synthesis: Arc Reactor Toroidal Containment & Quantum Ground States",
+      "researchQuestion": "Can quantum harmonic oscillator zero-point energy fluctuations be stabilized and harvested in compact toroidal magnetic fields?",
+      "executiveSummary": "This preliminary report unifies quantum ladder operator theory with differential boundary integration to establish the theoretical feasibility of stable zero-point energy extraction within a toroidal magnetic containment geometry.",
+      "findings": [
+        "The ground state energy E_0 = 1/2 hbar omega represents an invariant baseline that cannot decay to zero, confirming a persistent energy reservoir.",
+        "Generalized Stokes theorem confirms that the total surface curl of magnetic flux is strictly bounded by the boundary line integral, preventing plasma leakage across the manifold.",
+        "Quantized ladder operators demonstrate stable discrete transitions with eigenvalue spacing of hbar omega."
+      ],
+      "evidenceReferences": [
+        "ev-qm-ladder-1",
+        "ev-calc-stokes-1"
+      ],
+      "sourceCitations": [
+        {
+          "sourceId": "src-qm-1",
+          "sourceTitle": "Quantum Harmonic Oscillator & Ladder Operators",
+          "excerpt": "Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations."
+        },
+        {
+          "sourceId": "src-calc-1",
+          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S."
+        }
+      ],
+      "limitations": [
+        "Relativistic QED quantum corrections have not yet been incorporated.",
+        "Thermal dissipation under continuous 100% core load requires high-temperature cryogenic cooling validation."
+      ],
+      "generatedAt": "2026-10-02T16:00:00.000Z"
+    },
+    {
+      "projectId": "proj-1791021412901-htn7",
+      "workspaceId": "ws-stark-core",
+      "title": "Formal Technical Synthesis: Toroidal Plasma Confinement",
+      "researchQuestion": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
+      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the l...",
+      "findings": [
+        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+      ],
+      "evidenceReferences": [
+        "ev-1791021412903-go0u"
+      ],
+      "sourceCitations": [
+        {
+          "sourceId": "src-mus7w2mp-rauw",
+          "sourceTitle": "Green Theorem Formulation.md",
+          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
+        },
+        {
+          "sourceId": "src-calc-1",
+          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+        }
+      ],
+      "limitations": [
+        "Grounded solely on currently ingested and indexed Knowledge Space records.",
+        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
+      ],
+      "id": "rep-1791021413822-lf2h",
+      "generatedAt": "2026-10-03T09:56:53.822Z"
+    },
+    {
+      "projectId": "proj-1791021412901-htn7",
+      "workspaceId": "ws-stark-core",
+      "title": "Automated Brief on Harmonic Zero-Point Energy",
+      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
+      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of...",
+      "findings": [
+        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
+        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+      ],
+      "evidenceReferences": [
+        "ev-1791021412903-go0u"
+      ],
+      "sourceCitations": [
+        {
+          "sourceId": "src-mus7w2mp-rauw",
+          "sourceTitle": "Green Theorem Formulation.md",
+          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
+        },
+        {
+          "sourceId": "src-calc-1",
+          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+        }
+      ],
+      "limitations": [
+        "Grounded solely on currently ingested and indexed Knowledge Space records.",
+        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
+      ],
+      "id": "rep-1791021414352-qcfa",
+      "generatedAt": "2026-10-03T09:56:54.352Z"
+    }
+  ],
+  "files": [
+    {
+      "id": "file-physics-syllabus",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "user-tony",
+      "originalName": "PHYS301_Quantum_Mechanics_Syllabus.pdf",
+      "storageKey": "obj-seed-phys301-syllabus-pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 1048576,
+      "extension": "pdf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "ready",
+      "classId": "class-phys-301",
+      "description": "Comprehensive syllabus and reading schedule for Advanced Quantum Physics.",
+      "tags": [
+        "Syllabus",
+        "Quantum Physics",
+        "Materials"
+      ],
+      "downloadCount": 14,
+      "isPublicInWorkspace": true,
+      "createdAt": "2026-09-01T08:00:00.000Z",
+      "updatedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "file-calculus-worksheet",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "user-tony",
+      "originalName": "Stokes_Theorem_Problem_Set.pdf",
+      "storageKey": "obj-seed-stokes-worksheet-pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 524288,
+      "extension": "pdf",
+      "sha256": "b5d4045c3f466fa91fe2cc6abe79232a1a57cdf104f7a26e716e0a1e2789df78",
+      "status": "ready",
+      "classId": "class-math-202",
+      "assignmentId": "asg-stokes-1",
+      "description": "Problem set covering surface integrals and curl line integrals.",
+      "tags": [
+        "Worksheet",
+        "Calculus",
+        "Stokes"
+      ],
+      "downloadCount": 28,
+      "isPublicInWorkspace": true,
+      "createdAt": "2026-09-18T10:00:00.000Z",
+      "updatedAt": "2026-09-18T10:00:00.000Z"
+    },
+    {
+      "id": "file-submission-alex",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "student-1",
+      "originalName": "Alex_Chen_Stokes_Theorem_Derivation.png",
+      "storageKey": "obj-seed-alex-stokes-diagram-png",
+      "mimeType": "image/png",
+      "sizeBytes": 245760,
+      "extension": "png",
+      "sha256": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+      "status": "ready",
+      "classId": "class-math-202",
+      "assignmentId": "asg-stokes-1",
+      "submissionId": "sub-1",
+      "description": "Hand-drawn proof diagram of boundary orientation for open hemisphere.",
+      "tags": [
+        "Student Submission",
+        "Proof Diagram"
+      ],
+      "downloadCount": 2,
+      "isPublicInWorkspace": false,
+      "createdAt": "2026-09-21T14:30:00.000Z",
+      "updatedAt": "2026-09-21T14:30:00.000Z"
+    },
+    {
+      "id": "file-research-plasma-spec",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "user-tony",
+      "originalName": "Arc_Reactor_Toroidal_Specs.md",
+      "storageKey": "obj-seed-plasma-spec-md",
+      "mimeType": "text/markdown",
+      "sizeBytes": 4096,
+      "extension": "md",
+      "sha256": "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+      "status": "ready",
+      "researchProjectId": "proj-arc-stabilization",
+      "knowledgeSpaceId": "ks-quantum",
+      "description": "Toroidal magnetic chamber specifications and zero-point harmonic constraints.",
+      "tags": [
+        "Research",
+        "Toroidal",
+        "Specifications"
+      ],
+      "downloadCount": 5,
+      "isPublicInWorkspace": true,
+      "createdAt": "2026-09-22T11:00:00.000Z",
+      "updatedAt": "2026-09-22T11:00:00.000Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "user-tony",
+      "originalName": "Arc_Reactor_Safety_Protocol.pdf",
+      "storageKey": "obj-2dada666a425-936131fc.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 98,
+      "extension": "pdf",
+      "sha256": "2dada666a425585b2f177e2be09b8b3a58e6e2d475406f330c825e1a02cfffe9",
+      "status": "ready",
+      "classId": "class-phys-301",
+      "description": "Official safety guidelines for toroidal arc containment.",
+      "tags": [
+        "Safety",
+        "Arc Reactor"
+      ],
+      "isPublicInWorkspace": true,
+      "id": "file-1791021415443-31aqc",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T09:56:55.443Z",
+      "updatedAt": "2026-10-03T09:56:55.443Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "user-tony",
+      "originalName": "Toroidal_Field_Derivation.md",
+      "storageKey": "obj-7ad477b5e0cb-167e9628.md",
+      "mimeType": "text/markdown",
+      "sizeBytes": 339,
+      "extension": "md",
+      "sha256": "7ad477b5e0cbe12c66a4c561e484b6af0be599aab6fde8006b72c16e458cd482",
+      "status": "ready",
+      "knowledgeSpaceId": "ks-quantum",
+      "tags": [],
+      "isPublicInWorkspace": true,
+      "id": "file-1791021415446-uqf5l",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T09:56:55.446Z",
+      "updatedAt": "2026-10-03T09:56:55.449Z",
+      "knowledgeSourceId": "src-mus7wopj-hwbp"
+    }
+  ]
 }

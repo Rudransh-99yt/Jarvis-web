@@ -170,11 +170,42 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     }
   };
 
+  const handleDeleteSource = async (spaceId: string, sourceId: string) => {
+    try {
+      const res = await fetch(`/api/knowledge-spaces/${spaceId}/sources/${sourceId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setKnowledgeSpaces((prev) =>
+          prev.map((s) => (s.id === spaceId ? { ...s, sources: s.sources.filter((src) => src.id !== sourceId) } : s))
+        );
+        showNotification(`Knowledge source purged from workspace.`);
+      }
+    } catch (err) {
+      console.error('Failed to delete source:', err);
+    }
+  };
+
+  const handleReindexSource = async (spaceId: string, sourceId: string) => {
+    try {
+      const res = await fetch(`/api/knowledge-spaces/${spaceId}/sources/${sourceId}/ingest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forceReindex: true })
+      });
+      if (res.ok) {
+        showNotification(`Re-indexing triggered for source ${sourceId}.`);
+      }
+    } catch (err) {
+      console.error('Failed to reindex source:', err);
+    }
+  };
+
   const handleQueryGrounded = async (spaceId: string, query: string): Promise<GroundedQueryResponse> => {
     const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/query`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
+      body: JSON.stringify({ query, userRole: currentRole, userId: currentRole === 'student' ? 'student-1' : 'teacher-1' })
     });
     if (!res.ok) throw new Error('Query failed');
     return res.json();
@@ -298,6 +329,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           onSelectSpace={(id) => setSelectedSpaceId(id)}
           onCreateSpace={handleCreateSpace}
           onAddSource={handleAddSource}
+          onDeleteSource={handleDeleteSource}
+          onReindexSource={handleReindexSource}
           onQueryGrounded={handleQueryGrounded}
         />
       )}

@@ -49,11 +49,18 @@ export class JsonFileStore {
             messages: Array.isArray(parsed.messages) ? parsed.messages : [],
             knowledgeSpaces: Array.isArray(parsed.knowledgeSpaces) ? parsed.knowledgeSpaces : [],
             knowledgeSources: Array.isArray(parsed.knowledgeSources) ? parsed.knowledgeSources : [],
+            knowledgeChunks: Array.isArray(parsed.knowledgeChunks) ? parsed.knowledgeChunks : [],
             classes: Array.isArray(parsed.classes) ? parsed.classes : [],
             assignments: Array.isArray(parsed.assignments) ? parsed.assignments : [],
             submissions: Array.isArray(parsed.submissions) ? parsed.submissions : [],
             studyArtifacts: Array.isArray(parsed.studyArtifacts) ? parsed.studyArtifacts : [],
-            auditEvents: Array.isArray(parsed.auditEvents) ? parsed.auditEvents : []
+            auditEvents: Array.isArray(parsed.auditEvents) ? parsed.auditEvents : [],
+            researchProjects: Array.isArray(parsed.researchProjects) && parsed.researchProjects.length > 0 ? parsed.researchProjects : (INITIAL_DATABASE_SCHEMA.researchProjects || []),
+            researchQuestions: Array.isArray(parsed.researchQuestions) && parsed.researchQuestions.length > 0 ? parsed.researchQuestions : (INITIAL_DATABASE_SCHEMA.researchQuestions || []),
+            evidenceRecords: Array.isArray(parsed.evidenceRecords) && parsed.evidenceRecords.length > 0 ? parsed.evidenceRecords : (INITIAL_DATABASE_SCHEMA.evidenceRecords || []),
+            researchNotes: Array.isArray(parsed.researchNotes) && parsed.researchNotes.length > 0 ? parsed.researchNotes : (INITIAL_DATABASE_SCHEMA.researchNotes || []),
+            researchReports: Array.isArray(parsed.researchReports) && parsed.researchReports.length > 0 ? parsed.researchReports : (INITIAL_DATABASE_SCHEMA.researchReports || []),
+            files: Array.isArray(parsed.files) && parsed.files.length > 0 ? parsed.files : (INITIAL_DATABASE_SCHEMA.files || [])
           };
           return;
         }
@@ -88,6 +95,9 @@ export class JsonFileStore {
         });
       }
     }, this.autoSaveDelayMs);
+    if (this.saveTimeout && typeof this.saveTimeout.unref === 'function') {
+      this.saveTimeout.unref();
+    }
   }
 
   async flush(): Promise<void> {

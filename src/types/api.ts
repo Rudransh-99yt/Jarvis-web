@@ -2,6 +2,8 @@
 
 export * from './platform.ts';
 export * from './education.ts';
+export * from './research.ts';
+export * from './storage.ts';
 
 export interface HealthResponse {
   status: 'healthy' | 'degraded' | 'unhealthy';

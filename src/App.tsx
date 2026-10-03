@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AppShell } from './components/layout/AppShell.tsx';
 import { CommandDeckSector } from './sectors/command/CommandDeckSector.tsx';
 import { EducationSector } from './sectors/education/EducationSector.tsx';
+import { ResearchSector } from './sectors/research/ResearchSector.tsx';
 import { soundEffects } from './services/soundEffects.ts';
 import { speechService } from './services/speechService.ts';
 import { processJarvisCommand } from './services/commandProcessor.ts';
@@ -574,6 +575,12 @@ export function App() {
         <EducationSector
           currentRole={educationRole}
           onToggleRole={() => setEducationRole(educationRole === 'student' ? 'teacher' : 'student')}
+          onSendChatMessage={sendChatMessage}
+        />
+      )}
+
+      {currentSector === 'research' && (
+        <ResearchSector
           onSendChatMessage={sendChatMessage}
         />
       )}

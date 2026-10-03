@@ -16,6 +16,16 @@ import type {
   GroundedQueryResponse
 } from '../../src/types/education.ts';
 import type { MessageRole } from '../../src/types/api.ts';
+import type {
+  ResearchProject,
+  ResearchQuestion,
+  EvidenceRecord,
+  ResearchNote,
+  ResearchReport,
+  ResearchProjectStatus,
+  ResearchQuestionStatus
+} from '../../src/types/research.ts';
+import type { FileRecord, FileListFilter } from '../../src/types/storage.ts';
 
 export interface IUserRepository {
   getById(id: string): Promise<User | null>;
@@ -62,10 +72,19 @@ export interface IKnowledgeRepository {
 
   // Sources
   getSourceById(id: string): Promise<KnowledgeSourceRecord | null>;
+  getSourceByHash(contentHash: string, spaceId?: string): Promise<KnowledgeSourceRecord | null>;
   listSourcesForSpace(spaceId: string, workspaceId?: string): Promise<KnowledgeSourceRecord[]>;
   createSource(source: Omit<KnowledgeSourceRecord, 'createdAt' | 'updatedAt'>): Promise<KnowledgeSourceRecord>;
+  updateSource(id: string, updates: Partial<Omit<KnowledgeSourceRecord, 'id' | 'createdAt'>>): Promise<KnowledgeSourceRecord | null>;
   updateSourceStatus(id: string, status: KnowledgeSourceRecord['status'], errorMessage?: string): Promise<KnowledgeSourceRecord | null>;
   deleteSource(id: string): Promise<boolean>;
+
+  // Chunks & Local Vector Storage
+  upsertChunks(chunks: import('./types.ts').KnowledgeChunkRecord[]): Promise<void>;
+  getChunksForSource(sourceId: string): Promise<import('./types.ts').KnowledgeChunkRecord[]>;
+  getChunksForSpace(spaceId: string, workspaceId?: string): Promise<import('./types.ts').KnowledgeChunkRecord[]>;
+  deleteChunksBySourceId(sourceId: string): Promise<number>;
+  deleteChunksBySpaceId(spaceId: string): Promise<number>;
   
   // Grounded search across indexed sources
   queryGrounded(spaceId: string, query: string, workspaceId?: string): Promise<GroundedQueryResponse>;
@@ -100,6 +119,52 @@ export interface IAuditRepository {
   listRecentEvents(limit?: number, workspaceId?: string): Promise<ToolAuditEvent[]>;
 }
 
+export interface IResearchRepository {
+  // Projects
+  getProjectById(id: string, workspaceId?: string): Promise<ResearchProject | null>;
+  listProjects(workspaceId?: string, status?: ResearchProjectStatus): Promise<ResearchProject[]>;
+  createProject(project: Omit<ResearchProject, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<ResearchProject>;
+  updateProject(id: string, updates: Partial<Omit<ResearchProject, 'id' | 'workspaceId' | 'createdAt'>>, workspaceId?: string): Promise<ResearchProject | null>;
+  deleteProject(id: string, workspaceId?: string): Promise<boolean>;
+
+  // Questions
+  getQuestionById(id: string, projectId?: string): Promise<ResearchQuestion | null>;
+  listQuestions(projectId: string, workspaceId?: string): Promise<ResearchQuestion[]>;
+  createQuestion(question: Omit<ResearchQuestion, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<ResearchQuestion>;
+  updateQuestion(id: string, updates: Partial<Omit<ResearchQuestion, 'id' | 'projectId' | 'workspaceId' | 'createdAt'>>): Promise<ResearchQuestion | null>;
+  deleteQuestion(id: string): Promise<boolean>;
+
+  // Evidence
+  getEvidenceById(id: string): Promise<EvidenceRecord | null>;
+  listEvidence(projectId: string, questionId?: string): Promise<EvidenceRecord[]>;
+  createEvidence(evidence: Omit<EvidenceRecord, 'id' | 'createdAt'>): Promise<EvidenceRecord>;
+  deleteEvidence(id: string): Promise<boolean>;
+
+  // Notes
+  getNoteById(id: string): Promise<ResearchNote | null>;
+  listNotes(projectId: string): Promise<ResearchNote[]>;
+  createNote(note: Omit<ResearchNote, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<ResearchNote>;
+  updateNote(id: string, updates: Partial<Omit<ResearchNote, 'id' | 'projectId' | 'workspaceId' | 'createdAt'>>): Promise<ResearchNote | null>;
+  deleteNote(id: string): Promise<boolean>;
+
+  // Reports
+  getReportById(id: string): Promise<ResearchReport | null>;
+  listReports(projectId: string): Promise<ResearchReport[]>;
+  createReport(report: Omit<ResearchReport, 'id' | 'generatedAt'> & { id?: string }): Promise<ResearchReport>;
+  deleteReport(id: string): Promise<boolean>;
+}
+
+export interface IFileRepository {
+  getById(id: string, workspaceId?: string): Promise<FileRecord | null>;
+  getByStorageKey(storageKey: string): Promise<FileRecord | null>;
+  list(filter?: FileListFilter): Promise<FileRecord[]>;
+  create(file: Omit<FileRecord, 'id' | 'createdAt' | 'updatedAt' | 'downloadCount'> & { id?: string }): Promise<FileRecord>;
+  update(id: string, updates: Partial<Omit<FileRecord, 'id' | 'workspaceId' | 'createdAt'>>, workspaceId?: string): Promise<FileRecord | null>;
+  delete(id: string, workspaceId?: string): Promise<boolean>;
+  findBySha256(sha256: string, workspaceId: string): Promise<FileRecord | null>;
+  incrementDownloadCount(id: string): Promise<void>;
+}
+
 export interface IJarvisDataRepository {
   readonly isPersistent: boolean;
   readonly storagePath?: string;
@@ -110,6 +175,8 @@ export interface IJarvisDataRepository {
   knowledge: IKnowledgeRepository;
   education: IEducationRepository;
   audit: IAuditRepository;
+  research: IResearchRepository;
+  files: IFileRepository;
 
   init(): Promise<void>;
   seed(force?: boolean): Promise<void>;

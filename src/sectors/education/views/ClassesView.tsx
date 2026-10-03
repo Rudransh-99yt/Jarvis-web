@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { EducationClass, EducationRole } from '../../../types/education.ts';
-import { BookOpen, Calendar, MapPin, Users, FileText, Download, Bell, PlusCircle } from 'lucide-react';
+import { BookOpen, Calendar, MapPin, Users, FileText, Download, Bell, PlusCircle, UploadCloud } from 'lucide-react';
+import { FileUploadModal } from '../../../components/files/FileUploadModal.tsx';
+import type { FileRecord } from '../../../types/storage.ts';
 
 interface ClassesViewProps {
   classes: EducationClass[];
@@ -10,6 +12,7 @@ interface ClassesViewProps {
 export const ClassesView: React.FC<ClassesViewProps> = ({ classes, currentRole }) => {
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || '');
   const [downloadedNotice, setDownloadedNotice] = useState<string | null>(null);
+  const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
 
   const selectedClass = classes.find((c) => c.id === selectedClassId) || classes[0];
 
@@ -33,7 +36,10 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ classes, currentRole }
 
         {currentRole === 'teacher' && (
           <button
-            onClick={() => alert('Class creation wizard enabled for instructors.')}
+            onClick={() => {
+              setDownloadedNotice('Class roster management active. Select any course to view or upload materials.');
+              setTimeout(() => setDownloadedNotice(null), 3500);
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-400/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono tracking-wider transition-all self-start md:self-auto"
           >
             <PlusCircle className="w-4 h-4 text-cyan-400" />
@@ -167,6 +173,16 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ classes, currentRole }
                     Course Documents & Lecture Materials ({selectedClass.materials.length})
                   </h3>
                 </div>
+
+                {currentRole === 'teacher' && (
+                  <button
+                    onClick={() => setIsUploadOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-all cursor-pointer"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    Upload Material
+                  </button>
+                )}
               </div>
 
               <div className="space-y-2.5">
@@ -199,6 +215,28 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ classes, currentRole }
           </div>
         )}
       </div>
+
+      {/* File Upload Modal for Teachers */}
+      <FileUploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onSuccess={(fileRecord: FileRecord) => {
+          selectedClass.materials.push({
+            id: fileRecord.id,
+            title: fileRecord.originalName,
+            type: fileRecord.extension === 'pdf' ? 'pdf' : 'notes',
+            url: `/api/files/${fileRecord.id}/download`,
+            uploadedAt: 'Just now',
+            size: `${(fileRecord.sizeBytes / 1024).toFixed(1)} KB`
+          });
+          setDownloadedNotice(`Uploaded '${fileRecord.originalName}' to ${selectedClass.name}.`);
+          setTimeout(() => setDownloadedNotice(null), 4000);
+        }}
+        workspaceId="ws-stark-core"
+        defaultAssociations={{ classId: selectedClass?.id }}
+        title={`Upload Material for ${selectedClass?.code || 'Course'}`}
+        description="Attach PDFs, lecture notes, or reference worksheets to this course syllabus."
+      />
     </div>
   );
 };

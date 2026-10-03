@@ -140,41 +140,70 @@ educationRouter.post('/knowledge-spaces', (req: Request, res: Response) => {
   res.status(201).json({ knowledgeSpace: created });
 });
 
-// POST /api/education/knowledge-spaces/:id/sources - Add source document
-educationRouter.post('/knowledge-spaces/:id/sources', (req: Request, res: Response) => {
-  const { title, type, author, summary, fullText, tokenCount } = req.body;
-  if (!title || !fullText) {
-    res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'title and fullText are required.' } });
+// POST /api/education/knowledge-spaces/:id/sources - Add source document & trigger RAG ingestion
+educationRouter.post('/knowledge-spaces/:id/sources', async (req: Request, res: Response) => {
+  const { title, name, type, author, summary, fullText, content } = req.body;
+  const sourceName = title || name;
+  const rawText = fullText || content;
+
+  if (!sourceName || !rawText) {
+    res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'title and fullText/content are required.' } });
     return;
   }
 
   const spaceId = req.params.id as string;
-  const newSource = educationStore.addSourceToSpace(spaceId, {
-    title,
-    type: type || 'notes',
-    author: author || 'User',
-    summary: summary || fullText.slice(0, 150),
-    fullText,
-    tokenCount: tokenCount || Math.round(fullText.split(/\s+/).length * 1.3)
-  });
-
-  if (!newSource) {
+  const space = educationStore.getKnowledgeSpace(spaceId);
+  if (!space) {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge Space not found.' } });
     return;
   }
 
-  res.status(201).json({ source: newSource });
+  const { ingestionPipeline } = await import('../../rag/ingestionPipeline.ts');
+  const ingestionResult = await ingestionPipeline.ingestSource({
+    workspaceId: 'ws-stark-core',
+    knowledgeSpaceId: spaceId,
+    name: sourceName.trim(),
+    rawContent: rawText,
+    type: type || 'notes',
+    author: author || 'User'
+  });
+
+  const sources = educationStore.getKnowledgeSpace(spaceId)?.sources || [];
+  const createdSource = sources.find((s) => s.id === ingestionResult.sourceId) || {
+    id: ingestionResult.sourceId,
+    spaceId,
+    title: sourceName,
+    type: type || 'notes',
+    author: author || 'User',
+    dateAdded: new Date().toISOString().split('T')[0],
+    summary: summary || rawText.slice(0, 150),
+    fullText: rawText,
+    tokenCount: ingestionResult.tokenCount
+  };
+
+  res.status(201).json({ source: createdSource, ingestion: ingestionResult });
 });
 
 // POST /api/education/knowledge-spaces/:id/query - Grounded retrieval Q&A
-educationRouter.post('/knowledge-spaces/:id/query', (req: Request, res: Response) => {
-  const { query } = req.body;
+educationRouter.post('/knowledge-spaces/:id/query', async (req: Request, res: Response) => {
+  const { query, userId, userRole } = req.body;
   if (!query || typeof query !== 'string') {
     res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'query string is required.' } });
     return;
   }
 
   const spaceId = req.params.id as string;
-  const result = educationStore.queryGrounded(spaceId, query);
-  res.json(result);
+
+  try {
+    const { groundingService } = await import('../../rag/groundingService.ts');
+    const result = await groundingService.answerQuery(spaceId, query, {
+      workspaceId: 'ws-stark-core',
+      userId,
+      userRole
+    });
+    res.json(result);
+  } catch (err: any) {
+    const fallbackResult = educationStore.queryGrounded(spaceId, query);
+    res.json(fallbackResult);
+  }
 });

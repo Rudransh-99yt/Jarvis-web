@@ -9,7 +9,7 @@
     "preview": "vite preview --host 0.0.0.0 --port 3000",
     "start": "tsx server.ts",
     "lint": "tsc --noEmit",
-    "test": "node --input-type=module -e \"import './tests/milestone4_tools.test.ts';\" && node --input-type=module -e \"import './tests/education_sector.test.ts';\" && node --input-type=module -e \"import './tests/persistence.test.ts';\""
+    "test": "node --input-type=module -e \"import './tests/milestone4_tools.test.ts';\" && node --input-type=module -e \"import './tests/education_sector.test.ts';\" && node --input-type=module -e \"import './tests/persistence.test.ts';\" && node --input-type=module -e \"import './tests/milestone8_rag.test.ts';\" && node --input-type=module -e \"import './tests/milestone9_research.test.ts';\" && node --input-type=module -e \"import './tests/milestone10_storage.test.ts';\""
   },
   "dependencies": {
     "@google/genai": "^2.27.0",

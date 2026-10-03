@@ -68,9 +68,9 @@ export const AppShell: React.FC<AppShellProps> = ({
       shortName: 'Research',
       category: 'Scientific Suite',
       icon: FlaskConical,
-      badge: 'PLANNED',
-      status: 'planned' as const,
-      description: 'Deep document synthesis, simulation models & experiments'
+      badge: 'ONLINE',
+      status: 'active' as const,
+      description: 'Grounded research projects, evidence locker & synthesis assistant'
     },
     {
       id: 'finance' as SectorId,

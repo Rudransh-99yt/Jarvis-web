@@ -1,6 +1,17 @@
 // Core Data Models and Schema Definitions for Jarvis Platform
 import type { EducationClass, Assignment, StudentSubmission, StudyArtifact } from '../../src/types/education.ts';
 import type { ConversationMessage } from '../../src/types/api.ts';
+import type {
+  ResearchProject,
+  ResearchQuestion,
+  EvidenceRecord,
+  ResearchNote,
+  ResearchReport
+} from '../../src/types/research.ts';
+import type { FileRecord } from '../../src/types/storage.ts';
+
+export * from '../../src/types/research.ts';
+export * from '../../src/types/storage.ts';
 
 // 1. User
 export type UserRole = 'admin' | 'commander' | 'teacher' | 'student' | 'guest';
@@ -53,9 +64,10 @@ export interface Message extends ConversationMessage {
   conversationId: string;
 }
 
-// 5. Knowledge Space & Knowledge Source
-export type KnowledgeSourceType = 'pdf' | 'notes' | 'lecture' | 'dataset' | 'web' | 'code' | 'transcript';
+// 5. Knowledge Space, Sources, & Chunks (RAG Layer)
+export type KnowledgeSourceType = 'pdf' | 'notes' | 'lecture' | 'dataset' | 'web' | 'code' | 'transcript' | 'markdown' | 'text';
 export type KnowledgeSourceStatus = 'pending' | 'processing' | 'ready' | 'failed';
+export type EmbeddingStatus = 'pending' | 'embedded' | 'ready' | 'failed';
 
 export interface KnowledgeSourceRecord {
   id: string;
@@ -67,6 +79,10 @@ export interface KnowledgeSourceRecord {
   size: string;
   sizeBytes?: number;
   status: KnowledgeSourceStatus;
+  ingestionStatus?: KnowledgeSourceStatus;
+  chunkCount?: number;
+  embeddingStatus?: EmbeddingStatus;
+  contentHash?: string;
   author?: string;
   summary: string;
   fullText: string;
@@ -74,6 +90,22 @@ export interface KnowledgeSourceRecord {
   errorMessage?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface KnowledgeChunkRecord {
+  id: string; // chunk-${sourceId}-${chunkIndex}
+  sourceId: string;
+  knowledgeSpaceId: string;
+  workspaceId: string;
+  sourceTitle: string;
+  chunkIndex: number;
+  text: string;
+  tokenCount: number;
+  page?: number;
+  section?: string;
+  contentHash: string;
+  embedding?: number[];
+  createdAt: string;
 }
 
 export interface KnowledgeSpaceRecord {
@@ -114,9 +146,16 @@ export interface DatabaseSchema {
   messages: Message[];
   knowledgeSpaces: KnowledgeSpaceRecord[];
   knowledgeSources: KnowledgeSourceRecord[];
+  knowledgeChunks: KnowledgeChunkRecord[];
   classes: EducationClass[];
   assignments: Assignment[];
   submissions: StudentSubmission[];
   studyArtifacts: StudyArtifact[];
   auditEvents: ToolAuditEvent[];
+  researchProjects: ResearchProject[];
+  researchQuestions: ResearchQuestion[];
+  evidenceRecords: EvidenceRecord[];
+  researchNotes: ResearchNote[];
+  researchReports: ResearchReport[];
+  files: FileRecord[];
 }
