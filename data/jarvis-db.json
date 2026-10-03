@@ -32,6 +32,20 @@
       "role": "student",
       "department": "Applied Mathematics",
       "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "student-outsider",
+      "displayName": "Outsider Student",
+      "email": "outsider@stark.edu",
+      "role": "student",
+      "createdAt": "2026-10-03T14:17:02.401Z"
+    },
+    {
+      "id": "user-foreign",
+      "displayName": "Foreign Operator",
+      "email": "foreign@other.com",
+      "role": "student",
+      "createdAt": "2026-10-03T14:17:02.402Z"
     }
   ],
   "workspaces": [
@@ -79,6 +93,13 @@
       "userId": "student-2",
       "role": "member",
       "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-1791037022402-yo78",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-outsider",
+      "role": "member",
+      "joinedAt": "2026-10-03T14:17:02.402Z"
     }
   ],
   "conversations": [
@@ -974,26 +995,6 @@
       "activeStudentCount": 0,
       "createdAt": "2026-10-02T10:00:00.000Z",
       "updatedAt": "2026-10-02T10:00:00.000Z"
-    },
-    {
-      "id": "session-1791033063134-qdk0v",
-      "sessionId": "session-1791033063134-qdk0v",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "teacherId": "teacher-1",
-      "title": "Classroom Session 10/3/2026",
-      "status": "live",
-      "boardState": {
-        "state": "question",
-        "currentTopic": "Smart Quiz: Quiz A: Quantum States (Question 1 of 2)",
-        "activeSlideIndex": 0,
-        "message": "What is the ground state energy of a quantum harmonic oscillator?",
-        "updatedAt": "2026-10-03T13:11:03.171Z"
-      },
-      "startedAt": "2026-10-03T13:11:03.134Z",
-      "activeStudentCount": 0,
-      "createdAt": "2026-10-03T13:11:03.134Z",
-      "updatedAt": "2026-10-03T13:11:03.173Z"
     }
   ],
   "classroomParticipants": [],
@@ -1011,175 +1012,6 @@
       "currentQuestionIndex": 0,
       "totalQuestions": 2,
       "createdAt": "2026-10-02T10:30:00.000Z"
-    },
-    {
-      "id": "quiz-1791033063162-27njh",
-      "quizId": "quiz-1791033063162-27njh",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Quiz A: Quantum States",
-      "description": "First test quiz",
-      "status": "live",
-      "currentQuestionIndex": 0,
-      "totalQuestions": 2,
-      "createdAt": "2026-10-03T13:11:03.162Z",
-      "startedAt": "2026-10-03T13:11:03.171Z"
-    },
-    {
-      "id": "quiz-1791033063166-5u7dm",
-      "quizId": "quiz-1791033063166-5u7dm",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Quiz B: Ladder Operators",
-      "description": "Second test quiz in same session",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 1,
-      "createdAt": "2026-10-03T13:11:03.166Z"
-    },
-    {
-      "id": "quiz-1791033063174-y2yp5",
-      "quizId": "quiz-1791033063174-y2yp5",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 1: Advanced Topic 1",
-      "description": "Rapid creation batch 1",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.174Z"
-    },
-    {
-      "id": "quiz-1791033063175-vks9o",
-      "quizId": "quiz-1791033063175-vks9o",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 2: Advanced Topic 2",
-      "description": "Rapid creation batch 2",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.175Z"
-    },
-    {
-      "id": "quiz-1791033063176-851mo",
-      "quizId": "quiz-1791033063176-851mo",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 3: Advanced Topic 3",
-      "description": "Rapid creation batch 3",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.176Z"
-    },
-    {
-      "id": "quiz-1791033063177-oc2xc",
-      "quizId": "quiz-1791033063177-oc2xc",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 4: Advanced Topic 4",
-      "description": "Rapid creation batch 4",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.177Z"
-    },
-    {
-      "id": "quiz-1791033063178-nhraj",
-      "quizId": "quiz-1791033063178-nhraj",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 5: Advanced Topic 5",
-      "description": "Rapid creation batch 5",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.178Z"
-    },
-    {
-      "id": "quiz-1791033063179-0aa0z",
-      "quizId": "quiz-1791033063179-0aa0z",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 6: Advanced Topic 6",
-      "description": "Rapid creation batch 6",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.179Z"
-    },
-    {
-      "id": "quiz-1791033063180-tg7q2",
-      "quizId": "quiz-1791033063180-tg7q2",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 7: Advanced Topic 7",
-      "description": "Rapid creation batch 7",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.180Z"
-    },
-    {
-      "id": "quiz-1791033063181-juqor",
-      "quizId": "quiz-1791033063181-juqor",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 8: Advanced Topic 8",
-      "description": "Rapid creation batch 8",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.181Z"
-    },
-    {
-      "id": "quiz-1791033063182-cdqen",
-      "quizId": "quiz-1791033063182-cdqen",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 9: Advanced Topic 9",
-      "description": "Rapid creation batch 9",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.182Z"
-    },
-    {
-      "id": "quiz-1791033063183-zx980",
-      "quizId": "quiz-1791033063183-zx980",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-1791033063134-qdk0v",
-      "teacherId": "teacher-1",
-      "title": "Stress Quiz 10: Advanced Topic 10",
-      "description": "Rapid creation batch 10",
-      "status": "draft",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 0,
-      "createdAt": "2026-10-03T13:11:03.183Z"
     }
   ],
   "quizQuestions": [
@@ -1216,59 +1048,6 @@
       "points": 10,
       "timeLimitSeconds": 30,
       "status": "pending"
-    },
-    {
-      "id": "qq-1791033063164-7bp9c",
-      "questionId": "qq-1791033063164-7bp9c",
-      "quizId": "quiz-1791033063162-27njh",
-      "order": 0,
-      "questionText": "What is the ground state energy of a quantum harmonic oscillator?",
-      "options": [
-        "Zero",
-        "0.5 * hbar * omega",
-        "hbar * omega",
-        "2 * hbar * omega"
-      ],
-      "correctOption": "B",
-      "points": 10,
-      "timeLimitSeconds": 30,
-      "status": "active",
-      "startedAt": "2026-10-03T13:11:03.171Z",
-      "deadline": "2026-10-03T13:11:33.171Z"
-    },
-    {
-      "id": "qq-1791033063165-8es11",
-      "questionId": "qq-1791033063165-8es11",
-      "quizId": "quiz-1791033063162-27njh",
-      "order": 1,
-      "questionText": "What is the parity of the n=1 excited state wavefunction?",
-      "options": [
-        "Even",
-        "Odd",
-        "Undefined",
-        "Zero everywhere"
-      ],
-      "correctOption": "B",
-      "points": 10,
-      "timeLimitSeconds": 30,
-      "status": "pending"
-    },
-    {
-      "id": "qq-1791033063168-dyq6h",
-      "questionId": "qq-1791033063168-dyq6h",
-      "quizId": "quiz-1791033063166-5u7dm",
-      "order": 0,
-      "questionText": "What is the commutator [a, a_dagger]?",
-      "options": [
-        "0",
-        "1",
-        "-1",
-        "hbar"
-      ],
-      "correctOption": "B",
-      "points": 15,
-      "timeLimitSeconds": 45,
-      "status": "pending"
     }
   ],
   "quizResponses": [],
@@ -1291,6 +1070,36 @@
       "status": "ready",
       "visibility": "class",
       "transcript": "Welcome back to Advanced Quantum Mechanics. Today we explore the quantum harmonic oscillator using Dirac notation and ladder operators. The Hamiltonian operator is H equals p squared over 2m plus one-half m omega squared x squared. Notice that by defining the dimensionless raising and lowering operators a and a-dagger, the commutation relation is exactly [a, a-dagger] equals one. The ground state energy is one-half h-bar omega, confirming the physical reality of zero-point vacuum fluctuations.",
+      "segments": [
+        {
+          "id": "seg-phys-1",
+          "startSeconds": 0,
+          "endSeconds": 180,
+          "timestampLabel": "00:00",
+          "text": "Welcome back to Advanced Quantum Mechanics. Today we explore the quantum harmonic oscillator using Dirac notation and ladder operators."
+        },
+        {
+          "id": "seg-phys-2",
+          "startSeconds": 180,
+          "endSeconds": 420,
+          "timestampLabel": "03:00",
+          "text": "The Hamiltonian operator is H equals p squared over 2m plus one-half m omega squared x squared, representing kinetic and harmonic potential energy."
+        },
+        {
+          "id": "seg-phys-3",
+          "startSeconds": 420,
+          "endSeconds": 750,
+          "timestampLabel": "07:00",
+          "text": "Notice that by defining the dimensionless raising and lowering ladder operators a and a-dagger, the commutation relation is exactly [a, a-dagger] equals one."
+        },
+        {
+          "id": "seg-phys-4",
+          "startSeconds": 750,
+          "endSeconds": 1100,
+          "timestampLabel": "12:30",
+          "text": "The ground state energy is one-half h-bar omega, confirming the physical reality of zero-point vacuum fluctuations and quantum ground state non-zero energy."
+        }
+      ],
       "knowledgeSpaceId": "ks-quantum",
       "knowledgeSourceId": "src-qm-vid-1",
       "tags": [
@@ -1319,6 +1128,29 @@
       "status": "ready",
       "visibility": "class",
       "transcript": "In this lecture we visualize Stokes theorem across 2D surfaces in 3-space. The line integral of vector field F along boundary curve C equals the surface integral of the curl of F dot dS over surface S. When formulated with exterior calculus, the integral of d-omega over manifold M unifies line, surface, and volume integrals into a single equation.",
+      "segments": [
+        {
+          "id": "seg-math-1",
+          "startSeconds": 0,
+          "endSeconds": 240,
+          "timestampLabel": "00:00",
+          "text": "In this lecture we visualize Stokes theorem across 2D surfaces in 3-space."
+        },
+        {
+          "id": "seg-math-2",
+          "startSeconds": 240,
+          "endSeconds": 600,
+          "timestampLabel": "04:00",
+          "text": "The line integral of vector field F along boundary curve C equals the surface integral of the curl of F dot dS over surface S."
+        },
+        {
+          "id": "seg-math-3",
+          "startSeconds": 600,
+          "endSeconds": 1050,
+          "timestampLabel": "10:00",
+          "text": "When formulated with exterior calculus, the integral of d-omega over manifold M unifies line, surface, and volume integrals into a single equation."
+        }
+      ],
       "knowledgeSpaceId": "ks-quantum",
       "tags": [
         "Calculus",

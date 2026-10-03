@@ -108,31 +108,31 @@ export const AppShell: React.FC<AppShellProps> = ({
       {/* Main Top Header Navigation Bar (Fixed at top) */}
       <header className="shrink-0 z-40 border-b border-cyan-500/20 bg-black/85 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-3 min-w-0">
+          <div className="flex h-16 items-center justify-between gap-2 sm:gap-4 min-w-0">
             {/* Left: Brand Identity */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-cyan-500/40 bg-gradient-to-br from-cyan-950/60 to-black p-2 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-                <Radio className="h-5 w-5 text-cyan-400 animate-pulse" />
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 shrink">
+              <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg border border-cyan-500/40 bg-gradient-to-br from-cyan-950/60 to-black p-2 shadow-[0_0_15px_rgba(6,182,212,0.2)] shrink-0">
+                <Radio className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400 animate-pulse" />
                 <div className="absolute -inset-0.5 rounded-lg bg-cyan-500/10 blur-sm -z-10" />
               </div>
 
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold font-mono tracking-widest text-white">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <span className="text-sm sm:text-base font-bold font-mono tracking-widest text-white truncate">
                     J.A.R.V.I.S.
                   </span>
-                  <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/60 text-cyan-300">
+                  <span className="hidden xl:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/60 text-cyan-300 shrink-0">
                     PLATFORM OS v1.3
                   </span>
                 </div>
-                <div className="hidden sm:block text-[10px] font-mono tracking-wider text-cyan-400/60 uppercase">
+                <div className="hidden md:block text-[10px] font-mono tracking-wider text-cyan-400/60 uppercase truncate">
                   Intelligent Operating Environment
                 </div>
               </div>
             </div>
 
             {/* Center: Sector Navigation Pills (Desktop) */}
-            <nav className="hidden lg:flex items-center gap-1.5 rounded-xl border border-cyan-500/20 bg-black/40 p-1 backdrop-blur-md min-w-0">
+            <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-1.5 rounded-xl border border-cyan-500/20 bg-black/40 p-1 backdrop-blur-md min-w-0 flex-1 max-w-2xl mx-1 xl:mx-2">
               {sectors.map((sector) => {
                 const Icon = sector.icon;
                 const isActive = sector.id === currentSector;
@@ -145,7 +145,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                       if (!isPlanned) onSelectSector(sector.id);
                     }}
                     disabled={isPlanned}
-                    className={`group relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono tracking-wider transition-all whitespace-nowrap ${
+                    className={`group relative flex items-center justify-center gap-1.5 px-2 xl:px-3 py-1.5 rounded-lg text-xs font-mono tracking-wider transition-all min-w-0 shrink flex-1 ${
                       isActive
                         ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/60 text-cyan-300 font-bold shadow-[0_0_12px_rgba(6,182,212,0.25)]'
                         : isPlanned
@@ -153,11 +153,11 @@ export const AppShell: React.FC<AppShellProps> = ({
                         : 'text-cyan-400/70 hover:text-cyan-200 hover:bg-white/5 border border-transparent'
                     }`}
                   >
-                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300' : 'text-cyan-400/60'}`} />
-                    <span>{sector.shortName}</span>
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-cyan-300' : 'text-cyan-400/60'}`} />
+                    <span className="truncate">{sector.shortName}</span>
                     {sector.badge && (
                       <span
-                        className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                        className={`text-[9px] px-1 py-0.2 rounded font-mono shrink-0 hidden xl:inline-block ${
                           isActive
                             ? 'bg-cyan-400/20 text-cyan-300'
                             : isPlanned
@@ -181,7 +181,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                   onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
                   className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-black/60 text-xs font-mono text-cyan-300"
                 >
-                  <activeSectorDef.icon className="w-3.5 h-3.5" />
+                  <activeSectorDef.icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate max-w-[90px] sm:max-w-none">{activeSectorDef.shortName}</span>
                   <ChevronDown className="w-3 h-3 shrink-0" />
                 </button>
@@ -210,11 +210,11 @@ export const AppShell: React.FC<AppShellProps> = ({
                               : 'text-cyan-400/80 hover:bg-white/5'
                           }`}
                         >
-                          <div className="flex items-center gap-2">
-                            <Icon className="w-3.5 h-3.5" />
-                            <span>{s.name}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Icon className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">{s.name}</span>
                           </div>
-                          {s.badge && <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800">{s.badge}</span>}
+                          {s.badge && <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 shrink-0">{s.badge}</span>}
                         </button>
                       );
                     })}
@@ -223,9 +223,9 @@ export const AppShell: React.FC<AppShellProps> = ({
               </div>
 
               {/* Status Indicator */}
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyan-500/20 bg-black/40 text-xs font-mono text-cyan-400/80">
-                <div className={`h-2 w-2 rounded-full ${isApiOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                <span className="hidden xl:inline text-cyan-400/60">Uplink:</span>
+              <div className="hidden md:flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-cyan-500/20 bg-black/40 text-xs font-mono text-cyan-400/80 shrink-0">
+                <div className={`h-2 w-2 rounded-full shrink-0 ${isApiOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                <span className="hidden 2xl:inline text-cyan-400/60">Uplink:</span>
                 <span className="text-cyan-300">{isApiOnline ? 'ONLINE' : 'AUXILIARY'}</span>
               </div>
 
@@ -243,22 +243,24 @@ export const AppShell: React.FC<AppShellProps> = ({
       </header>
 
       {/* Scrollable Application Content Region - Single Page Scroll Owner */}
-      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col overscroll-contain">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain relative z-10">
         {/* Main App Content Viewport */}
-        <main className="flex-1 mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 min-h-0 min-w-0">
+        <main className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 min-w-0">
           {children}
         </main>
-
-        {/* Footer Bar */}
-        <footer className="shrink-0 border-t border-cyan-500/10 bg-black/60 py-4 text-center text-xs font-mono text-cyan-400/40 backdrop-blur-sm relative z-10 min-w-0">
-          <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2 min-w-0">
-            <div className="truncate">JARVIS MULTI-SECTOR INTELLIGENT PLATFORM // STARK ENTERPRISES</div>
-            <div className="text-[11px] text-cyan-400/60 truncate">
-              Active Core: <strong className="text-cyan-300">{activeSectorDef.name.toUpperCase()}</strong> • Gemini 3.8 Flash Streaming
-            </div>
-          </div>
-        </footer>
       </div>
+
+      {/* Persistent Status / Footer Bar at Bottom */}
+      <footer className="shrink-0 border-t border-cyan-500/10 bg-black/80 py-2.5 text-center text-xs font-mono text-cyan-400/40 backdrop-blur-md relative z-30 min-w-0">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 min-w-0">
+          <div className="truncate text-[11px] text-cyan-400/70">
+            JARVIS MULTI-SECTOR INTELLIGENT PLATFORM // STARK ENTERPRISES
+          </div>
+          <div className="text-[10px] sm:text-[11px] text-cyan-400/60 truncate">
+            Active Core: <strong className="text-cyan-300">{activeSectorDef.name.toUpperCase()}</strong> • Gemini 3.8 Flash Streaming
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

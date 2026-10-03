@@ -203,7 +203,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-03T11:21:33.659Z"
+      "updatedAt": "2026-10-03T14:16:44.222Z"
     },
     {
       "id": "ks-calculus",
@@ -584,7 +584,7 @@
       "gradedCount": 0
     },
     {
-      "id": "asg-1791026493956-jyac",
+      "id": "asg-1791037004528-bcdv",
       "classId": "class-phys-301",
       "className": "PHYS-301: Advanced Quantum & Electrodynamics",
       "title": "Audit Lab: QED Loop Corrections",
@@ -641,15 +641,15 @@
       ]
     },
     {
-      "id": "sub-student-1-asg-1791026493956-jyac-musaxjba",
-      "assignmentId": "asg-1791026493956-jyac",
+      "id": "sub-student-1-asg-1791037004528-bcdv-mush6tbm",
+      "assignmentId": "asg-1791037004528-bcdv",
       "assignmentTitle": "Audit Lab: QED Loop Corrections",
       "classId": "class-phys-301",
       "className": "PHYS-301: Advanced Quantum & Electrodynamics",
       "studentId": "student-1",
       "studentName": "Alex Chen",
       "status": "graded",
-      "submittedAt": "2026-10-03T11:21:33.958Z",
+      "submittedAt": "2026-10-03T14:16:44.530Z",
       "content": "Completed derivation with attached notes.",
       "attachments": [
         {
@@ -659,7 +659,7 @@
       ],
       "grade": 98,
       "feedback": "Flawless calculation of the Ward identity.",
-      "gradedAt": "2026-10-03T11:21:33.959Z"
+      "gradedAt": "2026-10-03T14:16:44.530Z"
     }
   ],
   "studyArtifacts": [],
@@ -677,8 +677,8 @@
       },
       "ok": true,
       "executionTimeMs": 1,
-      "id": "audit-1791026493651-lqfg",
-      "timestamp": "2026-10-03T11:21:33.651Z"
+      "id": "audit-1791037004215-xa4s",
+      "timestamp": "2026-10-03T14:16:44.215Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -686,8 +686,8 @@
       "toolName": "file.upload.completed",
       "sector": "storage",
       "args": {
-        "fileId": "file-1791026493655-rcjqe",
-        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "fileId": "file-1791037004219-e71e3",
+        "storageKey": "obj-9dfedd548acf-6651407a.pdf",
         "sizeBytes": 243,
         "sha256": "9dfedd548acfd5ed4c9b766ed0911592ab110d2d8a14b971e355dcb5de524b3c",
         "mimeType": "application/pdf",
@@ -695,8 +695,8 @@
       },
       "ok": true,
       "executionTimeMs": 4,
-      "id": "audit-1791026493655-7kkm",
-      "timestamp": "2026-10-03T11:21:33.655Z"
+      "id": "audit-1791037004219-urz3",
+      "timestamp": "2026-10-03T14:16:44.219Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -704,15 +704,15 @@
       "toolName": "file.downloaded",
       "sector": "storage",
       "args": {
-        "fileId": "file-1791026493655-rcjqe",
+        "fileId": "file-1791037004219-e71e3",
         "originalName": "QED-Lecture-Notes.pdf",
         "userId": "student-1",
         "sizeBytes": 243
       },
       "ok": true,
       "executionTimeMs": 1,
-      "id": "audit-1791026493657-itqz",
-      "timestamp": "2026-10-03T11:21:33.657Z"
+      "id": "audit-1791037004220-pzcn",
+      "timestamp": "2026-10-03T14:16:44.220Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -727,8 +727,8 @@
       },
       "ok": true,
       "executionTimeMs": 1,
-      "id": "audit-1791026493956-de88",
-      "timestamp": "2026-10-03T11:21:33.956Z"
+      "id": "audit-1791037004528-ibkw",
+      "timestamp": "2026-10-03T14:16:44.528Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -736,17 +736,17 @@
       "toolName": "file.upload.completed",
       "sector": "storage",
       "args": {
-        "fileId": "file-1791026493958-kjmjn",
-        "storageKey": "obj-49a2d3c741a0-09cc08e0.md",
+        "fileId": "file-1791037004529-3rqqg",
+        "storageKey": "obj-49a2d3c741a0-541b48e7.md",
         "sizeBytes": 61,
         "sha256": "49a2d3c741a09ea76978936cf25d512995ecc0d45c484f7e467409282725d2e4",
         "mimeType": "text/markdown",
         "userId": "student-1"
       },
       "ok": true,
-      "executionTimeMs": 2,
-      "id": "audit-1791026493958-h1d6",
-      "timestamp": "2026-10-03T11:21:33.958Z"
+      "executionTimeMs": 1,
+      "id": "audit-1791037004529-qhw6",
+      "timestamp": "2026-10-03T14:16:44.529Z"
     },
     {
       "workspaceId": "ws-rogue-organization",
@@ -761,8 +761,8 @@
       "ok": false,
       "executionTimeMs": 0,
       "errorMessage": "User is not a member of the target workspace.",
-      "id": "audit-1791026493959-ry63",
-      "timestamp": "2026-10-03T11:21:33.959Z"
+      "id": "audit-1791037004530-b91x",
+      "timestamp": "2026-10-03T14:16:44.530Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -777,8 +777,8 @@
       },
       "ok": true,
       "executionTimeMs": 1,
-      "id": "audit-1791026493960-5o8q",
-      "timestamp": "2026-10-03T11:21:33.961Z"
+      "id": "audit-1791037004531-2ysz",
+      "timestamp": "2026-10-03T14:16:44.531Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -786,8 +786,8 @@
       "toolName": "file.upload.completed",
       "sector": "storage",
       "args": {
-        "fileId": "file-1791026493961-z2t5x",
-        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "fileId": "file-1791037004532-43lhi",
+        "storageKey": "obj-9dfedd548acf-6651407a.pdf",
         "sizeBytes": 243,
         "sha256": "9dfedd548acfd5ed4c9b766ed0911592ab110d2d8a14b971e355dcb5de524b3c",
         "mimeType": "application/pdf",
@@ -795,8 +795,8 @@
       },
       "ok": true,
       "executionTimeMs": 1,
-      "id": "audit-1791026493961-5c82",
-      "timestamp": "2026-10-03T11:21:33.961Z"
+      "id": "audit-1791037004532-ycok",
+      "timestamp": "2026-10-03T14:16:44.532Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -804,15 +804,15 @@
       "toolName": "file.deleted",
       "sector": "storage",
       "args": {
-        "fileId": "file-1791026493961-z2t5x",
+        "fileId": "file-1791037004532-43lhi",
         "originalName": "QED-Lecture-Duplicate.pdf",
-        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "storageKey": "obj-9dfedd548acf-6651407a.pdf",
         "userId": "teacher-1"
       },
       "ok": true,
       "executionTimeMs": 0,
-      "id": "audit-1791026493962-w4ib",
-      "timestamp": "2026-10-03T11:21:33.962Z"
+      "id": "audit-1791037004532-ybho",
+      "timestamp": "2026-10-03T14:16:44.532Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -820,15 +820,15 @@
       "toolName": "file.deleted",
       "sector": "storage",
       "args": {
-        "fileId": "file-1791026493655-rcjqe",
+        "fileId": "file-1791037004219-e71e3",
         "originalName": "QED-Lecture-Notes.pdf",
-        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "storageKey": "obj-9dfedd548acf-6651407a.pdf",
         "userId": "teacher-1"
       },
       "ok": true,
-      "executionTimeMs": 0,
-      "id": "audit-1791026493962-uqth",
-      "timestamp": "2026-10-03T11:21:33.962Z"
+      "executionTimeMs": 1,
+      "id": "audit-1791037004533-fotp",
+      "timestamp": "2026-10-03T14:16:44.533Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -843,8 +843,8 @@
       },
       "ok": true,
       "executionTimeMs": 1,
-      "id": "audit-1791026493963-gydp",
-      "timestamp": "2026-10-03T11:21:33.963Z"
+      "id": "audit-1791037004533-hve7",
+      "timestamp": "2026-10-03T14:16:44.533Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -852,8 +852,8 @@
       "toolName": "file.upload.completed",
       "sector": "storage",
       "args": {
-        "fileId": "file-1791026493964-yke76",
-        "storageKey": "obj-8db4b3e9139a-a8cc233b.md",
+        "fileId": "file-1791037004534-77gq5",
+        "storageKey": "obj-8db4b3e9139a-48aa7a14.md",
         "sizeBytes": 58,
         "sha256": "8db4b3e9139afa5558d0f1dc8339980883307a005b55b55be90e86f36c88f2bd",
         "mimeType": "text/markdown",
@@ -861,8 +861,8 @@
       },
       "ok": true,
       "executionTimeMs": 1,
-      "id": "audit-1791026493964-ua2g",
-      "timestamp": "2026-10-03T11:21:33.964Z"
+      "id": "audit-1791037004534-w4d2",
+      "timestamp": "2026-10-03T14:16:44.534Z"
     }
   ],
   "researchProjects": [
@@ -901,10 +901,10 @@
       "title": "Arc Reactor Plasma Confinement",
       "description": "Stabilizing magnetohydrodynamic equilibrium.",
       "researchQuestion": "How to suppress tearing modes in 3.2 GW core?",
-      "id": "proj-1791026493960-vs5x",
+      "id": "proj-1791037004531-tlt9",
       "knowledgeSpaceIds": [],
-      "createdAt": "2026-10-03T11:21:33.960Z",
-      "updatedAt": "2026-10-03T11:21:33.960Z"
+      "createdAt": "2026-10-03T14:16:44.531Z",
+      "updatedAt": "2026-10-03T14:16:44.531Z"
     },
     {
       "workspaceId": "ws-stark-core",
@@ -912,10 +912,10 @@
       "title": "Quantum Vacuum Fluctuations & Casimir Effect",
       "description": "Analyzing Casimir force between conducting plates.",
       "researchQuestion": "Does zero-point energy shift boundary conditions?",
-      "id": "proj-1791026493963-lrxi",
+      "id": "proj-1791037004533-wglg",
       "knowledgeSpaceIds": [],
-      "createdAt": "2026-10-03T11:21:33.963Z",
-      "updatedAt": "2026-10-03T11:21:33.963Z"
+      "createdAt": "2026-10-03T14:16:44.533Z",
+      "updatedAt": "2026-10-03T14:16:44.533Z"
     }
   ],
   "researchQuestions": [
@@ -1070,7 +1070,7 @@
       "generatedAt": "2026-10-02T16:00:00.000Z"
     },
     {
-      "projectId": "proj-1791026493963-lrxi",
+      "projectId": "proj-1791037004533-wglg",
       "workspaceId": "ws-stark-core",
       "title": "Synthesis of Casimir Boundary States",
       "researchQuestion": "Does zero-point energy shift boundary conditions?",
@@ -1084,8 +1084,8 @@
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791026493969-uiy9",
-      "generatedAt": "2026-10-03T11:21:33.969Z"
+      "id": "rep-1791037004538-6279",
+      "generatedAt": "2026-10-03T14:16:44.538Z"
     }
   ],
   "files": [
@@ -1185,42 +1185,90 @@
       "updatedAt": "2026-09-22T11:00:00.000Z"
     },
     {
+      "id": "file-seed-vid-1",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "teacher-1",
+      "originalName": "quantum_harmonic_oscillator_lecture.mp4",
+      "storageKey": "obj-seed-vid-1",
+      "mimeType": "video/mp4",
+      "sizeBytes": 428372,
+      "extension": "mp4",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "ready",
+      "classId": "class-phys-301",
+      "knowledgeSpaceId": "ks-quantum",
+      "description": "Quantum harmonic oscillator video lecture breakdown.",
+      "tags": [
+        "Quantum",
+        "Lecture",
+        "Ladder Operators"
+      ],
+      "downloadCount": 12,
+      "isPublicInWorkspace": true,
+      "createdAt": "2026-10-02T11:00:00.000Z",
+      "updatedAt": "2026-10-02T11:00:00.000Z"
+    },
+    {
+      "id": "file-seed-vid-2",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "teacher-1",
+      "originalName": "stokes_theorem_differential_forms.mp4",
+      "storageKey": "obj-seed-vid-2",
+      "mimeType": "video/mp4",
+      "sizeBytes": 423670,
+      "extension": "mp4",
+      "sha256": "f4b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b866",
+      "status": "ready",
+      "classId": "class-math-240",
+      "knowledgeSpaceId": "ks-quantum",
+      "description": "Stokes theorem and differential forms video lecture visualization.",
+      "tags": [
+        "Calculus",
+        "Differential Forms",
+        "Stokes Theorem"
+      ],
+      "downloadCount": 8,
+      "isPublicInWorkspace": true,
+      "createdAt": "2026-10-01T15:00:00.000Z",
+      "updatedAt": "2026-10-01T15:00:00.000Z"
+    },
+    {
       "workspaceId": "ws-stark-core",
       "ownerUserId": "student-1",
       "originalName": "Alex-Chen-QED-Lab-Report.md",
-      "storageKey": "obj-49a2d3c741a0-09cc08e0.md",
+      "storageKey": "obj-49a2d3c741a0-541b48e7.md",
       "mimeType": "text/markdown",
       "sizeBytes": 61,
       "extension": "md",
       "sha256": "49a2d3c741a09ea76978936cf25d512995ecc0d45c484f7e467409282725d2e4",
       "status": "ready",
       "classId": "class-phys-301",
-      "assignmentId": "asg-1791026493956-jyac",
-      "submissionId": "sub-student-1-asg-1791026493956-jyac",
+      "assignmentId": "asg-1791037004528-bcdv",
+      "submissionId": "sub-student-1-asg-1791037004528-bcdv",
       "tags": [],
       "isPublicInWorkspace": true,
-      "id": "file-1791026493958-kjmjn",
+      "id": "file-1791037004529-3rqqg",
       "downloadCount": 0,
-      "createdAt": "2026-10-03T11:21:33.958Z",
-      "updatedAt": "2026-10-03T11:21:33.958Z"
+      "createdAt": "2026-10-03T14:16:44.529Z",
+      "updatedAt": "2026-10-03T14:16:44.529Z"
     },
     {
       "workspaceId": "ws-stark-core",
       "ownerUserId": "teacher-1",
       "originalName": "Casimir-Force.md",
-      "storageKey": "obj-8db4b3e9139a-a8cc233b.md",
+      "storageKey": "obj-8db4b3e9139a-48aa7a14.md",
       "mimeType": "text/markdown",
       "sizeBytes": 58,
       "extension": "md",
       "sha256": "8db4b3e9139afa5558d0f1dc8339980883307a005b55b55be90e86f36c88f2bd",
       "status": "ready",
-      "researchProjectId": "proj-1791026493963-lrxi",
+      "researchProjectId": "proj-1791037004533-wglg",
       "tags": [],
       "isPublicInWorkspace": true,
-      "id": "file-1791026493964-yke76",
+      "id": "file-1791037004534-77gq5",
       "downloadCount": 0,
-      "createdAt": "2026-10-03T11:21:33.964Z",
-      "updatedAt": "2026-10-03T11:21:33.964Z"
+      "createdAt": "2026-10-03T14:16:44.534Z",
+      "updatedAt": "2026-10-03T14:16:44.534Z"
     }
   ],
   "classroomSessions": [
@@ -1244,5 +1292,168 @@
       "updatedAt": "2026-10-02T10:00:00.000Z"
     }
   ],
-  "classroomParticipants": []
+  "classroomParticipants": [],
+  "quizzes": [
+    {
+      "id": "quiz-seed-phys-1",
+      "quizId": "quiz-seed-phys-1",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-seed-phys-1",
+      "teacherId": "teacher-1",
+      "title": "Quantum Wavefunctions & Measurement Quiz",
+      "description": "Interactive concept check on wavefunction collapse and quantum superposition.",
+      "status": "ready",
+      "currentQuestionIndex": 0,
+      "totalQuestions": 2,
+      "createdAt": "2026-10-02T10:30:00.000Z"
+    }
+  ],
+  "quizQuestions": [
+    {
+      "id": "q-seed-phys-1",
+      "questionId": "q-seed-phys-1",
+      "quizId": "quiz-seed-phys-1",
+      "order": 0,
+      "questionText": "What occurs during wavefunction collapse according to the Copenhagen interpretation?",
+      "options": [
+        "A) The system branches into alternate parallel universes",
+        "B) The superposition state reduces to a single definite eigenstate",
+        "C) Entanglement between particles is permanently broken",
+        "D) Kinetic energy converts entirely to thermal radiation"
+      ],
+      "correctOption": "B",
+      "points": 10,
+      "timeLimitSeconds": 30,
+      "status": "pending"
+    },
+    {
+      "id": "q-seed-phys-2",
+      "questionId": "q-seed-phys-2",
+      "quizId": "quiz-seed-phys-1",
+      "order": 1,
+      "questionText": "Which physical quantity is conserved in an isolated quantum system under unitary time evolution?",
+      "options": [
+        "A) Total probability (normalization condition)",
+        "B) Magnetic vector potential phase angle",
+        "C) Quantum decoherence rate",
+        "D) Relativistic mass dilation factor"
+      ],
+      "correctOption": "A",
+      "points": 10,
+      "timeLimitSeconds": 30,
+      "status": "pending"
+    }
+  ],
+  "quizResponses": [],
+  "quizParticipantStates": [],
+  "videos": [
+    {
+      "id": "vid-seed-phys-1",
+      "videoId": "vid-seed-phys-1",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "uploaderId": "teacher-1",
+      "fileId": "file-seed-vid-1",
+      "title": "Quantum Harmonic Oscillator & Energy Eigenstates",
+      "description": "Comprehensive lecture breakdown on algebraic ladder operators, ground state energy derivation, and zero-point quantum fluctuations.",
+      "filename": "quantum_harmonic_oscillator_lecture.mp4",
+      "mimeType": "video/mp4",
+      "sizeBytes": 18450200,
+      "durationSeconds": 1840,
+      "thumbnailUrl": "/media/thumbnails/quantum_oscillator.jpg",
+      "status": "ready",
+      "visibility": "class",
+      "transcript": "Welcome back to Advanced Quantum Mechanics. Today we explore the quantum harmonic oscillator using Dirac notation and ladder operators. The Hamiltonian operator is H equals p squared over 2m plus one-half m omega squared x squared. Notice that by defining the dimensionless raising and lowering operators a and a-dagger, the commutation relation is exactly [a, a-dagger] equals one. The ground state energy is one-half h-bar omega, confirming the physical reality of zero-point vacuum fluctuations.",
+      "segments": [
+        {
+          "id": "seg-phys-1",
+          "startSeconds": 0,
+          "endSeconds": 180,
+          "timestampLabel": "00:00",
+          "text": "Welcome back to Advanced Quantum Mechanics. Today we explore the quantum harmonic oscillator using Dirac notation and ladder operators."
+        },
+        {
+          "id": "seg-phys-2",
+          "startSeconds": 180,
+          "endSeconds": 420,
+          "timestampLabel": "03:00",
+          "text": "The Hamiltonian operator is H equals p squared over 2m plus one-half m omega squared x squared, representing kinetic and harmonic potential energy."
+        },
+        {
+          "id": "seg-phys-3",
+          "startSeconds": 420,
+          "endSeconds": 750,
+          "timestampLabel": "07:00",
+          "text": "Notice that by defining the dimensionless raising and lowering ladder operators a and a-dagger, the commutation relation is exactly [a, a-dagger] equals one."
+        },
+        {
+          "id": "seg-phys-4",
+          "startSeconds": 750,
+          "endSeconds": 1100,
+          "timestampLabel": "12:30",
+          "text": "The ground state energy is one-half h-bar omega, confirming the physical reality of zero-point vacuum fluctuations and quantum ground state non-zero energy."
+        }
+      ],
+      "knowledgeSpaceId": "ks-quantum",
+      "knowledgeSourceId": "src-qm-vid-1",
+      "tags": [
+        "Quantum",
+        "Lecture",
+        "Ladder Operators",
+        "Harmonic Oscillator"
+      ],
+      "createdAt": "2026-10-02T11:00:00.000Z",
+      "updatedAt": "2026-10-02T11:00:00.000Z"
+    },
+    {
+      "id": "vid-seed-math-1",
+      "videoId": "vid-seed-math-1",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-math-240",
+      "uploaderId": "teacher-1",
+      "fileId": "file-seed-vid-2",
+      "title": "Stokes Theorem & Differential Forms Visualization",
+      "description": "3D geometric interpretation of curl flux across bounded manifolds and generalized Stokes formulation.",
+      "filename": "stokes_theorem_differential_forms.mp4",
+      "mimeType": "video/mp4",
+      "sizeBytes": 24120800,
+      "durationSeconds": 2150,
+      "thumbnailUrl": "/media/thumbnails/stokes_theorem.jpg",
+      "status": "ready",
+      "visibility": "class",
+      "transcript": "In this lecture we visualize Stokes theorem across 2D surfaces in 3-space. The line integral of vector field F along boundary curve C equals the surface integral of the curl of F dot dS over surface S. When formulated with exterior calculus, the integral of d-omega over manifold M unifies line, surface, and volume integrals into a single equation.",
+      "segments": [
+        {
+          "id": "seg-math-1",
+          "startSeconds": 0,
+          "endSeconds": 240,
+          "timestampLabel": "00:00",
+          "text": "In this lecture we visualize Stokes theorem across 2D surfaces in 3-space."
+        },
+        {
+          "id": "seg-math-2",
+          "startSeconds": 240,
+          "endSeconds": 600,
+          "timestampLabel": "04:00",
+          "text": "The line integral of vector field F along boundary curve C equals the surface integral of the curl of F dot dS over surface S."
+        },
+        {
+          "id": "seg-math-3",
+          "startSeconds": 600,
+          "endSeconds": 1050,
+          "timestampLabel": "10:00",
+          "text": "When formulated with exterior calculus, the integral of d-omega over manifold M unifies line, surface, and volume integrals into a single equation."
+        }
+      ],
+      "knowledgeSpaceId": "ks-quantum",
+      "tags": [
+        "Calculus",
+        "Differential Forms",
+        "Stokes Theorem"
+      ],
+      "createdAt": "2026-10-01T15:00:00.000Z",
+      "updatedAt": "2026-10-01T15:00:00.000Z"
+    }
+  ]
 }
