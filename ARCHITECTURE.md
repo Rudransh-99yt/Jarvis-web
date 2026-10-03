@@ -1,7 +1,7 @@
 # Web Jarvis Architecture
 
 ## Overview
-Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic assistant designed to operate as a full-stack web application. The architecture follows a decoupled client-server model enabling real-time voice interaction, high-fidelity HUD visualization, AI inference via Google Gemini, safe server-side tool execution, domain-specific academic and research sectors, and a durable core persistence foundation.
+Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic assistant designed to operate as a full-stack web application. The architecture follows a decoupled client-server model enabling real-time voice interaction, high-fidelity HUD visualization, AI inference via Google Gemini, safe server-side tool execution, domain-specific academic and research sectors, a durable core persistence foundation, and a source-grounded RAG knowledge engine.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -9,8 +9,8 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 │               AppShell Multi-Sector Routing & Navigation                │
 │                                                                         │
 │  ┌──────────────────────┐  ┌─────────────────────┐  ┌────────────────┐  │
-│  │     Command Deck     │  │  Education Sector   │  │ Voice & Audio  │  │
-│  │ (Arc Reactor, Armor) │  │ (Student & Teacher) │  │ Synthesizer    │  │
+│  │     Command Deck     │  │  Education Sector   │  │ Research & Labs│  │
+│  │ (Arc Reactor, Armor) │  │ (Student & Teacher) │  │(Workspace, RAG)│  │
 │  └──────────────────────┘  └─────────────────────┘  └────────────────┘  │
 └────────────────────────────────────▲────────────────────────────────────┘
                                      │ HTTP / SSE (Port 3000)
@@ -26,6 +26,15 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 │  └───────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
 │  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │     Grounded RAG Subsystem (server/rag/)                          │  │
+│  │  ┌───────────────────┐   ┌───────────────────┐   ┌─────────────┐ │  │
+│  │  │ Ingestion Pipeline│   │ Hybrid Retrieval  │   │  Grounding  │ │  │
+│  │  │ (Extract/Chunk/   │──►│ (Vector Cosine +  │──►│  Synthesizer│ │  │
+│  │  │  Content Hash)    │   │  BM25 Lexical)    │   │ & Citations │ │  │
+│  │  └───────────────────┘   └───────────────────┘   └─────────────┘ │  │
+│  └──────────────────────────────────┬────────────────────────────────┘  │
+│                                     │                                   │
+│  ┌──────────────────────────────────▼────────────────────────────────┐  │
 │  │                /api/chat (Multi-Turn Tool Loop & SSE)             │  │
 │  └───────────────────────────────┬───────────────────────────────────┘  │
 │                                  │                                      │
@@ -36,7 +45,7 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 │                          │               │                              │
 │      ┌───────────────────▼───────┐  ┌────▼────────────────────┐         │
 │      │     Gemini Provider       │  │  Fallback Mock Provider │         │
-│      │ (gemini-3.8-flash, Tools) │  │   (Auxiliary Core Mock) │         │
+│      │ (gemini-3.7-flash, Tools) │  │   (Auxiliary Core Mock) │         │
 │      └───────────────────┬───────┘  └────┬────────────────────┘         │
 │                          │               │                              │
 │                          └───────┬───────┘                              │
@@ -45,16 +54,12 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 │                   │     Tool Execution Layer    │                       │
 │                   │  ┌────────────────────────┐ │                       │
 │                   │  │      ToolRegistry      │ │                       │
-│                   │  │  (12 allowlisted tools)│ │                       │
+│                   │  │  (17 allowlisted tools)│ │                       │
 │                   │  └───────────┬────────────┘ │                       │
 │                   │  ┌───────────▼────────────┐ │                       │
 │                   │  │      ToolExecutor      │ │                       │
 │                   │  │ (Allowlist & Sandbox)  │ │                       │
 │                   │  └───────────┬────────────┘ │                       │
-│                   │  ┌───────────▼────────────┐ │                       │
-│                   │  │   serverProtocolStore  │ │                       │
-│                   │  │ (Single Source of Truth│ │                       │
-│                   │  └────────────────────────┘ │                       │
 │                   └──────────────┬──────────────┘                       │
 │                                  │                                      │
 │  ┌───────────────────────────────▼───────────────────────────────────┐  │
@@ -66,13 +71,14 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 │  │  │  • IUserRepository       • IWorkspaceRepository             │  │  │
 │  │  │  • IConversationRepository • IKnowledgeRepository           │  │  │
 │  │  │  • IEducationRepository  • IAuditRepository                 │  │  │
+│  │  │  • IResearchRepository   • IFileRepository                  │  │  │
 │  │  └──────────────────────────────┬──────────────────────────────┘  │  │
 │  │                                 │                                 │  │
 │  │  ┌──────────────────────────────▼──────────────────────────────┐  │  │
 │  │  │              Durable Storage Adapter / Driver               │  │  │
 │  │  │    • DiskJarvisDataRepository (Atomic JsonFileStore)        │  │  │
 │  │  │    • MemoryJarvisDataRepository (Test isolation)            │  │  │
-│  │  │    • Seed Data Engine (Deterministic & Idempotent)          │  │  │
+│  │  │    • Local Vector Store (Cosine similarity chunks)          │  │  │
 │  │  └──────────────────────────────┬──────────────────────────────┘  │  │
 │  └─────────────────────────────────┼─────────────────────────────────┘  │
 └────────────────────────────────────┼────────────────────────────────────┘
@@ -91,80 +97,66 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 - **Sectors**:
   - **Command Deck (`src/sectors/command/`)**: Concentric rotating Arc Reactor cores, radar sweeps, armor vault matrix (Marks III through LXXXV), Stark protocol overrides, and streaming tactical terminal.
   - **Education Sector (`src/sectors/education/`)**: Dual-mode student/teacher academic environment, course syllabi, assignments and submission workflows, and NotebookLM-style knowledge workspaces.
+  - **Research & Labs Sector (`src/sectors/research/`)**: Scientific hypothesis tracking, multi-source grounded investigations, structured evidence locking, research notes, and formal synthesis reports.
 - **Audio & Speech Engine**:
   - Browser-native Web Speech API for voice transcription and synthesis.
   - Procedural Web Audio API synthesizer for tactile clicks, scan chimes, warning klaxons, and deployment cues.
 
 ### 1.2 Node.js Backend & API Gateway
-- **Runtime**: Node.js 22 with Express 5.
-- **Dev Mode Integration**: Express server mounting Vite dev middleware (`tsx server.ts`) on single port `3000`.
+- **Runtime**: Node.js 22 with Express 5 on port `3000`.
 - **Endpoints**:
   - `GET /api/health`: Subsystem health, uptime, provider status, tool counts, and persistence status.
   - `GET /api/protocols`: Authoritative list and states of all Stark tactical security protocols.
-  - `GET /api/tools`: Catalog of registered deterministic tools across all sectors.
-  - `GET /api/workspaces` & `GET /api/workspaces/:id`: Workspace directory and memberships.
-  - `GET /api/conversations` & `POST /api/conversations`: Conversation management and message histories.
-  - `GET /api/knowledge-spaces` & `POST /api/knowledge-spaces`: Grounded knowledge spaces and indexed documents.
+  - `GET /api/tools`: Catalog of registered deterministic tools across all sectors (31 tools).
+  - `GET/POST /api/workspaces`: Workspace directory and memberships.
+  - `GET/POST /api/conversations`: Conversation management and message histories.
+  - `GET/POST /api/knowledge-spaces`: Grounded knowledge spaces, source ingestion, deletion, retrieval, and grounded Q&A.
   - `GET/POST /api/education/*`: Classes, assignments, submissions, grading, and grounded Q&A.
+  - `GET/POST/PATCH/DELETE /api/research/*`: Research projects, questions, evidence, notes, reports, and grounded investigation.
+  - `GET/POST/DELETE /api/files/*`: Unified file upload, metadata lookup, controlled streaming/download, and RAG ingestion bridge.
   - `POST /api/chat`: Multi-turn conversational endpoint supporting unary JSON and SSE streaming with tool execution loop.
 
-### 1.3 Model Provider Layer
+### 1.3 Grounded RAG Subsystem (`server/rag/`)
+- **Document Extraction (`extractor.ts`)**: Plain text, Markdown (with header hierarchy), and lightweight PDF stream extraction. Normalization & SHA-256 content hashing.
+- **Deterministic Chunker (`chunker.ts`)**: Sentence & paragraph boundary splitting with stable IDs (`chunk-${sourceId}-${index}`) and configurable overlap.
+- **Embedding Provider Abstraction (`embeddingProvider.ts`)**:
+  - `EmbeddingProvider` interface (`embedText`, `embedTexts`, `dimensions`).
+  - `DeterministicLocalEmbeddingProvider`: 128-dim dense feature embedder using subword n-gram hashing and L2 norm unit vectors. 100% deterministic, ₹0 local execution.
+  - `GeminiEmbeddingProvider`: Connects to `@google/genai` (`text-embedding-004`) when `GEMINI_API_KEY` is present.
+- **Local Persistent Vector Index (`vectorIndex.ts`)**: Cosine similarity search with workspace & knowledge space filtering, stored in `jarvisData.knowledgeChunks`.
+- **Hybrid Retrieval (`retrievalService.ts`)**: Combines vector similarity (cosine) with BM25 lexical term matching using weighted alpha fusion (`0.65 * vector + 0.35 * lexical`).
+- **Grounded Synthesis & Refusal Guard (`groundingService.ts`)**:
+  - Workspace & class authorization enforcement.
+  - Refusal guard for ungrounded queries (zero fake citations).
+  - Gemini 3.7 Flash synthesis with strict grounding instructions when online; deterministic local synthesizer fallback when offline.
+  - Verifiable structured citations with source title, chunk ID, section/page, and excerpt text.
+
+### 1.4 Model Provider Layer
 - **Interface Abstraction (`AiProvider`)**: Decouples API endpoints from specific model SDKs and supports both standard text generation and tool-calling turns.
 - **Active Providers**:
-  - `GeminiProvider`: Connects to Google Gemini using `@google/genai` (`gemini-3.8-flash`). Exposes function declarations to Gemini and handles multi-turn tool loops preserving `rawCandidateContent` thought signatures.
-  - `FallbackMockProvider`: Engages automatically if `GEMINI_API_KEY` is omitted or unavailable, providing intelligent intent matching to trigger the same server-side tool execution pipeline.
+  - `GeminiProvider`: Connects to Google Gemini using `@google/genai` (`gemini-3.7-flash` / `gemini-3.8-flash`).
+  - `FallbackMockProvider`: Engages automatically if `GEMINI_API_KEY` is omitted or unavailable.
 
-### 1.4 Tool Execution Engine (`server/tools/`)
-- **`ToolRegistry` (`registry.ts`)**: Central registry managing 12 tool definitions, parameter validations, and SDK function declarations across core diagnostics, telemetry, education, and knowledge sectors.
-- **`ToolExecutor` (`executor.ts`)**: Strict allowlist check, argument validation, and sandboxed try/catch execution preventing unhandled exceptions from crashing the server.
-- **Audit Logging**: Every tool execution is recorded with timing, arguments, success status, and error messages to `jarvisData.audit`.
+### 1.5 Tool Execution Engine (`server/tools/`)
+- **`ToolRegistry` (`registry.ts`)**: Central registry managing 31 tool definitions across diagnostics, telemetry, education, RAG knowledge spaces, research & labs, and storage.
+- **`ToolExecutor` (`executor.ts`)**: Strict allowlist check, argument validation, and sandboxed execution.
 
-### 1.5 Core Platform Persistence Layer (`server/data/`)
-- **Repository Pattern (`repository.ts`)**: Explicit interface contracts for users, workspaces, conversations, knowledge spaces, education entities, and audit events.
-- **Durable Disk Driver (`fileStore.ts` & `diskRepository.ts`)**: Atomic write-to-temp and atomic rename strategy (`data/jarvis-db.json`) ensuring 100% data durability across server restarts.
-- **Memory Driver (`memoryRepository.ts`)**: Isolated in-memory implementation for automated testing.
-- **Deterministic Seeding (`seedData.ts`)**: Idempotent seeding of default workspace, users, classes, assignments, and knowledge spaces.
-- **Workspace Isolation**: Strict workspace-scoped boundaries ensuring records cannot leak across workspaces.
+### 1.6 Core Platform Persistence Layer (`server/data/`)
+- **Repository Pattern (`repository.ts`)**: Explicit interface contracts for users, workspaces, conversations, knowledge spaces, sources, chunks, education entities, research projects, questions, evidence, notes, reports, file records, and audit events.
+- **Durable Disk Driver (`fileStore.ts` & `diskRepository.ts`)**: Atomic write-to-temp and atomic rename strategy (`data/jarvis-db.json`).
 
----
-
-## 2. Request & Response Schemas
-
-### 2.1 Chat / Query Schema (`POST /api/chat`)
-
-**Client Request**:
-```typescript
-export interface ChatRequest {
-  message: string;
-  sessionId?: string;
-  conversationId?: string;
-  context?: {
-    sector?: string;
-    role?: string;
-    userId?: string;
-    workspaceId?: string;
-    activeSpaceId?: string;
-    activeClassId?: string;
-    activeProtocol?: string;
-    deployedArmors?: string[];
-  };
-  stream?: boolean;
-}
-```
-
-**Streaming SSE Protocol** (`stream: true`):
-- `Content-Type: text/event-stream`
-- Event types emitted over connection:
-  - `start`: `{ "type": "start", "id": "...", "sessionId": "..." }`
-  - `tool_start`: `{ "type": "tool_start", "tool": { "name": "...", "callId": "..." } }`
-  - `tool_result`: `{ "type": "tool_result", "tool": { "name": "..." }, "result": { "ok": true, "data": { ... } }, "protocols": [ ... ] }`
-  - `chunk`: `{ "type": "chunk", "chunk": "..." }`
-  - `done`: `{ "type": "done", "fullReply": "...", "speechText": "...", "source": "gemini", "protocols": [ ... ] }`
-  - `error`: `{ "type": "error", "error": "..." }`
+### 1.7 Unified Storage & File Subsystem (`server/storage/`)
+- **Provider Abstraction (`IStorageProvider`)**: Decouples binary storage operations (`putObject`, `getObject`, `getObjectStream`, `deleteObject`, `hasObject`, `getObjectMetadata`, `getSignedUrl`) from concrete storage backends.
+- **`LocalStorageProvider`**: Writes binary payloads to application-controlled `data/storage/objects/` outside the web root using collision-resistant generated keys (`obj-${sha256Prefix}-${uuid}.${ext}`). Never uses client-provided filenames as filesystem paths.
+- **Secure Validation (`validator.ts`)**: Strict extension allowlist (`pdf`, `png`, `jpg`, `jpeg`, `webp`, `txt`, `md`, `docx`), magic byte binary signature verification, filename normalization, and 25 MB max file size limit.
+- **Tenant-Safe Deduplication & Cascading RAG Cleanup (`ragBridge.ts`)**: Same-content deduplication within workspace boundaries; direct ingestion into Knowledge Spaces; cascading purge of all derived vector chunks upon file deletion.
+- **Cloud-Ready Strategy**: Provider configuration allows `STORAGE_PROVIDER=local` default, ready for future S3/GCS drivers without rewriting higher-level sectors. Note: Cloud storage is **not yet enabled**.
 
 ---
 
-## 3. Security & Boundary Guarantees
+## 2. Security & Boundary Guarantees
 1. **Zero Secret Leakage**: Server API keys and database file paths are strictly encapsulated on the backend process.
-2. **Workspace Multi-Tenancy**: All conversation and knowledge space queries require explicit workspace identification.
-3. **Graceful Tool Sandboxing**: Unhandled exceptions inside tool execution do not crash the server and are cleanly formatted as tool errors.
+2. **Workspace Multi-Tenancy**: All conversation, knowledge space, source, file, and vector chunk queries require explicit workspace identification.
+3. **Storage Isolation**: Raw filesystem paths are never exposed to clients; downloads and uploads are mediated exclusively through authorized API endpoints.
+4. **Refusal Guard against Hallucinations**: Answers with insufficient evidence trigger explicit refusal responses with 0 manufactured citations.
+5. **Graceful Tool Sandboxing**: Unhandled exceptions inside tool execution do not crash the server and are cleanly formatted as tool errors.

@@ -131,3 +131,47 @@ export interface StudyArtifact {
   }>;
   createdAt: string;
 }
+
+// Milestone 11: Teacher ↔ Student Real-Time Messaging & File Attachments
+export interface ClassMessage {
+  id: string;
+  workspaceId: string;
+  classId: string;
+  conversationId: string; // thread or channel ID
+  senderUserId: string;
+  senderName: string;
+  senderRole: 'teacher' | 'student';
+  body: string;
+  attachmentFileIds?: string[];
+  attachments?: import('./storage.ts').FileRecord[];
+  readBy?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClassConversationThread {
+  id: string;
+  workspaceId: string;
+  classId: string;
+  title: string;
+  participantIds: string[];
+  type: 'class_channel' | 'direct';
+  createdAt: string;
+  updatedAt: string;
+  lastMessage?: ClassMessage;
+}
+
+export interface MessagingNotification {
+  id: string;
+  workspaceId: string;
+  classId: string;
+  messageId: string;
+  senderUserId: string;
+  senderName: string;
+  senderRole: 'teacher' | 'student';
+  title: string;
+  body: string;
+  hasAttachment: boolean;
+  timestamp: string;
+}
+

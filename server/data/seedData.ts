@@ -96,6 +96,19 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       createdAt: '2026-10-02T08:00:00.000Z',
       updatedAt: '2026-10-02T08:00:05.000Z',
       messageCount: 2
+    },
+    {
+      id: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      userId: 'teacher-1',
+      title: 'PHYS-301 General Course Discussion',
+      sector: 'education',
+      classId: 'class-phys-301',
+      type: 'class_channel',
+      participantIds: ['teacher-1', 'student-1', 'student-2'],
+      createdAt: '2026-10-02T09:00:00.000Z',
+      updatedAt: '2026-10-02T09:30:00.000Z',
+      messageCount: 3
     }
   ],
 
@@ -113,8 +126,57 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       role: 'assistant',
       content: 'At your service, sir. All multi-sector data repositories and persistent bridges are fully initialized and nominal.',
       timestamp: '2026-10-02T08:00:05.000Z'
+    },
+    {
+      id: 'msg-phys-seed-1',
+      conversationId: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      senderUserId: 'teacher-1',
+      senderName: 'Dr. Sarah (Lead Physicist)',
+      senderRole: 'teacher',
+      role: 'user',
+      body: 'Welcome to Advanced Quantum Mechanics. Please review the lecture notes on harmonic oscillator ladder operators.',
+      content: 'Welcome to Advanced Quantum Mechanics. Please review the lecture notes on harmonic oscillator ladder operators.',
+      timestamp: '2026-10-02T09:00:00.000Z',
+      createdAt: '2026-10-02T09:00:00.000Z',
+      updatedAt: '2026-10-02T09:00:00.000Z',
+      readBy: ['teacher-1', 'student-1']
+    },
+    {
+      id: 'msg-phys-seed-2',
+      conversationId: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      senderUserId: 'student-1',
+      senderName: 'Alex Chen',
+      senderRole: 'student',
+      role: 'user',
+      body: 'Thank you Dr. Sarah. I am verifying the commutator [a, a^dagger] = 1 for the zero-point energy calculation.',
+      content: 'Thank you Dr. Sarah. I am verifying the commutator [a, a^dagger] = 1 for the zero-point energy calculation.',
+      timestamp: '2026-10-02T09:15:00.000Z',
+      createdAt: '2026-10-02T09:15:00.000Z',
+      updatedAt: '2026-10-02T09:15:00.000Z',
+      readBy: ['student-1', 'teacher-1']
+    },
+    {
+      id: 'msg-phys-seed-3',
+      conversationId: 'thread-phys-301-general',
+      workspaceId: 'ws-stark-core',
+      classId: 'class-phys-301',
+      senderUserId: 'teacher-1',
+      senderName: 'Dr. Sarah (Lead Physicist)',
+      senderRole: 'teacher',
+      role: 'user',
+      body: 'Exactly right, Alex. Keep an eye on how the 1/2 hbar omega shift arises from symmetric ordering.',
+      content: 'Exactly right, Alex. Keep an eye on how the 1/2 hbar omega shift arises from symmetric ordering.',
+      timestamp: '2026-10-02T09:30:00.000Z',
+      createdAt: '2026-10-02T09:30:00.000Z',
+      updatedAt: '2026-10-02T09:30:00.000Z',
+      readBy: ['teacher-1']
     }
   ],
+
 
   // 5. Knowledge Spaces
   knowledgeSpaces: [
@@ -166,6 +228,10 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       size: '2.4 MB',
       sizeBytes: 2516582,
       status: 'ready',
+      ingestionStatus: 'ready',
+      chunkCount: 1,
+      embeddingStatus: 'ready',
+      contentHash: 'f45ab289cd3e8a64917036d6d84a71ef2807f4337b58793010b91df13838491d',
       author: 'Dr. Sarah',
       summary: 'Algebraic treatment of the 1D quantum harmonic oscillator using lowering (a) and raising (a-dagger) operators.',
       fullText: `The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). The number operator N = a_dagger a has eigenstates |n> with eigenvalues n = 0, 1, 2, ... Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.`,
@@ -183,6 +249,10 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       size: '3.8 MB',
       sizeBytes: 3984588,
       status: 'ready',
+      ingestionStatus: 'ready',
+      chunkCount: 1,
+      embeddingStatus: 'ready',
+      contentHash: '9c55b6eb2d6092fe6c3e74ffc8e96bf1153fa8ecf937d2f9d6c382f7bb7d5d71',
       author: 'Stark Physics Archive',
       summary: 'Time-dependent and time-independent Schrödinger equations, probability density conservation, and Hermitian operators.',
       fullText: `The time-dependent Schrödinger equation i hbar d/dt Psi(x,t) = H Psi(x,t) governs the deterministic evolution of non-relativistic state vectors. For time-independent potentials, separation of variables yields H psi_n(x) = E_n psi_n(x). The Born rule dictates that |Psi(x,t)|^2 represents probability density, satisfying the continuity equation d rho / dt + div J = 0 where J is the probability current vector. Wave function collapse occurs upon projective measurement by Hermitian observables.`,
@@ -200,12 +270,62 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       size: '1.9 MB',
       sizeBytes: 1992294,
       status: 'ready',
+      ingestionStatus: 'ready',
+      chunkCount: 1,
+      embeddingStatus: 'ready',
+      contentHash: 'a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842',
       author: 'Dr. Sarah',
       summary: 'Unified formulation of generalized Stokes theorem on oriented smooth manifolds and vector field curl relations.',
       fullText: `Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.`,
       tokenCount: 460,
       createdAt: '2026-09-20T16:00:00.000Z',
       updatedAt: '2026-09-20T16:00:00.000Z'
+    }
+  ],
+
+  // 6b. Knowledge Chunks with Vector Embeddings
+  knowledgeChunks: [
+    {
+      id: 'chunk-src-qm-1-0',
+      sourceId: 'src-qm-1',
+      knowledgeSpaceId: 'ks-quantum',
+      workspaceId: 'ws-stark-core',
+      sourceTitle: 'Quantum Harmonic Oscillator & Ladder Operators',
+      chunkIndex: 0,
+      text: `The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). The number operator N = a_dagger a has eigenstates |n> with eigenvalues n = 0, 1, 2, ... Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.`,
+      tokenCount: 420,
+      page: 1,
+      section: 'Harmonic Oscillator & Ladder Operators',
+      contentHash: 'f45ab289cd3e8a64917036d6d84a71ef2807f4337b58793010b91df13838491d',
+      createdAt: '2026-09-15T12:00:00.000Z'
+    },
+    {
+      id: 'chunk-src-qm-2-0',
+      sourceId: 'src-qm-2',
+      knowledgeSpaceId: 'ks-quantum',
+      workspaceId: 'ws-stark-core',
+      sourceTitle: 'Schrödinger Wave Equation & Wave Mechanics',
+      chunkIndex: 0,
+      text: `The time-dependent Schrödinger equation i hbar d/dt Psi(x,t) = H Psi(x,t) governs the deterministic evolution of non-relativistic state vectors. For time-independent potentials, separation of variables yields H psi_n(x) = E_n psi_n(x). The Born rule dictates that |Psi(x,t)|^2 represents probability density, satisfying the continuity equation d rho / dt + div J = 0 where J is the probability current vector. Wave function collapse occurs upon projective measurement by Hermitian observables.`,
+      tokenCount: 510,
+      page: 1,
+      section: 'Wave Mechanics & Probability Density',
+      contentHash: '9c55b6eb2d6092fe6c3e74ffc8e96bf1153fa8ecf937d2f9d6c382f7bb7d5d71',
+      createdAt: '2026-09-18T14:00:00.000Z'
+    },
+    {
+      id: 'chunk-src-calc-1-0',
+      sourceId: 'src-calc-1',
+      knowledgeSpaceId: 'ks-calculus',
+      workspaceId: 'ws-stark-core',
+      sourceTitle: 'Stokes Theorem & Surface Integrals Guide',
+      chunkIndex: 0,
+      text: `Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.`,
+      tokenCount: 460,
+      page: 1,
+      section: 'Stokes Theorem on Smooth Manifolds',
+      contentHash: 'a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842',
+      createdAt: '2026-09-20T16:00:00.000Z'
     }
   ],
 
@@ -486,5 +606,254 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
   studyArtifacts: [],
 
   // 11. Audit Events
-  auditEvents: []
+  auditEvents: [],
+
+  // 12. Research Projects (Milestone 9)
+  researchProjects: [
+    {
+      id: 'proj-arc-stabilization',
+      workspaceId: 'ws-stark-core',
+      ownerId: 'user-tony',
+      title: 'Arc Reactor Core Plasma Stabilization & Quantum Zero-Point Tapping',
+      description: 'Theoretical and experimental investigation into containment geometry and zero-point harmonic energy extraction for Mark-series arc power cores.',
+      status: 'active',
+      researchQuestion: 'Can quantum harmonic oscillator zero-point energy fluctuations be stabilized and harvested in compact toroidal magnetic fields?',
+      knowledgeSpaceIds: ['ks-quantum', 'ks-calculus'],
+      createdAt: '2026-09-22T08:00:00.000Z',
+      updatedAt: '2026-10-02T16:00:00.000Z'
+    },
+    {
+      id: 'proj-nanotech-alloys',
+      workspaceId: 'ws-stark-core',
+      ownerId: 'user-tony',
+      title: 'Vibranium-Titanium Nanocrystalline Matrix Cohesion',
+      description: 'Analyzing microscopic boundary conditions and surface curl distributions in polymorphic armor chasses.',
+      status: 'active',
+      researchQuestion: 'What differential geometry metrics guarantee boundary stability under supersonic aerodynamic shear?',
+      knowledgeSpaceIds: ['ks-calculus'],
+      createdAt: '2026-09-25T11:00:00.000Z',
+      updatedAt: '2026-10-01T12:00:00.000Z'
+    }
+  ],
+
+  // 13. Research Questions
+  researchQuestions: [
+    {
+      id: 'q-zero-point-harmonics',
+      projectId: 'proj-arc-stabilization',
+      workspaceId: 'ws-stark-core',
+      title: 'Zero-Point Energy Scaling in Ladder Ground States',
+      question: 'How do zero-point ground state fluctuations E_0 = 1/2 hbar omega interact with quantized magnetic vector potentials in toroidal cavities?',
+      status: 'investigating',
+      priority: 'high',
+      notes: 'Evaluating ladder operator commutators [a, a^dagger] = 1 within electromagnetic cavities.',
+      linkedEvidenceIds: ['ev-qm-ladder-1'],
+      createdAt: '2026-09-23T09:00:00.000Z',
+      updatedAt: '2026-10-02T14:00:00.000Z'
+    },
+    {
+      id: 'q-flux-containment-stokes',
+      projectId: 'proj-arc-stabilization',
+      workspaceId: 'ws-stark-core',
+      title: 'Toroidal Boundary Flux Containment via Stokes Theorem',
+      question: 'How does generalized Stokes theorem guarantee total magnetic curl flux is conserved across the open manifold boundary?',
+      status: 'answered',
+      priority: 'critical',
+      notes: 'Confirmed by analytical derivation of line integral over bounding curve.',
+      linkedEvidenceIds: ['ev-calc-stokes-1'],
+      answer: 'Stokes theorem confirms that the surface integral of the curl of the magnetic vector field equals the closed line integral around the bounding perimeter, proving zero uncontrolled plasma boundary leakage.',
+      createdAt: '2026-09-24T10:00:00.000Z',
+      updatedAt: '2026-10-02T15:30:00.000Z'
+    }
+  ],
+
+  // 14. Evidence Records (Grounded in Verified Sources and Chunks)
+  evidenceRecords: [
+    {
+      id: 'ev-qm-ladder-1',
+      projectId: 'proj-arc-stabilization',
+      workspaceId: 'ws-stark-core',
+      questionId: 'q-zero-point-harmonics',
+      knowledgeSourceId: 'src-qm-1',
+      knowledgeSpaceId: 'ks-quantum',
+      sourceTitle: 'Quantum Harmonic Oscillator & Ladder Operators',
+      chunkId: 'chunk-src-qm-1-0',
+      chunkText: 'The quantum harmonic oscillator Hamiltonian is given by H = p^2 / 2m + 1/2 m omega^2 x^2. By defining dimensionless ladder operators a = sqrt(m omega / 2 hbar) (x + i p / (m omega)) and its adjoint a_dagger, the Hamiltonian simplifies to H = hbar omega (a_dagger a + 1/2). Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.',
+      citation: {
+        sourceId: 'src-qm-1',
+        sourceTitle: 'Quantum Harmonic Oscillator & Ladder Operators',
+        chunkId: 'chunk-src-qm-1-0',
+        spaceId: 'ks-quantum',
+        page: 1,
+        section: 'Harmonic Oscillator & Ladder Operators',
+        excerpt: 'Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.',
+        score: 0.94
+      },
+      relevance: 0.94,
+      userNote: 'Definitive analytical confirmation of persistent non-zero ground state oscillation energy.',
+      tags: ['Quantum', 'Harmonic Oscillator', 'Zero-Point'],
+      createdAt: '2026-09-23T11:00:00.000Z'
+    },
+    {
+      id: 'ev-calc-stokes-1',
+      projectId: 'proj-arc-stabilization',
+      workspaceId: 'ws-stark-core',
+      questionId: 'q-flux-containment-stokes',
+      knowledgeSourceId: 'src-calc-1',
+      knowledgeSpaceId: 'ks-calculus',
+      sourceTitle: 'Stokes Theorem & Surface Integrals Guide',
+      chunkId: 'chunk-src-calc-1-0',
+      chunkText: 'Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.',
+      citation: {
+        sourceId: 'src-calc-1',
+        sourceTitle: 'Stokes Theorem & Surface Integrals Guide',
+        chunkId: 'chunk-src-calc-1-0',
+        spaceId: 'ks-calculus',
+        page: 1,
+        section: 'Stokes Theorem & Manifold Boundaries',
+        excerpt: 'Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr.',
+        score: 0.92
+      },
+      relevance: 0.92,
+      userNote: 'Mathematical foundation for magnetic toroidal plasma boundary containment proof.',
+      tags: ['Calculus', 'Stokes Theorem', 'Containment'],
+      createdAt: '2026-09-24T12:00:00.000Z'
+    }
+  ],
+
+  // 15. Research Notes
+  researchNotes: [
+    {
+      id: 'note-ladder-operators',
+      projectId: 'proj-arc-stabilization',
+      workspaceId: 'ws-stark-core',
+      authorId: 'user-tony',
+      title: 'Containment Field Harmonic Synthesis',
+      content: 'Using ladder operators a and a_dagger, the number operator N = a_dagger a provides quantized energy levels. The zero-point energy E_0 = 1/2 hbar omega is unavoidable but can be phase-locked using high-frequency magnetic coils.',
+      linkedQuestionIds: ['q-zero-point-harmonics'],
+      linkedEvidenceIds: ['ev-qm-ladder-1'],
+      tags: ['Quantum', 'Plasma', 'Core Engineering'],
+      createdAt: '2026-09-24T14:00:00.000Z',
+      updatedAt: '2026-09-24T14:30:00.000Z'
+    }
+  ],
+
+  // 16. Research Reports
+  researchReports: [
+    {
+      id: 'rep-arc-phase1',
+      projectId: 'proj-arc-stabilization',
+      workspaceId: 'ws-stark-core',
+      title: 'Phase I Synthesis: Arc Reactor Toroidal Containment & Quantum Ground States',
+      researchQuestion: 'Can quantum harmonic oscillator zero-point energy fluctuations be stabilized and harvested in compact toroidal magnetic fields?',
+      executiveSummary: 'This preliminary report unifies quantum ladder operator theory with differential boundary integration to establish the theoretical feasibility of stable zero-point energy extraction within a toroidal magnetic containment geometry.',
+      findings: [
+        'The ground state energy E_0 = 1/2 hbar omega represents an invariant baseline that cannot decay to zero, confirming a persistent energy reservoir.',
+        'Generalized Stokes theorem confirms that the total surface curl of magnetic flux is strictly bounded by the boundary line integral, preventing plasma leakage across the manifold.',
+        'Quantized ladder operators demonstrate stable discrete transitions with eigenvalue spacing of hbar omega.'
+      ],
+      evidenceReferences: ['ev-qm-ladder-1', 'ev-calc-stokes-1'],
+      sourceCitations: [
+        {
+          sourceId: 'src-qm-1',
+          sourceTitle: 'Quantum Harmonic Oscillator & Ladder Operators',
+          excerpt: 'Ground state energy is E_0 = 1/2 hbar omega, representing zero-point quantum fluctuations.'
+        },
+        {
+          sourceId: 'src-calc-1',
+          sourceTitle: 'Stokes Theorem & Surface Integrals Guide',
+          excerpt: 'Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S.'
+        }
+      ],
+      limitations: [
+        'Relativistic QED quantum corrections have not yet been incorporated.',
+        'Thermal dissipation under continuous 100% core load requires high-temperature cryogenic cooling validation.'
+      ],
+      generatedAt: '2026-10-02T16:00:00.000Z'
+    }
+  ],
+
+  // 17. Unified File Records (Milestone 10)
+  files: [
+    {
+      id: 'file-physics-syllabus',
+      workspaceId: 'ws-stark-core',
+      ownerUserId: 'user-tony',
+      originalName: 'PHYS301_Quantum_Mechanics_Syllabus.pdf',
+      storageKey: 'obj-seed-phys301-syllabus-pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 1048576, // 1 MB
+      extension: 'pdf',
+      sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      status: 'ready',
+      classId: 'class-phys-301',
+      description: 'Comprehensive syllabus and reading schedule for Advanced Quantum Physics.',
+      tags: ['Syllabus', 'Quantum Physics', 'Materials'],
+      downloadCount: 14,
+      isPublicInWorkspace: true,
+      createdAt: '2026-09-01T08:00:00.000Z',
+      updatedAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'file-calculus-worksheet',
+      workspaceId: 'ws-stark-core',
+      ownerUserId: 'user-tony',
+      originalName: 'Stokes_Theorem_Problem_Set.pdf',
+      storageKey: 'obj-seed-stokes-worksheet-pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 524288, // 512 KB
+      extension: 'pdf',
+      sha256: 'b5d4045c3f466fa91fe2cc6abe79232a1a57cdf104f7a26e716e0a1e2789df78',
+      status: 'ready',
+      classId: 'class-math-202',
+      assignmentId: 'asg-stokes-1',
+      description: 'Problem set covering surface integrals and curl line integrals.',
+      tags: ['Worksheet', 'Calculus', 'Stokes'],
+      downloadCount: 28,
+      isPublicInWorkspace: true,
+      createdAt: '2026-09-18T10:00:00.000Z',
+      updatedAt: '2026-09-18T10:00:00.000Z'
+    },
+    {
+      id: 'file-submission-alex',
+      workspaceId: 'ws-stark-core',
+      ownerUserId: 'student-1',
+      originalName: 'Alex_Chen_Stokes_Theorem_Derivation.png',
+      storageKey: 'obj-seed-alex-stokes-diagram-png',
+      mimeType: 'image/png',
+      sizeBytes: 245760, // 240 KB
+      extension: 'png',
+      sha256: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
+      status: 'ready',
+      classId: 'class-math-202',
+      assignmentId: 'asg-stokes-1',
+      submissionId: 'sub-1',
+      description: 'Hand-drawn proof diagram of boundary orientation for open hemisphere.',
+      tags: ['Student Submission', 'Proof Diagram'],
+      downloadCount: 2,
+      isPublicInWorkspace: false,
+      createdAt: '2026-09-21T14:30:00.000Z',
+      updatedAt: '2026-09-21T14:30:00.000Z'
+    },
+    {
+      id: 'file-research-plasma-spec',
+      workspaceId: 'ws-stark-core',
+      ownerUserId: 'user-tony',
+      originalName: 'Arc_Reactor_Toroidal_Specs.md',
+      storageKey: 'obj-seed-plasma-spec-md',
+      mimeType: 'text/markdown',
+      sizeBytes: 4096,
+      extension: 'md',
+      sha256: '7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069',
+      status: 'ready',
+      researchProjectId: 'proj-arc-stabilization',
+      knowledgeSpaceId: 'ks-quantum',
+      description: 'Toroidal magnetic chamber specifications and zero-point harmonic constraints.',
+      tags: ['Research', 'Toroidal', 'Specifications'],
+      downloadCount: 5,
+      isPublicInWorkspace: true,
+      createdAt: '2026-09-22T11:00:00.000Z',
+      updatedAt: '2026-09-22T11:00:00.000Z'
+    }
+  ]
 };

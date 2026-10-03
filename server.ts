@@ -6,18 +6,31 @@ import { handleChatRoute } from './server/routes/chat.ts';
 import { providerManager } from './server/providers/providerManager.ts';
 import { toolRegistry, serverProtocolStore } from './server/tools/index.ts';
 import { educationRouter } from './server/sectors/education/routes.ts';
+import { researchRouter } from './server/sectors/research/routes.ts';
 import { workspaceRouter } from './server/routes/workspaceRoutes.ts';
 import { conversationRouter } from './server/routes/conversationRoutes.ts';
 import { knowledgeRouter } from './server/routes/knowledgeRoutes.ts';
+import { filesRouter } from './server/routes/files.ts';
+import { messagingRouter } from './server/routes/messagingRoutes.ts';
+import { storageManager } from './server/storage/index.ts';
 import { jarvisData } from './server/data/index.ts';
 
+function getArg(flag: string): string | undefined {
+  const idx = process.argv.indexOf(flag);
+  if (idx !== -1 && idx < process.argv.length - 1) {
+    return process.argv[idx + 1];
+  }
+  return undefined;
+}
+
 const app = express();
-const PORT = 3000;
-const HOST = '0.0.0.0';
+const PORT = parseInt(getArg('--port') || process.env.PORT || '3000', 10);
+const HOST = getArg('--host') || process.env.HOST || '0.0.0.0';
 const startTime = Date.now();
 
-// Server-side JSON parsing
-app.use(express.json());
+// Server-side parsing with support for large file payloads (Milestone 10)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.raw({ limit: '50mb', type: ['application/octet-stream', 'application/pdf', 'image/*'] }));
 
 // Health Check Endpoint
 app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) => {
@@ -27,9 +40,10 @@ app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) =>
   const healthData: HealthResponse & {
     tools: { count: number; registered: string[] };
     persistence: { driver: string; persistent: boolean; path?: string };
+    storage?: { provider: string; ready: boolean };
   } = {
     status: 'healthy',
-    version: '1.4.0',
+    version: '1.5.0',
     service: 'web-jarvis-api',
     uptimeSeconds,
     timestamp: new Date().toISOString(),
@@ -38,7 +52,7 @@ app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) =>
       available: !isFallback
     },
     sectors: {
-      active: ['command', 'education'],
+      active: ['command', 'education', 'research'],
       available: ['command', 'education', 'research', 'finance', 'home']
     },
     tools: {
@@ -49,6 +63,10 @@ app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) =>
       driver: 'json-file-store',
       persistent: jarvisData.isPersistent,
       path: jarvisData.storagePath
+    },
+    storage: {
+      provider: storageManager.getProvider().name,
+      ready: true
     }
   };
   res.json(healthData);
@@ -58,9 +76,12 @@ app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) =>
 app.use('/api/workspaces', workspaceRouter);
 app.use('/api/conversations', conversationRouter);
 app.use('/api/knowledge-spaces', knowledgeRouter);
+app.use('/api/files', filesRouter);
+app.use('/api/messages', messagingRouter);
 
-// Sector REST Router: Education
+// Sector REST Routers
 app.use('/api/education', educationRouter);
+app.use('/api/research', researchRouter);
 
 // Server-authoritative Protocols Endpoint
 app.get('/api/protocols', (_req: Request, res: Response) => {
@@ -108,7 +129,7 @@ async function startServer() {
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true, host: HOST, port: PORT },
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa'
     });
     app.use(vite.middlewares);

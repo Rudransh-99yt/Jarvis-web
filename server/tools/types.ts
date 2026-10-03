@@ -38,7 +38,7 @@ export type ValidationResult<T = Record<string, unknown>> = ValidationSuccess<T>
 
 export interface ToolDefinition<TArgs = Record<string, unknown>> {
   readonly name: string;
-  readonly sector?: 'system' | 'education' | 'knowledge' | 'all';
+  readonly sector?: 'system' | 'education' | 'knowledge' | 'research' | 'storage' | 'all';
   readonly aliases?: string[];
   readonly description: string;
   readonly declaration: FunctionDeclaration;
