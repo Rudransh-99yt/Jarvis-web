@@ -1,6 +1,7 @@
 // Milestone 10: Unified File & Storage Foundation Automated Test Suite
-import { jarvisData, createRepository } from '../server/data/index.ts';
+import { jarvisData, createRepository, setActiveRepository, resetActiveRepository, DiskJarvisDataRepository } from '../server/data/index.ts';
 import { LocalStorageProvider } from '../server/storage/localStorageProvider.ts';
+import { storageManager } from '../server/storage/providerManager.ts';
 import { validateUpload, sanitizeFilename } from '../server/storage/validator.ts';
 import { fileService } from '../server/storage/fileService.ts';
 import { fileAuth } from '../server/storage/fileAuth.ts';
@@ -31,13 +32,19 @@ const testContext: ToolExecutionContext = {
 async function runMilestone10Tests() {
   console.log('\n=== [WEB JARVIS] MILESTONE 10: UNIFIED FILE & STORAGE FOUNDATION TEST SUITE ===\n');
 
-  // Initialize data repository
-  await jarvisData.init();
-  await jarvisData.seed();
+  // Initialize isolated data repository
+  const testDbDir = path.resolve(process.cwd(), 'tests', '.tmp-db');
+  if (!fs.existsSync(testDbDir)) fs.mkdirSync(testDbDir, { recursive: true });
+  const testDbPath = path.join(testDbDir, `m10-test-jarvis-${Date.now()}.json`);
+  const testRepo = new DiskJarvisDataRepository(testDbPath);
+  await testRepo.init();
+  await testRepo.seed();
+  setActiveRepository(testRepo);
 
   const testStorageDir = path.resolve(process.cwd(), 'data', 'test-storage', 'objects');
   const storageProvider = new LocalStorageProvider(testStorageDir);
   await storageProvider.init();
+  storageManager.setProvider(storageProvider);
 
   // Test 1: Storage Provider - Put & Get
   const samplePdfBytes = Buffer.from('%PDF-1.4\n%âãÏÓ\n1 0 obj\n<< /Title (Quantum Stabilization Specs) >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF');
@@ -238,7 +245,7 @@ async function runMilestone10Tests() {
 
   // Test 33: Persistence & Restart Simulation
   await jarvisData.flush();
-  const restoredRepo = createRepository('disk', jarvisData.storagePath);
+  const restoredRepo = createRepository('disk', testDbPath);
   await restoredRepo.init();
 
   const recoveredFile = await restoredRepo.files.getById(uploadedFile.id, 'ws-stark-core');
@@ -248,9 +255,12 @@ async function runMilestone10Tests() {
   const diskBytesAfterRestart = await fileService.getFileContent(uploadedFile.id, tonyUser, 'ws-stark-core');
   assert(Boolean(diskBytesAfterRestart.buffer && diskBytesAfterRestart.buffer.equals(testPdfContent)), '34. Persistence: Physical file remains byte-identical after simulated restart');
 
-  // Clean up temporary test storage folder
+  // Clean up temporary test storage folder & temporary test DB
+  resetActiveRepository();
+  storageManager.resetToDefault();
   try {
     await fs.promises.rm(path.resolve(process.cwd(), 'data', 'test-storage'), { recursive: true, force: true });
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
   } catch {}
 
   console.log('\n=== ALL 34 MILESTONE 10 STORAGE & FILE TESTS PASSED SUCCESSFULLY! ===\n');

@@ -1,10 +1,14 @@
 // Milestone 11: Teacher ↔ Student Real-Time Messaging & File Attachments Automated Test Suite
 import crypto from 'node:crypto';
-import { jarvisData } from '../server/data/index.ts';
+import path from 'node:path';
+import fs from 'node:fs';
+import { jarvisData, setActiveRepository, resetActiveRepository } from '../server/data/index.ts';
 import { DiskJarvisDataRepository } from '../server/data/diskRepository.ts';
 import { messagingService } from '../server/sectors/education/messagingService.ts';
 import { messageEventBus } from '../server/sectors/education/messageEventBus.ts';
 import { fileService } from '../server/storage/fileService.ts';
+import { storageManager } from '../server/storage/providerManager.ts';
+import { LocalStorageProvider } from '../server/storage/localStorageProvider.ts';
 import { validateUpload } from '../server/storage/validator.ts';
 import { toolExecutor, toolRegistry } from '../server/tools/index.ts';
 import type { User } from '../server/data/types.ts';
@@ -29,9 +33,21 @@ async function runMilestone11Tests() {
   console.log('=== [WEB JARVIS] MILESTONE 11: CLASS MESSAGING & ATTACHMENTS ===');
   console.log('================================================================\n');
 
-  // Initialize and seed repository
-  await jarvisData.init();
-  await jarvisData.seed();
+  // Initialize and seed isolated repository
+  const testDbDir = path.resolve(process.cwd(), 'tests', '.tmp-db');
+  if (!fs.existsSync(testDbDir)) fs.mkdirSync(testDbDir, { recursive: true });
+  const testDbPath = path.join(testDbDir, `m11-test-jarvis-${Date.now()}.json`);
+
+  const testRepo = new DiskJarvisDataRepository(testDbPath);
+  await testRepo.init();
+  await testRepo.seed();
+  setActiveRepository(testRepo);
+
+  const testStorageDir = path.resolve(process.cwd(), 'tests', '.tmp-storage', `m11-objects-${Date.now()}`);
+  if (!fs.existsSync(testStorageDir)) fs.mkdirSync(testStorageDir, { recursive: true });
+  const testStorageProvider = new LocalStorageProvider(testStorageDir);
+  await testStorageProvider.init();
+  storageManager.setProvider(testStorageProvider);
 
   const workspaceId = 'ws-stark-core';
   const classId = 'class-phys-301';
@@ -184,7 +200,7 @@ async function runMilestone11Tests() {
   // -------------------------------------------------------------
   console.log('\n--- 7. Restart Persistence ---');
   await jarvisData.flush();
-  const freshRepo = new DiskJarvisDataRepository(jarvisData.storagePath);
+  const freshRepo = new DiskJarvisDataRepository(testDbPath);
   await freshRepo.init();
 
   const recoveredMessages = await freshRepo.conversations.listMessages({ classId, workspaceId });
@@ -460,6 +476,13 @@ async function runMilestone11Tests() {
   console.log('\n================================================================');
   console.log(`=== M11 SUMMARY: ALL ${passed}/${total} MILESTONE 11 TESTS PASSED! ===`);
   console.log('================================================================\n');
+
+  resetActiveRepository();
+  storageManager.resetToDefault();
+  try {
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+    if (fs.existsSync(testStorageDir)) fs.rmSync(testStorageDir, { recursive: true, force: true });
+  } catch {}
 }
 
 runMilestone11Tests().catch((err) => {

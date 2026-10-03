@@ -203,7 +203,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-03T11:21:05.128Z"
+      "updatedAt": "2026-10-03T11:21:33.659Z"
     },
     {
       "id": "ks-calculus",
@@ -225,7 +225,7 @@
         "What is the relation between Green Theorem and the Divergence Theorem?"
       ],
       "createdAt": "2026-09-12T11:00:00.000Z",
-      "updatedAt": "2026-10-03T11:21:05.455Z"
+      "updatedAt": "2026-09-28T09:15:00.000Z"
     }
   ],
   "knowledgeSources": [
@@ -291,27 +291,6 @@
       "tokenCount": 460,
       "createdAt": "2026-09-20T16:00:00.000Z",
       "updatedAt": "2026-09-20T16:00:00.000Z"
-    },
-    {
-      "id": "src-musawxbj-102m",
-      "workspaceId": "ws-stark-core",
-      "knowledgeSpaceId": "ks-calculus",
-      "name": "Green Theorem Formulation.md",
-      "type": "notes",
-      "mimeType": "text/plain",
-      "size": "0.1 KB",
-      "sizeBytes": 108,
-      "status": "ready",
-      "ingestionStatus": "ready",
-      "embeddingStatus": "ready",
-      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
-      "author": "User",
-      "summary": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "fullText": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "tokenCount": 22,
-      "createdAt": "2026-10-03T11:21:05.455Z",
-      "updatedAt": "2026-10-03T11:21:05.455Z",
-      "chunkCount": 1
     }
   ],
   "knowledgeChunks": [
@@ -356,164 +335,6 @@
       "section": "Stokes Theorem on Smooth Manifolds",
       "contentHash": "a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842",
       "createdAt": "2026-09-20T16:00:00.000Z"
-    },
-    {
-      "id": "chunk-src-test-chunk-0",
-      "sourceId": "src-test-chunk",
-      "knowledgeSpaceId": "ks-quantum",
-      "workspaceId": "ws-stark-core",
-      "sourceTitle": "Test Doc",
-      "chunkIndex": 0,
-      "text": "Paragraph 1 statement about quantum states.",
-      "tokenCount": 8,
-      "page": 1,
-      "section": "General",
-      "contentHash": "d559f5f8f7448066528f3b65619eb7c419a0d44b1a5ca2c2a6d0bd8a75c48484",
-      "createdAt": "2026-10-03T11:21:05.130Z"
-    },
-    {
-      "id": "chunk-src-musawxbj-102m-0",
-      "sourceId": "src-musawxbj-102m",
-      "knowledgeSpaceId": "ks-calculus",
-      "workspaceId": "ws-stark-core",
-      "sourceTitle": "Green Theorem Formulation.md",
-      "chunkIndex": 0,
-      "text": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "tokenCount": 22,
-      "page": 1,
-      "section": "General Content",
-      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
-      "createdAt": "2026-10-03T11:21:05.455Z",
-      "embedding": [
-        0,
-        0.112517,
-        0,
-        0,
-        0.05517,
-        0,
-        0,
-        0,
-        0,
-        0.029723,
-        0.182499,
-        0.110341,
-        0.05517,
-        0.05517,
-        0.05517,
-        0.126461,
-        0,
-        0,
-        0,
-        0.110341,
-        0.03256,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0.05517,
-        0,
-        0.05517,
-        0,
-        0.02893,
-        0,
-        0.110341,
-        0,
-        0.05517,
-        0.144538,
-        0.110341,
-        0,
-        0,
-        0.165511,
-        0.05517,
-        0.118363,
-        0,
-        0,
-        0.110341,
-        0.165511,
-        0.083596,
-        0,
-        0.05517,
-        0.165511,
-        0,
-        0,
-        0.091574,
-        0,
-        0.192242,
-        0.118222,
-        0,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0,
-        0,
-        0.039878,
-        0,
-        0.05517,
-        0.275852,
-        0.05517,
-        0.165511,
-        0.110341,
-        0.165511,
-        0.05517,
-        0,
-        0.05517,
-        0.164585,
-        0,
-        0.220682,
-        0.05517,
-        0,
-        0.137926,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0.05517,
-        0,
-        0.030585,
-        0.389849,
-        0,
-        0,
-        0.05517,
-        0,
-        0,
-        0,
-        0.038022,
-        0,
-        0,
-        0.06105,
-        0.068256,
-        0,
-        0.175919,
-        0.033703,
-        0.110341,
-        0.05517,
-        0.31889,
-        0,
-        0,
-        0.063052,
-        0,
-        0,
-        0.140651,
-        0.05517,
-        0.05517,
-        0,
-        0.034975,
-        0.129941,
-        0,
-        0,
-        0,
-        0,
-        0.072806,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0.110341,
-        0.073561,
-        0.044584
-      ]
     }
   ],
   "classes": [
@@ -763,20 +584,20 @@
       "gradedCount": 0
     },
     {
-      "id": "asg-1791026439020-pw25",
+      "id": "asg-1791026493956-jyac",
       "classId": "class-phys-301",
       "className": "PHYS-301: Advanced Quantum & Electrodynamics",
-      "title": "Quantum Entanglement & Bell Inequalities Lab",
-      "description": "Analyze experimental Bell state correlations.",
-      "instructions": "Submit lab observations and Bell parameter S calculations.",
+      "title": "Audit Lab: QED Loop Corrections",
+      "description": "Calculate 1-loop vertex correction.",
+      "instructions": "Compute Ward-Takahashi identity validation.",
       "assignedDate": "2026-10-03",
-      "dueDate": "2026-11-15",
+      "dueDate": "2026-11-20",
       "maxScore": 100,
       "category": "Lab Report",
       "teacherId": "teacher-1",
       "totalEnrolled": 2,
-      "submittedCount": 0,
-      "gradedCount": 0
+      "submittedCount": 1,
+      "gradedCount": 1
     }
   ],
   "submissions": [
@@ -818,10 +639,232 @@
           "size": "920 KB"
         }
       ]
+    },
+    {
+      "id": "sub-student-1-asg-1791026493956-jyac-musaxjba",
+      "assignmentId": "asg-1791026493956-jyac",
+      "assignmentTitle": "Audit Lab: QED Loop Corrections",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum & Electrodynamics",
+      "studentId": "student-1",
+      "studentName": "Alex Chen",
+      "status": "graded",
+      "submittedAt": "2026-10-03T11:21:33.958Z",
+      "content": "Completed derivation with attached notes.",
+      "attachments": [
+        {
+          "name": "Alex-Chen-QED-Lab-Report.md",
+          "size": "1.2 KB"
+        }
+      ],
+      "grade": 98,
+      "feedback": "Flawless calculation of the Ward identity.",
+      "gradedAt": "2026-10-03T11:21:33.959Z"
     }
   ],
   "studyArtifacts": [],
-  "auditEvents": [],
+  "auditEvents": [
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "QED-Lecture-Notes.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 243,
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791026493651-lqfg",
+      "timestamp": "2026-10-03T11:21:33.651Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791026493655-rcjqe",
+        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "sizeBytes": 243,
+        "sha256": "9dfedd548acfd5ed4c9b766ed0911592ab110d2d8a14b971e355dcb5de524b3c",
+        "mimeType": "application/pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 4,
+      "id": "audit-1791026493655-7kkm",
+      "timestamp": "2026-10-03T11:21:33.655Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.downloaded",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791026493655-rcjqe",
+        "originalName": "QED-Lecture-Notes.pdf",
+        "userId": "student-1",
+        "sizeBytes": 243
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791026493657-itqz",
+      "timestamp": "2026-10-03T11:21:33.657Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Alex-Chen-QED-Lab-Report.md",
+        "claimedMime": "text/markdown",
+        "sizeBytes": 61,
+        "userId": "student-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791026493956-de88",
+      "timestamp": "2026-10-03T11:21:33.956Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791026493958-kjmjn",
+        "storageKey": "obj-49a2d3c741a0-09cc08e0.md",
+        "sizeBytes": 61,
+        "sha256": "49a2d3c741a09ea76978936cf25d512995ecc0d45c484f7e467409282725d2e4",
+        "mimeType": "text/markdown",
+        "userId": "student-1"
+      },
+      "ok": true,
+      "executionTimeMs": 2,
+      "id": "audit-1791026493958-h1d6",
+      "timestamp": "2026-10-03T11:21:33.958Z"
+    },
+    {
+      "workspaceId": "ws-rogue-organization",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.rejected",
+      "sector": "storage",
+      "args": {
+        "originalName": "Secret.txt",
+        "reason": "User is not a member of the target workspace.",
+        "userId": "student-1"
+      },
+      "ok": false,
+      "executionTimeMs": 0,
+      "errorMessage": "User is not a member of the target workspace.",
+      "id": "audit-1791026493959-ry63",
+      "timestamp": "2026-10-03T11:21:33.959Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "QED-Lecture-Duplicate.pdf",
+        "claimedMime": "application/pdf",
+        "sizeBytes": 243,
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791026493960-5o8q",
+      "timestamp": "2026-10-03T11:21:33.961Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791026493961-z2t5x",
+        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "sizeBytes": 243,
+        "sha256": "9dfedd548acfd5ed4c9b766ed0911592ab110d2d8a14b971e355dcb5de524b3c",
+        "mimeType": "application/pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791026493961-5c82",
+      "timestamp": "2026-10-03T11:21:33.961Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.deleted",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791026493961-z2t5x",
+        "originalName": "QED-Lecture-Duplicate.pdf",
+        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 0,
+      "id": "audit-1791026493962-w4ib",
+      "timestamp": "2026-10-03T11:21:33.962Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.deleted",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791026493655-rcjqe",
+        "originalName": "QED-Lecture-Notes.pdf",
+        "storageKey": "obj-9dfedd548acf-450973a3.pdf",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 0,
+      "id": "audit-1791026493962-uqth",
+      "timestamp": "2026-10-03T11:21:33.962Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.started",
+      "sector": "storage",
+      "args": {
+        "originalName": "Casimir-Force.md",
+        "claimedMime": "text/markdown",
+        "sizeBytes": 58,
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791026493963-gydp",
+      "timestamp": "2026-10-03T11:21:33.963Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "storage-service-session",
+      "toolName": "file.upload.completed",
+      "sector": "storage",
+      "args": {
+        "fileId": "file-1791026493964-yke76",
+        "storageKey": "obj-8db4b3e9139a-a8cc233b.md",
+        "sizeBytes": 58,
+        "sha256": "8db4b3e9139afa5558d0f1dc8339980883307a005b55b55be90e86f36c88f2bd",
+        "mimeType": "text/markdown",
+        "userId": "teacher-1"
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791026493964-ua2g",
+      "timestamp": "2026-10-03T11:21:33.964Z"
+    }
+  ],
   "researchProjects": [
     {
       "id": "proj-arc-stabilization",
@@ -854,30 +897,25 @@
     },
     {
       "workspaceId": "ws-stark-core",
-      "ownerId": "user-tony",
-      "title": "Arc Reactor Plasma Toroidal Boundary Study",
-      "description": "Temporarily paused for sensor recalibration.",
-      "status": "paused",
-      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
-      "knowledgeSpaceIds": [
-        "ks-quantum",
-        "ks-calculus"
-      ],
-      "id": "proj-1791026490654-8voy",
-      "createdAt": "2026-10-03T11:21:30.654Z",
-      "updatedAt": "2026-10-03T11:21:30.655Z"
+      "ownerId": "teacher-1",
+      "title": "Arc Reactor Plasma Confinement",
+      "description": "Stabilizing magnetohydrodynamic equilibrium.",
+      "researchQuestion": "How to suppress tearing modes in 3.2 GW core?",
+      "id": "proj-1791026493960-vs5x",
+      "knowledgeSpaceIds": [],
+      "createdAt": "2026-10-03T11:21:33.960Z",
+      "updatedAt": "2026-10-03T11:21:33.960Z"
     },
     {
-      "title": "Vibranium Lattice Resonance Project",
-      "researchQuestion": "What vibrational modes produce constructive acoustic interference in vibranium?",
-      "description": "",
       "workspaceId": "ws-stark-core",
-      "ownerId": "user-tony",
+      "ownerId": "teacher-1",
+      "title": "Quantum Vacuum Fluctuations & Casimir Effect",
+      "description": "Analyzing Casimir force between conducting plates.",
+      "researchQuestion": "Does zero-point energy shift boundary conditions?",
+      "id": "proj-1791026493963-lrxi",
       "knowledgeSpaceIds": [],
-      "status": "active",
-      "id": "proj-1791026491056-9nr2",
-      "createdAt": "2026-10-03T11:21:31.056Z",
-      "updatedAt": "2026-10-03T11:21:31.056Z"
+      "createdAt": "2026-10-03T11:21:33.963Z",
+      "updatedAt": "2026-10-03T11:21:33.963Z"
     }
   ],
   "researchQuestions": [
@@ -911,22 +949,6 @@
       "answer": "Stokes theorem confirms that the surface integral of the curl of the magnetic vector field equals the closed line integral around the bounding perimeter, proving zero uncontrolled plasma boundary leakage.",
       "createdAt": "2026-09-24T10:00:00.000Z",
       "updatedAt": "2026-10-02T15:30:00.000Z"
-    },
-    {
-      "projectId": "proj-1791026490654-8voy",
-      "workspaceId": "ws-stark-core",
-      "title": "Magnetic Boundary Line Integral Equivalence",
-      "question": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
-      "priority": "critical",
-      "status": "answered",
-      "notes": "Checking against classical Stokes formulation in ks-calculus.",
-      "id": "q-1791026490655-xj9z",
-      "linkedEvidenceIds": [
-        "ev-1791026490656-8skk"
-      ],
-      "createdAt": "2026-10-03T11:21:30.655Z",
-      "updatedAt": "2026-10-03T11:21:30.655Z",
-      "answer": "Stokes theorem confirms surface integral of curl F equals closed line integral around boundary."
     }
   ],
   "evidenceRecords": [
@@ -987,34 +1009,6 @@
         "Containment"
       ],
       "createdAt": "2026-09-24T12:00:00.000Z"
-    },
-    {
-      "projectId": "proj-1791026490654-8voy",
-      "workspaceId": "ws-stark-core",
-      "questionId": "q-1791026490655-xj9z",
-      "knowledgeSourceId": "src-calc-1",
-      "knowledgeSpaceId": "ks-calculus",
-      "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-      "chunkId": "chunk-src-calc-1-0",
-      "chunkText": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.",
-      "citation": {
-        "sourceId": "src-calc-1",
-        "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-        "chunkId": "chunk-src-calc-1-0",
-        "spaceId": "ks-calculus",
-        "page": 1,
-        "section": "Stokes Theorem on Smooth Manifolds",
-        "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around",
-        "score": 0.95
-      },
-      "relevance": 0.95,
-      "userNote": "Definitive analytical proof of surface curl boundary line equivalence.",
-      "tags": [
-        "Stokes Theorem",
-        "Plasma Boundary"
-      ],
-      "id": "ev-1791026490656-8skk",
-      "createdAt": "2026-10-03T11:21:30.656Z"
     }
   ],
   "researchNotes": [
@@ -1038,26 +1032,6 @@
       ],
       "createdAt": "2026-09-24T14:00:00.000Z",
       "updatedAt": "2026-09-24T14:30:00.000Z"
-    },
-    {
-      "projectId": "proj-1791026490654-8voy",
-      "workspaceId": "ws-stark-core",
-      "authorId": "user-tony",
-      "title": "Plasma Boundary Mathematical Synthesis",
-      "content": "Boundary curve integration establishes exact conservation of magnetic flux.",
-      "linkedQuestionIds": [
-        "q-1791026490655-xj9z"
-      ],
-      "linkedEvidenceIds": [
-        "ev-1791026490656-8skk"
-      ],
-      "tags": [
-        "Plasma",
-        "Derivations"
-      ],
-      "id": "note-1791026490656-ot3z",
-      "createdAt": "2026-10-03T11:21:30.656Z",
-      "updatedAt": "2026-10-03T11:21:30.656Z"
     }
   ],
   "researchReports": [
@@ -1096,68 +1070,22 @@
       "generatedAt": "2026-10-02T16:00:00.000Z"
     },
     {
-      "projectId": "proj-1791026490654-8voy",
+      "projectId": "proj-1791026493963-lrxi",
       "workspaceId": "ws-stark-core",
-      "title": "Formal Technical Synthesis: Toroidal Plasma Confinement",
-      "researchQuestion": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
-      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the l...",
+      "title": "Synthesis of Casimir Boundary States",
+      "researchQuestion": "Does zero-point energy shift boundary conditions?",
+      "executiveSummary": "Based on verified research materials in this project, there is insufficient evidence to address your inquiry regarding \"Does zero-point energy shift boundary conditions?\". No indexed source records contain relevant factual context for this query.",
       "findings": [
-        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+        "Based on verified research materials in this project, there is insufficient evidence to address your inquiry regarding \"Does zero-point energy shift boundary conditions?\". No indexed source records contain relevant factual context for this query."
       ],
-      "evidenceReferences": [
-        "ev-1791026490656-8skk"
-      ],
-      "sourceCitations": [
-        {
-          "sourceId": "src-musawxbj-102m",
-          "sourceTitle": "Green Theorem Formulation.md",
-          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
-        },
-        {
-          "sourceId": "src-calc-1",
-          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
-        }
-      ],
+      "evidenceReferences": [],
+      "sourceCitations": [],
       "limitations": [
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791026491055-ic30",
-      "generatedAt": "2026-10-03T11:21:31.055Z"
-    },
-    {
-      "projectId": "proj-1791026490654-8voy",
-      "workspaceId": "ws-stark-core",
-      "title": "Automated Brief on Harmonic Zero-Point Energy",
-      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
-      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of...",
-      "findings": [
-        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
-      ],
-      "evidenceReferences": [
-        "ev-1791026490656-8skk"
-      ],
-      "sourceCitations": [
-        {
-          "sourceId": "src-musawxbj-102m",
-          "sourceTitle": "Green Theorem Formulation.md",
-          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
-        },
-        {
-          "sourceId": "src-calc-1",
-          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
-        }
-      ],
-      "limitations": [
-        "Grounded solely on currently ingested and indexed Knowledge Space records.",
-        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
-      ],
-      "id": "rep-1791026491059-tcgs",
-      "generatedAt": "2026-10-03T11:21:31.059Z"
+      "id": "rep-1791026493969-uiy9",
+      "generatedAt": "2026-10-03T11:21:33.969Z"
     }
   ],
   "files": [
@@ -1255,6 +1183,44 @@
       "isPublicInWorkspace": true,
       "createdAt": "2026-09-22T11:00:00.000Z",
       "updatedAt": "2026-09-22T11:00:00.000Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "student-1",
+      "originalName": "Alex-Chen-QED-Lab-Report.md",
+      "storageKey": "obj-49a2d3c741a0-09cc08e0.md",
+      "mimeType": "text/markdown",
+      "sizeBytes": 61,
+      "extension": "md",
+      "sha256": "49a2d3c741a09ea76978936cf25d512995ecc0d45c484f7e467409282725d2e4",
+      "status": "ready",
+      "classId": "class-phys-301",
+      "assignmentId": "asg-1791026493956-jyac",
+      "submissionId": "sub-student-1-asg-1791026493956-jyac",
+      "tags": [],
+      "isPublicInWorkspace": true,
+      "id": "file-1791026493958-kjmjn",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T11:21:33.958Z",
+      "updatedAt": "2026-10-03T11:21:33.958Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "teacher-1",
+      "originalName": "Casimir-Force.md",
+      "storageKey": "obj-8db4b3e9139a-a8cc233b.md",
+      "mimeType": "text/markdown",
+      "sizeBytes": 58,
+      "extension": "md",
+      "sha256": "8db4b3e9139afa5558d0f1dc8339980883307a005b55b55be90e86f36c88f2bd",
+      "status": "ready",
+      "researchProjectId": "proj-1791026493963-lrxi",
+      "tags": [],
+      "isPublicInWorkspace": true,
+      "id": "file-1791026493964-yke76",
+      "downloadCount": 0,
+      "createdAt": "2026-10-03T11:21:33.964Z",
+      "updatedAt": "2026-10-03T11:21:33.964Z"
     }
   ],
   "classroomSessions": [

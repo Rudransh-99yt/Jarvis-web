@@ -1,10 +1,13 @@
 // End-to-End Hardening & Comprehensive Verification Audit Test Suite (Milestones 1–10)
 import crypto from 'node:crypto';
-import { jarvisData } from '../server/data/index.ts';
+import path from 'node:path';
+import fs from 'node:fs';
+import { jarvisData, setActiveRepository, resetActiveRepository } from '../server/data/index.ts';
 import { DiskJarvisDataRepository } from '../server/data/diskRepository.ts';
 import { toolRegistry, toolExecutor } from '../server/tools/index.ts';
 import { fileService } from '../server/storage/fileService.ts';
 import { storageManager } from '../server/storage/providerManager.ts';
+import { LocalStorageProvider } from '../server/storage/localStorageProvider.ts';
 import { validateUpload } from '../server/storage/validator.ts';
 import { fileAuth } from '../server/storage/fileAuth.ts';
 import { ragStorageBridge } from '../server/storage/ragBridge.ts';
@@ -34,9 +37,22 @@ async function runAuditTestSuite() {
   console.log('=== JARVIS-WEB FULL MILESTONES 1–10 VERIFICATION & AUDIT SUITE ===');
   console.log('================================================================\n');
 
-  // Initialize and seed repository
-  await jarvisData.init();
-  await jarvisData.seed();
+  // Initialize and seed isolated repository
+  const testDbDir = path.resolve(process.cwd(), 'tests', '.tmp-db');
+  if (!fs.existsSync(testDbDir)) fs.mkdirSync(testDbDir, { recursive: true });
+  const testDbPath = path.join(testDbDir, `audit-db-${Date.now()}.json`);
+
+  const testStorageDir = path.resolve(process.cwd(), 'tests', '.tmp-storage', `objects-${Date.now()}`);
+  if (!fs.existsSync(testStorageDir)) fs.mkdirSync(testStorageDir, { recursive: true });
+
+  const testRepo = new DiskJarvisDataRepository(testDbPath);
+  await testRepo.init();
+  await testRepo.seed();
+  setActiveRepository(testRepo);
+
+  const testStorageProvider = new LocalStorageProvider(testStorageDir);
+  await testStorageProvider.init();
+  storageManager.setProvider(testStorageProvider);
 
   const teacherUser: User = {
     id: 'teacher-1',
@@ -511,6 +527,14 @@ async function runAuditTestSuite() {
   console.log('\n================================================================');
   console.log(`=== AUDIT SUMMARY: ALL ${passed}/${total} AUDIT TESTS PASSED! ===`);
   console.log('================================================================\n');
+
+  // Teardown and cleanup test artifacts
+  resetActiveRepository();
+  storageManager.resetToDefault();
+  try {
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+    if (fs.existsSync(testStorageDir)) fs.rmSync(testStorageDir, { recursive: true, force: true });
+  } catch {}
 }
 
 runAuditTestSuite().catch((err) => {

@@ -1,65 +1,92 @@
-// Milestone 12: Smart Classroom REST & Realtime API Routes
-import { Router, Request, Response } from 'express';
+// Milestone 12: Smart Classroom REST & Realtime API Routes (Hardened & Secure)
+import express, { type Request, type Response } from 'express';
 import { jarvisData } from '../../data/index.ts';
 import { classroomService } from './classroomService.ts';
 import { classroomEventBus } from './classroomEventBus.ts';
-import type { User } from '../../data/types.ts';
+import { authenticateRequest, AuthenticationError } from '../../auth/index.ts';
 
-export const classroomRouter = Router();
-
-async function resolveUser(req: Request): Promise<User> {
-  const userId =
-    (typeof req.headers['x-user-id'] === 'string' && req.headers['x-user-id']) ||
-    (typeof req.query.userId === 'string' && req.query.userId) ||
-    'teacher-1';
-
-  const user = await jarvisData.users.getById(userId);
-  if (user) return user;
-
-  const role =
-    (typeof req.headers['x-user-role'] === 'string' && req.headers['x-user-role']) ||
-    (userId.startsWith('student') ? 'student' : 'teacher');
-
-  return {
-    id: userId,
-    displayName: userId.startsWith('student') ? 'Student User' : 'Teacher User',
-    email: `${userId}@stark.local`,
-    role: role as any,
-    createdAt: new Date().toISOString()
-  };
-}
+export const classroomRouter = express.Router();
 
 function getParam(param: string | string[] | undefined): string {
   if (Array.isArray(param)) return param[0] || '';
   return param || '';
 }
 
+function handleRouteError(err: any, res: Response, fallbackCode = 'CLASSROOM_ERROR') {
+  if (res.headersSent) return;
+
+  if (err instanceof AuthenticationError || err.statusCode === 401 || err.code === 'UNAUTHENTICATED') {
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: err.message } });
+    return;
+  }
+
+  const msg = err.message || '';
+  if (
+    msg.includes('Unauthorized') ||
+    msg.includes('Forbidden') ||
+    msg.includes('Access denied') ||
+    msg.includes('denied') ||
+    msg.includes('not assigned') ||
+    msg.includes('not enrolled') ||
+    msg.includes('Only authorized')
+  ) {
+    res.status(403).json({ error: { code: 'FORBIDDEN', message: msg } });
+    return;
+  }
+
+  if (msg.includes('not found') || msg.includes('does not exist')) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: msg } });
+    return;
+  }
+
+  res.status(400).json({ error: { code: fallbackCode, message: msg } });
+}
+
 // 1. GET /api/classroom/sessions/active - Query active live session for a course
 classroomRouter.get('/active', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const classId = typeof req.query.classId === 'string' ? req.query.classId : 'class-phys-301';
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
     const session = await classroomService.getActiveSession(classId, workspaceId, currentUser);
     res.json({ session });
   } catch (err: any) {
-    const status = err.message?.includes('Unauthorized') || err.message?.includes('Access denied') ? 403 : 500;
-    res.status(status).json({ error: { code: 'ACTIVE_SESSION_ERROR', message: err.message } });
+    handleRouteError(err, res, 'ACTIVE_SESSION_ERROR');
   }
 });
 
 // 2. GET /api/classroom/sessions/:id/stream - Server-Sent Events (SSE) Real-Time Uplink for Classroom
 classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
+  let unsubscribe: (() => void) | null = null;
+  let heartbeatTimer: NodeJS.Timeout | null = null;
+
   try {
-    const currentUser = await resolveUser(req);
+    // 1. Authenticate user from request context (Header, Bearer token, or Query param ?userId=)
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
-    // 1. Check session existence & authorization
-    const session = await classroomService.getSession(sessionId, workspaceId, currentUser);
+    // 2. Look up session
+    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    if (!session) {
+      res.status(404).json({
+        error: { code: 'SESSION_NOT_FOUND', message: `Classroom session '${sessionId}' not found in workspace '${workspaceId}'.` }
+      });
+      return;
+    }
 
-    // 2. Set SSE Headers
+    // 3. CRITICAL: Evaluate authorization BEFORE setting stream headers or subscribing to EventBus!
+    const authCheck = await classroomService.getPolicy().canSubscribeStream(currentUser, session, workspaceId);
+    if (!authCheck.allowed) {
+      const statusCode = authCheck.statusCode || 403;
+      res.status(statusCode).json({
+        error: { code: 'FORBIDDEN', message: authCheck.reason || 'Stream access denied.' }
+      });
+      return;
+    }
+
+    // 4. Set SSE Headers now that authorization is strictly confirmed
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
@@ -71,7 +98,7 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
       res.flushHeaders();
     }
 
-    // 3. Send initial connected event with full session & board state
+    // 5. Send initial connected event with full session & board state
     const participants = await jarvisData.classroom.listParticipants(sessionId, true);
     res.write(
       `event: connected\ndata: ${JSON.stringify({
@@ -87,8 +114,8 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
       })}\n\n`
     );
 
-    // 4. Subscribe to Real-Time EventBus for this specific classroom session
-    const unsubscribe = classroomEventBus.subscribeToSession(sessionId, workspaceId, (event) => {
+    // 6. Subscribe to Real-Time EventBus for this specific classroom session channel
+    unsubscribe = classroomEventBus.subscribeToSession(sessionId, workspaceId, (event) => {
       if (res.writableEnded) return;
       res.write(`event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`);
       if (typeof (res as any).flush === 'function') {
@@ -96,29 +123,34 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
       }
     });
 
-    // 5. Periodic Heartbeat
-    const heartbeatTimer = setInterval(() => {
+    // 7. Periodic Heartbeat
+    heartbeatTimer = setInterval(() => {
       if (!res.writableEnded) {
         res.write(`: heartbeat ${Date.now()}\n\n`);
       }
     }, 20000);
 
     req.on('close', () => {
-      clearInterval(heartbeatTimer);
-      unsubscribe();
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
     });
   } catch (err: any) {
-    if (!res.headersSent) {
-      const status = err.message?.includes('Unauthorized') || err.message?.includes('Access denied') ? 403 : 500;
-      res.status(status).json({ error: { code: 'CLASSROOM_STREAM_ERROR', message: err.message || 'Stream failed.' } });
-    }
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    if (unsubscribe) unsubscribe();
+    handleRouteError(err, res, 'CLASSROOM_STREAM_ERROR');
   }
 });
 
 // 3. POST /api/classroom/sessions - Create / Start Classroom Session (Teacher)
 classroomRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const { classId, workspaceId = 'ws-stark-core', title, status = 'scheduled', boardTopic } = req.body || {};
 
     if (!classId) {
@@ -133,15 +165,14 @@ classroomRouter.post('/', async (req: Request, res: Response) => {
 
     res.status(201).json({ session });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('Only authorized') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'SESSION_CREATE_FAILED', message: err.message } });
+    handleRouteError(err, res, 'SESSION_CREATE_FAILED');
   }
 });
 
 // 4. GET /api/classroom/sessions - List Sessions (with optional filters)
 classroomRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const classId = typeof req.query.classId === 'string' ? req.query.classId : undefined;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
     const status = typeof req.query.status === 'string' ? (req.query.status as any) : undefined;
@@ -149,15 +180,14 @@ classroomRouter.get('/', async (req: Request, res: Response) => {
     const sessions = await classroomService.listSessions(classId, workspaceId, currentUser, status);
     res.json({ sessions, count: sessions.length });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'LIST_SESSIONS_FAILED', message: err.message } });
+    handleRouteError(err, res, 'LIST_SESSIONS_FAILED');
   }
 });
 
 // 5. GET /api/classroom/sessions/:id - Get session details
 classroomRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
@@ -170,75 +200,70 @@ classroomRouter.get('/:id', async (req: Request, res: Response) => {
       participants
     });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') ? 403 : err.message?.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({ error: { code: 'GET_SESSION_FAILED', message: err.message } });
+    handleRouteError(err, res, 'GET_SESSION_FAILED');
   }
 });
 
 // 6. POST /api/classroom/sessions/:id/start - Start Session
 classroomRouter.post('/:id/start', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
 
     const session = await classroomService.startSession(sessionId, currentUser, workspaceId);
     res.json({ session, message: 'Classroom session is now LIVE.' });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('denied') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'START_SESSION_FAILED', message: err.message } });
+    handleRouteError(err, res, 'START_SESSION_FAILED');
   }
 });
 
 // 7. POST /api/classroom/sessions/:id/pause - Pause Session
 classroomRouter.post('/:id/pause', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
 
     const session = await classroomService.pauseSession(sessionId, currentUser, workspaceId);
     res.json({ session, message: 'Classroom session paused.' });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('denied') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'PAUSE_SESSION_FAILED', message: err.message } });
+    handleRouteError(err, res, 'PAUSE_SESSION_FAILED');
   }
 });
 
 // 8. POST /api/classroom/sessions/:id/resume - Resume Session
 classroomRouter.post('/:id/resume', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
 
     const session = await classroomService.resumeSession(sessionId, currentUser, workspaceId);
     res.json({ session, message: 'Classroom session resumed.' });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('denied') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'RESUME_SESSION_FAILED', message: err.message } });
+    handleRouteError(err, res, 'RESUME_SESSION_FAILED');
   }
 });
 
 // 9. POST /api/classroom/sessions/:id/end - End Session
 classroomRouter.post('/:id/end', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
 
     const session = await classroomService.endSession(sessionId, currentUser, workspaceId);
     res.json({ session, message: 'Classroom session concluded.' });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('denied') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'END_SESSION_FAILED', message: err.message } });
+    handleRouteError(err, res, 'END_SESSION_FAILED');
   }
 });
 
 // 10. POST /api/classroom/sessions/:id/join - Student Join Session
 classroomRouter.post('/:id/join', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const { workspaceId = 'ws-stark-core', deviceType = 'web' } = req.body || {};
 
@@ -249,15 +274,14 @@ classroomRouter.post('/:id/join', async (req: Request, res: Response) => {
       message: `Enrolled student '${currentUser.displayName}' connected to session '${sessionId}'.`
     });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('Access denied') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'JOIN_SESSION_FAILED', message: err.message } });
+    handleRouteError(err, res, 'JOIN_SESSION_FAILED');
   }
 });
 
 // 11. POST /api/classroom/sessions/:id/leave - Student Leave Session
 classroomRouter.post('/:id/leave', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
 
@@ -268,28 +292,28 @@ classroomRouter.post('/:id/leave', async (req: Request, res: Response) => {
       message: `Student '${currentUser.displayName}' disconnected from session.`
     });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'LEAVE_SESSION_FAILED', message: err.message } });
+    handleRouteError(err, res, 'LEAVE_SESSION_FAILED');
   }
 });
 
 // 12. POST /api/classroom/sessions/:id/presence - Student Heartbeat
 classroomRouter.post('/:id/presence', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
 
     const result = await classroomService.recordPresence(sessionId, currentUser, workspaceId);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'PRESENCE_FAILED', message: err.message } });
+    handleRouteError(err, res, 'PRESENCE_FAILED');
   }
 });
 
 // 13. GET /api/classroom/sessions/:id/presence - List Participants
 classroomRouter.get('/:id/presence', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
     const onlyConnected = req.query.connected === 'true';
@@ -302,15 +326,14 @@ classroomRouter.get('/:id/presence', async (req: Request, res: Response) => {
       connectedCount: participants.filter((p) => p.connectionStatus === 'connected').length
     });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'LIST_PARTICIPANTS_FAILED', message: err.message } });
+    handleRouteError(err, res, 'LIST_PARTICIPANTS_FAILED');
   }
 });
 
 // 14. GET /api/classroom/sessions/:id/state - Get Board State
 classroomRouter.get('/:id/state', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
@@ -322,15 +345,14 @@ classroomRouter.get('/:id/state', async (req: Request, res: Response) => {
       activeStudentCount: session.activeStudentCount
     });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') ? 403 : 404;
-    res.status(statusCode).json({ error: { code: 'GET_STATE_FAILED', message: err.message } });
+    handleRouteError(err, res, 'GET_STATE_FAILED');
   }
 });
 
 // 15. PUT /api/classroom/sessions/:id/state - Update Smart Board State (Teacher)
 classroomRouter.put('/:id/state', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const { state, currentTopic, activeSlideIndex, message, workspaceId = 'ws-stark-core' } = req.body || {};
 
@@ -348,15 +370,14 @@ classroomRouter.put('/:id/state', async (req: Request, res: Response) => {
 
     res.json({ boardState: updatedState });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('denied') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'UPDATE_STATE_FAILED', message: err.message } });
+    handleRouteError(err, res, 'UPDATE_STATE_FAILED');
   }
 });
 
 // Also support POST on state for flexibility
 classroomRouter.post('/:id/state', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
     const { state, currentTopic, activeSlideIndex, message, workspaceId = 'ws-stark-core' } = req.body || {};
 
@@ -374,7 +395,6 @@ classroomRouter.post('/:id/state', async (req: Request, res: Response) => {
 
     res.json({ boardState: updatedState });
   } catch (err: any) {
-    const statusCode = err.message?.includes('Unauthorized') || err.message?.includes('denied') ? 403 : 400;
-    res.status(statusCode).json({ error: { code: 'UPDATE_STATE_FAILED', message: err.message } });
+    handleRouteError(err, res, 'UPDATE_STATE_FAILED');
   }
 });

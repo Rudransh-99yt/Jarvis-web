@@ -1,6 +1,8 @@
-// Milestone 12: Smart Classroom Service Orchestrator
+// Milestone 12: Smart Classroom Service Orchestrator (Hardened)
 import { jarvisData } from '../../data/index.ts';
+import type { IJarvisDataRepository } from '../../data/repository.ts';
 import { classroomEventBus } from './classroomEventBus.ts';
+import { ClassroomAuthorizationPolicy } from '../../auth/classroomPolicy.ts';
 import type { User, WorkspaceMembership } from '../../data/types.ts';
 import type {
   ClassroomSession,
@@ -8,12 +10,23 @@ import type {
   ClassroomSessionStatus,
   SmartBoardState,
   SmartBoardStateType,
-  RemoteDeviceType,
-  ParticipantConnectionStatus
+  RemoteDeviceType
 } from '../../../src/types/classroom.ts';
 import type { EducationClass } from '../../../src/types/education.ts';
 
 export class ClassroomService {
+  private repo: IJarvisDataRepository;
+  private policy: ClassroomAuthorizationPolicy;
+
+  constructor(repo: IJarvisDataRepository = jarvisData, policy?: ClassroomAuthorizationPolicy) {
+    this.repo = repo;
+    this.policy = policy || new ClassroomAuthorizationPolicy(repo);
+  }
+
+  getPolicy(): ClassroomAuthorizationPolicy {
+    return this.policy;
+  }
+
   /**
    * Verifies that the user has explicit authorized membership to access this course and workspace.
    */
@@ -22,39 +35,12 @@ export class ClassroomService {
     classId: string,
     workspaceId: string
   ): Promise<{ allowed: boolean; reason?: string; cls?: EducationClass }> {
-    // 1. Workspace Membership Check
-    const memberships = await jarvisData.workspaces.getMembers(workspaceId);
-    const isMember = memberships.some((m: WorkspaceMembership) => m.userId === currentUser.id);
-    if (!isMember && currentUser.role !== 'commander' && currentUser.role !== 'admin') {
-      return { allowed: false, reason: `User '${currentUser.id}' is not a member of workspace '${workspaceId}'.` };
-    }
-
-    // 2. Class Verification
-    const cls = await jarvisData.education.getClassById(classId);
-    if (!cls) {
-      return { allowed: false, reason: `Class '${classId}' does not exist.` };
-    }
-
-    // 3. Role-Based Class Authorization Check
-    if (currentUser.role === 'commander' || currentUser.role === 'admin') {
-      return { allowed: true, cls };
-    }
-
-    if (currentUser.role === 'teacher') {
-      if (cls.instructorId === currentUser.id || currentUser.id === 'teacher-1') {
-        return { allowed: true, cls };
-      }
-      return { allowed: false, reason: `Teacher '${currentUser.id}' is not assigned to course '${cls.code}'.` };
-    }
-
-    if (currentUser.role === 'student') {
-      if (cls.studentIds && cls.studentIds.includes(currentUser.id)) {
-        return { allowed: true, cls };
-      }
-      return { allowed: false, reason: `Access denied: Student '${currentUser.id}' is not enrolled in class '${cls.code}'.` };
-    }
-
-    return { allowed: false, reason: `Role '${currentUser.role}' is not authorized for classroom participation.` };
+    const res = await this.policy.canReadActiveSession(currentUser, classId, workspaceId);
+    return {
+      allowed: res.allowed,
+      reason: res.reason,
+      cls: res.cls
+    };
   }
 
   /**
@@ -64,19 +50,11 @@ export class ClassroomService {
     currentUser: User,
     session: ClassroomSession
   ): Promise<{ allowed: boolean; reason?: string }> {
-    if (currentUser.role === 'commander' || currentUser.role === 'admin') {
-      return { allowed: true };
-    }
-
-    if (currentUser.role !== 'teacher') {
-      return { allowed: false, reason: `Unauthorized: User '${currentUser.id}' does not have teacher role.` };
-    }
-
-    if (session.teacherId === currentUser.id || currentUser.id === 'teacher-1') {
-      return { allowed: true };
-    }
-
-    return { allowed: false, reason: `Teacher '${currentUser.id}' is not the controller of session '${session.id}'.` };
+    const res = await this.policy.canControlSession(currentUser, session, session.workspaceId);
+    return {
+      allowed: res.allowed,
+      reason: res.reason
+    };
   }
 
   /**
@@ -94,21 +72,17 @@ export class ClassroomService {
   ): Promise<ClassroomSession> {
     const { classId, workspaceId, title, status = 'scheduled', boardTopic } = data;
 
-    // 1. Authorization check
-    const authCheck = await this.verifyClassAccess(teacher, classId, workspaceId);
+    // 1. Centralized Authorization check
+    const authCheck = await this.policy.canCreateSession(teacher, classId, workspaceId);
     if (!authCheck.allowed || !authCheck.cls) {
       throw new Error(`Unauthorized: ${authCheck.reason || 'Class access denied'}`);
     }
 
-    if (teacher.role !== 'teacher' && teacher.role !== 'commander' && teacher.role !== 'admin') {
-      throw new Error(`Only authorized teachers can initialize classroom sessions.`);
-    }
-
     // 2. If status is live, ensure any previous live session for this class is safely ended or marked paused
     if (status === 'live') {
-      const activeSession = await jarvisData.classroom.getActiveSessionForClass(classId, workspaceId);
+      const activeSession = await this.repo.classroom.getActiveSessionForClass(classId, workspaceId);
       if (activeSession && activeSession.status === 'live') {
-        await jarvisData.classroom.updateSession(activeSession.id, {
+        await this.repo.classroom.updateSession(activeSession.id, {
           status: 'paused',
           boardState: { ...activeSession.boardState, state: 'paused', updatedAt: new Date().toISOString() }
         }, workspaceId);
@@ -116,7 +90,7 @@ export class ClassroomService {
     }
 
     const defaultTitle = `${authCheck.cls.code} Live Classroom: ${authCheck.cls.name}`;
-    const session = await jarvisData.classroom.createSession({
+    const session = await this.repo.classroom.createSession({
       workspaceId,
       classId,
       teacherId: teacher.id,
@@ -142,12 +116,12 @@ export class ClassroomService {
    * Starts an existing scheduled or paused session.
    */
   async startSession(sessionId: string, teacher: User, workspaceId: string): Promise<ClassroomSession> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found in workspace '${workspaceId}'.`);
     }
 
-    const controlCheck = await this.verifyTeacherControl(teacher, session);
+    const controlCheck = await this.policy.canControlSession(teacher, session, workspaceId);
     if (!controlCheck.allowed) {
       throw new Error(controlCheck.reason || 'Teacher session control denied');
     }
@@ -155,16 +129,16 @@ export class ClassroomService {
     const now = new Date().toISOString();
 
     // Ensure any previous active session for this class is safely concluded
-    const prevActive = await jarvisData.classroom.getActiveSessionForClass(session.classId, workspaceId);
+    const prevActive = await this.repo.classroom.getActiveSessionForClass(session.classId, workspaceId);
     if (prevActive && prevActive.id !== sessionId) {
-      await jarvisData.classroom.updateSession(prevActive.id, {
+      await this.repo.classroom.updateSession(prevActive.id, {
         status: 'ended',
         endedAt: now,
         boardState: { ...prevActive.boardState, state: 'ended', updatedAt: now }
       }, workspaceId);
     }
 
-    const updated = await jarvisData.classroom.updateSession(sessionId, {
+    const updated = await this.repo.classroom.updateSession(sessionId, {
       status: 'live',
       startedAt: session.startedAt || now,
       boardState: {
@@ -184,18 +158,18 @@ export class ClassroomService {
    * Pauses an active session.
    */
   async pauseSession(sessionId: string, teacher: User, workspaceId: string): Promise<ClassroomSession> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found.`);
     }
 
-    const controlCheck = await this.verifyTeacherControl(teacher, session);
+    const controlCheck = await this.policy.canControlSession(teacher, session, workspaceId);
     if (!controlCheck.allowed) {
       throw new Error(controlCheck.reason || 'Teacher session control denied');
     }
 
     const now = new Date().toISOString();
-    const updated = await jarvisData.classroom.updateSession(sessionId, {
+    const updated = await this.repo.classroom.updateSession(sessionId, {
       status: 'paused',
       boardState: {
         ...session.boardState,
@@ -214,18 +188,18 @@ export class ClassroomService {
    * Resumes a paused session.
    */
   async resumeSession(sessionId: string, teacher: User, workspaceId: string): Promise<ClassroomSession> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found.`);
     }
 
-    const controlCheck = await this.verifyTeacherControl(teacher, session);
+    const controlCheck = await this.policy.canControlSession(teacher, session, workspaceId);
     if (!controlCheck.allowed) {
       throw new Error(controlCheck.reason || 'Teacher session control denied');
     }
 
     const now = new Date().toISOString();
-    const updated = await jarvisData.classroom.updateSession(sessionId, {
+    const updated = await this.repo.classroom.updateSession(sessionId, {
       status: 'live',
       boardState: {
         ...session.boardState,
@@ -244,18 +218,18 @@ export class ClassroomService {
    * Ends an active session.
    */
   async endSession(sessionId: string, teacher: User, workspaceId: string): Promise<ClassroomSession> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found.`);
     }
 
-    const controlCheck = await this.verifyTeacherControl(teacher, session);
+    const controlCheck = await this.policy.canControlSession(teacher, session, workspaceId);
     if (!controlCheck.allowed) {
       throw new Error(controlCheck.reason || 'Teacher session control denied');
     }
 
     const now = new Date().toISOString();
-    const updated = await jarvisData.classroom.updateSession(sessionId, {
+    const updated = await this.repo.classroom.updateSession(sessionId, {
       status: 'ended',
       endedAt: now,
       activeStudentCount: 0,
@@ -270,9 +244,9 @@ export class ClassroomService {
     if (!updated) throw new Error('Failed to end session');
 
     // Disconnect all connected participants
-    const participants = await jarvisData.classroom.listParticipants(sessionId, true);
+    const participants = await this.repo.classroom.listParticipants(sessionId, true);
     for (const p of participants) {
-      await jarvisData.classroom.updateParticipantStatus(sessionId, p.studentId, 'disconnected');
+      await this.repo.classroom.updateParticipantStatus(sessionId, p.studentId, 'disconnected');
     }
 
     classroomEventBus.notifySessionEnded(updated);
@@ -293,12 +267,12 @@ export class ClassroomService {
     teacher: User,
     workspaceId: string
   ): Promise<SmartBoardState> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found.`);
     }
 
-    const controlCheck = await this.verifyTeacherControl(teacher, session);
+    const controlCheck = await this.policy.canControlSession(teacher, session, workspaceId);
     if (!controlCheck.allowed) {
       throw new Error(controlCheck.reason || 'Teacher session control denied');
     }
@@ -309,7 +283,7 @@ export class ClassroomService {
       updatedAt: new Date().toISOString()
     };
 
-    const updated = await jarvisData.classroom.updateSession(sessionId, {
+    const updated = await this.repo.classroom.updateSession(sessionId, {
       boardState: newBoardState
     }, workspaceId);
 
@@ -328,7 +302,7 @@ export class ClassroomService {
     deviceType: RemoteDeviceType = 'web'
   ): Promise<{ session: ClassroomSession; participant: ClassroomParticipant }> {
     // 1. Session lookup & verification
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' does not exist in workspace '${workspaceId}'.`);
     }
@@ -337,8 +311,8 @@ export class ClassroomService {
       throw new Error(`Cannot join session '${sessionId}' because it has already ended.`);
     }
 
-    // 2. Student authorization check for this class
-    const authCheck = await this.verifyClassAccess(student, session.classId, workspaceId);
+    // 2. Centralized policy check: guarantees enrolled student, workspace match, and no identity spoofing
+    const authCheck = await this.policy.canJoinSession(student, session, workspaceId, student.id);
     if (!authCheck.allowed) {
       throw new Error(`Unauthorized: ${authCheck.reason || 'Student enrollment access denied'}`);
     }
@@ -346,7 +320,7 @@ export class ClassroomService {
     const now = new Date().toISOString();
 
     // 3. Upsert participant state (idempotent duplicate join handling)
-    const existing = await jarvisData.classroom.getParticipant(sessionId, student.id);
+    const existing = await this.repo.classroom.getParticipant(sessionId, student.id);
     const participantRecord: ClassroomParticipant = {
       id: `${sessionId}:${student.id}`,
       sessionId,
@@ -362,13 +336,13 @@ export class ClassroomService {
       }
     };
 
-    const participant = await jarvisData.classroom.upsertParticipant(participantRecord);
+    const participant = await this.repo.classroom.upsertParticipant(participantRecord);
 
     // 4. Update session active student count accurately
-    const connectedParticipants = await jarvisData.classroom.listParticipants(sessionId, true);
+    const connectedParticipants = await this.repo.classroom.listParticipants(sessionId, true);
     const updatedCount = connectedParticipants.length;
 
-    const updatedSession = await jarvisData.classroom.updateSession(sessionId, {
+    const updatedSession = await this.repo.classroom.updateSession(sessionId, {
       activeStudentCount: updatedCount
     }, workspaceId);
 
@@ -391,18 +365,23 @@ export class ClassroomService {
     student: User,
     workspaceId: string
   ): Promise<{ session: ClassroomSession; participant: ClassroomParticipant | null }> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found.`);
     }
 
-    const participant = await jarvisData.classroom.updateParticipantStatus(sessionId, student.id, 'disconnected');
+    const authCheck = await this.policy.canPerformParticipantAction(student, session, workspaceId, student.id);
+    if (!authCheck.allowed) {
+      throw new Error(`Unauthorized: ${authCheck.reason || 'Leave session access denied'}`);
+    }
+
+    const participant = await this.repo.classroom.updateParticipantStatus(sessionId, student.id, 'disconnected');
 
     // Recalculate active participants
-    const connectedParticipants = await jarvisData.classroom.listParticipants(sessionId, true);
+    const connectedParticipants = await this.repo.classroom.listParticipants(sessionId, true);
     const updatedCount = connectedParticipants.length;
 
-    const updatedSession = await jarvisData.classroom.updateSession(sessionId, {
+    const updatedSession = await this.repo.classroom.updateSession(sessionId, {
       activeStudentCount: updatedCount
     }, workspaceId);
 
@@ -426,19 +405,24 @@ export class ClassroomService {
     student: User,
     workspaceId: string
   ): Promise<{ ok: boolean; lastSeenAt: string }> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found.`);
     }
 
+    const authCheck = await this.policy.canPerformParticipantAction(student, session, workspaceId, student.id);
+    if (!authCheck.allowed) {
+      throw new Error(`Unauthorized: ${authCheck.reason || 'Presence heartbeat access denied'}`);
+    }
+
     const now = new Date().toISOString();
-    let participant = await jarvisData.classroom.getParticipant(sessionId, student.id);
+    let participant = await this.repo.classroom.getParticipant(sessionId, student.id);
     if (!participant) {
       // Auto-reconnect if heartbeat received
       const joinRes = await this.joinSession(sessionId, student, workspaceId);
       participant = joinRes.participant;
     } else {
-      participant = await jarvisData.classroom.updateParticipantStatus(sessionId, student.id, 'connected');
+      participant = await this.repo.classroom.updateParticipantStatus(sessionId, student.id, 'connected');
     }
 
     if (participant) {
@@ -456,24 +440,24 @@ export class ClassroomService {
     workspaceId: string,
     user: User
   ): Promise<ClassroomSession | null> {
-    const authCheck = await this.verifyClassAccess(user, classId, workspaceId);
+    const authCheck = await this.policy.canReadActiveSession(user, classId, workspaceId);
     if (!authCheck.allowed) {
       throw new Error(`Unauthorized: ${authCheck.reason || 'Class access denied'}`);
     }
 
-    return jarvisData.classroom.getActiveSessionForClass(classId, workspaceId);
+    return this.repo.classroom.getActiveSessionForClass(classId, workspaceId);
   }
 
   /**
    * Queries session by ID.
    */
   async getSession(sessionId: string, workspaceId: string, user: User): Promise<ClassroomSession> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found in workspace '${workspaceId}'.`);
     }
 
-    const authCheck = await this.verifyClassAccess(user, session.classId, workspaceId);
+    const authCheck = await this.policy.canReadSession(user, session, workspaceId);
     if (!authCheck.allowed) {
       throw new Error(`Unauthorized: ${authCheck.reason || 'Session access denied'}`);
     }
@@ -491,13 +475,27 @@ export class ClassroomService {
     status?: ClassroomSessionStatus
   ): Promise<ClassroomSession[]> {
     if (classId) {
-      const authCheck = await this.verifyClassAccess(user, classId, workspaceId);
+      const authCheck = await this.policy.canReadActiveSession(user, classId, workspaceId);
       if (!authCheck.allowed) {
         throw new Error(`Unauthorized: ${authCheck.reason || 'Class access denied'}`);
       }
+      return this.repo.classroom.listSessions(classId, workspaceId, status);
     }
 
-    return jarvisData.classroom.listSessions(classId, workspaceId, status);
+    const wsCheck = await this.policy.verifyWorkspaceMembership(user, workspaceId);
+    if (!wsCheck.isMember) {
+      throw new Error(`Unauthorized: User '${user.id}' is not a member of workspace '${workspaceId}'.`);
+    }
+
+    const allSessions = await this.repo.classroom.listSessions(undefined, workspaceId, status);
+    const filtered: ClassroomSession[] = [];
+    for (const s of allSessions) {
+      const check = await this.policy.canReadSession(user, s, workspaceId);
+      if (check.allowed) {
+        filtered.push(s);
+      }
+    }
+    return filtered;
   }
 
   /**
@@ -509,17 +507,17 @@ export class ClassroomService {
     user: User,
     onlyConnected?: boolean
   ): Promise<ClassroomParticipant[]> {
-    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    const session = await this.repo.classroom.getSessionById(sessionId, workspaceId);
     if (!session) {
       throw new Error(`Classroom session '${sessionId}' not found.`);
     }
 
-    const authCheck = await this.verifyClassAccess(user, session.classId, workspaceId);
+    const authCheck = await this.policy.canListParticipants(user, session, workspaceId);
     if (!authCheck.allowed) {
       throw new Error(`Unauthorized: ${authCheck.reason || 'Access denied'}`);
     }
 
-    return jarvisData.classroom.listParticipants(sessionId, onlyConnected);
+    return this.repo.classroom.listParticipants(sessionId, onlyConnected);
   }
 }
 

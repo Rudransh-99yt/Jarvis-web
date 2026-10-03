@@ -1,9 +1,19 @@
-// Milestone 12: Smart Classroom Foundation Automated Test Suite
-import { jarvisData } from '../server/data/index.ts';
-import { DiskJarvisDataRepository } from '../server/data/diskRepository.ts';
-import { classroomService } from '../server/sectors/education/classroomService.ts';
+// Milestone 12: Smart Classroom Foundation Automated Test Suite (Hardened & Isolated)
+import path from 'node:path';
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import express from 'express';
+import type { Server } from 'node:http';
+import {
+  jarvisData,
+  DiskJarvisDataRepository,
+  setActiveRepository,
+  resetActiveRepository
+} from '../server/data/index.ts';
+import { ClassroomService } from '../server/sectors/education/classroomService.ts';
 import { classroomEventBus } from '../server/sectors/education/classroomEventBus.ts';
-import { toolExecutor, toolRegistry } from '../server/tools/index.ts';
+import { classroomRouter } from '../server/sectors/education/classroomRoutes.ts';
+import { toolExecutor } from '../server/tools/index.ts';
 import type { User } from '../server/data/types.ts';
 import type { ToolExecutionContext } from '../server/tools/types.ts';
 import type { RealtimeClassroomEvent } from '../src/types/classroom.ts';
@@ -22,14 +32,34 @@ function assert(condition: boolean, testName: string, detail?: any) {
   }
 }
 
+function getFileSha256(filePath: string): string {
+  const content = fs.readFileSync(filePath);
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
 async function runMilestone12Tests() {
   console.log('\n================================================================');
   console.log('=== [WEB JARVIS] MILESTONE 12: SMART CLASSROOM FOUNDATION SUITE ===');
+  console.log('=== (HARDENED AUTHORIZATION & DATA HYGIENE VALIDATION)         ===');
   console.log('================================================================\n');
 
-  // Initialize and seed repository
-  await jarvisData.init();
-  await jarvisData.seed();
+  // Baseline Verification: Record initial persistent database hash
+  const durableDbPath = path.resolve(process.cwd(), 'data', 'jarvis-db.json');
+  const initialDbHash = getFileSha256(durableDbPath);
+
+  // Setup isolated temporary repository for test execution
+  const testDbDir = path.resolve(process.cwd(), 'tests', '.tmp-db');
+  if (!fs.existsSync(testDbDir)) {
+    fs.mkdirSync(testDbDir, { recursive: true });
+  }
+  const testDbPath = path.join(testDbDir, `m12-test-jarvis-${Date.now()}.json`);
+
+  const isolatedRepo = new DiskJarvisDataRepository(testDbPath);
+  await isolatedRepo.init();
+  await isolatedRepo.seed();
+  setActiveRepository(isolatedRepo);
+
+  const classroomService = new ClassroomService(isolatedRepo);
 
   const workspaceId = 'ws-stark-core';
   const classId = 'class-phys-301';
@@ -74,6 +104,10 @@ async function runMilestone12Tests() {
     createdAt: new Date().toISOString()
   };
 
+  // Register nonEnrolledStudent and unauthorizedTeacher in the isolated user repository
+  await isolatedRepo.users.create(nonEnrolledStudent);
+  await isolatedRepo.users.create(unauthorizedTeacher);
+
   // --- PART 1: SESSION CREATION & AUTHORIZATION ---
   console.log('\n--- PART 1: Session Creation & Teacher Authorization ---');
 
@@ -111,7 +145,7 @@ async function runMilestone12Tests() {
   } catch (err: any) {
     studentCreateFailed = true;
     assert(
-      err.message.includes('Only authorized teachers') || err.message.includes('Unauthorized'),
+      err.message.includes('Only authorized') || err.message.includes('Forbidden') || err.message.includes('Unauthorized'),
       '3. Enrolled student is blocked from creating sessions',
       err.message
     );
@@ -128,7 +162,7 @@ async function runMilestone12Tests() {
   } catch (err: any) {
     otherTeacherFailed = true;
     assert(
-      err.message.includes('not assigned') || err.message.includes('Unauthorized'),
+      err.message.includes('not assigned') || err.message.includes('Forbidden') || err.message.includes('Unauthorized'),
       '4. Unauthorized teacher blocked from creating session for course',
       err.message
     );
@@ -325,7 +359,7 @@ async function runMilestone12Tests() {
   console.log('\n--- PART 4: Security, Tenant Isolation & Boundaries ---');
 
   // Add nonEnrolledStudent as workspace member so workspace check passes, but class enrollment fails
-  await jarvisData.workspaces.addMember(workspaceId, nonEnrolledStudent.id, 'member');
+  await isolatedRepo.workspaces.addMember(workspaceId, nonEnrolledStudent.id, 'member');
 
   // 23. Non-enrolled student cannot join class session
   let rogueJoinFailed = false;
@@ -334,7 +368,7 @@ async function runMilestone12Tests() {
   } catch (err: any) {
     rogueJoinFailed = true;
     assert(
-      err.message.includes('not enrolled') || err.message.includes('Access denied'),
+      err.message.includes('not enrolled') || err.message.includes('Access denied') || err.message.includes('Unauthorized'),
       '23. Non-enrolled student is rejected from joining session',
       err.message
     );
@@ -348,7 +382,7 @@ async function runMilestone12Tests() {
   } catch (err: any) {
     crossWorkspaceFailed = true;
     assert(
-      err.message.includes('not found') || err.message.includes('not a member') || err.message.includes('Unauthorized'),
+      err.message.includes('not found') || err.message.includes('not a member') || err.message.includes('denied') || err.message.includes('Unauthorized'),
       '24. Cross-workspace session access blocked',
       err.message
     );
@@ -362,7 +396,7 @@ async function runMilestone12Tests() {
   } catch (err: any) {
     arbitrarySessionFailed = true;
     assert(
-      err.message.includes('does not exist'),
+      err.message.includes('does not exist') || err.message.includes('not found'),
       '25. Non-existent arbitrary session ID cannot be joined',
       err.message
     );
@@ -377,17 +411,23 @@ async function runMilestone12Tests() {
     activeSession?.id
   );
 
-  // --- PART 5: 40+ CONCURRENT STUDENT SIMULATION ---
-  console.log('\n--- PART 5: 40+ Student Classroom-Scale Scale Simulation ---');
+  // --- PART 5: 40+ CONCURRENT STUDENT SIMULATION (ISOLATED) ---
+  console.log('\n--- PART 5: 40+ Student Classroom-Scale Simulation (In Isolation) ---');
 
-  // Add 45 enrolled students to class studentIds and workspace memberships for simulation
-  const cls = await jarvisData.education.getClassById(classId);
+  // Add 45 enrolled students strictly to isolated test repo
+  const cls = await isolatedRepo.education.getClassById(classId);
   if (cls) {
     const simulatedStudentIds = Array.from({ length: 45 }, (_, i) => `sim-student-${i + 1}`);
     const updatedStudentIds = Array.from(new Set([...(cls.studentIds || []), ...simulatedStudentIds]));
-    await jarvisData.education.updateClass(classId, { studentIds: updatedStudentIds });
+    await isolatedRepo.education.updateClass(classId, { studentIds: updatedStudentIds });
     for (const sid of simulatedStudentIds) {
-      await jarvisData.workspaces.addMember(workspaceId, sid, 'member');
+      await isolatedRepo.users.create({
+        id: sid,
+        displayName: `Cadet Unit ${sid.split('-')[2]}`,
+        email: `${sid}@stark.local`,
+        role: 'student'
+      });
+      await isolatedRepo.workspaces.addMember(workspaceId, sid, 'member');
     }
   }
 
@@ -460,20 +500,20 @@ async function runMilestone12Tests() {
   }
   assert(joinEndedFailed, '32b. Ended session join guarded');
 
-  // --- PART 7: PERSISTENCE ACROSS REBOOT ---
-  console.log('\n--- PART 7: Persistence Across Restart ---');
+  // --- PART 7: PERSISTENCE ACROSS REBOOT (ON ISOLATED REPO) ---
+  console.log('\n--- PART 7: Persistence Across Restart (Isolated Disk File) ---');
 
-  // Ensure flushed
-  await jarvisData.flush();
+  // Ensure isolated repo is flushed
+  await isolatedRepo.flush();
 
-  // Instantiate fresh Disk repository reading same storage file
-  const rebootedRepo = new DiskJarvisDataRepository(jarvisData.storagePath);
+  // Instantiate fresh Disk repository reading test storage file
+  const rebootedRepo = new DiskJarvisDataRepository(testDbPath);
   await rebootedRepo.init();
 
   const persistedSession = await rebootedRepo.classroom.getSessionById(createdSession.id, workspaceId);
   assert(
     persistedSession?.id === createdSession.id && persistedSession?.status === 'ended',
-    '33. Classroom session state persists across cold system reboot',
+    '33. Classroom session state persists across cold system reboot in isolated repo',
     persistedSession?.id
   );
 
@@ -593,11 +633,307 @@ async function runMilestone12Tests() {
     toolEndRes.data
   );
 
+  // Tool 7: Unauthenticated tool execution fails closed
+  const unauthToolRes = await toolExecutor.execute(
+    {
+      name: 'classroom.session.status',
+      args: { sessionId: newToolSessionId }
+    },
+    { sessionId: 'test-unauth', timestamp: new Date().toISOString(), serverUptime: 10 }
+  );
+  assert(
+    !unauthToolRes.ok && (unauthToolRes.error?.message?.includes('Unauthenticated') || unauthToolRes.error?.message?.includes('missing userId')),
+    '41. Unauthenticated tool call rejected with failure result',
+    unauthToolRes.error
+  );
+
   // Clean up listener
   unsubscribe();
 
+  // --- PART 9: HTTP/API BOUNDARY AUTHORIZATION TESTS (REQUIREMENT 5) ---
+  console.log('\n--- PART 9: HTTP / Route Boundary Authorization Tests ---');
+
+  const app = express();
+  app.use(express.json());
+  app.use('/api/classroom/sessions', classroomRouter);
+
+  const server: Server = await new Promise((resolve) => {
+    const s = app.listen(0, '127.0.0.1', () => resolve(s));
+  });
+  const port = (server.address() as any).port;
+  const baseUrl = `http://127.0.0.1:${port}/api/classroom/sessions`;
+
+  try {
+    // Create a live session for HTTP boundary tests
+    const httpTestSession = await classroomService.createSession(
+      {
+        classId,
+        workspaceId,
+        title: 'PHYS-301 Security Verification Session',
+        status: 'live',
+        boardTopic: 'Security & Authorization Tests'
+      },
+      teacherUser
+    );
+
+    // 42. Unauthenticated request (no user headers/query) -> 401
+    const unauthHttpRes = await fetch(`${baseUrl}/active?classId=${classId}&workspaceId=${workspaceId}`);
+    assert(
+      unauthHttpRes.status === 401,
+      '42. HTTP: Unauthenticated request rejected with 401 Unauthorized',
+      unauthHttpRes.status
+    );
+    const unauthBody = await unauthHttpRes.json();
+    assert(unauthBody.error?.code === 'UNAUTHENTICATED', '42b. HTTP: Returns code UNAUTHENTICATED');
+
+    // 43. Invalid identity / unknown user ID header -> 401
+    const invalidUserRes = await fetch(`${baseUrl}/active?classId=${classId}&workspaceId=${workspaceId}`, {
+      headers: { 'x-user-id': 'user-unknown-adversary' }
+    });
+    assert(
+      invalidUserRes.status === 401,
+      '43. HTTP: Invalid/unregistered user ID rejected with 401 Unauthorized',
+      invalidUserRes.status
+    );
+
+    // 44. Forged user ID header (non-existent) -> 401
+    const forgedIdRes = await fetch(`${baseUrl}/${httpTestSession.id}`, {
+      headers: { 'x-user-id': 'fake-hacker-999' }
+    });
+    assert(
+      forgedIdRes.status === 401,
+      '44. HTTP: Forged user ID header rejected with 401',
+      forgedIdRes.status
+    );
+
+    // 45. Forged user role header (student passes role: teacher to control session) -> 403
+    const forgedRoleRes = await fetch(`${baseUrl}/${httpTestSession.id}/pause`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': studentUser.id,
+        'x-user-role': 'teacher' // Client attempts to forge role!
+      },
+      body: JSON.stringify({ workspaceId })
+    });
+    assert(
+      forgedRoleRes.status === 403,
+      '45. HTTP: Student forging x-user-role=teacher is rejected with 403 Forbidden',
+      forgedRoleRes.status
+    );
+
+    // 46. Student attempting teacher control (pause session) -> 403
+    const studentControlRes = await fetch(`${baseUrl}/${httpTestSession.id}/pause`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': studentUser.id
+      },
+      body: JSON.stringify({ workspaceId })
+    });
+    assert(
+      studentControlRes.status === 403,
+      '46. HTTP: Enrolled student attempting teacher session control rejected with 403',
+      studentControlRes.status
+    );
+
+    // 47. Non-enrolled student attempting to join session -> 403
+    const nonEnrolledJoinRes = await fetch(`${baseUrl}/${httpTestSession.id}/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': nonEnrolledStudent.id
+      },
+      body: JSON.stringify({ workspaceId, deviceType: 'web' })
+    });
+    assert(
+      nonEnrolledJoinRes.status === 403,
+      '47. HTTP: Non-enrolled student attempting to join rejected with 403 Forbidden',
+      nonEnrolledJoinRes.status
+    );
+
+    // 48. Teacher from another class attempting control or session creation -> 403
+    const otherTeacherControlRes = await fetch(`${baseUrl}/${httpTestSession.id}/pause`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': unauthorizedTeacher.id
+      },
+      body: JSON.stringify({ workspaceId })
+    });
+    assert(
+      otherTeacherControlRes.status === 403,
+      '48. HTTP: Teacher from another class attempting session control rejected with 403',
+      otherTeacherControlRes.status
+    );
+
+    // 49. Cross-workspace access rejected -> 403 / 404
+    const crossWsRes = await fetch(`${baseUrl}/${httpTestSession.id}?workspaceId=ws-other-unauthorized`, {
+      headers: { 'x-user-id': teacherUser.id }
+    });
+    assert(
+      crossWsRes.status === 403 || crossWsRes.status === 404,
+      '49. HTTP: Cross-workspace access rejected with 403/404',
+      crossWsRes.status
+    );
+
+    // 50. Participant from another workspace rejected -> 403
+    // Create an outsider user not in ws-stark-core
+    const outsiderUser: User = {
+      id: 'user-outsider',
+      displayName: 'Outsider',
+      email: 'outsider@domain.com',
+      role: 'student',
+      createdAt: new Date().toISOString()
+    };
+    await isolatedRepo.users.create(outsiderUser);
+
+    const outsiderJoinRes = await fetch(`${baseUrl}/${httpTestSession.id}/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': outsiderUser.id
+      },
+      body: JSON.stringify({ workspaceId })
+    });
+    assert(
+      outsiderJoinRes.status === 403,
+      '50. HTTP: Participant from another workspace rejected with 403 Forbidden',
+      outsiderJoinRes.status
+    );
+
+    // 51. Unauthorized SSE subscription rejected BEFORE stream headers
+    // 51a. No credentials on stream -> 401
+    const unauthStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}`);
+    assert(
+      unauthStreamRes.status === 401,
+      '51a. HTTP: Unauthorized SSE stream request rejected with 401 (before headers sent)',
+      unauthStreamRes.status
+    );
+    assert(
+      unauthStreamRes.headers.get('content-type')?.includes('application/json'),
+      '51b. HTTP: Rejection returns JSON error, not text/event-stream'
+    );
+
+    // 51c. Non-enrolled student on stream -> 403
+    const rogueStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&userId=${nonEnrolledStudent.id}`);
+    assert(
+      rogueStreamRes.status === 403,
+      '51c. HTTP: Non-enrolled student SSE stream subscription rejected with 403 Forbidden',
+      rogueStreamRes.status
+    );
+
+    // 51d. Teacher from another class on stream -> 403
+    const otherTeacherStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&userId=${unauthorizedTeacher.id}`);
+    assert(
+      otherTeacherStreamRes.status === 403,
+      '51d. HTTP: Unauthorized teacher SSE stream subscription rejected with 403 Forbidden',
+      otherTeacherStreamRes.status
+    );
+
+    // 52. Student attempting teacher board state update -> 403
+    const studentBoardRes = await fetch(`${baseUrl}/${httpTestSession.id}/state`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': studentUser.id
+      },
+      body: JSON.stringify({ state: 'question', workspaceId })
+    });
+    assert(
+      studentBoardRes.status === 403,
+      '52. HTTP: Student attempting to update board state rejected with 403 Forbidden',
+      studentBoardRes.status
+    );
+
+    // 53. Authorized operations pass closed boundary
+    // 53a. Enrolled student joins
+    const authJoinRes = await fetch(`${baseUrl}/${httpTestSession.id}/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': studentUser.id
+      },
+      body: JSON.stringify({ workspaceId, deviceType: 'software_remote' })
+    });
+    assert(authJoinRes.status === 200, '53a. HTTP: Authorized enrolled student join succeeds (200 OK)');
+
+    // 53b. Presence heartbeat
+    const authPresenceRes = await fetch(`${baseUrl}/${httpTestSession.id}/presence`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': studentUser.id
+      },
+      body: JSON.stringify({ workspaceId })
+    });
+    assert(authPresenceRes.status === 200, '53b. HTTP: Authorized student presence heartbeat succeeds (200 OK)');
+
+    // 53c. Teacher updates board state
+    const authBoardRes = await fetch(`${baseUrl}/${httpTestSession.id}/state`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': teacherUser.id
+      },
+      body: JSON.stringify({ state: 'lesson', currentTopic: 'Quantum Electrodynamics', workspaceId })
+    });
+    assert(authBoardRes.status === 200, '53c. HTTP: Authorized teacher board state update succeeds (200 OK)');
+
+    // 53d. Teacher ends session
+    const authEndRes = await fetch(`${baseUrl}/${httpTestSession.id}/end`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': teacherUser.id
+      },
+      body: JSON.stringify({ workspaceId })
+    });
+    assert(authEndRes.status === 200, '53d. HTTP: Authorized teacher end session succeeds (200 OK)');
+
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+
+  // --- PART 10: TEST DATA HYGIENE & REGRESSION PROOF (REQUIREMENT 4) ---
+  console.log('\n--- PART 10: Test Data Hygiene & Durable Store Invariant Verification ---');
+
+  // Verify that running M12 tests did NOT alter the durable database file data/jarvis-db.json
+  const finalDbHash = getFileSha256(durableDbPath);
+  assert(
+    initialDbHash === finalDbHash,
+    '54. TEST DATA HYGIENE: Running M12 tests did NOT modify data/jarvis-db.json (100% byte-identical hash match)',
+    { initialDbHash, finalDbHash }
+  );
+
+  // Inspect data/jarvis-db.json content to prove zero simulated student test artifacts exist
+  const durableDbContent = JSON.parse(fs.readFileSync(durableDbPath, 'utf-8'));
+  const hasSimulatedStudentsInUsers = (durableDbContent.users || []).some((u: any) => u.id.startsWith('sim-student') || u.id === 'student-rogue');
+  const hasSimulatedStudentsInMemberships = (durableDbContent.memberships || []).some((m: any) => m.userId.startsWith('sim-student') || m.userId === 'student-rogue');
+  const physClass = (durableDbContent.classes || []).find((c: any) => c.id === 'class-phys-301');
+  const hasSimulatedInClass = physClass?.studentIds?.some((sid: string) => sid.startsWith('sim-student'));
+
+  assert(
+    !hasSimulatedStudentsInUsers && !hasSimulatedStudentsInMemberships && !hasSimulatedInClass,
+    '55. TEST DATA HYGIENE: Simulated 40+ students exist exclusively in test isolation; ZERO simulated students in data/jarvis-db.json'
+  );
+
+  // Verify no test artifacts appear in git-tracked data/storage/objects
+  const storageObjectsDir = path.resolve(process.cwd(), 'data', 'storage', 'objects');
+  const remainingStorageFiles = fs.readdirSync(storageObjectsDir).filter((f) => f !== '.gitkeep');
+  assert(
+    remainingStorageFiles.length === 0,
+    `56. TEST DATA HYGIENE: Zero runtime-generated test storage artifacts in data/storage/objects (found: ${remainingStorageFiles.length})`
+  );
+
+  // Teardown: Reset repository singleton and clean up temporary test DB
+  resetActiveRepository();
+  try {
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+  } catch {}
+
   console.log(`\n================================================================`);
-  console.log(`=== MILESTONE 12 TEST SUMMARY: ${passed}/${total} PASSING (100%) ===`);
+  console.log(`=== MILESTONE 12 TEST SUMMARY: ALL ${passed}/${total} PASSING (100%) ===`);
   console.log(`================================================================\n`);
 }
 

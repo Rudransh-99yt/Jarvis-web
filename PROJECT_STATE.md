@@ -186,20 +186,29 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 
 ---
 
-## 5. Current Architecture & Milestone 11 Implementation
-- **Milestone 12 (Smart Classroom Foundation: Session Lifecycle, Presence, Smart Board & Multi-Student Remote) Complete**:
-  - **Classroom Session Model**: Persistent contracts (`ClassroomSession`, `ClassroomParticipant`, `SmartBoardState`) persisting to core store (`data/jarvis-db.json`) across cold reboots.
-  - **Session Lifecycle & Authorization**: Complete transition workflows (`create`, `start`, `pause`, `resume`, `end`, `getActiveSession`, `listSessions`) with strict teacher ownership verification and multi-tenant workspace isolation.
-  - **Student Presence & Software Remote**: Real-time join/leave, duplicate connection deduplication, and periodic heartbeat presence (`/presence`) tracking connection status (`connected`, `disconnected`, `reconnecting`) and device type (`web`, `mobile`, `tablet`, `software_remote`).
-  - **Smart Board Synchronization**: State dispatcher supporting `lesson`, `waiting`, `question`, `results`, `paused`, and `ended` states with live topic and broadcast messaging.
-  - **Real-Time EventBus**: Reusable `classroomEventBus` with session channel subscriptions emitting `classroom.session.started`, `classroom.session.paused`, `classroom.session.resumed`, `classroom.session.ended`, `classroom.student.joined`, `classroom.student.left`, `classroom.student.presence`, and `classroom.board.state.changed`.
-  - **REST API Endpoints**: `/api/classroom/sessions`, `/:id/start`, `/:id/pause`, `/:id/resume`, `/:id/end`, `/:id/join`, `/:id/leave`, `/:id/presence`, `/:id/state`, and `/api/classroom/sessions/:id/stream` (SSE).
-  - **Tool Engine (7 Classroom Tools)**: `classroom.session.create`, `classroom.session.start`, `classroom.session.pause`, `classroom.session.resume`, `classroom.session.end`, `classroom.session.status`, `classroom.session.participants` registered to the tool registry (total 41 deterministic tools).
-  - **Frontend UI (`src/sectors/education/views/SmartClassroomView.tsx`)**:
-    - **Teacher View**: Live session telemetry, session controls (start, pause, resume, end), board state dispatcher, real-time connected student roster with device badges.
-    - **Student View**: Auto-discovers active course session, one-click join, live SSE synchronization, identity display, and cadet software remote keypad placeholder.
-    - **Smart Board Mode**: High-contrast, large-display-friendly layout with large typography, pulsing live radar indicator, central topic display, and live participant ticker.
-  - **Classroom-Scale Validation**: Tested and verified with 42+ concurrent simulated connected students.
+## 5. Current Architecture & Milestone 12 Hardening
+- **Milestone 12 Hardening & Data Hygiene Checkpoint Complete**:
+  - **Centralized Authorization Policy (`server/auth/classroomPolicy.ts` & `server/auth/index.ts`)**:
+    - Removed all classroom-specific identity fallbacks (no defaulting to `teacher-1`, no trusting client-supplied `x-user-role`, and no on-the-fly synthesis of unauthenticated users).
+    - Hardened `authenticateRequest(req)` to derive the authenticated user strictly from the trusted user database (`jarvisData.users`), failing closed with `401 Unauthorized` for missing or unrecognized credentials.
+    - Centralized `ClassroomAuthorizationPolicy` enforcing: Authenticated User → Workspace Membership → Course/Instructor Role Verification → Session Authorization.
+    - All classroom REST and realtime SSE endpoints deny by default.
+    - Strict cross-workspace isolation: cross-workspace sessions, mismatched workspace/session parameters, and outsider participants are strictly rejected (403/404).
+    - Students are strictly prohibited from manipulating another student's participant record or joining on behalf of another user.
+    - SSE stream subscription (`/api/classroom/sessions/:id/stream`) performs authorization *before* stream headers are sent or EventBus listeners are registered; disconnect cleanup cleans up timers and listeners.
+  - **Persistent Database & Storage Hygiene**:
+    - Restored `data/jarvis-db.json` to 100% clean deterministic development state from `INITIAL_DATABASE_SCHEMA`.
+    - Removed all 88 committed runtime-generated test storage artifacts from `data/storage/objects/`.
+    - Implemented active repository switching (`setActiveRepository` / `resetActiveRepository`) and `StorageProviderManager` isolation in all test suites (`milestone10_storage`, `milestone11_messaging`, `milestone12_classroom`, `audit_e2e_verification`).
+    - Added regression coverage verifying that running tests leaves `data/jarvis-db.json` 100% byte-identical and produces 0 artifacts in `data/storage/objects/`.
+  - **Classroom Model Contracts Preserved**:
+    - `ClassroomSession`, `ClassroomParticipant`, and `SmartBoardState` contracts preserved verbatim.
+  - **Classroom-Scale Simulation**:
+    - 40+ concurrent simulated students tested and verified in test isolation with 100% success.
+  - **Comprehensive Regression Results**:
+    - 270/270 test assertions passing (100% across M4, Education, M5, M8, M9, M10, M11, M12, E2E Audit).
+    - TypeScript compilation (`tsc --noEmit`): 0 errors.
+    - Production bundle compilation (`npm run build`): Succeeded.
 
 ---
 
@@ -208,11 +217,13 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 - No physical remote hardware or Bluetooth required (software remotes on web/mobile/tablet).
 - Zero quiz question scoring logic implemented in M12 (established state and presence contracts only).
 - Strict workspace and class membership boundaries enforced across User -> Workspace -> File -> KnowledgeSpace -> Message -> ClassroomSession.
+- Strict deny-by-default server-side authorization on all classroom endpoints.
+- Tests run in isolated test repositories and temporary storage providers, never modifying durable data.
 - ₹0 local-first execution mode fully operational for offline development.
 
 ---
 
 ## 7. Next Milestones & Roadmap
-- **M13**: Smart Quiz & Live Responses (Interactive question dispatch, real-time remote response scoring, live analytics, and Smart Board leaderboard).
+- **Next Milestone**: **M13 — Smart Quiz & Live Responses** (Interactive question dispatch, real-time remote response scoring, live analytics, and Smart Board leaderboard).
 - **M14**: Voice & Audio Interaction (Web Audio API synthesis & STT integration).
 - **M15**: Autonomous Task Agent & Multi-Sector Orchestration.
