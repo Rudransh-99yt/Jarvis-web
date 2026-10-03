@@ -41,7 +41,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ classes, currentRole }
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-cyan-500/20 bg-black/40 p-4 rounded-xl backdrop-blur-md">
         <div>
           <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase mb-1">
-            Jarvis Academic // Classes & Syllabi
+            Jarvis Academic · Classes & Syllabi
           </div>
           <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
             Academic Courses & Course Materials

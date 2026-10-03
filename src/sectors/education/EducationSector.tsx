@@ -1,37 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import type { EducationRole, EducationClass, Assignment, StudentSubmission, KnowledgeSpace, GroundedQueryResponse } from '../../types/education.ts';
-import { StudentDashboard } from './views/StudentDashboard.tsx';
-import { TeacherDashboard } from './views/TeacherDashboard.tsx';
+import type {
+  EducationRole,
+  EducationClass,
+  Assignment,
+  StudentSubmission,
+  KnowledgeSpace,
+  GroundedQueryResponse,
+  AcademicInstitution
+} from '../../types/education.ts';
+import { EducationSidebar, EducationSidebarSection } from './components/EducationSidebar.tsx';
+import { EducationBreadcrumbs, BreadcrumbItem } from './components/EducationBreadcrumbs.tsx';
+
+// Progressive Views
+import { StudentHomeView } from './views/StudentHomeView.tsx';
+import { StudentMyLearningView } from './views/StudentMyLearningView.tsx';
+import { SubjectDetailView } from './views/SubjectDetailView.tsx';
+import { ChapterDetailView } from './views/ChapterDetailView.tsx';
+import { LessonWorkspaceView } from './views/LessonWorkspaceView.tsx';
+
+// Productivity & Community Views
+import { StudentFocusWorkspaceView } from './views/StudentFocusWorkspaceView.tsx';
+import { MyWorkspaceView } from './workspace/MyWorkspaceView.tsx';
+import { EducationCommunityView } from './views/EducationCommunityView.tsx';
+import { EducationCalendarView } from './views/EducationCalendarView.tsx';
+
+// Teacher Views
+import { TeacherHomeView } from './views/TeacherHomeView.tsx';
+import { TeacherClassDetailView } from './views/TeacherClassDetailView.tsx';
+import { TeacherCurriculumModal } from './views/TeacherCurriculumModal.tsx';
+
+// Principal View
+import { PrincipalExecutiveView } from './views/PrincipalExecutiveView.tsx';
+
+// Preserved Core Views
+import { SmartClassroomView } from './views/SmartClassroomView.tsx';
+import { VideoLibraryView } from './views/VideoLibraryView.tsx';
 import { ClassesView } from './views/ClassesView.tsx';
 import { AssignmentsView } from './views/AssignmentsView.tsx';
 import { KnowledgeWorkspaceView } from './views/KnowledgeWorkspaceView.tsx';
 import { StudyAssistantView } from './views/StudyAssistantView.tsx';
-import { SmartClassroomView } from './views/SmartClassroomView.tsx';
-import { VideoLibraryView } from './views/VideoLibraryView.tsx';
-import { LayoutDashboard, BookOpen, FileCheck2, Sparkles, Brain, UserCheck, RefreshCw, Radio, Video } from 'lucide-react';
+
+import { Menu, Home, Layers, Flame, FileCheck2, Building2 } from 'lucide-react';
 
 interface EducationSectorProps {
   currentRole: EducationRole;
-  onToggleRole: () => void;
+  onToggleRole: (newRole?: EducationRole) => void;
   onSendChatMessage: (message: string, context?: any) => Promise<string>;
 }
 
-export type EducationTab = 'overview' | 'classroom' | 'videos' | 'classes' | 'assignments' | 'knowledge' | 'study';
+export type DeepEducationView =
+  | 'student_home'
+  | 'student_my_learning'
+  | 'subject_detail'
+  | 'chapter_detail'
+  | 'lesson_workspace'
+  | 'teacher_home'
+  | 'teacher_class_detail'
+  | 'principal_home'
+  | 'classroom'
+  | 'videos'
+  | 'classes'
+  | 'assignments'
+  | 'calendar'
+  | 'focus'
+  | 'workspace'
+  | 'community'
+  | 'knowledge'
+  | 'study';
 
 export const EducationSector: React.FC<EducationSectorProps> = ({
   currentRole,
   onToggleRole,
   onSendChatMessage
 }) => {
-  const [activeTab, setActiveTab] = useState<EducationTab>('overview');
+  // Navigation & Hierarchy State
+  const [currentView, setCurrentView] = useState<DeepEducationView>(
+    currentRole === 'student' ? 'student_home' : currentRole === 'teacher' ? 'teacher_home' : 'principal_home'
+  );
+  const [activeCourseId, setActiveCourseId] = useState<string>('class-phys-301');
+  const [activeUnitId, setActiveUnitId] = useState<string>('unit-phys-2');
+  const [activeLessonId, setActiveLessonId] = useState<string>('les-phys-202');
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string>('ks-quantum');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // Data State
+  const [institution, setInstitution] = useState<AcademicInstitution | undefined>();
   const [classes, setClasses] = useState<EducationClass[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<StudentSubmission[]>([]);
   const [knowledgeSpaces, setKnowledgeSpaces] = useState<KnowledgeSpace[]>([]);
-  const [selectedSpaceId, setSelectedSpaceId] = useState<string>('ks-quantum');
   const [selectedGradingSub, setSelectedGradingSub] = useState<StudentSubmission | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Curriculum Modal State for Teachers
+  const [curriculumModal, setCurriculumModal] = useState<{
+    isOpen: boolean;
+    mode: 'create_unit' | 'create_lesson';
+    courseId: string;
+    courseCode: string;
+    unitId?: string;
+    unitTitle?: string;
+  }>({
+    isOpen: false,
+    mode: 'create_unit',
+    courseId: '',
+    courseCode: ''
+  });
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -45,13 +120,14 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       const res = await fetch('/api/education/state');
       if (res.ok) {
         const data = await res.json();
+        if (data.institution) setInstitution(data.institution);
         if (data.classes) setClasses(data.classes);
         if (data.assignments) setAssignments(data.assignments);
         if (data.submissions) setSubmissions(data.submissions);
         if (data.knowledgeSpaces) setKnowledgeSpaces(data.knowledgeSpaces);
       }
     } catch (err) {
-      console.warn('Failed to fetch education state from API, using fallback store:', err);
+      console.warn('Failed to fetch education state from API:', err);
     } finally {
       setIsSyncing(false);
     }
@@ -60,6 +136,99 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   useEffect(() => {
     fetchEducationState();
   }, []);
+
+  // Update default view when role switches
+  useEffect(() => {
+    if (currentRole === 'student') {
+      if (['teacher_home', 'teacher_class_detail', 'principal_home'].includes(currentView)) {
+        setCurrentView('student_home');
+      }
+    } else if (currentRole === 'teacher') {
+      if (['student_home', 'student_my_learning', 'principal_home'].includes(currentView)) {
+        setCurrentView('teacher_home');
+      }
+    } else if (currentRole === 'principal') {
+      if (['student_home', 'student_my_learning', 'teacher_home'].includes(currentView)) {
+        setCurrentView('principal_home');
+      }
+    }
+  }, [currentRole]);
+
+  // Active items lookup
+  const activeCourse = classes.find((c) => c.id === activeCourseId) || classes[0];
+  const activeUnit = activeCourse?.units?.find((u) => u.id === activeUnitId) || activeCourse?.units?.[0];
+  const activeLesson = activeUnit?.lessons?.find((l) => l.id === activeLessonId) || activeUnit?.lessons?.[0];
+
+  // Progressive Navigation Handlers
+  const handleSelectCourse = (courseId: string) => {
+    setActiveCourseId(courseId);
+    const cls = classes.find((c) => c.id === courseId);
+    if (cls?.units && cls.units.length > 0) {
+      setActiveUnitId(cls.units[0].id);
+      if (cls.units[0].lessons && cls.units[0].lessons.length > 0) {
+        setActiveLessonId(cls.units[0].lessons[0].id);
+      }
+    }
+    if (currentRole === 'teacher') {
+      setCurrentView('teacher_class_detail');
+    } else {
+      setCurrentView('subject_detail');
+    }
+  };
+
+  const handleSelectUnit = (courseId: string, unitId: string) => {
+    setActiveCourseId(courseId);
+    setActiveUnitId(unitId);
+    const cls = classes.find((c) => c.id === courseId);
+    const unit = cls?.units?.find((u) => u.id === unitId);
+    if (unit?.lessons && unit.lessons.length > 0) {
+      setActiveLessonId(unit.lessons[0].id);
+    }
+    setCurrentView('chapter_detail');
+  };
+
+  const handleOpenLesson = (courseId: string, unitId: string, lessonId: string) => {
+    setActiveCourseId(courseId);
+    setActiveUnitId(unitId);
+    setActiveLessonId(lessonId);
+    setCurrentView('lesson_workspace');
+  };
+
+  const handleToggleLessonComplete = async (isCompleted: boolean) => {
+    if (!activeCourse || !activeUnit || !activeLesson) return;
+
+    try {
+      await fetch(`/api/education/classes/${activeCourse.id}/units/${activeUnit.id}/lessons/${activeLesson.id}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isCompleted })
+      });
+
+      // Update local state
+      setClasses((prev) =>
+        prev.map((cls) => {
+          if (cls.id !== activeCourse.id) return cls;
+          return {
+            ...cls,
+            units: cls.units?.map((u) => {
+              if (u.id !== activeUnit.id) return u;
+              const updatedLessons = u.lessons.map((l) => (l.id === activeLesson.id ? { ...l, isCompleted } : l));
+              const doneCount = updatedLessons.filter((l) => l.isCompleted).length;
+              return {
+                ...u,
+                lessons: updatedLessons,
+                masteryPercent: Math.round((doneCount / updatedLessons.length) * 100),
+                isCompleted: doneCount === updatedLessons.length
+              };
+            })
+          };
+        })
+      );
+      showNotification(isCompleted ? `Lesson marked as completed! (+20 XP)` : `Lesson marked in progress.`);
+    } catch (err) {
+      console.error('Failed to toggle completion:', err);
+    }
+  };
 
   // Teacher Create Assignment Handler
   const handleCreateAssignment = async (data: {
@@ -134,19 +303,91 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     }
   };
 
-  // Knowledge Space Handlers
+  // Teacher Save Unit Handler
+  const handleSaveUnit = async (data: {
+    title: string;
+    description: string;
+    learningObjectives: string[];
+    estimatedHours: number;
+  }) => {
+    if (!curriculumModal.courseId) return;
+    try {
+      const res = await fetch(`/api/education/classes/${curriculumModal.courseId}/units`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        const payload = await res.json();
+        setClasses((prev) =>
+          prev.map((cls) => {
+            if (cls.id !== curriculumModal.courseId) return cls;
+            return {
+              ...cls,
+              units: [...(cls.units || []), payload.unit]
+            };
+          })
+        );
+        showNotification(`Unit '${data.title}' created and published!`);
+      }
+    } catch (err) {
+      console.error('Failed to create unit:', err);
+    }
+  };
+
+  // Teacher Save Lesson Handler
+  const handleSaveLesson = async (data: {
+    title: string;
+    description: string;
+    durationMinutes: number;
+    notes: string;
+    keyTakeaways: string[];
+    videoId?: string;
+  }) => {
+    if (!curriculumModal.courseId || !curriculumModal.unitId) return;
+    try {
+      const res = await fetch(`/api/education/classes/${curriculumModal.courseId}/units/${curriculumModal.unitId}/lessons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, unitId: curriculumModal.unitId })
+      });
+      if (res.ok) {
+        const payload = await res.json();
+        setClasses((prev) =>
+          prev.map((cls) => {
+            if (cls.id !== curriculumModal.courseId) return cls;
+            return {
+              ...cls,
+              units: cls.units?.map((u) => {
+                if (u.id !== curriculumModal.unitId) return u;
+                return {
+                  ...u,
+                  lessons: [...(u.lessons || []), payload.lesson]
+                };
+              })
+            };
+          })
+        );
+        showNotification(`Lesson '${data.title}' added to Unit!`);
+      }
+    } catch (err) {
+      console.error('Failed to create lesson:', err);
+    }
+  };
+
+  // Knowledge Spaces Handlers
   const handleCreateSpace = async (title: string, description: string, category: string) => {
     try {
       const res = await fetch('/api/education/knowledge-spaces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, category })
+        body: JSON.stringify({ name: title, description, category })
       });
       if (res.ok) {
         const payload = await res.json();
-        setKnowledgeSpaces((prev) => [...prev, payload.knowledgeSpace]);
-        setSelectedSpaceId(payload.knowledgeSpace.id);
-        showNotification(`Knowledge Workspace '${title}' created.`);
+        setKnowledgeSpaces((prev) => [...prev, payload.space]);
+        setSelectedSpaceId(payload.space.id);
+        showNotification(`Knowledge Space '${title}' initialized.`);
       }
     } catch (err) {
       console.error('Failed to create space:', err);
@@ -158,14 +399,14 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/sources`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, fullText, type })
+        body: JSON.stringify({ name: title, content: fullText, type: type === 'web' ? 'url' : 'text' })
       });
       if (res.ok) {
         const payload = await res.json();
         setKnowledgeSpaces((prev) =>
           prev.map((s) => (s.id === spaceId ? { ...s, sources: [...s.sources, payload.source] } : s))
         );
-        showNotification(`Document '${title}' indexed in knowledge space.`);
+        showNotification(`Source '${title}' attached and indexed into RAG index.`);
       }
     } catch (err) {
       console.error('Failed to add source:', err);
@@ -174,14 +415,14 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
   const handleDeleteSource = async (spaceId: string, sourceId: string) => {
     try {
-      const res = await fetch(`/api/knowledge-spaces/${spaceId}/sources/${sourceId}`, {
+      const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/sources/${sourceId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
         setKnowledgeSpaces((prev) =>
           prev.map((s) => (s.id === spaceId ? { ...s, sources: s.sources.filter((src) => src.id !== sourceId) } : s))
         );
-        showNotification(`Knowledge source purged from workspace.`);
+        showNotification(`Source removed from space.`);
       }
     } catch (err) {
       console.error('Failed to delete source:', err);
@@ -190,13 +431,11 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
   const handleReindexSource = async (spaceId: string, sourceId: string) => {
     try {
-      const res = await fetch(`/api/knowledge-spaces/${spaceId}/sources/${sourceId}/ingest`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ forceReindex: true })
+      const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/sources/${sourceId}/reindex`, {
+        method: 'POST'
       });
       if (res.ok) {
-        showNotification(`Re-indexing triggered for source ${sourceId}.`);
+        showNotification(`Vector embeddings re-indexed successfully.`);
       }
     } catch (err) {
       console.error('Failed to reindex source:', err);
@@ -207,152 +446,520 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/query`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, userRole: currentRole, userId: currentRole === 'student' ? 'student-1' : 'teacher-1' })
+      body: JSON.stringify({ query, userId: 'student-1', userRole: currentRole })
     });
     if (!res.ok) throw new Error('Query failed');
     return res.json();
   };
 
-  const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
-    { id: 'classroom' as const, label: 'Smart Classroom', icon: Radio },
-    { id: 'videos' as const, label: 'Video Library', icon: Video },
-    { id: 'classes' as const, label: 'Classes & Syllabi', icon: BookOpen },
-    { id: 'assignments' as const, label: 'Assignments', icon: FileCheck2 },
-    { id: 'knowledge' as const, label: 'NotebookLM / Knowledge', icon: Sparkles },
-    { id: 'study' as const, label: 'Study AI Assistant', icon: Brain }
-  ];
+  // Derive active sidebar section
+  const getSidebarActiveSection = (): EducationSidebarSection => {
+    if (['student_home', 'teacher_home'].includes(currentView)) return 'home';
+    if (currentView === 'student_my_learning') return 'my_learning';
+    if (['classes', 'subject_detail', 'chapter_detail', 'lesson_workspace', 'teacher_class_detail'].includes(currentView)) return 'classes';
+    if (currentView === 'assignments') return 'assignments';
+    if (currentView === 'calendar') return 'calendar';
+    if (currentView === 'focus') return 'focus';
+    if (currentView === 'workspace') return 'workspace';
+    if (currentView === 'community') return 'community';
+    if (currentView === 'knowledge') return 'knowledge';
+    if (currentView === 'videos') return 'videos';
+    if (currentView === 'classroom') return 'classroom';
+    if (currentView === 'principal_home') return 'principal_overview';
+    return 'home';
+  };
+
+  const handleSidebarSelectSection = (section: EducationSidebarSection) => {
+    switch (section) {
+      case 'home':
+        setCurrentView(currentRole === 'student' ? 'student_home' : currentRole === 'teacher' ? 'teacher_home' : 'principal_home');
+        break;
+      case 'my_learning':
+        setCurrentView('student_my_learning');
+        break;
+      case 'classes':
+        setCurrentView('classes');
+        break;
+      case 'assignments':
+        setCurrentView('assignments');
+        break;
+      case 'calendar':
+        setCurrentView('calendar');
+        break;
+      case 'focus':
+        setCurrentView('focus');
+        break;
+      case 'workspace':
+        setCurrentView('workspace');
+        break;
+      case 'community':
+        setCurrentView('community');
+        break;
+      case 'knowledge':
+        setCurrentView('knowledge');
+        break;
+      case 'videos':
+        setCurrentView('videos');
+        break;
+      case 'classroom':
+        setCurrentView('classroom');
+        break;
+      case 'principal_overview':
+        setCurrentView('principal_home');
+        break;
+    }
+  };
+
+  // Dynamic Breadcrumb Trail
+  const getBreadcrumbs = (): BreadcrumbItem[] => {
+    const items: BreadcrumbItem[] = [];
+
+    if (['student_home', 'teacher_home', 'principal_home'].includes(currentView)) {
+      return [];
+    }
+
+    if (currentView === 'student_my_learning') {
+      items.push({ id: 'my_learning', label: 'My Learning Tracks', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'calendar') {
+      items.push({ id: 'calendar', label: 'Academic Calendar', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'focus') {
+      items.push({ id: 'focus', label: 'Focus Session', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'workspace') {
+      items.push({ id: 'workspace', label: 'My Workspace & Notes', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'community') {
+      items.push({ id: 'community', label: 'Class Community', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'classroom') {
+      items.push({ id: 'classroom', label: 'Smart Classroom', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'videos') {
+      items.push({ id: 'videos', label: 'Video Library & Q&A', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'classes') {
+      items.push({ id: 'classes', label: 'All Classes', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'assignments') {
+      items.push({ id: 'assignments', label: 'Assignments & Assessments', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'knowledge') {
+      items.push({ id: 'knowledge', label: 'Knowledge Spaces', type: 'section' });
+      return items;
+    }
+
+    if (activeCourse) {
+      items.push({
+        id: activeCourse.id,
+        label: `${activeCourse.code}: ${activeCourse.name}`,
+        type: 'subject',
+        onClick: () => {
+          if (currentRole === 'teacher') setCurrentView('teacher_class_detail');
+          else setCurrentView('subject_detail');
+        }
+      });
+    }
+
+    if (['chapter_detail', 'lesson_workspace'].includes(currentView) && activeUnit) {
+      items.push({
+        id: activeUnit.id,
+        label: `Unit ${activeUnit.number}: ${activeUnit.title}`,
+        type: 'unit',
+        onClick: () => setCurrentView('chapter_detail')
+      });
+    }
+
+    if (currentView === 'lesson_workspace' && activeLesson && activeUnit) {
+      items.push({
+        id: activeLesson.id,
+        label: `Lesson ${activeUnit.number}.${activeLesson.number}: ${activeLesson.title}`,
+        type: 'lesson'
+      });
+    }
+
+    return items;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   return (
-    <div className="space-y-6">
-      {/* Top Sector Navigation & Role Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border border-cyan-500/20 bg-black/50 p-3 rounded-xl backdrop-blur-md">
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+    <div className="flex min-h-[calc(100vh-5rem)]">
+      {/* 1. Dedicated Education Left Sidebar */}
+      <EducationSidebar
+        currentRole={currentRole}
+        onChangeRole={(r) => onToggleRole(r)}
+        activeSection={getSidebarActiveSection()}
+        onSelectSection={handleSidebarSelectSection}
+        activeCourseId={activeCourseId}
+        onSelectCourse={(cId) => handleSelectCourse(cId)}
+        classes={classes}
+        institution={institution}
+        isSyncing={isSyncing}
+        onRefresh={fetchEducationState}
+        isOpenMobile={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+      />
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono tracking-wider transition-all shrink-0 ${
-                  isActive
-                    ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 font-bold shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                    : 'text-cyan-400/60 hover:text-cyan-200 hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-300' : 'text-cyan-400/60'}`} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+      {/* 2. Main Education Application Workspace */}
+      <main className="flex-1 flex flex-col min-w-0 px-4 sm:px-8 py-6 pb-20 lg:pb-12">
+        {/* Mobile Header Bar */}
+        <div className="lg:hidden flex items-center justify-between pb-4 mb-4 border-b border-cyan-500/15">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-lg border border-cyan-500/30 bg-black/60 text-cyan-300 hover:text-white"
+              title="Open Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <span className="text-xs font-mono font-bold text-white truncate">
+              {institution?.name || 'Stark Academy'}
+            </span>
+          </div>
+
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 text-cyan-300">
+            {currentRole}
+          </span>
         </div>
 
-        {/* Demo Role Switcher */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fetchEducationState}
-            disabled={isSyncing}
-            title="Refresh academic data from server"
-            className="p-2 rounded-lg border border-cyan-500/20 bg-black/40 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-200 transition-all"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-          </button>
+        {/* Interactive Breadcrumb Trail for Hierarchical Views */}
+        {breadcrumbs.length > 0 && (
+          <div className="mb-6 max-w-4xl mx-auto w-full">
+            <EducationBreadcrumbs
+              items={breadcrumbs}
+              onHomeClick={() =>
+                setCurrentView(
+                  currentRole === 'student'
+                    ? 'student_home'
+                    : currentRole === 'teacher'
+                    ? 'teacher_home'
+                    : 'principal_home'
+                )
+              }
+            />
+          </div>
+        )}
 
-          <button
-            onClick={onToggleRole}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-950/40 to-cyan-950/40 hover:border-cyan-400/60 text-xs font-mono text-cyan-200 transition-all shadow-[0_0_10px_rgba(59,130,246,0.15)]"
-          >
-            <UserCheck className="w-4 h-4 text-cyan-400" />
-            <span>ROLE: <strong className="text-cyan-300 uppercase">{currentRole === 'student' ? 'Alex Chen [Student]' : 'Dr. Sarah [Teacher]'}</strong></span>
-            <span className="text-[10px] text-cyan-400/60 underline ml-1">Switch</span>
-          </button>
+        {/* Notification Toast */}
+        {notification && (
+          <div className="mb-6 max-w-4xl mx-auto w-full p-3 rounded-lg border border-cyan-400/40 bg-cyan-950/80 text-cyan-200 text-xs font-mono flex items-center gap-2 shadow-lg animate-fade-in">
+            <div className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+            <span>{notification}</span>
+          </div>
+        )}
+
+        {/* 3. Deep View Routing */}
+        <div className="flex-1 w-full">
+          {/* Student Views */}
+          {currentView === 'student_home' && (
+            <StudentHomeView
+              classes={classes}
+              assignments={assignments}
+              submissions={submissions}
+              onSelectCourse={(id) => handleSelectCourse(id)}
+              onOpenLesson={(cId, uId, lId) => handleOpenLesson(cId, uId, lId)}
+              onNavigateTab={(t) => setCurrentView(t as any)}
+            />
+          )}
+
+          {currentView === 'student_my_learning' && (
+            <StudentMyLearningView
+              classes={classes}
+              onSelectCourse={(id) => handleSelectCourse(id)}
+              onSelectUnit={(cId, uId) => handleSelectUnit(cId, uId)}
+              onOpenLesson={(cId, uId, lId) => handleOpenLesson(cId, uId, lId)}
+            />
+          )}
+
+          {currentView === 'subject_detail' && activeCourse && (
+            <SubjectDetailView
+              course={activeCourse}
+              assignments={assignments}
+              onSelectUnit={(uId) => handleSelectUnit(activeCourse.id, uId)}
+              onOpenLesson={(uId, lId) => handleOpenLesson(activeCourse.id, uId, lId)}
+              onNavigateTab={(t) => setCurrentView(t as any)}
+            />
+          )}
+
+          {currentView === 'chapter_detail' && activeCourse && activeUnit && (
+            <ChapterDetailView
+              course={activeCourse}
+              unit={activeUnit}
+              onOpenLesson={(lId) => handleOpenLesson(activeCourse.id, activeUnit.id, lId)}
+              onBackToCourse={() => setCurrentView('subject_detail')}
+              onLaunchStudyAssistant={(topic) => {
+                setSelectedSpaceId(activeCourse.id === 'class-math-240' ? 'ks-calculus' : 'ks-quantum');
+                setCurrentView('study');
+              }}
+            />
+          )}
+
+          {currentView === 'lesson_workspace' && activeCourse && activeUnit && activeLesson && (
+            <LessonWorkspaceView
+              course={activeCourse}
+              unit={activeUnit}
+              lesson={activeLesson}
+              onToggleComplete={handleToggleLessonComplete}
+              onNavigateLesson={(uId, lId) => handleOpenLesson(activeCourse.id, uId, lId)}
+              onBackToChapter={() => setCurrentView('chapter_detail')}
+              onQueryGrounded={handleQueryGrounded}
+            />
+          )}
+
+          {/* Productivity & Community Workspaces */}
+          {currentView === 'calendar' && (
+            <EducationCalendarView
+              classes={classes}
+              assignments={assignments}
+              onSelectCourse={(id) => handleSelectCourse(id)}
+              onNavigateTab={(t) => setCurrentView(t as any)}
+            />
+          )}
+
+          {currentView === 'focus' && (
+            <StudentFocusWorkspaceView
+              classes={classes}
+              initialSubjectId={activeCourseId}
+              initialTopicTitle={activeLesson?.title}
+              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+              onOpenLesson={(cId, uId, lId) => handleOpenLesson(cId, uId, lId)}
+            />
+          )}
+
+          {currentView === 'workspace' && (
+            <MyWorkspaceView
+              classes={classes}
+              knowledgeSpaces={knowledgeSpaces}
+              initialCourseId={activeCourseId}
+              initialLessonId={activeLessonId}
+              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+              onNavigateToAcademicLink={(link) => {
+                if (link.courseId && link.unitId && link.lessonId) {
+                  handleOpenLesson(link.courseId, link.unitId, link.lessonId);
+                } else if (link.courseId && link.unitId) {
+                  handleSelectUnit(link.courseId, link.unitId);
+                } else if (link.courseId) {
+                  handleSelectCourse(link.courseId);
+                } else if (link.assignmentId) {
+                  setCurrentView('assignments');
+                } else if (link.knowledgeSpaceId) {
+                  setSelectedSpaceId(link.knowledgeSpaceId);
+                  setCurrentView('knowledge');
+                }
+              }}
+            />
+          )}
+
+          {currentView === 'community' && (
+            <EducationCommunityView
+              classes={classes}
+              currentRole={currentRole}
+              initialClassId={activeCourseId}
+              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+            />
+          )}
+
+          {/* Teacher Views */}
+          {currentView === 'teacher_home' && (
+            <TeacherHomeView
+              classes={classes}
+              assignments={assignments}
+              submissions={submissions}
+              onSelectClass={(id) => handleSelectCourse(id)}
+              onOpenCreateAssignmentModal={() => setCurrentView('assignments')}
+              onSelectSubmissionForGrading={(sub) => {
+                setSelectedGradingSub(sub);
+                setCurrentView('assignments');
+              }}
+              onNavigateTab={(t) => setCurrentView(t as any)}
+            />
+          )}
+
+          {currentView === 'teacher_class_detail' && activeCourse && (
+            <TeacherClassDetailView
+              course={activeCourse}
+              assignments={assignments}
+              onBackToClasses={() => setCurrentView('classes')}
+              onOpenUnit={(uId) => handleSelectUnit(activeCourse.id, uId)}
+              onOpenCreateUnitModal={() =>
+                setCurriculumModal({
+                  isOpen: true,
+                  mode: 'create_unit',
+                  courseId: activeCourse.id,
+                  courseCode: activeCourse.code
+                })
+              }
+              onOpenCreateLessonModal={(uId) => {
+                const unit = activeCourse.units?.find((u) => u.id === uId);
+                setCurriculumModal({
+                  isOpen: true,
+                  mode: 'create_lesson',
+                  courseId: activeCourse.id,
+                  courseCode: activeCourse.code,
+                  unitId: uId,
+                  unitTitle: unit?.title
+                });
+              }}
+              onNavigateTab={(t) => setCurrentView(t as any)}
+            />
+          )}
+
+          {/* Principal View */}
+          {currentView === 'principal_home' && (
+            <PrincipalExecutiveView
+              institution={institution}
+              classes={classes}
+              assignments={assignments}
+              submissions={submissions}
+              onSelectCourse={(id) => handleSelectCourse(id)}
+              onNavigateTab={(t) => setCurrentView(t as any)}
+            />
+          )}
+
+          {/* Preserved Core Workspaces */}
+          {currentView === 'classroom' && (
+            <SmartClassroomView classes={classes} currentRole={currentRole} />
+          )}
+
+          {currentView === 'videos' && (
+            <VideoLibraryView classes={classes} currentRole={currentRole} />
+          )}
+
+          {currentView === 'classes' && (
+            <ClassesView classes={classes} currentRole={currentRole} />
+          )}
+
+          {currentView === 'assignments' && (
+            <AssignmentsView
+              assignments={assignments}
+              submissions={submissions}
+              classes={classes}
+              currentRole={currentRole}
+              onCreateAssignment={handleCreateAssignment}
+              onSubmitWork={handleSubmitWork}
+              onGradeSubmission={handleGradeSubmission}
+              selectedSubmissionForGrading={selectedGradingSub}
+              onClearSelectedGradingSubmission={() => setSelectedGradingSub(null)}
+            />
+          )}
+
+          {currentView === 'knowledge' && (
+            <KnowledgeWorkspaceView
+              knowledgeSpaces={knowledgeSpaces}
+              activeSpaceId={selectedSpaceId}
+              onSelectSpace={(id) => setSelectedSpaceId(id)}
+              onCreateSpace={handleCreateSpace}
+              onAddSource={handleAddSource}
+              onDeleteSource={handleDeleteSource}
+              onReindexSource={handleReindexSource}
+              onQueryGrounded={handleQueryGrounded}
+            />
+          )}
+
+          {currentView === 'study' && (
+            <StudyAssistantView
+              currentRole={currentRole}
+              onSendMessage={(msg) =>
+                onSendChatMessage(msg, { sector: 'education', role: currentRole, activeSpaceId: selectedSpaceId })
+              }
+            />
+          )}
         </div>
-      </div>
+      </main>
 
-      {/* Notification Toast */}
-      {notification && (
-        <div className="p-3 rounded-lg border border-cyan-400/40 bg-cyan-950/80 text-cyan-200 text-xs font-mono flex items-center gap-2 shadow-lg animate-fade-in">
-          <div className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
-          <span>{notification}</span>
-        </div>
-      )}
+      {/* 4. Teacher Curriculum Modal */}
+      <TeacherCurriculumModal
+        isOpen={curriculumModal.isOpen}
+        onClose={() => setCurriculumModal((prev) => ({ ...prev, isOpen: false }))}
+        mode={curriculumModal.mode}
+        courseId={curriculumModal.courseId}
+        courseCode={curriculumModal.courseCode}
+        unitId={curriculumModal.unitId}
+        unitTitle={curriculumModal.unitTitle}
+        onSaveUnit={handleSaveUnit}
+        onSaveLesson={handleSaveLesson}
+      />
 
-      {/* Active Tab View Rendering */}
-      {activeTab === 'overview' && (
-        currentRole === 'student' ? (
-          <StudentDashboard
-            classes={classes}
-            assignments={assignments}
-            submissions={submissions}
-            knowledgeSpaces={knowledgeSpaces}
-            onNavigateTab={(t) => setActiveTab(t)}
-            onSelectKnowledgeSpace={(id) => setSelectedSpaceId(id)}
-          />
-        ) : (
-          <TeacherDashboard
-            classes={classes}
-            assignments={assignments}
-            submissions={submissions}
-            onNavigateTab={(t) => setActiveTab(t)}
-            onOpenCreateAssignmentModal={() => {
-              setActiveTab('assignments');
-            }}
-            onSelectSubmissionForGrading={(sub) => {
-              setSelectedGradingSub(sub);
-              setActiveTab('assignments');
-            }}
-          />
-        )
-      )}
+      {/* 5. Mobile Sticky Bottom Navigation (Top 4 destinations) */}
+      <nav aria-label="Mobile Navigation" className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-black/90 border-t border-cyan-500/20 backdrop-blur-xl flex items-center justify-around px-2 z-30">
+        <button
+          onClick={() =>
+            setCurrentView(
+              currentRole === 'student'
+                ? 'student_home'
+                : currentRole === 'teacher'
+                ? 'teacher_home'
+                : 'principal_home'
+            )
+          }
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+            ['student_home', 'teacher_home', 'principal_home'].includes(currentView)
+              ? 'text-cyan-300 font-bold'
+              : 'text-cyan-400/60'
+          }`}
+        >
+          <Home className="w-4 h-4" />
+          <span>Home</span>
+        </button>
 
-      {activeTab === 'classroom' && (
-        <SmartClassroomView classes={classes} currentRole={currentRole} />
-      )}
+        <button
+          onClick={() => setCurrentView('student_my_learning')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+            currentView === 'student_my_learning' ? 'text-cyan-300 font-bold' : 'text-cyan-400/60'
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Tracks</span>
+        </button>
 
-      {activeTab === 'videos' && (
-        <VideoLibraryView classes={classes} currentRole={currentRole} />
-      )}
+        <button
+          onClick={() => setCurrentView('focus')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+            currentView === 'focus' ? 'text-cyan-300 font-bold' : 'text-cyan-400/60'
+          }`}
+        >
+          <Flame className="w-4 h-4" />
+          <span>Focus</span>
+        </button>
 
-      {activeTab === 'classes' && (
-        <ClassesView classes={classes} currentRole={currentRole} />
-      )}
+        <button
+          onClick={() => setCurrentView('assignments')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+            currentView === 'assignments' ? 'text-cyan-300 font-bold' : 'text-cyan-400/60'
+          }`}
+        >
+          <FileCheck2 className="w-4 h-4" />
+          <span>Work</span>
+        </button>
 
-      {activeTab === 'assignments' && (
-        <AssignmentsView
-          assignments={assignments}
-          submissions={submissions}
-          classes={classes}
-          currentRole={currentRole}
-          onCreateAssignment={handleCreateAssignment}
-          onSubmitWork={handleSubmitWork}
-          onGradeSubmission={handleGradeSubmission}
-          selectedSubmissionForGrading={selectedGradingSub}
-          onClearSelectedGradingSubmission={() => setSelectedGradingSub(null)}
-        />
-      )}
-
-      {activeTab === 'knowledge' && (
-        <KnowledgeWorkspaceView
-          knowledgeSpaces={knowledgeSpaces}
-          activeSpaceId={selectedSpaceId}
-          onSelectSpace={(id) => setSelectedSpaceId(id)}
-          onCreateSpace={handleCreateSpace}
-          onAddSource={handleAddSource}
-          onDeleteSource={handleDeleteSource}
-          onReindexSource={handleReindexSource}
-          onQueryGrounded={handleQueryGrounded}
-        />
-      )}
-
-      {activeTab === 'study' && (
-        <StudyAssistantView
-          currentRole={currentRole}
-          onSendMessage={(msg) => onSendChatMessage(msg, { sector: 'education', role: currentRole, activeSpaceId: selectedSpaceId })}
-        />
-      )}
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="flex flex-col items-center gap-0.5 text-[10px] font-mono text-cyan-400/60 cursor-pointer"
+        >
+          <Menu className="w-4 h-4" />
+          <span>More</span>
+        </button>
+      </nav>
     </div>
   );
 };

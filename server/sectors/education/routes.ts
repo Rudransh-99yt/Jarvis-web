@@ -10,11 +10,19 @@ educationRouter.use('/videos', videoRouter);
 // GET /api/education/state - Hydrate entire Education sector state
 educationRouter.get('/state', (_req: Request, res: Response) => {
   res.json({
+    institution: educationStore.getInstitution(),
     classes: educationStore.getClasses(),
     assignments: educationStore.getAssignments(),
     submissions: educationStore.getSubmissions(),
     knowledgeSpaces: educationStore.getKnowledgeSpaces(),
     timestamp: new Date().toISOString()
+  });
+});
+
+// GET /api/education/institution
+educationRouter.get('/institution', (_req: Request, res: Response) => {
+  res.json({
+    institution: educationStore.getInstitution()
   });
 });
 
@@ -34,6 +42,68 @@ educationRouter.get('/classes/:id', (req: Request, res: Response) => {
     return;
   }
   res.json({ class: cls });
+});
+
+// GET /api/education/classes/:id/units
+educationRouter.get('/classes/:id/units', (req: Request, res: Response) => {
+  const classId = req.params.id as string;
+  res.json({
+    units: educationStore.getUnits(classId)
+  });
+});
+
+// POST /api/education/classes/:id/units - Teacher creates unit
+educationRouter.post('/classes/:id/units', (req: Request, res: Response) => {
+  const classId = req.params.id as string;
+  const { title, description, learningObjectives, estimatedHours, number } = req.body;
+  if (!title) {
+    res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'title is required.' } });
+    return;
+  }
+  const unit = educationStore.addUnitToCourse(classId, {
+    courseId: classId,
+    number: number || 1,
+    title,
+    description: description || '',
+    learningObjectives: learningObjectives || [],
+    estimatedHours: estimatedHours || 10,
+    lessons: []
+  });
+  res.status(201).json({ unit });
+});
+
+// POST /api/education/classes/:id/units/:unitId/lessons - Teacher creates lesson
+educationRouter.post('/classes/:id/units/:unitId/lessons', (req: Request, res: Response) => {
+  const classId = req.params.id as string;
+  const unitId = req.params.unitId as string;
+  const { title, description, durationMinutes, videoId, videoTimestampSeconds, notes, keyTakeaways, number } = req.body;
+  if (!title) {
+    res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'title is required.' } });
+    return;
+  }
+  const lesson = educationStore.addLessonToUnit(classId, unitId, {
+    number: number || 1,
+    title,
+    description: description || '',
+    durationMinutes: durationMinutes || 45,
+    videoId,
+    videoTimestampSeconds,
+    notes,
+    keyTakeaways: keyTakeaways || [],
+    isCompleted: false
+  });
+  res.status(201).json({ lesson });
+});
+
+// POST /api/education/classes/:id/units/:unitId/lessons/:lessonId/complete - Toggle lesson completion
+educationRouter.post('/classes/:id/units/:unitId/lessons/:lessonId/complete', (req: Request, res: Response) => {
+  const { isCompleted } = req.body;
+  const classId = req.params.id as string;
+  const unitId = req.params.unitId as string;
+  const lessonId = req.params.lessonId as string;
+
+  const success = educationStore.toggleLessonCompletion(classId, unitId, lessonId, Boolean(isCompleted));
+  res.json({ success, isCompleted: Boolean(isCompleted) });
 });
 
 // GET /api/education/assignments
@@ -210,4 +280,156 @@ educationRouter.post('/knowledge-spaces/:id/query', async (req: Request, res: Re
     const fallbackResult = educationStore.queryGrounded(spaceId, query);
     res.json(fallbackResult);
   }
+});
+
+// ==========================================
+// NOTION-STYLE MY WORKSPACE REST ROUTES
+// ==========================================
+
+// GET /api/education/workspace/pages - List non-deleted workspace pages
+educationRouter.get('/workspace/pages', (_req: Request, res: Response) => {
+  res.json({
+    pages: educationStore.getWorkspacePages(false)
+  });
+});
+
+// GET /api/education/workspace/trash - List deleted workspace pages
+educationRouter.get('/workspace/trash', (_req: Request, res: Response) => {
+  res.json({
+    pages: educationStore.getWorkspacePages(true)
+  });
+});
+
+// GET /api/education/workspace/pages/:id - Get single page
+educationRouter.get('/workspace/pages/:id', (req: Request, res: Response) => {
+  const pageId = req.params.id as string;
+  const page = educationStore.getWorkspacePage(pageId);
+  if (!page) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Workspace page not found.' } });
+    return;
+  }
+  res.json({ page });
+});
+
+// POST /api/education/workspace/pages - Create new workspace page
+educationRouter.post('/workspace/pages', (req: Request, res: Response) => {
+  const page = educationStore.createWorkspacePage(req.body);
+  res.status(201).json({ page });
+});
+
+// PUT /api/education/workspace/pages/:id - Update page metadata/properties
+educationRouter.put('/workspace/pages/:id', (req: Request, res: Response) => {
+  const pageId = req.params.id as string;
+  const updated = educationStore.updateWorkspacePage(pageId, req.body);
+  if (!updated) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Workspace page not found.' } });
+    return;
+  }
+  res.json({ page: updated });
+});
+
+// PUT /api/education/workspace/pages/:id/blocks - Update block content
+educationRouter.put('/workspace/pages/:id/blocks', (req: Request, res: Response) => {
+  const pageId = req.params.id as string;
+  const { blocks } = req.body;
+  if (!Array.isArray(blocks)) {
+    res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'blocks array is required.' } });
+    return;
+  }
+  const updated = educationStore.updateWorkspacePageBlocks(pageId, blocks);
+  if (!updated) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Workspace page not found.' } });
+    return;
+  }
+  res.json({ page: updated });
+});
+
+// DELETE /api/education/workspace/pages/:id - Soft delete (trash) or permanent delete
+educationRouter.delete('/workspace/pages/:id', (req: Request, res: Response) => {
+  const pageId = req.params.id as string;
+  const permanent = req.query.permanent === 'true';
+  const success = educationStore.deleteWorkspacePage(pageId, permanent);
+  if (!success) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Workspace page not found.' } });
+    return;
+  }
+  res.json({ success: true, pageId, permanent });
+});
+
+// POST /api/education/workspace/pages/:id/restore - Restore from trash
+educationRouter.post('/workspace/pages/:id/restore', (req: Request, res: Response) => {
+  const pageId = req.params.id as string;
+  const success = educationStore.restoreWorkspacePage(pageId);
+  if (!success) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Workspace page not found in trash.' } });
+    return;
+  }
+  res.json({ success: true, page: educationStore.getWorkspacePage(pageId) });
+});
+
+// GET /api/education/workspace/databases - List all database collections
+educationRouter.get('/workspace/databases', (_req: Request, res: Response) => {
+  res.json({
+    databases: educationStore.getWorkspaceDatabases()
+  });
+});
+
+// GET /api/education/workspace/databases/:id - Get database
+educationRouter.get('/workspace/databases/:id', (req: Request, res: Response) => {
+  const dbId = req.params.id as string;
+  const db = educationStore.getWorkspaceDatabase(dbId);
+  if (!db) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Database collection not found.' } });
+    return;
+  }
+  res.json({ database: db });
+});
+
+// POST /api/education/workspace/databases - Create database collection
+educationRouter.post('/workspace/databases', (req: Request, res: Response) => {
+  const db = educationStore.createWorkspaceDatabase(req.body);
+  res.status(201).json({ database: db });
+});
+
+// PUT /api/education/workspace/databases/:id - Update database collection / items
+educationRouter.put('/workspace/databases/:id', (req: Request, res: Response) => {
+  const dbId = req.params.id as string;
+  const updated = educationStore.updateWorkspaceDatabase(dbId, req.body);
+  if (!updated) {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Database collection not found.' } });
+    return;
+  }
+  res.json({ database: updated });
+});
+
+// GET /api/education/workspace/templates - List built-in workspace templates
+educationRouter.get('/workspace/templates', (_req: Request, res: Response) => {
+  res.json({
+    templates: educationStore.getWorkspaceTemplates()
+  });
+});
+
+// POST /api/education/workspace/pages/from-template - Instantiate page from template
+educationRouter.post('/workspace/pages/from-template', (req: Request, res: Response) => {
+  const { templateId, customTitle, academicLink } = req.body;
+  if (!templateId) {
+    res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'templateId is required.' } });
+    return;
+  }
+  const page = educationStore.createPageFromTemplate(templateId, customTitle, academicLink);
+  res.status(201).json({ page });
+});
+
+// GET /api/education/workspace/search - Search pages, blocks, and tags
+educationRouter.get('/workspace/search', (req: Request, res: Response) => {
+  const q = (req.query.q as string) || '';
+  const results = educationStore.searchWorkspace(q);
+  res.json({ results, query: q });
+});
+
+// GET /api/education/workspace/by-lesson/:courseId/:lessonId - Find notes linked to an academic lesson
+educationRouter.get('/workspace/by-lesson/:courseId/:lessonId', (req: Request, res: Response) => {
+  const { courseId, lessonId } = req.params;
+  const pages = educationStore.getWorkspacePagesForLesson(courseId as string, lessonId as string);
+  res.json({ pages });
 });

@@ -537,7 +537,11 @@ export function App() {
       apiProviderName={apiProviderName}
       isApiOnline={isApiOnline}
       educationRole={educationRole}
-      onToggleEducationRole={() => setEducationRole(educationRole === 'student' ? 'teacher' : 'student')}
+      onToggleEducationRole={() => {
+        if (educationRole === 'student') setEducationRole('teacher');
+        else if (educationRole === 'teacher') setEducationRole('principal');
+        else setEducationRole('student');
+      }}
     >
       {currentSector === 'command' && (
         <CommandDeckSector
@@ -574,7 +578,15 @@ export function App() {
       {currentSector === 'education' && (
         <EducationSector
           currentRole={educationRole}
-          onToggleRole={() => setEducationRole(educationRole === 'student' ? 'teacher' : 'student')}
+          onToggleRole={(newRole) => {
+            if (newRole) {
+              setEducationRole(newRole);
+            } else {
+              if (educationRole === 'student') setEducationRole('teacher');
+              else if (educationRole === 'teacher') setEducationRole('principal');
+              else setEducationRole('student');
+            }
+          }}
           onSendChatMessage={sendChatMessage}
         />
       )}

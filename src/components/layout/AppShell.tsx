@@ -245,7 +245,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       {/* Scrollable Application Content Region - Single Page Scroll Owner */}
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain relative z-10">
         {/* Main App Content Viewport */}
-        <main className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 min-w-0">
+        <main className={`w-full min-w-0 ${currentSector === 'education' ? 'px-0 py-0' : 'mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6'}`}>
           {children}
         </main>
       </div>

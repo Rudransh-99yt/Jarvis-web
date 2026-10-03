@@ -2,7 +2,77 @@
 
 import type { SourceReference } from './platform.ts';
 
-export type EducationRole = 'student' | 'teacher';
+export type EducationRole = 'student' | 'teacher' | 'principal';
+export * from './workspace.ts';
+
+// --- Hierarchical Institution & Academic Hierarchy Types ---
+
+export interface AcademicInstitution {
+  id: string;
+  name: string;
+  code: string;
+  campus: string;
+  currentAcademicYear: string;
+  grades: AcademicGrade[];
+  batches: AcademicBatch[];
+}
+
+export interface AcademicGrade {
+  id: string;
+  name: string; // e.g., "Grade 12 / Senior Level"
+  code: string; // e.g., "G12"
+  level: number;
+  classesCount: number;
+  studentsCount: number;
+}
+
+export interface AcademicBatch {
+  id: string;
+  name: string; // e.g., "Alpha Quantum Cohort 2026"
+  code: string; // e.g., "BATCH-A26"
+  gradeId: string;
+  term: string;
+  studentCount: number;
+  classIds: string[];
+}
+
+export interface CourseLesson {
+  id: string;
+  unitId: string;
+  courseId: string;
+  number: number;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  videoId?: string;
+  videoTimestampSeconds?: number;
+  fileIds?: string[];
+  knowledgeSpaceId?: string;
+  isCompleted?: boolean;
+  notes?: string;
+  keyTakeaways?: string[];
+  practiceQuestions?: Array<{
+    id: string;
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation: string;
+  }>;
+}
+
+export interface CourseUnit {
+  id: string;
+  courseId: string;
+  number: number;
+  title: string;
+  description: string;
+  learningObjectives: string[];
+  estimatedHours: number;
+  lessons: CourseLesson[];
+  masteryPercent?: number;
+  isCompleted?: boolean;
+  quizId?: string;
+}
 
 export interface EducationClass {
   id: string;
@@ -18,6 +88,10 @@ export interface EducationClass {
   studentCount: number;
   materialsCount: number;
   assignmentsCount: number;
+  gradeLevel?: string;
+  batchName?: string;
+  department?: string;
+  units?: CourseUnit[];
   announcements: Array<{
     id: string;
     title: string;
@@ -55,7 +129,6 @@ export interface Assignment {
     type: string;
     size: string;
   }>;
-  // Summary metrics for teacher overview
   totalEnrolled?: number;
   submittedCount?: number;
   gradedCount?: number;
@@ -137,7 +210,7 @@ export interface ClassMessage {
   id: string;
   workspaceId: string;
   classId: string;
-  conversationId: string; // thread or channel ID
+  conversationId: string;
   senderUserId: string;
   senderName: string;
   senderRole: 'teacher' | 'student';
@@ -177,4 +250,3 @@ export interface MessagingNotification {
 
 // Milestone 12: Smart Classroom Foundation Re-export
 export * from './classroom.ts';
-

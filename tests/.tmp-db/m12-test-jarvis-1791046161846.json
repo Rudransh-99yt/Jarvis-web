@@ -32,6 +32,342 @@
       "role": "student",
       "department": "Applied Mathematics",
       "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "student-rogue",
+      "displayName": "Rogue Cadet",
+      "email": "rogue@outsider.org",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.850Z"
+    },
+    {
+      "id": "teacher-other",
+      "displayName": "Dr. Other",
+      "email": "other@outsider.org",
+      "role": "teacher",
+      "createdAt": "2026-10-03T16:49:21.850Z"
+    },
+    {
+      "id": "sim-student-1",
+      "displayName": "Cadet Unit 1",
+      "email": "sim-student-1@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.875Z"
+    },
+    {
+      "id": "sim-student-2",
+      "displayName": "Cadet Unit 2",
+      "email": "sim-student-2@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.875Z"
+    },
+    {
+      "id": "sim-student-3",
+      "displayName": "Cadet Unit 3",
+      "email": "sim-student-3@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.875Z"
+    },
+    {
+      "id": "sim-student-4",
+      "displayName": "Cadet Unit 4",
+      "email": "sim-student-4@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-5",
+      "displayName": "Cadet Unit 5",
+      "email": "sim-student-5@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-6",
+      "displayName": "Cadet Unit 6",
+      "email": "sim-student-6@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-7",
+      "displayName": "Cadet Unit 7",
+      "email": "sim-student-7@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-8",
+      "displayName": "Cadet Unit 8",
+      "email": "sim-student-8@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-9",
+      "displayName": "Cadet Unit 9",
+      "email": "sim-student-9@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-10",
+      "displayName": "Cadet Unit 10",
+      "email": "sim-student-10@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-11",
+      "displayName": "Cadet Unit 11",
+      "email": "sim-student-11@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-12",
+      "displayName": "Cadet Unit 12",
+      "email": "sim-student-12@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-13",
+      "displayName": "Cadet Unit 13",
+      "email": "sim-student-13@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-14",
+      "displayName": "Cadet Unit 14",
+      "email": "sim-student-14@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-15",
+      "displayName": "Cadet Unit 15",
+      "email": "sim-student-15@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-16",
+      "displayName": "Cadet Unit 16",
+      "email": "sim-student-16@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-17",
+      "displayName": "Cadet Unit 17",
+      "email": "sim-student-17@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-18",
+      "displayName": "Cadet Unit 18",
+      "email": "sim-student-18@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-19",
+      "displayName": "Cadet Unit 19",
+      "email": "sim-student-19@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-20",
+      "displayName": "Cadet Unit 20",
+      "email": "sim-student-20@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-21",
+      "displayName": "Cadet Unit 21",
+      "email": "sim-student-21@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-22",
+      "displayName": "Cadet Unit 22",
+      "email": "sim-student-22@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-23",
+      "displayName": "Cadet Unit 23",
+      "email": "sim-student-23@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-24",
+      "displayName": "Cadet Unit 24",
+      "email": "sim-student-24@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-25",
+      "displayName": "Cadet Unit 25",
+      "email": "sim-student-25@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-26",
+      "displayName": "Cadet Unit 26",
+      "email": "sim-student-26@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-27",
+      "displayName": "Cadet Unit 27",
+      "email": "sim-student-27@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-28",
+      "displayName": "Cadet Unit 28",
+      "email": "sim-student-28@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-29",
+      "displayName": "Cadet Unit 29",
+      "email": "sim-student-29@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-30",
+      "displayName": "Cadet Unit 30",
+      "email": "sim-student-30@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-31",
+      "displayName": "Cadet Unit 31",
+      "email": "sim-student-31@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-32",
+      "displayName": "Cadet Unit 32",
+      "email": "sim-student-32@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-33",
+      "displayName": "Cadet Unit 33",
+      "email": "sim-student-33@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-34",
+      "displayName": "Cadet Unit 34",
+      "email": "sim-student-34@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-35",
+      "displayName": "Cadet Unit 35",
+      "email": "sim-student-35@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-36",
+      "displayName": "Cadet Unit 36",
+      "email": "sim-student-36@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-37",
+      "displayName": "Cadet Unit 37",
+      "email": "sim-student-37@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-38",
+      "displayName": "Cadet Unit 38",
+      "email": "sim-student-38@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-39",
+      "displayName": "Cadet Unit 39",
+      "email": "sim-student-39@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-40",
+      "displayName": "Cadet Unit 40",
+      "email": "sim-student-40@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-41",
+      "displayName": "Cadet Unit 41",
+      "email": "sim-student-41@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-42",
+      "displayName": "Cadet Unit 42",
+      "email": "sim-student-42@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-43",
+      "displayName": "Cadet Unit 43",
+      "email": "sim-student-43@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-44",
+      "displayName": "Cadet Unit 44",
+      "email": "sim-student-44@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "sim-student-45",
+      "displayName": "Cadet Unit 45",
+      "email": "sim-student-45@stark.local",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "user-outsider",
+      "displayName": "Outsider",
+      "email": "outsider@domain.com",
+      "role": "student",
+      "createdAt": "2026-10-03T16:49:22.082Z"
     }
   ],
   "workspaces": [
@@ -79,6 +415,328 @@
       "userId": "student-2",
       "role": "member",
       "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-1791046161874-1pgi",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-rogue",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.874Z"
+    },
+    {
+      "id": "mem-1791046161875-duus",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-1",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.875Z"
+    },
+    {
+      "id": "mem-1791046161875-sv0f",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-2",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.875Z"
+    },
+    {
+      "id": "mem-1791046161876-1u6p",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-3",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-3lif",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-4",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-s47i",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-5",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-utja",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-6",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-6jgp",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-7",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-3o8v",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-8",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-d18p",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-9",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-kv4a",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-10",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-cb2l",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-11",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-dfzj",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-12",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-gas7",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-13",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-cniq",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-14",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-ffvw",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-15",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-uk3a",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-16",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-p8ue",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-17",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-8hw5",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-18",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-jnw5",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-19",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-8d7w",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-20",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-923m",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-21",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-ianf",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-22",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-o01h",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-23",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-atce",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-24",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-yrwy",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-25",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-gvh8",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-26",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-wl7o",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-27",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-4mta",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-28",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-nrrx",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-29",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-myll",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-30",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-4x88",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-31",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-2ipe",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-32",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-u7ht",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-33",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-wal3",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-34",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-t601",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-35",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-zs6b",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-36",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-3wve",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-37",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-kyoa",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-38",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-o4j6",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-39",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-cy6k",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-40",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-qwtf",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-41",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-dtop",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-42",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-uvzc",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-43",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-56l8",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-44",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
+    },
+    {
+      "id": "mem-1791046161876-bkgr",
+      "workspaceId": "ws-stark-core",
+      "userId": "sim-student-45",
+      "role": "member",
+      "joinedAt": "2026-10-03T16:49:21.876Z"
     }
   ],
   "conversations": [
@@ -350,11 +1008,56 @@
       "room": "Stark Tower Lab 4A",
       "studentIds": [
         "student-1",
-        "student-2"
+        "student-2",
+        "sim-student-1",
+        "sim-student-2",
+        "sim-student-3",
+        "sim-student-4",
+        "sim-student-5",
+        "sim-student-6",
+        "sim-student-7",
+        "sim-student-8",
+        "sim-student-9",
+        "sim-student-10",
+        "sim-student-11",
+        "sim-student-12",
+        "sim-student-13",
+        "sim-student-14",
+        "sim-student-15",
+        "sim-student-16",
+        "sim-student-17",
+        "sim-student-18",
+        "sim-student-19",
+        "sim-student-20",
+        "sim-student-21",
+        "sim-student-22",
+        "sim-student-23",
+        "sim-student-24",
+        "sim-student-25",
+        "sim-student-26",
+        "sim-student-27",
+        "sim-student-28",
+        "sim-student-29",
+        "sim-student-30",
+        "sim-student-31",
+        "sim-student-32",
+        "sim-student-33",
+        "sim-student-34",
+        "sim-student-35",
+        "sim-student-36",
+        "sim-student-37",
+        "sim-student-38",
+        "sim-student-39",
+        "sim-student-40",
+        "sim-student-41",
+        "sim-student-42",
+        "sim-student-43",
+        "sim-student-44",
+        "sim-student-45"
       ],
       "studentCount": 2,
       "materialsCount": 3,
-      "assignmentsCount": 3,
+      "assignmentsCount": 2,
       "announcements": [
         {
           "id": "ann-1",
@@ -580,22 +1283,6 @@
       "category": "Project",
       "teacherId": "teacher-1",
       "totalEnrolled": 1,
-      "submittedCount": 0,
-      "gradedCount": 0
-    },
-    {
-      "id": "asg-1791050132280-046j",
-      "classId": "class-phys-301",
-      "className": "PHYS-301: Advanced Quantum & Electrodynamics",
-      "title": "Quantum Entanglement & Bell Inequalities Lab",
-      "description": "Analyze experimental Bell state correlations.",
-      "instructions": "Submit lab observations and Bell parameter S calculations.",
-      "assignedDate": "2026-10-03",
-      "dueDate": "2026-11-15",
-      "maxScore": 100,
-      "category": "Lab Report",
-      "teacherId": "teacher-1",
-      "totalEnrolled": 2,
       "submittedCount": 0,
       "gradedCount": 0
     }
@@ -990,9 +1677,702 @@
       "activeStudentCount": 0,
       "createdAt": "2026-10-02T10:00:00.000Z",
       "updatedAt": "2026-10-02T10:00:00.000Z"
+    },
+    {
+      "id": "session-1791046161851-nwa1c",
+      "sessionId": "session-1791046161851-nwa1c",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "teacherId": "teacher-1",
+      "title": "PHYS-301: Wave Mechanics & Hilbert Spaces",
+      "status": "ended",
+      "boardState": {
+        "state": "ended",
+        "currentTopic": "Live Poll: Wavefunction Collapse Probability",
+        "activeSlideIndex": 0,
+        "message": "Classroom session concluded.",
+        "updatedAt": "2026-10-03T16:49:21.888Z"
+      },
+      "activeStudentCount": 0,
+      "createdAt": "2026-10-03T16:49:21.851Z",
+      "updatedAt": "2026-10-03T16:49:21.888Z",
+      "startedAt": "2026-10-03T16:49:21.854Z",
+      "endedAt": "2026-10-03T16:49:21.888Z"
+    },
+    {
+      "id": "session-1791046161937-ox6bh",
+      "sessionId": "session-1791046161937-ox6bh",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-math-240",
+      "teacherId": "teacher-1",
+      "title": "MATH-240 Differential Geometry Lecture",
+      "status": "ended",
+      "boardState": {
+        "state": "ended",
+        "currentTopic": "Stokes Theorem & Manifold Curvature",
+        "activeSlideIndex": 0,
+        "message": "Classroom session concluded.",
+        "updatedAt": "2026-10-03T16:49:21.943Z"
+      },
+      "startedAt": "2026-10-03T16:49:21.937Z",
+      "activeStudentCount": 0,
+      "createdAt": "2026-10-03T16:49:21.937Z",
+      "updatedAt": "2026-10-03T16:49:21.943Z",
+      "endedAt": "2026-10-03T16:49:21.943Z"
+    },
+    {
+      "id": "session-1791046161957-y70x0",
+      "sessionId": "session-1791046161957-y70x0",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "teacherId": "teacher-1",
+      "title": "PHYS-301 Security Verification Session",
+      "status": "ended",
+      "boardState": {
+        "state": "ended",
+        "currentTopic": "Quantum Electrodynamics",
+        "updatedAt": "2026-10-03T16:49:22.127Z",
+        "message": "Classroom session concluded."
+      },
+      "startedAt": "2026-10-03T16:49:21.957Z",
+      "activeStudentCount": 0,
+      "createdAt": "2026-10-03T16:49:21.957Z",
+      "updatedAt": "2026-10-03T16:49:22.127Z",
+      "endedAt": "2026-10-03T16:49:22.127Z"
     }
   ],
-  "classroomParticipants": [],
+  "classroomParticipants": [
+    {
+      "id": "session-1791046161851-nwa1c:student-1",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "student-1",
+      "displayName": "Alex Chen",
+      "joinedAt": "2026-10-03T16:49:21.863Z",
+      "lastSeenAt": "2026-10-03T16:49:21.889Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "alex.chen@stark.edu",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:student-2",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "student-2",
+      "displayName": "Maya Lin",
+      "joinedAt": "2026-10-03T16:49:21.865Z",
+      "lastSeenAt": "2026-10-03T16:49:21.890Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "maya.lin@stark.edu",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-1",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-1",
+      "displayName": "Cadet Unit 1",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.891Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-1@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-2",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-2",
+      "displayName": "Cadet Unit 2",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.892Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-2@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-3",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-3",
+      "displayName": "Cadet Unit 3",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.893Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-3@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-4",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-4",
+      "displayName": "Cadet Unit 4",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.894Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-4@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-5",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-5",
+      "displayName": "Cadet Unit 5",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.895Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-5@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-6",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-6",
+      "displayName": "Cadet Unit 6",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.896Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-6@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-7",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-7",
+      "displayName": "Cadet Unit 7",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.897Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-7@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-8",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-8",
+      "displayName": "Cadet Unit 8",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.898Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-8@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-9",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-9",
+      "displayName": "Cadet Unit 9",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.899Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-9@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-10",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-10",
+      "displayName": "Cadet Unit 10",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.900Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-10@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-11",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-11",
+      "displayName": "Cadet Unit 11",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.901Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-11@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-12",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-12",
+      "displayName": "Cadet Unit 12",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.902Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-12@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-13",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-13",
+      "displayName": "Cadet Unit 13",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.903Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-13@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-14",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-14",
+      "displayName": "Cadet Unit 14",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.905Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-14@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-15",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-15",
+      "displayName": "Cadet Unit 15",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.906Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-15@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-16",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-16",
+      "displayName": "Cadet Unit 16",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.907Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-16@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-17",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-17",
+      "displayName": "Cadet Unit 17",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.908Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-17@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-18",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-18",
+      "displayName": "Cadet Unit 18",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.909Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-18@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-19",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-19",
+      "displayName": "Cadet Unit 19",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.910Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-19@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-20",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-20",
+      "displayName": "Cadet Unit 20",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.911Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-20@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-21",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-21",
+      "displayName": "Cadet Unit 21",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.912Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-21@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-22",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-22",
+      "displayName": "Cadet Unit 22",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.913Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-22@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-23",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-23",
+      "displayName": "Cadet Unit 23",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.916Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-23@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-24",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-24",
+      "displayName": "Cadet Unit 24",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.917Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-24@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-25",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-25",
+      "displayName": "Cadet Unit 25",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.918Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-25@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-26",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-26",
+      "displayName": "Cadet Unit 26",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.919Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-26@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-27",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-27",
+      "displayName": "Cadet Unit 27",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.920Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-27@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-28",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-28",
+      "displayName": "Cadet Unit 28",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.921Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-28@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-29",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-29",
+      "displayName": "Cadet Unit 29",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.922Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-29@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-30",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-30",
+      "displayName": "Cadet Unit 30",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.922Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-30@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-31",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-31",
+      "displayName": "Cadet Unit 31",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.923Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-31@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-32",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-32",
+      "displayName": "Cadet Unit 32",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.924Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-32@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-33",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-33",
+      "displayName": "Cadet Unit 33",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.925Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-33@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-34",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-34",
+      "displayName": "Cadet Unit 34",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.926Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-34@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-35",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-35",
+      "displayName": "Cadet Unit 35",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.927Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-35@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-36",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-36",
+      "displayName": "Cadet Unit 36",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.927Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-36@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-37",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-37",
+      "displayName": "Cadet Unit 37",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.928Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-37@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-38",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-38",
+      "displayName": "Cadet Unit 38",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.929Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-38@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-39",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-39",
+      "displayName": "Cadet Unit 39",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.930Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-39@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-40",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-40",
+      "displayName": "Cadet Unit 40",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.931Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "tablet",
+      "metadata": {
+        "email": "sim-student-40@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-41",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-41",
+      "displayName": "Cadet Unit 41",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.931Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "mobile",
+      "metadata": {
+        "email": "sim-student-41@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161851-nwa1c:sim-student-42",
+      "sessionId": "session-1791046161851-nwa1c",
+      "studentId": "sim-student-42",
+      "displayName": "Cadet Unit 42",
+      "joinedAt": "2026-10-03T16:49:21.877Z",
+      "lastSeenAt": "2026-10-03T16:49:21.932Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "sim-student-42@stark.local",
+        "role": "student"
+      }
+    },
+    {
+      "id": "session-1791046161957-y70x0:student-1",
+      "sessionId": "session-1791046161957-y70x0",
+      "studentId": "student-1",
+      "displayName": "Alex Chen",
+      "joinedAt": "2026-10-03T16:49:22.108Z",
+      "lastSeenAt": "2026-10-03T16:49:22.128Z",
+      "connectionStatus": "disconnected",
+      "deviceType": "software_remote",
+      "metadata": {
+        "email": "alex.chen@stark.edu",
+        "role": "student"
+      }
+    }
+  ],
   "quizzes": [
     {
       "id": "quiz-seed-phys-1",

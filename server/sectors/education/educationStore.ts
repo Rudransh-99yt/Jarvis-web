@@ -1,26 +1,142 @@
-// Education Sector Data Bridge backed by Core Jarvis Persistence Layer
 import type {
   EducationClass,
   Assignment,
   StudentSubmission,
   KnowledgeSpace,
   KnowledgeSource,
-  GroundedQueryResponse
+  GroundedQueryResponse,
+  CourseUnit,
+  CourseLesson,
+  AcademicInstitution,
+  WorkspacePage,
+  WorkspaceDatabase,
+  WorkspaceTemplate,
+  PageBlock
 } from '../../../src/types/education.ts';
 import { jarvisData } from '../../data/index.ts';
+import { DEFAULT_COURSE_UNITS, DEFAULT_INSTITUTION } from './curriculumData.ts';
+import {
+  INITIAL_WORKSPACE_PAGES,
+  INITIAL_WORKSPACE_DATABASES,
+  DEFAULT_WORKSPACE_TEMPLATES
+} from './workspaceData.ts';
 
 export class EducationStore {
+  getInstitution(): AcademicInstitution {
+    return DEFAULT_INSTITUTION;
+  }
+
   // Synchronous cached accessors that read directly from current repository state
   getClasses(): EducationClass[] {
     const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
     if (state && Array.isArray(state.classes)) {
-      return state.classes.map((c: EducationClass) => ({ ...c }));
+      return state.classes.map((c: EducationClass) => {
+        const units = c.units && c.units.length > 0 ? c.units : (DEFAULT_COURSE_UNITS[c.id] || []);
+        return {
+          ...c,
+          units
+        };
+      });
     }
     return [];
   }
 
   getClass(id: string): EducationClass | undefined {
     return this.getClasses().find((c) => c.id === id);
+  }
+
+  getUnits(classId: string): CourseUnit[] {
+    const cls = this.getClass(classId);
+    if (!cls) return [];
+    return cls.units || DEFAULT_COURSE_UNITS[classId] || [];
+  }
+
+  getUnit(classId: string, unitId: string): CourseUnit | undefined {
+    const units = this.getUnits(classId);
+    return units.find((u) => u.id === unitId);
+  }
+
+  getLesson(classId: string, unitId: string, lessonId: string): CourseLesson | undefined {
+    const unit = this.getUnit(classId, unitId);
+    if (!unit) return undefined;
+    return unit.lessons.find((l) => l.id === lessonId);
+  }
+
+  toggleLessonCompletion(classId: string, unitId: string, lessonId: string, isCompleted: boolean): boolean {
+    if ((jarvisData as any)['store']) {
+      (jarvisData as any)['store'].mutate((state: any) => {
+        const c = state.classes.find((item: any) => item.id === classId);
+        if (c) {
+          if (!c.units || c.units.length === 0) {
+            c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+          }
+          const u = c.units.find((unit: any) => unit.id === unitId);
+          if (u) {
+            const l = u.lessons.find((les: any) => les.id === lessonId);
+            if (l) {
+              l.isCompleted = isCompleted;
+              // Recalculate unit mastery
+              const completedCount = u.lessons.filter((les: any) => les.isCompleted).length;
+              u.masteryPercent = Math.round((completedCount / u.lessons.length) * 100);
+              u.isCompleted = completedCount === u.lessons.length;
+            }
+          }
+        }
+      });
+      return true;
+    }
+    return false;
+  }
+
+  addUnitToCourse(classId: string, unit: Omit<CourseUnit, 'id'>): CourseUnit {
+    const newUnitId = `unit-${classId}-${Date.now().toString(36)}`;
+    const newUnit: CourseUnit = {
+      ...unit,
+      id: newUnitId,
+      courseId: classId,
+      lessons: unit.lessons || []
+    };
+
+    if ((jarvisData as any)['store']) {
+      (jarvisData as any)['store'].mutate((state: any) => {
+        const c = state.classes.find((item: any) => item.id === classId);
+        if (c) {
+          if (!c.units || c.units.length === 0) {
+            c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+          }
+          c.units.push(newUnit);
+        }
+      });
+    }
+
+    return newUnit;
+  }
+
+  addLessonToUnit(classId: string, unitId: string, lesson: Omit<CourseLesson, 'id' | 'unitId' | 'courseId'>): CourseLesson {
+    const newLessonId = `les-${unitId}-${Date.now().toString(36)}`;
+    const newLesson: CourseLesson = {
+      ...lesson,
+      id: newLessonId,
+      unitId,
+      courseId: classId
+    };
+
+    if ((jarvisData as any)['store']) {
+      (jarvisData as any)['store'].mutate((state: any) => {
+        const c = state.classes.find((item: any) => item.id === classId);
+        if (c) {
+          if (!c.units || c.units.length === 0) {
+            c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+          }
+          const u = c.units.find((unit: any) => unit.id === unitId);
+          if (u) {
+            u.lessons.push(newLesson);
+          }
+        }
+      });
+    }
+
+    return newLesson;
   }
 
   getAssignments(classId?: string): Assignment[] {
@@ -361,6 +477,204 @@ export class EducationStore {
       confidence: activeSources.length > 0 ? 0.95 : 0.85,
       timestamp: new Date().toISOString()
     };
+  }
+
+  // --- Notion-Style My Workspace Methods ---
+
+  private localPages: WorkspacePage[] = JSON.parse(JSON.stringify(INITIAL_WORKSPACE_PAGES));
+  private localDatabases: WorkspaceDatabase[] = JSON.parse(JSON.stringify(INITIAL_WORKSPACE_DATABASES));
+
+  getWorkspacePages(includeDeleted: boolean = false): WorkspacePage[] {
+    return this.localPages.filter((p) => (includeDeleted ? p.isDeleted : !p.isDeleted));
+  }
+
+  getWorkspacePage(id: string): WorkspacePage | undefined {
+    return this.localPages.find((p) => p.id === id);
+  }
+
+  createWorkspacePage(data: Partial<WorkspacePage>): WorkspacePage {
+    const now = new Date().toISOString();
+    const id = data.id || `page-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const newPage: WorkspacePage = {
+      id,
+      title: data.title || 'Untitled Page',
+      icon: data.icon || '📄',
+      coverImage: data.coverImage,
+      parentId: data.parentId !== undefined ? data.parentId : null,
+      type: data.type || 'doc',
+      ownerId: data.ownerId || 'student-1',
+      ownerName: data.ownerName || 'Alex Chen',
+      ownerRole: data.ownerRole || 'student',
+      visibility: data.visibility || 'personal',
+      tags: data.tags || ['General'],
+      blocks: data.blocks && data.blocks.length > 0 ? data.blocks : [
+        {
+          id: `blk-${Date.now()}-1`,
+          type: 'paragraph',
+          content: ''
+        }
+      ],
+      academicLink: data.academicLink,
+      isFavorite: !!data.isFavorite,
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    this.localPages.unshift(newPage);
+    return newPage;
+  }
+
+  updateWorkspacePage(id: string, data: Partial<WorkspacePage>): WorkspacePage | undefined {
+    const page = this.localPages.find((p) => p.id === id);
+    if (!page) return undefined;
+
+    if (data.title !== undefined) page.title = data.title;
+    if (data.icon !== undefined) page.icon = data.icon;
+    if (data.coverImage !== undefined) page.coverImage = data.coverImage;
+    if (data.parentId !== undefined) page.parentId = data.parentId;
+    if (data.type !== undefined) page.type = data.type;
+    if (data.tags !== undefined) page.tags = data.tags;
+    if (data.blocks !== undefined) page.blocks = data.blocks;
+    if (data.academicLink !== undefined) page.academicLink = data.academicLink;
+    if (data.isFavorite !== undefined) page.isFavorite = data.isFavorite;
+    page.updatedAt = new Date().toISOString();
+
+    return page;
+  }
+
+  updateWorkspacePageBlocks(id: string, blocks: PageBlock[]): WorkspacePage | undefined {
+    const page = this.localPages.find((p) => p.id === id);
+    if (!page) return undefined;
+
+    page.blocks = blocks;
+    page.updatedAt = new Date().toISOString();
+    return page;
+  }
+
+  deleteWorkspacePage(id: string, permanent: boolean = false): boolean {
+    const idx = this.localPages.findIndex((p) => p.id === id);
+    if (idx === -1) return false;
+
+    if (permanent) {
+      this.localPages.splice(idx, 1);
+    } else {
+      this.localPages[idx].isDeleted = true;
+      this.localPages[idx].deletedAt = new Date().toISOString();
+    }
+    return true;
+  }
+
+  restoreWorkspacePage(id: string): boolean {
+    const page = this.localPages.find((p) => p.id === id);
+    if (!page) return false;
+
+    page.isDeleted = false;
+    delete page.deletedAt;
+    page.updatedAt = new Date().toISOString();
+    return true;
+  }
+
+  getWorkspaceDatabases(): WorkspaceDatabase[] {
+    return this.localDatabases;
+  }
+
+  getWorkspaceDatabase(id: string): WorkspaceDatabase | undefined {
+    return this.localDatabases.find((db) => db.id === id);
+  }
+
+  createWorkspaceDatabase(data: Partial<WorkspaceDatabase>): WorkspaceDatabase {
+    const now = new Date().toISOString();
+    const id = data.id || `db-${Date.now()}`;
+    const newDb: WorkspaceDatabase = {
+      id,
+      title: data.title || 'New Database',
+      icon: data.icon || '📊',
+      description: data.description || '',
+      pageId: data.pageId,
+      properties: data.properties || [
+        { id: 'prop-name', name: 'Name', type: 'title' },
+        { id: 'prop-status', name: 'Status', type: 'status', options: [{ id: 'opt-1', label: 'Done', color: 'emerald' }, { id: 'opt-2', label: 'In Progress', color: 'amber' }] },
+        { id: 'prop-tags', name: 'Tags', type: 'multi_select', options: [{ id: 'tag-1', label: 'Physics', color: 'cyan' }] }
+      ],
+      items: data.items || [],
+      defaultView: data.defaultView || 'table',
+      createdAt: now,
+      updatedAt: now
+    };
+
+    this.localDatabases.unshift(newDb);
+    return newDb;
+  }
+
+  updateWorkspaceDatabase(id: string, data: Partial<WorkspaceDatabase>): WorkspaceDatabase | undefined {
+    const db = this.localDatabases.find((d) => d.id === id);
+    if (!db) return undefined;
+
+    if (data.title !== undefined) db.title = data.title;
+    if (data.icon !== undefined) db.icon = data.icon;
+    if (data.description !== undefined) db.description = data.description;
+    if (data.properties !== undefined) db.properties = data.properties;
+    if (data.items !== undefined) db.items = data.items;
+    if (data.defaultView !== undefined) db.defaultView = data.defaultView;
+    db.updatedAt = new Date().toISOString();
+
+    return db;
+  }
+
+  getWorkspaceTemplates(): WorkspaceTemplate[] {
+    return DEFAULT_WORKSPACE_TEMPLATES;
+  }
+
+  createPageFromTemplate(templateId: string, customTitle?: string, academicLink?: any): WorkspacePage {
+    const template = DEFAULT_WORKSPACE_TEMPLATES.find((t) => t.id === templateId) || DEFAULT_WORKSPACE_TEMPLATES[0];
+    const newBlocks: PageBlock[] = JSON.parse(JSON.stringify(template.blocks)).map((b: PageBlock) => ({
+      ...b,
+      id: `blk-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
+    }));
+
+    return this.createWorkspacePage({
+      title: customTitle || template.defaultTitle,
+      icon: template.icon,
+      type: template.type,
+      tags: [...template.sampleTags],
+      blocks: newBlocks,
+      academicLink
+    });
+  }
+
+  searchWorkspace(query: string): Array<{ id: string; title: string; type: string; snippet: string; icon?: string }> {
+    const term = query.toLowerCase().trim();
+    if (!term) return [];
+
+    const results: Array<{ id: string; title: string; type: string; snippet: string; icon?: string }> = [];
+
+    for (const page of this.localPages.filter((p) => !p.isDeleted)) {
+      const matchTitle = page.title.toLowerCase().includes(term);
+      const matchTags = page.tags.some((t) => t.toLowerCase().includes(term));
+      const matchBlock = page.blocks.find((b) => b.content.toLowerCase().includes(term));
+
+      if (matchTitle || matchTags || matchBlock) {
+        results.push({
+          id: page.id,
+          title: page.title,
+          type: page.type,
+          icon: page.icon,
+          snippet: matchBlock ? matchBlock.content.slice(0, 120) : page.tags.join(' · ')
+        });
+      }
+    }
+
+    return results;
+  }
+
+  getWorkspacePagesForLesson(courseId: string, lessonId: string): WorkspacePage[] {
+    return this.localPages.filter(
+      (p) =>
+        !p.isDeleted &&
+        p.academicLink?.courseId === courseId &&
+        p.academicLink?.lessonId === lessonId
+    );
   }
 }
 
