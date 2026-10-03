@@ -65,16 +65,16 @@ export const CommandDeckSector: React.FC<CommandDeckSectorProps> = ({
   onClearLogs
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* Sector Sub-header Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border border-cyan-500/20 bg-black/40 px-4 py-3 rounded-lg backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
-          <span className="text-xs font-mono tracking-widest text-cyan-400 font-bold uppercase">
+      <div className="flex flex-wrap items-center justify-between gap-3 border border-cyan-500/20 bg-black/40 px-4 py-3 rounded-lg backdrop-blur-md min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-2 w-2 rounded-full bg-cyan-400 animate-ping shrink-0" />
+          <span className="text-xs font-mono tracking-widest text-cyan-400 font-bold uppercase truncate">
             SECTOR: COMMAND DECK // CORE TACTICAL OPERATIONS
           </span>
         </div>
-        <div className="flex items-center gap-4 text-xs font-mono text-cyan-400/70">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-cyan-400/70 shrink-0">
           <span>ARC POWER: <strong className="text-cyan-300">{corePower.toFixed(1)} GW</strong></span>
           <span>•</span>
           <span>SHIELD RESONANCE: <strong className="text-cyan-300">94.0%</strong></span>
@@ -84,9 +84,9 @@ export const CommandDeckSector: React.FC<CommandDeckSectorProps> = ({
       </div>
 
       {/* Primary Tri-Column HUD Cockpit Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 w-full min-w-0">
         {/* Left Column: Directives & Telemetry */}
-        <div className="space-y-6 lg:col-span-3">
+        <div className="space-y-6 lg:col-span-3 min-w-0 flex flex-col">
           <MemosPanel
             directives={directives}
             onAddDirective={onAddDirective}
@@ -100,7 +100,7 @@ export const CommandDeckSector: React.FC<CommandDeckSectorProps> = ({
         </div>
 
         {/* Center Column: Arc Reactor Core & Holographic Waveform */}
-        <div className="flex flex-col items-center justify-between space-y-6 lg:col-span-6">
+        <div className="flex flex-col items-center justify-between space-y-6 lg:col-span-6 min-w-0">
           <ArcReactor
             theme={theme}
             isSpeaking={isSpeaking}
@@ -108,13 +108,13 @@ export const CommandDeckSector: React.FC<CommandDeckSectorProps> = ({
             onOverdrive={onToggleOverclock}
           />
 
-          <div className="w-full">
+          <div className="w-full min-w-0 flex justify-center">
             <AudioWaveform isSpeaking={isSpeaking} isListening={isListening} theme={theme} />
           </div>
         </div>
 
         {/* Right Column: Protocols & Armor Matrix */}
-        <div className="space-y-6 lg:col-span-3">
+        <div className="space-y-6 lg:col-span-3 min-w-0 flex flex-col">
           <ProtocolsPanel protocols={protocols} onToggleProtocol={onToggleProtocol} />
           <ArmorMatrix
             armors={armors}
@@ -125,7 +125,7 @@ export const CommandDeckSector: React.FC<CommandDeckSectorProps> = ({
       </div>
 
       {/* Terminal & Tactical Log Console */}
-      <div className="w-full">
+      <div className="w-full min-w-0">
         <TerminalLogs
           logs={logs}
           isListening={isListening}

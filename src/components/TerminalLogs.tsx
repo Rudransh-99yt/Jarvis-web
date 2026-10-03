@@ -67,15 +67,15 @@ export const TerminalLogs: React.FC<TerminalLogsProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-2 font-mono-code text-xs h-full bg-black/60 border border-cyan-500/20 rounded p-3">
+    <div className="flex flex-col gap-2 font-mono-code text-xs w-full min-w-0 bg-black/60 border border-cyan-500/20 rounded p-3">
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-cyan-400" />
-          <span className="text-cyan-300 font-bold tracking-wider">COMMAND INTERFACE & LOGS</span>
+      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2 gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <Terminal className="w-4 h-4 text-cyan-400 shrink-0" />
+          <span className="text-cyan-300 font-bold tracking-wider truncate">COMMAND INTERFACE & LOGS</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-cyan-500/70">
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[10px] text-cyan-500/70 hidden sm:inline">
             {isTransmitting
               ? 'UPLINK ACTIVE (STREAMING)...'
               : isSpeaking
@@ -90,7 +90,7 @@ export const TerminalLogs: React.FC<TerminalLogsProps> = ({
               onClearLogs();
             }}
             title="Clear Log Feed"
-            className="p-1 text-cyan-400/50 hover:text-cyan-200 transition-colors"
+            className="p-1 text-cyan-400/50 hover:text-cyan-200 transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -100,21 +100,21 @@ export const TerminalLogs: React.FC<TerminalLogsProps> = ({
       {/* Scrollable Log Terminal Feed */}
       <div
         ref={logContainerRef}
-        className="flex-1 overflow-y-auto space-y-1.5 p-2 bg-black/50 border border-cyan-500/10 rounded min-h-[140px] max-h-[220px]"
+        className="flex-1 overflow-y-auto space-y-1.5 p-2 bg-black/50 border border-cyan-500/10 rounded min-h-[140px] max-h-[220px] w-full min-w-0"
       >
         {logs.map((log) => (
-          <div key={log.id} className={`text-[11px] leading-relaxed flex gap-2 ${getLogStyle(log.type)}`}>
-            <span className="text-cyan-600 shrink-0 text-[10px]">[{log.timestamp}]</span>
+          <div key={log.id} className={`text-[11px] leading-relaxed flex items-start gap-2 min-w-0 ${getLogStyle(log.type)}`}>
+            <span className="text-cyan-600 shrink-0 text-[10px] font-mono">[{log.timestamp}]</span>
             <span className="font-bold text-cyan-400 shrink-0">
               {log.type === 'user' ? 'STARK >' : log.type === 'jarvis' ? 'JARVIS :' : 'SYS >'}
             </span>
-            <span className="break-words whitespace-pre-wrap">{log.message}</span>
+            <span className="break-words whitespace-pre-wrap flex-1 min-w-0">{log.message}</span>
           </div>
         ))}
       </div>
 
       {/* Quick Suggestion Chips */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none w-full min-w-0">
         {quickCommands.map((cmd) => (
           <button
             key={cmd}
@@ -123,7 +123,7 @@ export const TerminalLogs: React.FC<TerminalLogsProps> = ({
               soundEffects.playClick();
               onExecuteCommand(cmd);
             }}
-            className={`px-2 py-0.5 rounded text-[10px] border whitespace-nowrap transition-colors ${
+            className={`px-2 py-0.5 rounded text-[10px] border whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
               isTransmitting
                 ? 'opacity-50 cursor-not-allowed bg-cyan-950/20 border-cyan-500/10 text-cyan-500/40'
                 : 'bg-cyan-950/40 hover:bg-cyan-900/60 border-cyan-500/20 text-cyan-300'
@@ -135,7 +135,7 @@ export const TerminalLogs: React.FC<TerminalLogsProps> = ({
       </div>
 
       {/* Input & Voice Bar */}
-      <form onSubmit={handleSubmit} className="flex gap-1.5 pt-1">
+      <form onSubmit={handleSubmit} className="flex gap-1.5 pt-1 w-full min-w-0">
         <button
           type="button"
           disabled={isTransmitting}
@@ -149,14 +149,14 @@ export const TerminalLogs: React.FC<TerminalLogsProps> = ({
             }
           }}
           title={isListening ? 'Stop Listening' : 'Speak to Jarvis (Voice Input)'}
-          className={`px-3 py-1.5 rounded border transition-all flex items-center gap-1.5 text-xs font-bold ${
+          className={`px-3 py-1.5 rounded border transition-all flex items-center gap-1.5 text-xs font-bold shrink-0 cursor-pointer ${
             isListening
               ? 'bg-red-500/30 border-red-500 text-red-200 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]'
               : 'bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-400 text-cyan-200'
           }`}
         >
           {isListening ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4 text-cyan-300" />}
-          <span>{isListening ? 'LISTENING' : 'VOICE'}</span>
+          <span className="hidden xs:inline">{isListening ? 'LISTENING' : 'VOICE'}</span>
         </button>
 
         <input
@@ -169,15 +169,15 @@ export const TerminalLogs: React.FC<TerminalLogsProps> = ({
               ? 'Synthesizing neural response...'
               : isListening
               ? 'Listening for your voice...'
-              : 'Type directive or voice command (e.g., "What is the speed of light?")...'
+              : 'Type directive or command (e.g., "Status Report")...'
           }
-          className="flex-1 bg-black/80 border border-cyan-500/30 rounded px-3 py-1.5 text-xs text-white placeholder-cyan-500/40 focus:outline-none focus:border-cyan-400 font-mono-code disabled:opacity-60"
+          className="flex-1 min-w-0 bg-black/80 border border-cyan-500/30 rounded px-3 py-1.5 text-xs text-white placeholder-cyan-500/40 focus:outline-none focus:border-cyan-400 font-mono-code disabled:opacity-60"
         />
 
         <button
           type="submit"
           disabled={isTransmitting || !inputVal.trim()}
-          className={`px-3.5 py-1.5 rounded flex items-center gap-1 font-bold transition-all border ${
+          className={`px-3.5 py-1.5 rounded flex items-center gap-1 font-bold transition-all border shrink-0 cursor-pointer ${
             isTransmitting
               ? 'bg-cyan-950/40 border-cyan-500/30 text-cyan-400/60 cursor-not-allowed'
               : 'bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-400 text-cyan-200 shadow-[0_0_8px_rgba(6,182,212,0.2)]'

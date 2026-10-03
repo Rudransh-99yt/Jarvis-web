@@ -68,6 +68,10 @@ export interface Citation {
   excerpt: string;
   location?: string;
   score?: number;
+  videoId?: string;
+  startSeconds?: number;
+  endSeconds?: number;
+  timestampLabel?: string;
 }
 
 export interface GroundedQueryOptions {

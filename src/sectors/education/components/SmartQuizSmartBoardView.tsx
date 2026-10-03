@@ -193,14 +193,14 @@ export const SmartQuizSmartBoardView: React.FC<SmartQuizSmartBoardViewProps> = (
       </div>
 
       {/* Prominent Question Prompt */}
-      <div className="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md">
-        <h2 className="text-xl md:text-3xl font-extrabold text-white leading-relaxed tracking-tight">
+      <div className="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md min-w-0">
+        <h2 className="text-xl md:text-3xl font-extrabold text-white leading-relaxed tracking-tight break-words">
           {activeQuestion?.questionText || aggregate?.questionText}
         </h2>
       </div>
 
       {/* 4 Interactive Stylized Option Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
         {options.map((optText, idx) => {
           const letter = String.fromCharCode(65 + idx);
           const count = aggregate?.optionCounts?.[letter] || 0;
@@ -210,7 +210,7 @@ export const SmartQuizSmartBoardView: React.FC<SmartQuizSmartBoardViewProps> = (
           return (
             <div
               key={letter}
-              className={`relative overflow-hidden p-5 rounded-2xl border-2 transition-all duration-500 flex flex-col justify-between ${
+              className={`relative overflow-hidden p-5 rounded-2xl border-2 transition-all duration-500 flex flex-col justify-between min-w-0 ${
                 isCorrect
                   ? 'bg-emerald-950/60 border-emerald-500 text-emerald-100 shadow-2xl shadow-emerald-900/40 ring-2 ring-emerald-500/50'
                   : isLocked
@@ -219,7 +219,7 @@ export const SmartQuizSmartBoardView: React.FC<SmartQuizSmartBoardViewProps> = (
               }`}
             >
               {/* Option Letter & Text */}
-              <div className="flex items-start space-x-3.5 z-10">
+              <div className="flex items-start space-x-3.5 z-10 min-w-0">
                 <span
                   className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-base font-mono shrink-0 shadow-md ${
                     isCorrect
@@ -231,7 +231,7 @@ export const SmartQuizSmartBoardView: React.FC<SmartQuizSmartBoardViewProps> = (
                 >
                   {letter}
                 </span>
-                <span className="text-base md:text-lg font-medium leading-snug pt-1">
+                <span className="text-base md:text-lg font-medium leading-snug pt-1 break-words min-w-0 flex-1">
                   {optText}
                 </span>
               </div>

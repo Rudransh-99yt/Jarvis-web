@@ -57,25 +57,25 @@ export const SystemTelemetry: React.FC<SystemTelemetryProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 font-mono-code text-xs h-full">
+    <div className="flex flex-col gap-3 font-mono-code text-xs w-full min-w-0">
       {/* Telemetry Header */}
-      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-1.5">
-        <span className="flex items-center gap-1.5 text-cyan-300 font-bold tracking-wider">
-          <Activity className="w-4 h-4 text-cyan-400" />
+      <div className="flex items-center justify-between border-b border-cyan-500/20 pb-1.5 gap-2 min-w-0">
+        <span className="flex items-center gap-1.5 text-cyan-300 font-bold tracking-wider truncate">
+          <Activity className="w-4 h-4 text-cyan-400 shrink-0" />
           SYSTEM TELEMETRY
         </span>
-        <span className="text-[10px] text-cyan-400/60 uppercase">
+        <span className="text-[10px] text-cyan-400/60 uppercase shrink-0">
           {isScanning ? 'RUNNING SWEEP...' : 'MONITORED REAL-TIME'}
         </span>
       </div>
 
       {/* Metric Bars */}
-      <div className="space-y-2.5 bg-black/40 border border-cyan-500/20 rounded p-2.5">
+      <div className="space-y-2.5 bg-black/40 border border-cyan-500/20 rounded p-2.5 w-full min-w-0">
         {metrics.map((m) => (
-          <div key={m.name} className="space-y-1">
-            <div className="flex justify-between items-center text-[11px]">
-              <span className="text-cyan-200/80">{m.name}</span>
-              <span className="font-orbitron font-bold text-white">
+          <div key={m.name} className="space-y-1 w-full min-w-0">
+            <div className="flex justify-between items-center text-[11px] gap-2 min-w-0">
+              <span className="text-cyan-200/80 truncate">{m.name}</span>
+              <span className="font-orbitron font-bold text-white shrink-0">
                 {m.value}
                 <span className="text-[10px] text-cyan-400/70 font-normal ml-0.5">{m.unit}</span>
               </span>
@@ -93,16 +93,16 @@ export const SystemTelemetry: React.FC<SystemTelemetryProps> = ({
       </div>
 
       {/* Radar Perimeter Sweep Display */}
-      <div className="relative bg-black/60 border border-cyan-500/20 rounded p-3 flex flex-col items-center justify-center overflow-hidden">
-        <div className="w-full flex items-center justify-between text-[10px] text-cyan-400/80 mb-2">
-          <span className="flex items-center gap-1">
-            <Compass className="w-3.5 h-3.5 text-cyan-400" />
+      <div className="relative bg-black/60 border border-cyan-500/20 rounded p-3 flex flex-col items-center justify-center overflow-hidden w-full min-w-0">
+        <div className="w-full flex items-center justify-between text-[10px] text-cyan-400/80 mb-2 gap-2 min-w-0">
+          <span className="flex items-center gap-1 truncate">
+            <Compass className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             STARK ORBITAL RADAR
           </span>
-          <span className="text-cyan-300 font-bold">RANGE: 25 KM</span>
+          <span className="text-cyan-300 font-bold shrink-0">RANGE: 25 KM</span>
         </div>
 
-        <div className="relative w-36 h-36 rounded-full border border-cyan-500/40 flex items-center justify-center bg-cyan-950/20">
+        <div className="relative w-36 h-36 rounded-full border border-cyan-500/40 flex items-center justify-center bg-cyan-950/20 my-1">
           {/* Concentric distance rings */}
           <div className="absolute w-24 h-24 rounded-full border border-dashed border-cyan-500/20" />
           <div className="absolute w-12 h-12 rounded-full border border-cyan-500/30" />
@@ -127,7 +127,7 @@ export const SystemTelemetry: React.FC<SystemTelemetryProps> = ({
           <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
         </div>
 
-        <div className="w-full flex items-center justify-between text-[9px] text-cyan-400/60 mt-2 px-1">
+        <div className="w-full flex flex-wrap items-center justify-between gap-1 text-[9px] text-cyan-400/60 mt-2 px-1 min-w-0">
           <span>LAT: 34.0259° N</span>
           <span>LNG: 118.7798° W</span>
           <span>ALT: 420 M</span>
@@ -135,30 +135,30 @@ export const SystemTelemetry: React.FC<SystemTelemetryProps> = ({
       </div>
 
       {/* Power Allocation Matrix */}
-      <div className="bg-black/40 border border-cyan-500/20 rounded p-2.5">
-        <div className="text-[10px] text-cyan-400/80 mb-2 flex items-center justify-between">
-          <span className="flex items-center gap-1">
-            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+      <div className="bg-black/40 border border-cyan-500/20 rounded p-2.5 w-full min-w-0">
+        <div className="text-[10px] text-cyan-400/80 mb-2 flex items-center justify-between gap-2 min-w-0">
+          <span className="flex items-center gap-1 truncate">
+            <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             POWER BUS DISTRIBUTION
           </span>
-          <span className="text-white font-orbitron font-bold">100% REGULATED</span>
+          <span className="text-white font-orbitron font-bold shrink-0">100% REGULATED</span>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-[10px]">
-          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20">
-            <div className="text-cyan-400/70">PROPULSION</div>
-            <div className="text-white font-bold font-orbitron">40%</div>
+        <div className="grid grid-cols-2 gap-2 text-[10px] w-full min-w-0">
+          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20 min-w-0">
+            <div className="text-cyan-400/70 text-[9px] truncate">PROPULSION</div>
+            <div className="text-white font-bold font-orbitron truncate">40%</div>
           </div>
-          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20">
-            <div className="text-cyan-400/70">REPULSORS</div>
-            <div className="text-white font-bold font-orbitron">35%</div>
+          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20 min-w-0">
+            <div className="text-cyan-400/70 text-[9px] truncate">REPULSORS</div>
+            <div className="text-white font-bold font-orbitron truncate">35%</div>
           </div>
-          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20">
-            <div className="text-cyan-400/70">HUD / AVIONICS</div>
-            <div className="text-white font-bold font-orbitron">15%</div>
+          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20 min-w-0">
+            <div className="text-cyan-400/70 text-[9px] truncate">HUD / AVIONICS</div>
+            <div className="text-white font-bold font-orbitron truncate">15%</div>
           </div>
-          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20">
-            <div className="text-cyan-400/70">LIFE SUPPORT</div>
-            <div className="text-white font-bold font-orbitron">10%</div>
+          <div className="bg-cyan-950/30 p-1.5 rounded border border-cyan-500/20 min-w-0">
+            <div className="text-cyan-400/70 text-[9px] truncate">LIFE SUPPORT</div>
+            <div className="text-white font-bold font-orbitron truncate">10%</div>
           </div>
         </div>
       </div>

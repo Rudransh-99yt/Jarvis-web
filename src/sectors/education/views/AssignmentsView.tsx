@@ -144,9 +144,9 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
       </div>
 
       {/* Main Grid: Assignment List & Detail View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full min-w-0">
         {/* Left Column (5 cols): Assignment List */}
-        <div className="space-y-3 lg:col-span-5">
+        <div className="space-y-3 lg:col-span-5 min-w-0">
           <h2 className="text-xs font-mono tracking-widest text-cyan-400 font-bold uppercase px-1">
             All Assignments ({assignments.length})
           </h2>
@@ -200,7 +200,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
 
         {/* Right Column (7 cols): Assignment Detailed View */}
         {selectedAsg && (
-          <div className="space-y-6 lg:col-span-7">
+          <div className="space-y-6 lg:col-span-7 min-w-0">
             <div className="p-6 rounded-xl border border-cyan-500/20 bg-black/40 backdrop-blur-sm space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-500/10 pb-4">
                 <div>

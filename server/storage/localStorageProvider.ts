@@ -72,10 +72,67 @@ export class LocalStorageProvider implements IStorageProvider {
   async getObject(key: string): Promise<Buffer | null> {
     try {
       const filePath = this.resolveSafePath(key);
-      return await fs.promises.readFile(filePath);
+      try {
+        return await fs.promises.readFile(filePath);
+      } catch (err: any) {
+        if (err.code === 'ENOENT' && (key === 'obj-seed-vid-1' || key === 'obj-seed-vid-2')) {
+          await this.ensureSeedMedia(key);
+          return await fs.promises.readFile(filePath);
+        }
+        if (err.code === 'ENOENT') return null;
+        throw err;
+      }
     } catch (err: any) {
       if (err.code === 'ENOENT') return null;
       throw err;
+    }
+  }
+
+  /**
+   * Generates deterministic seed media fixture on demand if not present.
+   */
+  private async ensureSeedMedia(key: string): Promise<void> {
+    await this.init();
+    const filePath = this.resolveSafePath(key);
+    try {
+      const { execFile } = await import('node:child_process');
+      const { promisify } = await import('node:util');
+      const execFileAsync = promisify(execFile);
+
+      const title =
+        key === 'obj-seed-vid-1'
+          ? 'STARK ACADEMIC // PHYS-301\\nQUANTUM HARMONIC OSCILLATOR'
+          : 'STARK ACADEMIC // MATH-240\\nSTOKES THEOREM & DIFFERENTIAL FORMS';
+      const freq = key === 'obj-seed-vid-1' ? '220' : '330';
+
+      await execFileAsync('ffmpeg', [
+        '-y',
+        '-f',
+        'lavfi',
+        '-i',
+        `testsrc=size=1280x720:rate=30,drawtext=text='${title}':fontcolor=white:fontsize=36:x=(w-text_w)/2:y=(h-text_h)/2-50:box=1:boxcolor=black@0.6,drawtext=text='Time\\: %{pts\\:hms}':fontcolor=cyan:fontsize=28:x=(w-text_w)/2:y=(h-text_h)/2+60`,
+        '-f',
+        'lavfi',
+        '-i',
+        `sine=frequency=${freq}:sample_rate=44100`,
+        '-c:v',
+        'libx264',
+        '-pix_fmt',
+        'yuv420p',
+        '-t',
+        '15',
+        '-c:a',
+        'aac',
+        '-b:a',
+        '128k',
+        '-movflags',
+        '+faststart',
+        '-f',
+        'mp4',
+        filePath
+      ]);
+    } catch (err) {
+      console.warn(`[LocalStorageProvider] ffmpeg on-demand seed generation skipped for ${key}:`, err);
     }
   }
 

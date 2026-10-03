@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Production build
+dist
+dist-ssr
+*.local
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Local storage objects (deterministic fixtures/uploads - keep .gitkeep)
+data/storage/objects/*
+!data/storage/objects/.gitkeep
+
+# Logs and runtime databases
+*.log
+data/jarvis-db.json.tmp.*
+
+# OS / Editor files
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

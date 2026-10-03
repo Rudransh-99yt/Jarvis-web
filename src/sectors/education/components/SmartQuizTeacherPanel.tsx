@@ -65,7 +65,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
   const [points, setPoints] = useState<number>(10);
 
   // 1. Fetch Quizzes for this classroom session
-  const fetchQuizzes = useCallback(async () => {
+  const fetchQuizzes = useCallback(async (preferredSelectId?: string) => {
     try {
       setIsLoading(true);
       const res = await fetch(`/api/classroom/quizzes?sessionId=${sessionId}&classId=${classId}&workspaceId=ws-stark-core`, {
@@ -73,16 +73,26 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
       });
       if (res.ok) {
         const data = await res.json();
-        setQuizzes(data.quizzes || []);
+        const fetchedQuizzes: Quiz[] = data.quizzes || [];
+        setQuizzes(fetchedQuizzes);
 
-        // Pick live quiz if one exists, else first
-        const live = (data.quizzes || []).find((q: Quiz) => q.status === 'live' || q.status === 'paused');
-        if (live) {
-          setSelectedQuizId(live.id);
-          onQuizChange(live);
-        } else if (!selectedQuizId && data.quizzes?.length > 0) {
-          setSelectedQuizId(data.quizzes[0].id);
-        }
+        setSelectedQuizId((prevId) => {
+          // If preferred target specified and exists, select it
+          if (preferredSelectId && fetchedQuizzes.some((q) => q.id === preferredSelectId)) {
+            return preferredSelectId;
+          }
+          // If previous selection still exists in the fetched list, preserve it!
+          if (prevId && fetchedQuizzes.some((q) => q.id === prevId)) {
+            return prevId;
+          }
+          // If a quiz is live or paused, prioritize selecting it
+          const live = fetchedQuizzes.find((q) => q.status === 'live' || q.status === 'paused');
+          if (live) {
+            return live.id;
+          }
+          // Fall back to first quiz or null
+          return fetchedQuizzes.length > 0 ? fetchedQuizzes[0].id : null;
+        });
       }
     } catch (err) {
       console.warn('Failed to fetch quizzes:', err);
@@ -97,6 +107,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
 
   // 2. Fetch selected quiz details, questions & active state
   const fetchQuizDetails = useCallback(async (quizId: string) => {
+    if (!quizId) return;
     try {
       const res = await fetch(`/api/classroom/quizzes/${quizId}?workspaceId=ws-stark-core`, {
         headers: { 'x-user-id': userId, 'x-user-role': 'teacher' }
@@ -104,9 +115,16 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
       if (res.ok) {
         const data = await res.json();
         setCurrentQuestions(data.questions || []);
-        onQuizChange(data.quiz);
+
+        // Update local quiz object if changed
+        setQuizzes((prev) =>
+          prev.map((q) => (q.id === data.quiz.id ? data.quiz : q))
+        );
 
         if (data.quiz.status === 'live' || data.quiz.status === 'paused') {
+          // Notify parent of active live quiz
+          onQuizChange(data.quiz);
+
           // Fetch live active question & aggregate
           const stateRes = await fetch(`/api/classroom/quizzes/${quizId}/active-question?workspaceId=ws-stark-core`, {
             headers: { 'x-user-id': userId, 'x-user-role': 'teacher' }
@@ -116,6 +134,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
             setCurrentAggregate(stateData.aggregate);
           }
         } else if (data.quiz.status === 'completed') {
+          onQuizChange(data.quiz);
+
           // Fetch results
           const resRes = await fetch(`/api/classroom/quizzes/${quizId}/results?workspaceId=ws-stark-core`, {
             headers: { 'x-user-id': userId, 'x-user-role': 'teacher' }
@@ -124,6 +144,9 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
             const resData = await resRes.json();
             setQuizResults(resData.results);
           }
+        } else {
+          setCurrentAggregate(null);
+          setQuizResults(null);
         }
       }
     } catch (err) {
@@ -134,18 +157,14 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
   useEffect(() => {
     if (selectedQuizId) {
       fetchQuizDetails(selectedQuizId);
+    } else {
+      setCurrentQuestions([]);
+      setCurrentAggregate(null);
+      setQuizResults(null);
     }
   }, [selectedQuizId, fetchQuizDetails]);
 
-  // Keep selected quiz in sync with external activeQuiz prop
-  useEffect(() => {
-    if (activeQuiz && activeQuiz.id !== selectedQuizId) {
-      setSelectedQuizId(activeQuiz.id);
-      fetchQuizDetails(activeQuiz.id);
-    }
-  }, [activeQuiz]);
-
-  const activeSelectedQuiz = quizzes.find((q) => q.id === selectedQuizId) || activeQuiz;
+  const activeSelectedQuiz = quizzes.find((q) => q.id === selectedQuizId) || null;
 
   // Actions
   const handleCreateQuiz = async (e: React.FormEvent) => {
@@ -174,8 +193,16 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         setNewTitle('');
         setNewDescription('');
         setShowCreateModal(false);
-        await fetchQuizzes();
+
+        // Add new quiz immutably and select it immediately
+        setQuizzes((prev) => {
+          const exists = prev.some((q) => q.id === data.quiz.id);
+          return exists ? prev.map((q) => (q.id === data.quiz.id ? data.quiz : q)) : [...prev, data.quiz];
+        });
         setSelectedQuizId(data.quiz.id);
+        setCurrentQuestions([]);
+        setCurrentAggregate(null);
+        setQuizResults(null);
       }
     } catch (err: any) {
       alert(`Error creating quiz: ${err.message}`);
@@ -238,8 +265,10 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
       if (res.ok) {
         const data = await res.json();
         showNotice('Quiz published and ready to launch!');
-        onQuizChange(data.quiz);
-        fetchQuizzes();
+        setQuizzes((prev) => prev.map((q) => (q.id === data.quiz.id ? data.quiz : q)));
+        if (activeQuiz?.id === data.quiz.id) {
+          onQuizChange(data.quiz);
+        }
       }
     } catch (err: any) {
       alert(`Failed to ready quiz: ${err.message}`);
@@ -264,9 +293,9 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
       if (res.ok) {
         const data = await res.json();
         showNotice('Quiz is now LIVE on Smart Board and Student Remotes!');
+        setQuizzes((prev) => prev.map((q) => (q.id === data.quiz.id ? data.quiz : q)));
         onQuizChange(data.quiz);
-        setCurrentAggregate(data.aggregate);
-        fetchQuizzes();
+        setCurrentAggregate(data.aggregate || null);
         fetchQuizDetails(selectedQuizId);
       }
     } catch (err: any) {
@@ -318,13 +347,13 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         const data = await res.json();
         if (data.completed) {
           showNotice('Quiz completed! Final scores computed.');
-          setQuizResults(data.results);
+          setQuizResults(data.results || null);
         } else {
           showNotice(`Advanced to question ${(data.quiz.currentQuestionIndex || 0) + 1}!`);
-          setCurrentAggregate(data.aggregate);
+          setCurrentAggregate(data.aggregate || null);
         }
+        setQuizzes((prev) => prev.map((q) => (q.id === data.quiz.id ? data.quiz : q)));
         onQuizChange(data.quiz);
-        fetchQuizzes();
         fetchQuizDetails(selectedQuizId);
       }
     } catch (err: any) {
@@ -352,8 +381,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
       if (res.ok) {
         const data = await res.json();
         showNotice(isPaused ? 'Quiz resumed.' : 'Quiz paused.');
+        setQuizzes((prev) => prev.map((q) => (q.id === data.quiz.id ? data.quiz : q)));
         onQuizChange(data.quiz);
-        fetchQuizzes();
       }
     } catch (err: any) {
       alert(`Action failed: ${err.message}`);
@@ -379,8 +408,9 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
       if (res.ok) {
         const data = await res.json();
         showNotice('Smart Quiz concluded! Final leaderboard saved.');
-        setQuizResults(data.results);
-        fetchQuizzes();
+        setQuizResults(data.results || null);
+        setQuizzes((prev) => prev.map((q) => (q.id === data.quiz.id ? data.quiz : q)));
+        onQuizChange(data.quiz);
         fetchQuizDetails(selectedQuizId);
       }
     } catch (err: any) {
@@ -459,7 +489,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         </div>
 
         <button
-          onClick={fetchQuizzes}
+          onClick={() => fetchQuizzes()}
           title="Refresh Quizzes"
           className="p-1.5 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-md transition"
         >

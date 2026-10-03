@@ -72,11 +72,11 @@ export const ArcReactor: React.FC<ArcReactorProps> = ({
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center py-4 select-none">
+    <div className="relative flex flex-col items-center justify-center py-2 select-none w-full min-w-0">
       {/* Reactor Housing Frame */}
       <div 
         onClick={handleReactorClick}
-        className="relative w-64 h-64 md:w-80 md:h-80 cursor-pointer flex items-center justify-center group transition-transform active:scale-95"
+        className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 cursor-pointer flex items-center justify-center group transition-transform active:scale-95 my-2 shrink-0"
         title="Click to pulse Arc Reactor energy output"
       >
         {/* Ambient Backlight Glow */}
@@ -147,11 +147,11 @@ export const ArcReactor: React.FC<ArcReactorProps> = ({
           {[...Array(10)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-4 h-7 -translate-x-1/2 rounded-sm shadow-md transition-colors duration-300"
+              className="absolute w-3.5 h-6 sm:w-4 sm:h-7 -translate-x-1/2 rounded-sm shadow-md transition-colors duration-300"
               style={{
                 top: '50%',
                 left: '50%',
-                transform: `rotate(${i * 36}deg) translateY(-88px) translateX(-50%)`,
+                transform: `rotate(${i * 36}deg) translateY(-78px) translateX(-50%)`,
                 backgroundColor: isOverdrive ? colors.accent : `${colors.ring}bb`,
                 boxShadow: `0 0 10px ${colors.glow}`
               }}
@@ -161,7 +161,7 @@ export const ArcReactor: React.FC<ArcReactorProps> = ({
 
         {/* Inner Reactor Center Ring */}
         <div 
-          className={`relative z-10 w-32 h-32 md:w-36 md:h-36 rounded-full flex flex-col items-center justify-center border-4 backdrop-blur-md shadow-2xl transition-all duration-500 ${
+          className={`relative z-10 w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full flex flex-col items-center justify-center border-4 backdrop-blur-md shadow-2xl transition-all duration-500 ${
             isOverdrive 
               ? 'scale-110 border-white bg-cyan-950/70' 
               : isSpeaking
@@ -176,46 +176,46 @@ export const ArcReactor: React.FC<ArcReactorProps> = ({
           {/* Inner Vibranium Core */}
           <div className="absolute inset-3 rounded-full border border-dashed border-white/40 animate-spin-reverse-slow" />
           
-          <div className="text-center z-10">
-            <span className="text-[10px] tracking-widest text-cyan-200/80 font-mono-code uppercase block">
+          <div className="text-center z-10 px-2 min-w-0">
+            <span className="text-[9px] sm:text-[10px] tracking-widest text-cyan-200/80 font-mono-code uppercase block truncate">
               {isOverdrive ? 'OVERDRIVE' : isListening ? 'LISTENING' : isSpeaking ? 'ACTIVE VOCAL' : 'CORE FLUX'}
             </span>
-            <div className={`text-xl md:text-2xl font-orbitron font-bold tracking-wider ${colors.text}`}>
+            <div className={`text-lg sm:text-xl md:text-2xl font-orbitron font-bold tracking-wider ${colors.text} truncate`}>
               {powerOutput.toFixed(2)}
             </div>
-            <span className="text-[9px] tracking-widest font-mono-code opacity-70">
+            <span className="text-[8px] sm:text-[9px] tracking-widest font-mono-code opacity-70 block truncate">
               GW OUTPUT
             </span>
           </div>
 
           {/* Central Energy Singularity */}
           <div 
-            className={`w-3 h-3 rounded-full bg-white transition-transform duration-300 ${
+            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-white transition-transform duration-300 ${
               isSpeaking || isOverdrive ? 'scale-150 animate-ping' : 'animate-pulse'
             }`}
             style={{ boxShadow: `0 0 16px ${colors.ring}` }}
           />
         </div>
 
-        {/* Floating Telemetry Labels */}
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-mono-code text-cyan-300 border border-cyan-500/30">
+        {/* Floating Telemetry Label - Safe positioning without negative margin overflow */}
+        <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-black/90 px-2 py-0.5 rounded text-[9px] font-mono-code text-cyan-300 border border-cyan-500/30 whitespace-nowrap z-20">
           MARK 85 // STARK CORE
         </div>
       </div>
 
       {/* Auxiliary Reactor Diagnostics Footprint */}
-      <div className="grid grid-cols-3 gap-4 mt-3 w-full max-w-sm px-4">
-        <div className="bg-cyan-950/20 border border-cyan-500/20 rounded p-1.5 text-center">
-          <div className="text-[9px] font-mono-code text-cyan-400/80 uppercase">STABILITY</div>
-          <div className="text-sm font-orbitron text-cyan-100 font-bold">99.4%</div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 w-full max-w-sm px-2 min-w-0">
+        <div className="bg-cyan-950/20 border border-cyan-500/20 rounded p-1.5 text-center min-w-0">
+          <div className="text-[9px] font-mono-code text-cyan-400/80 uppercase truncate">STABILITY</div>
+          <div className="text-xs sm:text-sm font-orbitron text-cyan-100 font-bold truncate">99.4%</div>
         </div>
-        <div className="bg-cyan-950/20 border border-cyan-500/20 rounded p-1.5 text-center">
-          <div className="text-[9px] font-mono-code text-cyan-400/80 uppercase">THERMAL</div>
-          <div className="text-sm font-orbitron text-cyan-100 font-bold">342°C</div>
+        <div className="bg-cyan-950/20 border border-cyan-500/20 rounded p-1.5 text-center min-w-0">
+          <div className="text-[9px] font-mono-code text-cyan-400/80 uppercase truncate">THERMAL</div>
+          <div className="text-xs sm:text-sm font-orbitron text-cyan-100 font-bold truncate">342°C</div>
         </div>
-        <div className="bg-cyan-950/20 border border-cyan-500/20 rounded p-1.5 text-center">
-          <div className="text-[9px] font-mono-code text-cyan-400/80 uppercase">PLASMA FLOW</div>
-          <div className="text-sm font-orbitron text-cyan-100 font-bold">48.2 L/M</div>
+        <div className="bg-cyan-950/20 border border-cyan-500/20 rounded p-1.5 text-center min-w-0">
+          <div className="text-[9px] font-mono-code text-cyan-400/80 uppercase truncate">PLASMA FLOW</div>
+          <div className="text-xs sm:text-sm font-orbitron text-cyan-100 font-bold truncate">48.2 L/M</div>
         </div>
       </div>
     </div>

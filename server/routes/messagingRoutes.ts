@@ -1,39 +1,27 @@
-// Milestone 11: Real-Time Class Messaging & Notifications REST API
+// Milestone 11 & 14.2: Real-Time Class Messaging & Notifications REST API
 import { Router, Request, Response } from 'express';
 import { jarvisData } from '../data/index.ts';
 import { messagingService } from '../sectors/education/messagingService.ts';
 import { messageEventBus } from '../sectors/education/messageEventBus.ts';
+import { authenticateRequest, ticketService } from '../auth/index.ts';
 import type { User } from '../data/types.ts';
 
 export const messagingRouter = Router();
 
-async function resolveUser(req: Request): Promise<User> {
-  const userId =
-    (typeof req.headers['x-user-id'] === 'string' && req.headers['x-user-id']) ||
-    (typeof req.query.userId === 'string' && req.query.userId) ||
-    'teacher-1';
-
-  const user = await jarvisData.users.getById(userId);
-  if (user) return user;
-
-  const role =
-    (typeof req.headers['x-user-role'] === 'string' && req.headers['x-user-role']) ||
-    (userId.startsWith('student') ? 'student' : 'teacher');
-
-  return {
-    id: userId,
-    displayName: userId.startsWith('student') ? 'Student User' : 'Teacher User',
-    email: `${userId}@stark.local`,
-    role: role as any,
-    createdAt: new Date().toISOString()
-  };
-}
-
 // GET /api/messages/stream - Server-Sent Events (SSE) Real-Time Uplink
 messagingRouter.get('/stream', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
     const classId = typeof req.query.classId === 'string' ? req.query.classId : 'class-phys-301';
+    let currentUser: User;
+
+    // Authenticate via SSE ticket or standard auth header
+    if (typeof req.query.ticket === 'string' && req.query.ticket.trim().length > 0) {
+      const verified = await ticketService.verifySSETicket(req.query.ticket.trim(), classId);
+      currentUser = verified.user;
+    } else {
+      currentUser = await authenticateRequest(req);
+    }
+
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
     // 1. Authorization check before establishing stream
@@ -88,8 +76,10 @@ messagingRouter.get('/stream', async (req: Request, res: Response) => {
       unsubscribe();
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
+    const statusCode = isUnauth ? 401 : 500;
     if (!res.headersSent) {
-      res.status(500).json({ error: { code: 'STREAM_ERROR', message: err.message || 'Failed to open event stream.' } });
+      res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'STREAM_ERROR', message: err.message || 'Failed to open event stream.' } });
     }
   }
 });
@@ -97,7 +87,7 @@ messagingRouter.get('/stream', async (req: Request, res: Response) => {
 // GET /api/messages - List messages for class or thread
 messagingRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const classId = typeof req.query.classId === 'string' ? req.query.classId : 'class-phys-301';
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
     const threadId = typeof req.query.threadId === 'string' ? req.query.threadId : undefined;
@@ -116,16 +106,17 @@ messagingRouter.get('/', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isAuth = err.message?.includes('Unauthorized') || err.message?.includes('denied');
-    const statusCode = isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'LIST_FAILED', message: err.message || 'Failed to list messages.' } });
+    const statusCode = isUnauth ? 401 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'LIST_FAILED', message: err.message || 'Failed to list messages.' } });
   }
 });
 
 // POST /api/messages - Send message with optional FileRecord attachments
 messagingRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const {
       classId,
       workspaceId = 'ws-stark-core',
@@ -156,17 +147,18 @@ messagingRouter.post('/', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isAuth = err.message?.includes('Unauthorized') || err.message?.includes('denied') || err.message?.includes('Cross-workspace');
     const isVal = err.message?.includes('required') || err.message?.includes('exist');
-    const statusCode = isAuth ? 403 : isVal ? 400 : 500;
-    res.status(statusCode).json({ error: { code: 'SEND_FAILED', message: err.message || 'Failed to send message.' } });
+    const statusCode = isUnauth ? 401 : isAuth ? 403 : isVal ? 400 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'SEND_FAILED', message: err.message || 'Failed to send message.' } });
   }
 });
 
 // GET /api/messages/threads - List discussion threads for a class
 messagingRouter.get('/threads', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const classId = typeof req.query.classId === 'string' ? req.query.classId : 'class-phys-301';
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
@@ -179,16 +171,17 @@ messagingRouter.get('/threads', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isAuth = err.message?.includes('Unauthorized') || err.message?.includes('denied');
-    const statusCode = isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'THREADS_FAILED', message: err.message || 'Failed to list threads.' } });
+    const statusCode = isUnauth ? 401 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'THREADS_FAILED', message: err.message || 'Failed to list threads.' } });
   }
 });
 
 // POST /api/messages/threads - Create a discussion thread for class
 messagingRouter.post('/threads', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const { classId, workspaceId = 'ws-stark-core', title, participantIds } = req.body || {};
 
     if (!classId || !title) {
@@ -214,14 +207,16 @@ messagingRouter.post('/threads', async (req: Request, res: Response) => {
 
     res.status(201).json({ thread });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'CREATE_THREAD_FAILED', message: err.message || 'Failed to create thread.' } });
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
+    const statusCode = isUnauth ? 401 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'CREATE_THREAD_FAILED', message: err.message || 'Failed to create thread.' } });
   }
 });
 
 // PATCH /api/messages/:id/read - Mark message as read
 messagingRouter.patch('/:id/read', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const id = req.params.id as string;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
 
@@ -232,17 +227,18 @@ messagingRouter.patch('/:id/read', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isNotFound = err.message?.includes('not found');
     const isAuth = err.message?.includes('Unauthorized') || err.message?.includes('denied');
-    const statusCode = isNotFound ? 404 : isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'READ_FAILED', message: err.message || 'Failed to mark message as read.' } });
+    const statusCode = isUnauth ? 401 : isNotFound ? 404 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'READ_FAILED', message: err.message || 'Failed to mark message as read.' } });
   }
 });
 
 // GET /api/messages/:id - Get single message
 messagingRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const id = req.params.id as string;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
 
@@ -252,9 +248,10 @@ messagingRouter.get('/:id', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isNotFound = err.message?.includes('not found');
     const isAuth = err.message?.includes('Unauthorized') || err.message?.includes('denied');
-    const statusCode = isNotFound ? 404 : isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'GET_FAILED', message: err.message || 'Failed to get message.' } });
+    const statusCode = isUnauth ? 401 : isNotFound ? 404 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'GET_FAILED', message: err.message || 'Failed to get message.' } });
   }
 });

@@ -1,38 +1,18 @@
-// Unified File & Storage REST API Routes (Milestone 10)
+// Unified File & Storage REST API Routes (Milestone 10 & 14.2 Hardening)
 import { Router, Request, Response } from 'express';
 import { jarvisData } from '../data/index.ts';
 import { fileService } from '../storage/fileService.ts';
 import { ragStorageBridge } from '../storage/ragBridge.ts';
+import { authenticateRequest } from '../auth/index.ts';
 import type { User } from '../data/types.ts';
 import type { FileListFilter } from '../../src/types/storage.ts';
 
 export const filesRouter = Router();
 
-/**
- * Resolves current user from request context (Header, Query, or fallback).
- */
-async function resolveUser(req: Request): Promise<User> {
-  const userId =
-    (typeof req.headers['x-user-id'] === 'string' && req.headers['x-user-id']) ||
-    (typeof req.query.userId === 'string' && req.query.userId) ||
-    'user-tony';
-
-  const user = await jarvisData.users.getById(userId);
-  if (user) return user;
-
-  return {
-    id: userId,
-    displayName: 'Authorized User',
-    email: `${userId}@stark.local`,
-    role: 'commander',
-    createdAt: new Date().toISOString()
-  };
-}
-
 // POST /api/files - Upload a file (JSON base64 or binary buffer)
 filesRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const {
       originalName,
       mimeType,
@@ -107,7 +87,7 @@ filesRouter.post('/', async (req: Request, res: Response) => {
 // GET /api/files - List files matching filter criteria
 filesRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
     const filter: FileListFilter = {
@@ -132,15 +112,16 @@ filesRouter.get('/', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
-    const statusCode = err.message?.includes('authorized') ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'LIST_FAILED', message: err.message || 'Failed to list files.' } });
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
+    const statusCode = isUnauth ? 401 : err.message?.includes('authorized') ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'LIST_FAILED', message: err.message || 'Failed to list files.' } });
   }
 });
 
 // GET /api/files/:id - Get file metadata & controlled access reference
 filesRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const id = req.params.id as string;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
 
@@ -153,17 +134,18 @@ filesRouter.get('/:id', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isNotFound = err.message?.includes('not found');
     const isAuth = err.message?.includes('denied') || err.message?.includes('permission');
-    const statusCode = isNotFound ? 404 : isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'METADATA_ERROR', message: err.message || 'Failed to get file metadata.' } });
+    const statusCode = isUnauth ? 401 : isNotFound ? 404 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'METADATA_ERROR', message: err.message || 'Failed to get file metadata.' } });
   }
 });
 
 // GET /api/files/:id/download - Authorized file streaming / download
 filesRouter.get('/:id/download', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const id = req.params.id as string;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
     const inline = req.query.inline === 'true';
@@ -181,17 +163,18 @@ filesRouter.get('/:id/download', async (req: Request, res: Response) => {
 
     res.send(buffer);
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isNotFound = err.message?.includes('not found') || err.message?.includes('missing');
     const isAuth = err.message?.includes('denied') || err.message?.includes('permission') || err.message?.includes('Cross-workspace');
-    const statusCode = isNotFound ? 404 : isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'DOWNLOAD_FAILED', message: err.message || 'Failed to download file.' } });
+    const statusCode = isUnauth ? 401 : isNotFound ? 404 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'DOWNLOAD_FAILED', message: err.message || 'Failed to download file.' } });
   }
 });
 
 // DELETE /api/files/:id - Authorized file deletion
 filesRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const id = req.params.id as string;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
 
@@ -209,16 +192,17 @@ filesRouter.delete('/:id', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isAuth = err.message?.includes('Unauthorized') || err.message?.includes('forbidden') || err.message?.includes('denied');
-    const statusCode = isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'DELETE_FAILED', message: err.message || 'Failed to delete file.' } });
+    const statusCode = isUnauth ? 401 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'DELETE_FAILED', message: err.message || 'Failed to delete file.' } });
   }
 });
 
 // POST /api/files/:id/ingest-to-knowledge - Ingest stored file into Knowledge Space
 filesRouter.post('/:id/ingest-to-knowledge', async (req: Request, res: Response) => {
   try {
-    const currentUser = await resolveUser(req);
+    const currentUser = await authenticateRequest(req);
     const id = req.params.id as string;
     const { knowledgeSpaceId } = req.body || {};
 
@@ -238,8 +222,9 @@ filesRouter.post('/:id/ingest-to-knowledge', async (req: Request, res: Response)
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
+    const isUnauth = err.statusCode === 401 || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
     const isAuth = err.message?.includes('denied') || err.message?.includes('permission');
-    const statusCode = isAuth ? 403 : 500;
-    res.status(statusCode).json({ error: { code: 'INGEST_FAILED', message: err.message || 'Failed to ingest file into Knowledge Space.' } });
+    const statusCode = isUnauth ? 401 : isAuth ? 403 : 500;
+    res.status(statusCode).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : 'INGEST_FAILED', message: err.message || 'Failed to ingest file into Knowledge Space.' } });
   }
 });

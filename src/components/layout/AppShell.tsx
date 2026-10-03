@@ -107,10 +107,10 @@ export const AppShell: React.FC<AppShellProps> = ({
 
       {/* Main Top Header Navigation Bar (Fixed at top) */}
       <header className="shrink-0 z-40 border-b border-cyan-500/20 bg-black/85 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between gap-3 min-w-0">
             {/* Left: Brand Identity */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <div className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-cyan-500/40 bg-gradient-to-br from-cyan-950/60 to-black p-2 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
                 <Radio className="h-5 w-5 text-cyan-400 animate-pulse" />
                 <div className="absolute -inset-0.5 rounded-lg bg-cyan-500/10 blur-sm -z-10" />
@@ -132,7 +132,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             </div>
 
             {/* Center: Sector Navigation Pills (Desktop) */}
-            <nav className="hidden lg:flex items-center gap-1.5 rounded-xl border border-cyan-500/20 bg-black/40 p-1 backdrop-blur-md">
+            <nav className="hidden lg:flex items-center gap-1.5 rounded-xl border border-cyan-500/20 bg-black/40 p-1 backdrop-blur-md min-w-0">
               {sectors.map((sector) => {
                 const Icon = sector.icon;
                 const isActive = sector.id === currentSector;
@@ -145,7 +145,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                       if (!isPlanned) onSelectSector(sector.id);
                     }}
                     disabled={isPlanned}
-                    className={`group relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono tracking-wider transition-all ${
+                    className={`group relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono tracking-wider transition-all whitespace-nowrap ${
                       isActive
                         ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/60 text-cyan-300 font-bold shadow-[0_0_12px_rgba(6,182,212,0.25)]'
                         : isPlanned
@@ -174,16 +174,16 @@ export const AppShell: React.FC<AppShellProps> = ({
             </nav>
 
             {/* Right: Sector Dropdown (Mobile) & System Status / Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {/* Sector Quick Switcher (Tablet / Mobile) */}
               <div className="relative lg:hidden">
                 <button
                   onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-black/60 text-xs font-mono text-cyan-300"
+                  className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-black/60 text-xs font-mono text-cyan-300"
                 >
                   <activeSectorDef.icon className="w-3.5 h-3.5" />
-                  <span>{activeSectorDef.shortName}</span>
-                  <ChevronDown className="w-3 h-3" />
+                  <span className="truncate max-w-[90px] sm:max-w-none">{activeSectorDef.shortName}</span>
+                  <ChevronDown className="w-3 h-3 shrink-0" />
                 </button>
 
                 {isSectorDropdownOpen && (
@@ -233,7 +233,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               <button
                 onClick={onToggleMute}
                 title={isMuted ? 'Unmute Jarvis Audio Synthesis' : 'Mute Jarvis Audio Synthesis'}
-                className="p-2 rounded-lg border border-cyan-500/20 bg-black/40 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-200 transition-all"
+                className="p-2 rounded-lg border border-cyan-500/20 bg-black/40 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-200 transition-all cursor-pointer shrink-0"
               >
                 {isMuted ? <VolumeX className="w-4 h-4 text-slate-400" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
               </button>
@@ -242,18 +242,18 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
       </header>
 
-      {/* Scrollable Application Content Region */}
+      {/* Scrollable Application Content Region - Single Page Scroll Owner */}
       <div className="flex-1 overflow-y-auto min-h-0 flex flex-col overscroll-contain">
         {/* Main App Content Viewport */}
-        <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 relative z-10 min-h-0">
+        <main className="flex-1 mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 min-h-0 min-w-0">
           {children}
         </main>
 
         {/* Footer Bar */}
-        <footer className="shrink-0 border-t border-cyan-500/10 bg-black/60 py-4 text-center text-xs font-mono text-cyan-400/40 backdrop-blur-sm relative z-10">
-          <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div>JARVIS MULTI-SECTOR INTELLIGENT PLATFORM // STARK ENTERPRISES</div>
-            <div className="text-[11px] text-cyan-400/60">
+        <footer className="shrink-0 border-t border-cyan-500/10 bg-black/60 py-4 text-center text-xs font-mono text-cyan-400/40 backdrop-blur-sm relative z-10 min-w-0">
+          <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2 min-w-0">
+            <div className="truncate">JARVIS MULTI-SECTOR INTELLIGENT PLATFORM // STARK ENTERPRISES</div>
+            <div className="text-[11px] text-cyan-400/60 truncate">
               Active Core: <strong className="text-cyan-300">{activeSectorDef.name.toUpperCase()}</strong> • Gemini 3.8 Flash Streaming
             </div>
           </div>

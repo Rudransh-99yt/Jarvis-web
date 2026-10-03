@@ -89,10 +89,14 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     role: currentRole
   };
 
-  const showNotice = (msg: string) => {
+  const showNotice = useCallback((msg: string) => {
     setStatusNotice(msg);
     setTimeout(() => setStatusNotice(null), 4000);
-  };
+  }, []);
+
+  const handleQuizChange = useCallback((quiz: Quiz | null) => {
+    setActiveQuiz(quiz);
+  }, []);
 
   // 1. Fetch Active Session for selected class
   const fetchSessionData = useCallback(async () => {
@@ -303,7 +307,12 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     es.addEventListener('quiz.created', (e: MessageEvent) => {
       try {
         const payload = JSON.parse(e.data);
-        setActiveQuiz(payload.quiz);
+        // Only set activeQuiz if there is currently NO active quiz or if the new quiz is live
+        setActiveQuiz((prev) => {
+          if (!prev) return payload.quiz;
+          if (payload.quiz?.status === 'live') return payload.quiz;
+          return prev;
+        });
       } catch (err) {
         console.warn(err);
       }
@@ -312,7 +321,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     es.addEventListener('quiz.updated', (e: MessageEvent) => {
       try {
         const payload = JSON.parse(e.data);
-        setActiveQuiz(payload.quiz);
+        setActiveQuiz((prev) => (prev && prev.id === payload.quiz.id ? payload.quiz : prev));
       } catch (err) {
         console.warn(err);
       }
@@ -337,7 +346,9 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         setActiveQuizQuestion(payload.question);
         setActiveQuizAggregate(payload.aggregate);
         setActiveQuiz((prev) =>
-          prev ? { ...prev, currentQuestionIndex: payload.currentQuestionIndex } : prev
+          prev && prev.id === payload.quizId
+            ? { ...prev, currentQuestionIndex: payload.currentQuestionIndex }
+            : prev
         );
       } catch (err) {
         console.warn(err);
@@ -389,7 +400,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     es.addEventListener('quiz.paused', (e: MessageEvent) => {
       try {
         const payload = JSON.parse(e.data);
-        setActiveQuiz(payload.quiz);
+        setActiveQuiz((prev) => (prev && prev.id === payload.quiz.id ? payload.quiz : prev));
         showNotice(`Quiz "${payload.quiz.title}" is paused.`);
       } catch (err) {
         console.warn(err);
@@ -399,7 +410,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     es.addEventListener('quiz.resumed', (e: MessageEvent) => {
       try {
         const payload = JSON.parse(e.data);
-        setActiveQuiz(payload.quiz);
+        setActiveQuiz((prev) => (prev && prev.id === payload.quiz.id ? payload.quiz : prev));
         showNotice(`Quiz "${payload.quiz.title}" resumed!`);
       } catch (err) {
         console.warn(err);
@@ -409,7 +420,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     es.addEventListener('quiz.completed', (e: MessageEvent) => {
       try {
         const payload = JSON.parse(e.data);
-        setActiveQuiz(payload.quiz);
+        setActiveQuiz((prev) => (prev && prev.id === payload.quiz.id ? payload.quiz : prev));
         setQuizResults(payload.results);
         showNotice(`Quiz completed! Final class scores calculated.`);
       } catch (err) {
@@ -420,7 +431,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     es.addEventListener('quiz.cancelled', (e: MessageEvent) => {
       try {
         const payload = JSON.parse(e.data);
-        setActiveQuiz(payload.quiz);
+        setActiveQuiz((prev) => (prev && prev.id === payload.quiz.id ? payload.quiz : prev));
         setActiveQuizQuestion(null);
         setActiveQuizAggregate(null);
         showNotice(`Quiz was cancelled.`);
@@ -1063,7 +1074,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
                 userId={currentUser.id}
                 activeStudentCount={participants.filter((p) => p.connectionStatus === 'connected').length}
                 activeQuiz={activeQuiz}
-                onQuizChange={(q) => setActiveQuiz(q)}
+                onQuizChange={handleQuizChange}
                 showNotice={showNotice}
               />
             )}

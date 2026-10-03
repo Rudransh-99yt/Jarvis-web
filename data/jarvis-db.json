@@ -203,7 +203,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-03T12:12:54.190Z"
+      "updatedAt": "2026-10-01T15:30:00.000Z"
     },
     {
       "id": "ks-calculus",
@@ -225,7 +225,7 @@
         "What is the relation between Green Theorem and the Divergence Theorem?"
       ],
       "createdAt": "2026-09-12T11:00:00.000Z",
-      "updatedAt": "2026-10-03T12:12:54.520Z"
+      "updatedAt": "2026-09-28T09:15:00.000Z"
     }
   ],
   "knowledgeSources": [
@@ -291,27 +291,6 @@
       "tokenCount": 460,
       "createdAt": "2026-09-20T16:00:00.000Z",
       "updatedAt": "2026-09-20T16:00:00.000Z"
-    },
-    {
-      "id": "src-muscrkag-qwl4",
-      "workspaceId": "ws-stark-core",
-      "knowledgeSpaceId": "ks-calculus",
-      "name": "Green Theorem Formulation.md",
-      "type": "notes",
-      "mimeType": "text/plain",
-      "size": "0.1 KB",
-      "sizeBytes": 108,
-      "status": "ready",
-      "ingestionStatus": "ready",
-      "embeddingStatus": "ready",
-      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
-      "author": "User",
-      "summary": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "fullText": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "tokenCount": 22,
-      "createdAt": "2026-10-03T12:12:54.520Z",
-      "updatedAt": "2026-10-03T12:12:54.521Z",
-      "chunkCount": 1
     }
   ],
   "knowledgeChunks": [
@@ -356,164 +335,6 @@
       "section": "Stokes Theorem on Smooth Manifolds",
       "contentHash": "a10b9382fc1de3683a48e718d0426b3fa1d8e64c39f04523910c69d80d283842",
       "createdAt": "2026-09-20T16:00:00.000Z"
-    },
-    {
-      "id": "chunk-src-test-chunk-0",
-      "sourceId": "src-test-chunk",
-      "knowledgeSpaceId": "ks-quantum",
-      "workspaceId": "ws-stark-core",
-      "sourceTitle": "Test Doc",
-      "chunkIndex": 0,
-      "text": "Paragraph 1 statement about quantum states.",
-      "tokenCount": 8,
-      "page": 1,
-      "section": "General",
-      "contentHash": "d559f5f8f7448066528f3b65619eb7c419a0d44b1a5ca2c2a6d0bd8a75c48484",
-      "createdAt": "2026-10-03T12:12:54.193Z"
-    },
-    {
-      "id": "chunk-src-muscrkag-qwl4-0",
-      "sourceId": "src-muscrkag-qwl4",
-      "knowledgeSpaceId": "ks-calculus",
-      "workspaceId": "ws-stark-core",
-      "sourceTitle": "Green Theorem Formulation.md",
-      "chunkIndex": 0,
-      "text": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-      "tokenCount": 22,
-      "page": 1,
-      "section": "General Content",
-      "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
-      "createdAt": "2026-10-03T12:12:54.521Z",
-      "embedding": [
-        0,
-        0.112517,
-        0,
-        0,
-        0.05517,
-        0,
-        0,
-        0,
-        0,
-        0.029723,
-        0.182499,
-        0.110341,
-        0.05517,
-        0.05517,
-        0.05517,
-        0.126461,
-        0,
-        0,
-        0,
-        0.110341,
-        0.03256,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0.05517,
-        0,
-        0.05517,
-        0,
-        0.02893,
-        0,
-        0.110341,
-        0,
-        0.05517,
-        0.144538,
-        0.110341,
-        0,
-        0,
-        0.165511,
-        0.05517,
-        0.118363,
-        0,
-        0,
-        0.110341,
-        0.165511,
-        0.083596,
-        0,
-        0.05517,
-        0.165511,
-        0,
-        0,
-        0.091574,
-        0,
-        0.192242,
-        0.118222,
-        0,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0,
-        0,
-        0.039878,
-        0,
-        0.05517,
-        0.275852,
-        0.05517,
-        0.165511,
-        0.110341,
-        0.165511,
-        0.05517,
-        0,
-        0.05517,
-        0.164585,
-        0,
-        0.220682,
-        0.05517,
-        0,
-        0.137926,
-        0,
-        0,
-        0.05517,
-        0.05517,
-        0.05517,
-        0,
-        0.030585,
-        0.389849,
-        0,
-        0,
-        0.05517,
-        0,
-        0,
-        0,
-        0.038022,
-        0,
-        0,
-        0.06105,
-        0.068256,
-        0,
-        0.175919,
-        0.033703,
-        0.110341,
-        0.05517,
-        0.31889,
-        0,
-        0,
-        0.063052,
-        0,
-        0,
-        0.140651,
-        0.05517,
-        0.05517,
-        0,
-        0.034975,
-        0.129941,
-        0,
-        0,
-        0,
-        0,
-        0.072806,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0.110341,
-        0.073561,
-        0.044584
-      ]
     }
   ],
   "classes": [
@@ -533,7 +354,7 @@
       ],
       "studentCount": 2,
       "materialsCount": 3,
-      "assignmentsCount": 3,
+      "assignmentsCount": 2,
       "announcements": [
         {
           "id": "ann-1",
@@ -761,22 +582,6 @@
       "totalEnrolled": 1,
       "submittedCount": 0,
       "gradedCount": 0
-    },
-    {
-      "id": "asg-1791029547876-6tbb",
-      "classId": "class-phys-301",
-      "className": "PHYS-301: Advanced Quantum & Electrodynamics",
-      "title": "Quantum Entanglement & Bell Inequalities Lab",
-      "description": "Analyze experimental Bell state correlations.",
-      "instructions": "Submit lab observations and Bell parameter S calculations.",
-      "assignedDate": "2026-10-03",
-      "dueDate": "2026-11-15",
-      "maxScore": 100,
-      "category": "Lab Report",
-      "teacherId": "teacher-1",
-      "totalEnrolled": 2,
-      "submittedCount": 0,
-      "gradedCount": 0
     }
   ],
   "submissions": [
@@ -851,33 +656,6 @@
       ],
       "createdAt": "2026-09-25T11:00:00.000Z",
       "updatedAt": "2026-10-01T12:00:00.000Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "ownerId": "user-tony",
-      "title": "Arc Reactor Plasma Toroidal Boundary Study",
-      "description": "Temporarily paused for sensor recalibration.",
-      "status": "paused",
-      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
-      "knowledgeSpaceIds": [
-        "ks-quantum",
-        "ks-calculus"
-      ],
-      "id": "proj-1791029599767-a3a6",
-      "createdAt": "2026-10-03T12:13:19.767Z",
-      "updatedAt": "2026-10-03T12:13:19.767Z"
-    },
-    {
-      "title": "Vibranium Lattice Resonance Project",
-      "researchQuestion": "What vibrational modes produce constructive acoustic interference in vibranium?",
-      "description": "",
-      "workspaceId": "ws-stark-core",
-      "ownerId": "user-tony",
-      "knowledgeSpaceIds": [],
-      "status": "active",
-      "id": "proj-1791029600144-6333",
-      "createdAt": "2026-10-03T12:13:20.144Z",
-      "updatedAt": "2026-10-03T12:13:20.144Z"
     }
   ],
   "researchQuestions": [
@@ -911,22 +689,6 @@
       "answer": "Stokes theorem confirms that the surface integral of the curl of the magnetic vector field equals the closed line integral around the bounding perimeter, proving zero uncontrolled plasma boundary leakage.",
       "createdAt": "2026-09-24T10:00:00.000Z",
       "updatedAt": "2026-10-02T15:30:00.000Z"
-    },
-    {
-      "projectId": "proj-1791029599767-a3a6",
-      "workspaceId": "ws-stark-core",
-      "title": "Magnetic Boundary Line Integral Equivalence",
-      "question": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
-      "priority": "critical",
-      "status": "answered",
-      "notes": "Checking against classical Stokes formulation in ks-calculus.",
-      "id": "q-1791029599768-snqd",
-      "linkedEvidenceIds": [
-        "ev-1791029599769-meil"
-      ],
-      "createdAt": "2026-10-03T12:13:19.768Z",
-      "updatedAt": "2026-10-03T12:13:19.768Z",
-      "answer": "Stokes theorem confirms surface integral of curl F equals closed line integral around boundary."
     }
   ],
   "evidenceRecords": [
@@ -987,34 +749,6 @@
         "Containment"
       ],
       "createdAt": "2026-09-24T12:00:00.000Z"
-    },
-    {
-      "projectId": "proj-1791029599767-a3a6",
-      "workspaceId": "ws-stark-core",
-      "questionId": "q-1791029599768-snqd",
-      "knowledgeSourceId": "src-calc-1",
-      "knowledgeSpaceId": "ks-calculus",
-      "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-      "chunkId": "chunk-src-calc-1-0",
-      "chunkText": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.",
-      "citation": {
-        "sourceId": "src-calc-1",
-        "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-        "chunkId": "chunk-src-calc-1-0",
-        "spaceId": "ks-calculus",
-        "page": 1,
-        "section": "Stokes Theorem on Smooth Manifolds",
-        "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around",
-        "score": 0.95
-      },
-      "relevance": 0.95,
-      "userNote": "Definitive analytical proof of surface curl boundary line equivalence.",
-      "tags": [
-        "Stokes Theorem",
-        "Plasma Boundary"
-      ],
-      "id": "ev-1791029599769-meil",
-      "createdAt": "2026-10-03T12:13:19.769Z"
     }
   ],
   "researchNotes": [
@@ -1038,26 +772,6 @@
       ],
       "createdAt": "2026-09-24T14:00:00.000Z",
       "updatedAt": "2026-09-24T14:30:00.000Z"
-    },
-    {
-      "projectId": "proj-1791029599767-a3a6",
-      "workspaceId": "ws-stark-core",
-      "authorId": "user-tony",
-      "title": "Plasma Boundary Mathematical Synthesis",
-      "content": "Boundary curve integration establishes exact conservation of magnetic flux.",
-      "linkedQuestionIds": [
-        "q-1791029599768-snqd"
-      ],
-      "linkedEvidenceIds": [
-        "ev-1791029599769-meil"
-      ],
-      "tags": [
-        "Plasma",
-        "Derivations"
-      ],
-      "id": "note-1791029599769-cqgs",
-      "createdAt": "2026-10-03T12:13:19.769Z",
-      "updatedAt": "2026-10-03T12:13:19.769Z"
     }
   ],
   "researchReports": [
@@ -1094,70 +808,6 @@
         "Thermal dissipation under continuous 100% core load requires high-temperature cryogenic cooling validation."
       ],
       "generatedAt": "2026-10-02T16:00:00.000Z"
-    },
-    {
-      "projectId": "proj-1791029599767-a3a6",
-      "workspaceId": "ws-stark-core",
-      "title": "Formal Technical Synthesis: Toroidal Plasma Confinement",
-      "researchQuestion": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
-      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the l...",
-      "findings": [
-        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
-      ],
-      "evidenceReferences": [
-        "ev-1791029599769-meil"
-      ],
-      "sourceCitations": [
-        {
-          "sourceId": "src-muscrkag-qwl4",
-          "sourceTitle": "Green Theorem Formulation.md",
-          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
-        },
-        {
-          "sourceId": "src-calc-1",
-          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
-        }
-      ],
-      "limitations": [
-        "Grounded solely on currently ingested and indexed Knowledge Space records.",
-        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
-      ],
-      "id": "rep-1791029600143-k514",
-      "generatedAt": "2026-10-03T12:13:20.143Z"
-    },
-    {
-      "projectId": "proj-1791029599767-a3a6",
-      "workspaceId": "ws-stark-core",
-      "title": "Automated Brief on Harmonic Zero-Point Energy",
-      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
-      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **Green Theorem Formulation.md**: Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D..\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of...",
-      "findings": [
-        "According to \"Green Theorem Formulation.md\" (General Content): Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
-        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
-      ],
-      "evidenceReferences": [
-        "ev-1791029599769-meil"
-      ],
-      "sourceCitations": [
-        {
-          "sourceId": "src-muscrkag-qwl4",
-          "sourceTitle": "Green Theorem Formulation.md",
-          "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
-        },
-        {
-          "sourceId": "src-calc-1",
-          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
-          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
-        }
-      ],
-      "limitations": [
-        "Grounded solely on currently ingested and indexed Knowledge Space records.",
-        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
-      ],
-      "id": "rep-1791029600146-hujo",
-      "generatedAt": "2026-10-03T12:13:20.146Z"
     }
   ],
   "files": [
@@ -1255,6 +905,54 @@
       "isPublicInWorkspace": true,
       "createdAt": "2026-09-22T11:00:00.000Z",
       "updatedAt": "2026-09-22T11:00:00.000Z"
+    },
+    {
+      "id": "file-seed-vid-1",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "teacher-1",
+      "originalName": "quantum_harmonic_oscillator_lecture.mp4",
+      "storageKey": "obj-seed-vid-1",
+      "mimeType": "video/mp4",
+      "sizeBytes": 428372,
+      "extension": "mp4",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "ready",
+      "classId": "class-phys-301",
+      "knowledgeSpaceId": "ks-quantum",
+      "description": "Quantum harmonic oscillator video lecture breakdown.",
+      "tags": [
+        "Quantum",
+        "Lecture",
+        "Ladder Operators"
+      ],
+      "downloadCount": 12,
+      "isPublicInWorkspace": true,
+      "createdAt": "2026-10-02T11:00:00.000Z",
+      "updatedAt": "2026-10-02T11:00:00.000Z"
+    },
+    {
+      "id": "file-seed-vid-2",
+      "workspaceId": "ws-stark-core",
+      "ownerUserId": "teacher-1",
+      "originalName": "stokes_theorem_differential_forms.mp4",
+      "storageKey": "obj-seed-vid-2",
+      "mimeType": "video/mp4",
+      "sizeBytes": 423670,
+      "extension": "mp4",
+      "sha256": "f4b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b866",
+      "status": "ready",
+      "classId": "class-math-240",
+      "knowledgeSpaceId": "ks-quantum",
+      "description": "Stokes theorem and differential forms video lecture visualization.",
+      "tags": [
+        "Calculus",
+        "Differential Forms",
+        "Stokes Theorem"
+      ],
+      "downloadCount": 8,
+      "isPublicInWorkspace": true,
+      "createdAt": "2026-10-01T15:00:00.000Z",
+      "updatedAt": "2026-10-01T15:00:00.000Z"
     }
   ],
   "classroomSessions": [
@@ -1276,6 +974,26 @@
       "activeStudentCount": 0,
       "createdAt": "2026-10-02T10:00:00.000Z",
       "updatedAt": "2026-10-02T10:00:00.000Z"
+    },
+    {
+      "id": "session-1791033063134-qdk0v",
+      "sessionId": "session-1791033063134-qdk0v",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "teacherId": "teacher-1",
+      "title": "Classroom Session 10/3/2026",
+      "status": "live",
+      "boardState": {
+        "state": "question",
+        "currentTopic": "Smart Quiz: Quiz A: Quantum States (Question 1 of 2)",
+        "activeSlideIndex": 0,
+        "message": "What is the ground state energy of a quantum harmonic oscillator?",
+        "updatedAt": "2026-10-03T13:11:03.171Z"
+      },
+      "startedAt": "2026-10-03T13:11:03.134Z",
+      "activeStudentCount": 0,
+      "createdAt": "2026-10-03T13:11:03.134Z",
+      "updatedAt": "2026-10-03T13:11:03.173Z"
     }
   ],
   "classroomParticipants": [],
@@ -1293,6 +1011,175 @@
       "currentQuestionIndex": 0,
       "totalQuestions": 2,
       "createdAt": "2026-10-02T10:30:00.000Z"
+    },
+    {
+      "id": "quiz-1791033063162-27njh",
+      "quizId": "quiz-1791033063162-27njh",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Quiz A: Quantum States",
+      "description": "First test quiz",
+      "status": "live",
+      "currentQuestionIndex": 0,
+      "totalQuestions": 2,
+      "createdAt": "2026-10-03T13:11:03.162Z",
+      "startedAt": "2026-10-03T13:11:03.171Z"
+    },
+    {
+      "id": "quiz-1791033063166-5u7dm",
+      "quizId": "quiz-1791033063166-5u7dm",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Quiz B: Ladder Operators",
+      "description": "Second test quiz in same session",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 1,
+      "createdAt": "2026-10-03T13:11:03.166Z"
+    },
+    {
+      "id": "quiz-1791033063174-y2yp5",
+      "quizId": "quiz-1791033063174-y2yp5",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 1: Advanced Topic 1",
+      "description": "Rapid creation batch 1",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.174Z"
+    },
+    {
+      "id": "quiz-1791033063175-vks9o",
+      "quizId": "quiz-1791033063175-vks9o",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 2: Advanced Topic 2",
+      "description": "Rapid creation batch 2",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.175Z"
+    },
+    {
+      "id": "quiz-1791033063176-851mo",
+      "quizId": "quiz-1791033063176-851mo",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 3: Advanced Topic 3",
+      "description": "Rapid creation batch 3",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.176Z"
+    },
+    {
+      "id": "quiz-1791033063177-oc2xc",
+      "quizId": "quiz-1791033063177-oc2xc",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 4: Advanced Topic 4",
+      "description": "Rapid creation batch 4",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.177Z"
+    },
+    {
+      "id": "quiz-1791033063178-nhraj",
+      "quizId": "quiz-1791033063178-nhraj",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 5: Advanced Topic 5",
+      "description": "Rapid creation batch 5",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.178Z"
+    },
+    {
+      "id": "quiz-1791033063179-0aa0z",
+      "quizId": "quiz-1791033063179-0aa0z",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 6: Advanced Topic 6",
+      "description": "Rapid creation batch 6",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.179Z"
+    },
+    {
+      "id": "quiz-1791033063180-tg7q2",
+      "quizId": "quiz-1791033063180-tg7q2",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 7: Advanced Topic 7",
+      "description": "Rapid creation batch 7",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.180Z"
+    },
+    {
+      "id": "quiz-1791033063181-juqor",
+      "quizId": "quiz-1791033063181-juqor",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 8: Advanced Topic 8",
+      "description": "Rapid creation batch 8",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.181Z"
+    },
+    {
+      "id": "quiz-1791033063182-cdqen",
+      "quizId": "quiz-1791033063182-cdqen",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 9: Advanced Topic 9",
+      "description": "Rapid creation batch 9",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.182Z"
+    },
+    {
+      "id": "quiz-1791033063183-zx980",
+      "quizId": "quiz-1791033063183-zx980",
+      "workspaceId": "ws-stark-core",
+      "classId": "class-phys-301",
+      "classroomSessionId": "session-1791033063134-qdk0v",
+      "teacherId": "teacher-1",
+      "title": "Stress Quiz 10: Advanced Topic 10",
+      "description": "Rapid creation batch 10",
+      "status": "draft",
+      "currentQuestionIndex": -1,
+      "totalQuestions": 0,
+      "createdAt": "2026-10-03T13:11:03.183Z"
     }
   ],
   "quizQuestions": [
@@ -1328,6 +1215,59 @@
       "correctOption": "A",
       "points": 10,
       "timeLimitSeconds": 30,
+      "status": "pending"
+    },
+    {
+      "id": "qq-1791033063164-7bp9c",
+      "questionId": "qq-1791033063164-7bp9c",
+      "quizId": "quiz-1791033063162-27njh",
+      "order": 0,
+      "questionText": "What is the ground state energy of a quantum harmonic oscillator?",
+      "options": [
+        "Zero",
+        "0.5 * hbar * omega",
+        "hbar * omega",
+        "2 * hbar * omega"
+      ],
+      "correctOption": "B",
+      "points": 10,
+      "timeLimitSeconds": 30,
+      "status": "active",
+      "startedAt": "2026-10-03T13:11:03.171Z",
+      "deadline": "2026-10-03T13:11:33.171Z"
+    },
+    {
+      "id": "qq-1791033063165-8es11",
+      "questionId": "qq-1791033063165-8es11",
+      "quizId": "quiz-1791033063162-27njh",
+      "order": 1,
+      "questionText": "What is the parity of the n=1 excited state wavefunction?",
+      "options": [
+        "Even",
+        "Odd",
+        "Undefined",
+        "Zero everywhere"
+      ],
+      "correctOption": "B",
+      "points": 10,
+      "timeLimitSeconds": 30,
+      "status": "pending"
+    },
+    {
+      "id": "qq-1791033063168-dyq6h",
+      "questionId": "qq-1791033063168-dyq6h",
+      "quizId": "quiz-1791033063166-5u7dm",
+      "order": 0,
+      "questionText": "What is the commutator [a, a_dagger]?",
+      "options": [
+        "0",
+        "1",
+        "-1",
+        "hbar"
+      ],
+      "correctOption": "B",
+      "points": 15,
+      "timeLimitSeconds": 45,
       "status": "pending"
     }
   ],

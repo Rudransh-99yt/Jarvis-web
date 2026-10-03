@@ -1,10 +1,11 @@
-// Centralized Authentication Layer (Milestone 12 Hardening)
+// Centralized Authentication Layer (Milestone 12 & 14.2 Hardening)
 import type { Request } from 'express';
 import type { User } from '../data/types.ts';
 import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
 
 export * from './classroomPolicy.ts';
+export * from './tickets.ts';
 
 export class AuthenticationError extends Error {
   public statusCode: number;
@@ -19,11 +20,12 @@ export class AuthenticationError extends Error {
 }
 
 /**
- * Extracts identity tokens / user identifiers from request context.
- * Supports:
- * - Authorization: Bearer <userId_or_token>
- * - x-user-id: <userId>
- * - Query param ?userId=<userId> (necessary for browser EventSource SSE connections)
+ * Extracts identity tokens / user identifiers from request headers.
+ * 
+ * SECURITY HARDENING (Milestone 14.2):
+ * - Arbitrary query parameters (such as ?userId=...) MUST NOT be treated as proof of authentication.
+ * - Authenticated requests MUST use 'Authorization: Bearer <token/userId>' or verified session header.
+ * - Ephemeral media streaming uses cryptographically signed playback tickets (?ticket=...).
  */
 export function extractAuthToken(req: Request): string | null {
   // 1. Authorization header: "Bearer <token/userId>"
@@ -42,10 +44,10 @@ export function extractAuthToken(req: Request): string | null {
     return xUserId.trim();
   }
 
-  // 3. Query parameter: ?userId=... (used for SSE EventSource streams)
-  const queryUserId = req.query.userId;
-  if (typeof queryUserId === 'string' && queryUserId.trim().length > 0) {
-    return queryUserId.trim();
+  // 3. Custom token header: x-auth-token
+  const xAuthToken = req.headers['x-auth-token'];
+  if (typeof xAuthToken === 'string' && xAuthToken.trim().length > 0) {
+    return xAuthToken.trim();
   }
 
   return null;

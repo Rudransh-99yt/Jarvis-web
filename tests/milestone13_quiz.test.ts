@@ -674,7 +674,7 @@ async function runMilestone13Tests() {
 
   // Verify zero runtime test storage objects
   const storageObjectsDir = path.resolve(process.cwd(), 'data', 'storage', 'objects');
-  const remainingObjects = fs.readdirSync(storageObjectsDir).filter((f) => f !== '.gitkeep');
+  const remainingObjects = fs.readdirSync(storageObjectsDir).filter((f) => f !== '.gitkeep' && !f.startsWith('obj-seed-'));
   assert(remainingObjects.length === 0, `93. TEST DATA HYGIENE: Zero runtime-generated test storage artifacts in data/storage/objects (found: ${remainingObjects.length})`);
 
   console.log('\n===================================================================');

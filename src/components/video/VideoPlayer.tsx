@@ -22,6 +22,8 @@ interface VideoPlayerProps {
   onTimeUpdate?: (currentTime: number) => void;
   className?: string;
   autoPlay?: boolean;
+  seekToSeconds?: number | null;
+  onSeekComplete?: () => void;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -29,7 +31,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   streamUrl,
   onTimeUpdate,
   className = '',
-  autoPlay = false
+  autoPlay = false,
+  seekToSeconds,
+  onSeekComplete
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -172,6 +176,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     document.addEventListener('fullscreenchange', handleFsChange);
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
+
+  // Programmatic seek trigger from AI citations / discovery
+  useEffect(() => {
+    if (seekToSeconds !== undefined && seekToSeconds !== null && videoRef.current) {
+      const targetSec = Math.max(0, Math.min(duration || 99999, seekToSeconds));
+      videoRef.current.currentTime = targetSec;
+      setCurrentTime(targetSec);
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+      onSeekComplete?.();
+    }
+  }, [seekToSeconds, duration, onSeekComplete]);
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -414,11 +430,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       {/* Transcript Drawer Overlay */}
       {showTranscriptDrawer && video.transcript && (
-        <div className="absolute top-12 bottom-16 right-4 w-80 max-w-[85%] bg-slate-950/95 border border-cyan-500/40 rounded-xl p-4 shadow-2xl backdrop-blur-md flex flex-col z-30 animate-fade-in">
+        <div className="absolute top-12 bottom-16 right-4 w-88 max-w-[90%] bg-slate-950/95 border border-cyan-500/40 rounded-xl p-4 shadow-2xl backdrop-blur-md flex flex-col z-30 animate-fade-in">
           <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2 mb-3">
             <span className="text-xs font-bold text-cyan-200 font-mono uppercase flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-cyan-400" />
-              LECTURE TRANSCRIPT
+              LECTURE TRANSCRIPT & TIMESTAMPS
             </span>
             <button
               onClick={() => setShowTranscriptDrawer(false)}
@@ -427,8 +443,45 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
               ✕
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto pr-1 text-xs text-cyan-100/90 leading-relaxed font-sans space-y-2">
-            <p>{video.transcript}</p>
+          <div className="flex-1 overflow-y-auto pr-1 text-xs text-cyan-100/90 leading-relaxed font-sans space-y-3">
+            {video.segments && video.segments.length > 0 ? (
+              video.segments.map((seg) => {
+                const isActive = currentTime >= seg.startSeconds && currentTime <= seg.endSeconds;
+                return (
+                  <div
+                    key={seg.id}
+                    onClick={() => {
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = seg.startSeconds;
+                        setCurrentTime(seg.startSeconds);
+                        videoRef.current.play().catch(() => {});
+                        setIsPlaying(true);
+                      }
+                    }}
+                    className={`p-2 rounded-lg border cursor-pointer transition-colors ${
+                      isActive
+                        ? 'bg-cyan-500/20 border-cyan-400/60 text-white'
+                        : 'bg-black/40 border-cyan-500/20 hover:border-cyan-400/40 text-cyan-200/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 font-mono text-[10px] font-bold">
+                        {seg.timestampLabel || formatTime(seg.startSeconds)}
+                      </span>
+                      {isActive && (
+                        <span className="text-[10px] text-cyan-400 font-mono flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                          Playing
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] leading-relaxed">{seg.text}</p>
+                  </div>
+                );
+              })
+            ) : (
+              <p>{video.transcript}</p>
+            )}
           </div>
         </div>
       )}

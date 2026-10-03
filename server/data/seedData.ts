@@ -854,6 +854,46 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       isPublicInWorkspace: true,
       createdAt: '2026-09-22T11:00:00.000Z',
       updatedAt: '2026-09-22T11:00:00.000Z'
+    },
+    {
+      id: 'file-seed-vid-1',
+      workspaceId: 'ws-stark-core',
+      ownerUserId: 'teacher-1',
+      originalName: 'quantum_harmonic_oscillator_lecture.mp4',
+      storageKey: 'obj-seed-vid-1',
+      mimeType: 'video/mp4',
+      sizeBytes: 428372,
+      extension: 'mp4',
+      sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      status: 'ready',
+      classId: 'class-phys-301',
+      knowledgeSpaceId: 'ks-quantum',
+      description: 'Quantum harmonic oscillator video lecture breakdown.',
+      tags: ['Quantum', 'Lecture', 'Ladder Operators'],
+      downloadCount: 12,
+      isPublicInWorkspace: true,
+      createdAt: '2026-10-02T11:00:00.000Z',
+      updatedAt: '2026-10-02T11:00:00.000Z'
+    },
+    {
+      id: 'file-seed-vid-2',
+      workspaceId: 'ws-stark-core',
+      ownerUserId: 'teacher-1',
+      originalName: 'stokes_theorem_differential_forms.mp4',
+      storageKey: 'obj-seed-vid-2',
+      mimeType: 'video/mp4',
+      sizeBytes: 423670,
+      extension: 'mp4',
+      sha256: 'f4b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b866',
+      status: 'ready',
+      classId: 'class-math-240',
+      knowledgeSpaceId: 'ks-quantum',
+      description: 'Stokes theorem and differential forms video lecture visualization.',
+      tags: ['Calculus', 'Differential Forms', 'Stokes Theorem'],
+      downloadCount: 8,
+      isPublicInWorkspace: true,
+      createdAt: '2026-10-01T15:00:00.000Z',
+      updatedAt: '2026-10-01T15:00:00.000Z'
     }
   ],
   classroomSessions: [
@@ -950,6 +990,36 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       status: 'ready',
       visibility: 'class',
       transcript: 'Welcome back to Advanced Quantum Mechanics. Today we explore the quantum harmonic oscillator using Dirac notation and ladder operators. The Hamiltonian operator is H equals p squared over 2m plus one-half m omega squared x squared. Notice that by defining the dimensionless raising and lowering operators a and a-dagger, the commutation relation is exactly [a, a-dagger] equals one. The ground state energy is one-half h-bar omega, confirming the physical reality of zero-point vacuum fluctuations.',
+      segments: [
+        {
+          id: 'seg-phys-1',
+          startSeconds: 0,
+          endSeconds: 180,
+          timestampLabel: '00:00',
+          text: 'Welcome back to Advanced Quantum Mechanics. Today we explore the quantum harmonic oscillator using Dirac notation and ladder operators.'
+        },
+        {
+          id: 'seg-phys-2',
+          startSeconds: 180,
+          endSeconds: 420,
+          timestampLabel: '03:00',
+          text: 'The Hamiltonian operator is H equals p squared over 2m plus one-half m omega squared x squared, representing kinetic and harmonic potential energy.'
+        },
+        {
+          id: 'seg-phys-3',
+          startSeconds: 420,
+          endSeconds: 750,
+          timestampLabel: '07:00',
+          text: 'Notice that by defining the dimensionless raising and lowering ladder operators a and a-dagger, the commutation relation is exactly [a, a-dagger] equals one.'
+        },
+        {
+          id: 'seg-phys-4',
+          startSeconds: 750,
+          endSeconds: 1100,
+          timestampLabel: '12:30',
+          text: 'The ground state energy is one-half h-bar omega, confirming the physical reality of zero-point vacuum fluctuations and quantum ground state non-zero energy.'
+        }
+      ],
       knowledgeSpaceId: 'ks-quantum',
       knowledgeSourceId: 'src-qm-vid-1',
       tags: ['Quantum', 'Lecture', 'Ladder Operators', 'Harmonic Oscillator'],
@@ -973,6 +1043,29 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       status: 'ready',
       visibility: 'class',
       transcript: 'In this lecture we visualize Stokes theorem across 2D surfaces in 3-space. The line integral of vector field F along boundary curve C equals the surface integral of the curl of F dot dS over surface S. When formulated with exterior calculus, the integral of d-omega over manifold M unifies line, surface, and volume integrals into a single equation.',
+      segments: [
+        {
+          id: 'seg-math-1',
+          startSeconds: 0,
+          endSeconds: 240,
+          timestampLabel: '00:00',
+          text: 'In this lecture we visualize Stokes theorem across 2D surfaces in 3-space.'
+        },
+        {
+          id: 'seg-math-2',
+          startSeconds: 240,
+          endSeconds: 600,
+          timestampLabel: '04:00',
+          text: 'The line integral of vector field F along boundary curve C equals the surface integral of the curl of F dot dS over surface S.'
+        },
+        {
+          id: 'seg-math-3',
+          startSeconds: 600,
+          endSeconds: 1050,
+          timestampLabel: '10:00',
+          text: 'When formulated with exterior calculus, the integral of d-omega over manifold M unifies line, surface, and volume integrals into a single equation.'
+        }
+      ],
       knowledgeSpaceId: 'ks-quantum',
       tags: ['Calculus', 'Differential Forms', 'Stokes Theorem'],
       createdAt: '2026-10-01T15:00:00.000Z',

@@ -358,10 +358,157 @@ export const deleteVideoTool: ToolDefinition<DeleteVideoArgs> = {
   }
 };
 
+// 6. Tool: video.search
+interface SearchVideoArgs {
+  query: string;
+  classId?: string;
+  workspaceId?: string;
+  topK?: number;
+}
+
+export const searchVideoTool: ToolDefinition<SearchVideoArgs> = {
+  name: 'video.search',
+  sector: 'education',
+  aliases: ['search_videos', 'discover_lectures', 'find_video_concepts'],
+  description: 'Searches across lecture transcripts and timestamped segments for concepts or topics.',
+  declaration: {
+    name: 'video_search',
+    description: 'Search lecture video transcripts and timestamped segments.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        query: { type: Type.STRING, description: 'Concept or topic keyword to search for' },
+        classId: { type: Type.STRING, description: 'Optional class identifier filter' },
+        workspaceId: { type: Type.STRING, description: 'Optional workspace identifier' },
+        topK: { type: Type.NUMBER, description: 'Maximum number of results to return' }
+      },
+      required: ['query']
+    }
+  },
+  validate(args: unknown): ValidationResult<SearchVideoArgs> {
+    if (!args || typeof args !== 'object') return { valid: false, error: 'Arguments object required.' };
+    const a = args as any;
+    if (!a.query || typeof a.query !== 'string') return { valid: false, error: "Parameter 'query' is required." };
+    return {
+      valid: true,
+      data: {
+        query: a.query.trim(),
+        classId: typeof a.classId === 'string' ? a.classId.trim() : undefined,
+        workspaceId: typeof a.workspaceId === 'string' ? a.workspaceId.trim() : undefined,
+        topK: typeof a.topK === 'number' ? a.topK : undefined
+      }
+    };
+  },
+  async execute(args: SearchVideoArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    try {
+      const user = await resolveUserFromContext(context);
+      const results = await smartVideoService.searchVideos(
+        args.query,
+        {
+          classId: args.classId,
+          workspaceId: args.workspaceId || context.workspaceId,
+          topK: args.topK
+        },
+        user
+      );
+      return {
+        ok: true,
+        data: {
+          query: args.query,
+          results,
+          count: results.length
+        }
+      };
+    } catch (err: any) {
+      return {
+        ok: false,
+        error: { code: 'SEARCH_VIDEO_ERROR', message: err.message || 'Failed to search videos.' }
+      };
+    }
+  }
+};
+
+// 7. Tool: video.ask
+interface AskVideoArgs {
+  question: string;
+  videoId?: string;
+  classId?: string;
+  workspaceId?: string;
+}
+
+export const askVideoTool: ToolDefinition<AskVideoArgs> = {
+  name: 'video.ask',
+  sector: 'education',
+  aliases: ['ask_video_question', 'lecture_qa', 'query_video_content'],
+  description: 'Answers student questions strictly grounded in lecture transcripts and video materials with exact citations.',
+  declaration: {
+    name: 'video_ask',
+    description: 'Ask a grounded question about a specific video lecture or course lectures.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        question: { type: Type.STRING, description: 'Question to answer from lecture material' },
+        videoId: { type: Type.STRING, description: 'Optional specific video ID to query' },
+        classId: { type: Type.STRING, description: 'Optional course ID filter' },
+        workspaceId: { type: Type.STRING, description: 'Optional workspace ID' }
+      },
+      required: ['question']
+    }
+  },
+  validate(args: unknown): ValidationResult<AskVideoArgs> {
+    if (!args || typeof args !== 'object') return { valid: false, error: 'Arguments object required.' };
+    const a = args as any;
+    if (!a.question || typeof a.question !== 'string') return { valid: false, error: "Parameter 'question' is required." };
+    return {
+      valid: true,
+      data: {
+        question: a.question.trim(),
+        videoId: typeof a.videoId === 'string' ? a.videoId.trim() : undefined,
+        classId: typeof a.classId === 'string' ? a.classId.trim() : undefined,
+        workspaceId: typeof a.workspaceId === 'string' ? a.workspaceId.trim() : undefined
+      }
+    };
+  },
+  async execute(args: AskVideoArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    try {
+      const user = await resolveUserFromContext(context);
+      let result;
+      if (args.videoId) {
+        result = await smartVideoService.askVideo(
+          args.videoId,
+          args.question,
+          user,
+          args.workspaceId || context.workspaceId
+        );
+      } else {
+        result = await smartVideoService.askCourseVideos(
+          args.question,
+          {
+            classId: args.classId,
+            workspaceId: args.workspaceId || context.workspaceId
+          },
+          user
+        );
+      }
+      return {
+        ok: true,
+        data: result as unknown as Record<string, unknown>
+      };
+    } catch (err: any) {
+      return {
+        ok: false,
+        error: { code: 'ASK_VIDEO_ERROR', message: err.message || 'Failed to answer video question.' }
+      };
+    }
+  }
+};
+
 export const videoTools = [
   listVideosTool,
   getVideoTool,
   uploadVideoTool,
   updateVideoTool,
-  deleteVideoTool
+  deleteVideoTool,
+  searchVideoTool,
+  askVideoTool
 ];

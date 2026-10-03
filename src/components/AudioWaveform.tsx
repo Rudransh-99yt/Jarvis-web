@@ -50,8 +50,8 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1.5 w-full max-w-xs">
-      <div className="flex items-center gap-1 h-8 px-2 py-1 bg-black/40 border border-cyan-500/20 rounded">
+    <div className="flex flex-col items-center justify-center gap-1.5 w-full max-w-xs min-w-0">
+      <div className="flex items-center justify-center gap-1 h-8 px-3 py-1 bg-black/40 border border-cyan-500/20 rounded">
         {bars.map((height, i) => (
           <div
             key={i}
@@ -60,10 +60,10 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
           />
         ))}
       </div>
-      <div className="flex items-center justify-between w-full px-1 text-[10px] font-mono-code">
-        <span className="flex items-center gap-1 text-cyan-400/80">
+      <div className="flex items-center justify-between w-full px-1 text-[10px] font-mono-code gap-2 min-w-0">
+        <span className="flex items-center gap-1 text-cyan-400/80 truncate min-w-0">
           <span
-            className={`w-1.5 h-1.5 rounded-full ${
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
               isSpeaking
                 ? 'bg-cyan-400 animate-ping'
                 : isListening
@@ -71,9 +71,11 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
                 : 'bg-cyan-700'
             }`}
           />
-          {isSpeaking ? 'VOCAL CARRIER ACTIVE' : isListening ? 'MICROPHONE LIVE' : 'VOICE ENGINE IDLE'}
+          <span className="truncate">
+            {isSpeaking ? 'VOCAL CARRIER ACTIVE' : isListening ? 'MICROPHONE LIVE' : 'VOICE ENGINE IDLE'}
+          </span>
         </span>
-        <span className="text-cyan-500/60">48.0 kHz 24-BIT</span>
+        <span className="text-cyan-500/60 shrink-0">48.0 kHz 24-BIT</span>
       </div>
     </div>
   );

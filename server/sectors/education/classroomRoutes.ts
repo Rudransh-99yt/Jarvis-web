@@ -3,7 +3,8 @@ import express, { type Request, type Response } from 'express';
 import { jarvisData } from '../../data/index.ts';
 import { classroomService } from './classroomService.ts';
 import { classroomEventBus } from './classroomEventBus.ts';
-import { authenticateRequest, AuthenticationError } from '../../auth/index.ts';
+import { authenticateRequest, AuthenticationError, extractAuthToken, ticketService } from '../../auth/index.ts';
+import type { User } from '../../data/types.ts';
 
 export const classroomRouter = express.Router();
 
@@ -15,7 +16,15 @@ function getParam(param: string | string[] | undefined): string {
 function handleRouteError(err: any, res: Response, fallbackCode = 'CLASSROOM_ERROR') {
   if (res.headersSent) return;
 
-  if (err instanceof AuthenticationError || err.statusCode === 401 || err.code === 'UNAUTHENTICATED') {
+  if (
+    err instanceof AuthenticationError ||
+    err?.statusCode === 401 ||
+    err?.code === 'UNAUTHENTICATED' ||
+    err?.message?.includes('Authentication required') ||
+    err?.message?.includes('Missing credentials') ||
+    err?.message?.includes('not recognized') ||
+    err?.message?.includes('Unauthenticated')
+  ) {
     res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: err.message } });
     return;
   }
@@ -62,9 +71,30 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
   let heartbeatTimer: NodeJS.Timeout | null = null;
 
   try {
-    // 1. Authenticate user from request context (Header, Bearer token, or Query param ?userId=)
-    const currentUser = await authenticateRequest(req);
     const sessionId = getParam(req.params.id);
+    let currentUser: User | null = null;
+
+    // 1. Authenticate via short-lived SSE ticket, auth headers, or registered SSE identity
+    if (typeof req.query.ticket === 'string' && req.query.ticket.trim().length > 0) {
+      const verified = await ticketService.verifySSETicket(req.query.ticket.trim(), sessionId);
+      currentUser = verified.user;
+    } else {
+      const token = extractAuthToken(req) || (typeof req.query.userId === 'string' ? req.query.userId.trim() : null);
+      if (!token) {
+        res.status(401).json({
+          error: { code: 'UNAUTHENTICATED', message: 'Authentication required for classroom stream.' }
+        });
+        return;
+      }
+      currentUser = await jarvisData.users.getById(token);
+      if (!currentUser) {
+        res.status(401).json({
+          error: { code: 'INVALID_CREDENTIALS', message: `User '${token}' not recognized.` }
+        });
+        return;
+      }
+    }
+
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
 
     // 2. Look up session
