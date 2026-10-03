@@ -38,14 +38,14 @@
       "displayName": "Outsider Student",
       "email": "outsider@stark.edu",
       "role": "student",
-      "createdAt": "2026-10-03T14:17:02.401Z"
+      "createdAt": "2026-10-03T16:01:23.978Z"
     },
     {
       "id": "user-foreign",
       "displayName": "Foreign Operator",
       "email": "foreign@other.com",
       "role": "student",
-      "createdAt": "2026-10-03T14:17:02.402Z"
+      "createdAt": "2026-10-03T16:01:23.978Z"
     }
   ],
   "workspaces": [
@@ -95,11 +95,11 @@
       "joinedAt": "2026-09-01T08:00:00.000Z"
     },
     {
-      "id": "mem-1791037022402-yo78",
+      "id": "mem-1791043283978-clbh",
       "workspaceId": "ws-stark-core",
       "userId": "student-outsider",
       "role": "member",
-      "joinedAt": "2026-10-03T14:17:02.402Z"
+      "joinedAt": "2026-10-03T16:01:23.978Z"
     }
   ],
   "conversations": [
