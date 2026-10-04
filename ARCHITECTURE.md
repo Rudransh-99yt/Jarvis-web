@@ -152,8 +152,22 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 - **Tenant-Safe Deduplication & Cascading RAG Cleanup (`ragBridge.ts`)**: Same-content deduplication within workspace boundaries; direct ingestion into Knowledge Spaces; cascading purge of all derived vector chunks upon file deletion.
 - **Cloud-Ready Strategy**: Provider configuration allows `STORAGE_PROVIDER=local` default, ready for future S3/GCS drivers without rewriting higher-level sectors. Note: Cloud storage is **not yet enabled**.
 
-### 1.8 Education OS Integration Layer — Phase D (`server/sectors/education/academicIntegrationService.ts`)
-- **Core Principle**: "One Academic Context → Many Connected Experiences". Eliminates siloed feature walls; replaces them with unified lenses over common academic objects without bloating individual views.
+### 1.8 Education OS Integration Layer & Canonical UX Hierarchy — Phase D (`server/sectors/education/academicIntegrationService.ts`)
+- **Core Principle**: "One Academic Context → Many Connected Experiences" & "One Page = One Primary Job".
+- **Canonical Education Hierarchy**:
+  ```text
+  Education
+    ├── My Learning (Curriculum Progression: Course/Subject -> Chapter/Unit -> Lesson -> Study Room)
+    ├── Classes & Cohorts (Social & Organizational: Cohort, Schedule, Faculty, Classmates/Roster, Announcements, Syllabus, Live Classroom)
+    ├── Class Sessions (Operational Classroom: Preparation -> SmartBoard -> Live Quiz -> Follow-up)
+    ├── Assignments (Academic Ledger: Tabular status, deadlines, submission, grading, points, contextual focus/lesson links)
+    ├── Calendar (Temporal Ledger: Chronological timeline, day agenda, color-coded class/deadline/study events)
+    ├── Focus (Calm Study Space: Countdown clock, academic target, scratchpad, mini checklist, distraction blocking, emergency exit)
+    ├── Workspace (Personal student notes, scratchpads, and project artifacts)
+    ├── Community (Cohort discussion, study groups, Q&A channels)
+    ├── Knowledge (Grounded RAG spaces, syllabus reference documents, verified citations)
+    └── Media (Video lecture library with seek points, transcript, SmartBoard replays)
+  ```
 - **Canonical Academic Entities**:
   - `User`, `Institution`, `Workspace`
   - `Class/Cohort`, `Course`, `Subject`, `Unit/Chapter`, `Lesson`
@@ -185,6 +199,14 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - `AcademicContextActions.tsx`: Contextual action strip rendering breadcrumbs (`PHYS-301 > Unit 2 > Lesson 202`) with 1-click "Open in Context" jumps (Study, Focus 25m, Notes, Discuss, Assignment, Sources).
 - **Bounded AI Context Builder**:
   - Packages active academic locus, verified textbook sources, and lesson plan outlines into high-signal, hallucination-resistant prompt contexts.
+- **Deep Curriculum Progression & Practice Hierarchy (Phase D.5)**:
+  - Canonical Progression: `Education` -> `My Learning` -> `Course / Subject` -> `Chapter / Unit` -> `Lesson / Study Room` -> `Practice Checkpoint` -> `Results & Analysis`.
+  - Back navigation contract: `SharedBackButton` and `EducationBreadcrumbs` provide bidirectional navigation and preserve context across browser popstate events.
+- **Student Engagement & Standings Foundation (Phase D.5)**:
+  - Authoritative point recording engine (`EngagementStore`) with transparent points configuration: lesson completion (+10), practice (+10), quiz (+15), on-time assignment (+15 + 5 bonus), focus (+10), community helpful (+10), streak milestone (+20).
+  - Anti-gaming idempotency: prevents duplicated point manipulation through deterministic `sourceEntityType` + `sourceEntityId` indexing.
+  - Multi-tier standings: class, cohort, and school scopes celebrating study consistency, daily streaks, and completed problem sets without publishing sensitive academic grades.
+  - Student activity ledger: chronological audit trail of completed tasks and points awarded.
 
 ---
 

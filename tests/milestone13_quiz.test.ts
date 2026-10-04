@@ -682,7 +682,11 @@ async function runMilestone13Tests() {
   console.log('===================================================================\n');
 }
 
-runMilestone13Tests().catch((err) => {
-  console.error('[FATAL] Milestone 13 test suite failure:', err);
-  process.exit(1);
-});
+runMilestone13Tests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('[FATAL] Milestone 13 test suite failure:', err);
+    process.exit(1);
+  });

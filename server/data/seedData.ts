@@ -37,6 +37,30 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       role: 'student',
       department: 'Applied Mathematics',
       createdAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'principal-1',
+      displayName: 'Dean Alistair Vance',
+      email: 'a.vance@stark.edu',
+      role: 'principal',
+      department: 'Office of the Dean & Academic Directorate',
+      createdAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'parent-1',
+      displayName: 'Maria Chen',
+      email: 'maria.chen@starkfamily.org',
+      role: 'parent',
+      department: 'Family & Guardian Council',
+      createdAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'parent-2',
+      displayName: 'Robert Lin',
+      email: 'robert.lin@linconsulting.com',
+      role: 'parent',
+      department: 'Family & Guardian Council',
+      createdAt: '2026-09-01T08:00:00.000Z'
     }
   ],
 
@@ -80,6 +104,27 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       id: 'mem-4',
       workspaceId: 'ws-stark-core',
       userId: 'student-2',
+      role: 'member',
+      joinedAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'mem-5',
+      workspaceId: 'ws-stark-core',
+      userId: 'principal-1',
+      role: 'admin',
+      joinedAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'mem-6',
+      workspaceId: 'ws-stark-core',
+      userId: 'parent-1',
+      role: 'member',
+      joinedAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'mem-7',
+      workspaceId: 'ws-stark-core',
+      userId: 'parent-2',
       role: 'member',
       joinedAt: '2026-09-01T08:00:00.000Z'
     }

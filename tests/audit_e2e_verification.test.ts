@@ -537,7 +537,11 @@ async function runAuditTestSuite() {
   } catch {}
 }
 
-runAuditTestSuite().catch((err) => {
-  console.error('\n[AUDIT TEST SUITE CRASHED]', err);
-  process.exit(1);
-});
+runAuditTestSuite()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('\n[AUDIT TEST SUITE CRASHED]', err);
+    process.exit(1);
+  });

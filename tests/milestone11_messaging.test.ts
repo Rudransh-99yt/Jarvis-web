@@ -485,7 +485,11 @@ async function runMilestone11Tests() {
   } catch {}
 }
 
-runMilestone11Tests().catch((err) => {
-  console.error('\n[MILESTONE 11 TEST SUITE CRASHED]', err);
-  process.exit(1);
-});
+runMilestone11Tests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('\n[MILESTONE 11 TEST SUITE CRASHED]', err);
+    process.exit(1);
+  });

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import type { Assignment, StudentSubmission, EducationRole, EducationClass } from '../../../types/education.ts';
 import {
-  Award,
   Calendar,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   FileText,
   PlusCircle,
@@ -14,7 +13,13 @@ import {
   ChevronRight,
   Filter,
   Search,
-  Sparkles
+  BookOpen,
+  Timer,
+  Award,
+  ChevronDown,
+  ArrowUpDown,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react';
 
 interface AssignmentsViewProps {
@@ -45,6 +50,9 @@ interface AssignmentsViewProps {
   onClearSelectedGradingSubmission?: () => void;
 }
 
+type SortField = 'dueDate' | 'course' | 'status' | 'title';
+type SortOrder = 'asc' | 'desc';
+
 export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
   assignments,
   submissions,
@@ -58,14 +66,15 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
   selectedSubmissionForGrading = null,
   onClearSelectedGradingSubmission
 }) => {
-  // If a grading submission was passed directly, select its assignment
-  const initialAsgId = selectedSubmissionForGrading
-    ? selectedSubmissionForGrading.assignmentId
-    : null;
+  const initialAsgId = selectedSubmissionForGrading ? selectedSubmissionForGrading.assignmentId : null;
 
   const [selectedAsgId, setSelectedAsgId] = useState<string | null>(initialAsgId);
   const [filterMode, setFilterMode] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
+  const [courseFilter, setCourseFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<SortField>('dueDate');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(initialCreateModalOpen);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [gradingSubmission, setGradingSubmission] = useState<StudentSubmission | null>(selectedSubmissionForGrading);
@@ -143,49 +152,93 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
     }
   };
 
-  // Filtered Assignments for Index View
-  const filteredAssignments = assignments.filter((asg) => {
-    const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === 'student-1');
-    const matchesSearch =
-      asg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      asg.className.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      asg.category.toLowerCase().includes(searchQuery.toLowerCase());
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
 
-    if (!matchesSearch) return false;
+  // Resolve Linked Lesson name if available
+  const getLinkedLessonName = (asg: Assignment) => {
+    if (asg.lessonId) {
+      const cls = classes.find((c) => c.id === asg.classId);
+      if (cls && cls.units) {
+        for (const u of cls.units) {
+          const l = u.lessons?.find((les) => les.id === asg.lessonId);
+          if (l) return `Lesson ${u.number}.${l.number}: ${l.title}`;
+        }
+      }
+      return 'Unit 1 · Foundation Lesson';
+    }
+    return 'Unit Practice Set';
+  };
 
-    if (filterMode === 'pending') {
-      return !sub || sub.status === 'submitted';
-    }
-    if (filterMode === 'submitted') {
-      return sub && sub.status === 'submitted';
-    }
-    if (filterMode === 'graded') {
-      return sub && sub.status === 'graded';
-    }
-    return true;
-  });
+  // Filtered & Sorted Assignments
+  const filteredAssignments = assignments
+    .filter((asg) => {
+      const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === 'student-1');
+      const matchesSearch =
+        asg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        asg.className.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        asg.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+      if (!matchesSearch) return false;
+      if (courseFilter !== 'all' && asg.classId !== courseFilter) return false;
+
+      if (filterMode === 'pending') {
+        return !sub || sub.status === 'submitted';
+      }
+      if (filterMode === 'submitted') {
+        return sub && sub.status === 'submitted';
+      }
+      if (filterMode === 'graded') {
+        return sub && sub.status === 'graded';
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      if (sortField === 'dueDate') {
+        comparison = a.dueDate.localeCompare(b.dueDate);
+      } else if (sortField === 'course') {
+        comparison = a.className.localeCompare(b.className);
+      } else if (sortField === 'title') {
+        comparison = a.title.localeCompare(b.title);
+      } else if (sortField === 'status') {
+        const subA = submissions.find((s) => s.assignmentId === a.id && s.studentId === 'student-1');
+        const subB = submissions.find((s) => s.assignmentId === b.id && s.studentId === 'student-1');
+        const statusWeight = (s?: StudentSubmission) => (!s ? 0 : s.status === 'submitted' ? 1 : 2);
+        comparison = statusWeight(subA) - statusWeight(subB);
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto w-full">
       {/* 1. Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
         <div className="space-y-1">
-          <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase">
-            Jarvis Academic · Assignments & Assessment Ledger
+          <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Academic Assessment Ledger</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Assignments & Coursework
           </h1>
           <p className="text-xs text-slate-400 font-mono">
             {currentRole === 'teacher'
-              ? 'Review submissions, evaluate cadet responses, and distribute new assessments.'
-              : 'Track deadlines, review problem sets, and submit coursework.'}
+              ? 'Review submissions, evaluate cadet responses, and distribute assessments.'
+              : 'Track deadlines, complete problem sets, and enter focused study blocks.'}
           </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
           {currentRole === 'teacher' && (
             <button
+              type="button"
               onClick={() => setIsCreateModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.15)]"
             >
@@ -196,6 +249,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
 
           {selectedAsgId && (
             <button
+              type="button"
               onClick={() => setSelectedAsgId(null)}
               className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-mono transition-all cursor-pointer"
             >
@@ -206,9 +260,9 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Primary Surface: Dedicated Detail View OR Compact Index Table */}
+      {/* 2. Main Content Surface */}
       {selectedAsg ? (
-        /* DEDICATED ASSIGNMENT WORKSPACE */
+        /* DEDICATED ASSIGNMENT DETAIL WORKSPACE */
         <div className="p-6 sm:p-8 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-6 animate-fade-in">
           {/* Header Metadata */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -225,189 +279,160 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               </h2>
             </div>
 
-            <div className="text-right font-mono shrink-0">
-              <div className="text-sm font-bold text-cyan-300">{selectedAsg.maxScore} Max Points</div>
-              <div className="text-[11px] text-slate-500">
-                {currentRole === 'student'
-                  ? userSubmission
-                    ? userSubmission.status === 'graded'
-                      ? `Score: ${userSubmission.grade} / ${selectedAsg.maxScore}`
-                      : 'Submitted for grading'
-                    : 'Awaiting submission'
-                  : `${asgSubmissions.length} cadet submissions`}
-              </div>
-            </div>
-          </div>
-
-          {/* Academic Context Actions Strip */}
-          {onNavigateToContext && (
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-mono">
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="font-bold text-cyan-400">Context:</span>
-                <span>{selectedAsg.className.split(':')[0]}</span>
-                <span className="text-slate-600">·</span>
-                <span className="text-slate-400">Lesson & Reference Hub</span>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() =>
-                    onNavigateToContext('lesson_workspace', {
-                      classId: selectedAsg.classId,
-                      courseId: selectedAsg.classId,
-                      unitId: 'unit-phys-2',
-                      lessonId: 'les-phys-202',
-                      assignmentId: selectedAsg.id
-                    })
-                  }
-                  className="px-3 py-1.5 min-h-[36px] rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-200 border border-slate-700 text-xs transition-colors cursor-pointer"
-                >
-                  Open Lesson
-                </button>
-                <button
-                  onClick={() =>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavigateToContext) {
                     onNavigateToContext('focus', {
                       classId: selectedAsg.classId,
                       assignmentId: selectedAsg.id,
                       topic: selectedAsg.title
-                    })
+                    });
                   }
-                  className="px-3 py-1.5 min-h-[36px] rounded-lg bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 text-xs transition-colors cursor-pointer"
-                >
-                  Start Focus Block (45m)
-                </button>
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-mono transition-colors"
+              >
+                <Timer className="w-3.5 h-3.5" />
+                <span>Start Focus (45m)</span>
+              </button>
+
+              {onNavigateToContext && (
                 <button
-                  onClick={() =>
-                    onNavigateToContext('community', {
+                  type="button"
+                  onClick={() => {
+                    onNavigateToContext('lesson_workspace', {
                       classId: selectedAsg.classId,
-                      assignmentId: selectedAsg.id
-                    })
-                  }
-                  className="px-3 py-1.5 min-h-[36px] rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs transition-colors cursor-pointer"
+                      courseId: selectedAsg.classId,
+                      unitId: selectedAsg.unitId || 'unit-phys-1',
+                      lessonId: selectedAsg.lessonId || 'les-phys-101'
+                    });
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-colors"
                 >
-                  Discuss
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Open Lesson</span>
                 </button>
+              )}
+
+              <div className="text-right font-mono shrink-0 pl-2">
+                <div className="text-sm font-bold text-cyan-300">{selectedAsg.maxScore} Max Points</div>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Instructions and Brief */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-              Problem Description & Instructions
-            </h3>
-            <div className="p-4 sm:p-5 rounded-xl border border-slate-800 bg-slate-950/70 text-xs text-slate-200 leading-relaxed whitespace-pre-line font-mono">
-              {selectedAsg.instructions || selectedAsg.description}
+          {/* Description & Problem Instructions */}
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 space-y-2">
+              <div className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
+                Problem Statement & Instructions
+              </div>
+              <p className="text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-line">
+                {selectedAsg.instructions}
+              </p>
             </div>
           </div>
 
           {/* Student Submission Card */}
           {currentRole === 'student' && (
-            <div className="p-5 rounded-xl border border-slate-800 bg-slate-950/80 space-y-4">
+            <div className="p-5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
-                  Your Submission
-                </h3>
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
+                    Your Submission Status
+                  </span>
+                </div>
+
                 {userSubmission ? (
-                  <span className="flex items-center gap-1.5 text-xs font-mono text-emerald-400 font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    {userSubmission.status === 'graded' ? 'Graded' : 'Submitted for Grading'}
+                  <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
+                    userSubmission.status === 'graded'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  }`}>
+                    {userSubmission.status === 'graded' ? `Graded: ${userSubmission.grade} / ${selectedAsg.maxScore}` : 'Submitted'}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-xs font-mono text-amber-400 font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                    Pending Submission
+                  <span className="px-2 py-0.5 rounded text-xs font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Not Submitted
                   </span>
                 )}
               </div>
 
               {userSubmission ? (
-                <div className="space-y-3 text-xs font-mono">
-                  <div className="text-slate-400 text-[11px]">
-                    Submitted at: {new Date(userSubmission.submittedAt || '').toLocaleString()}
+                <div className="space-y-3 pt-2 text-xs font-mono">
+                  <div className="p-3 rounded-lg border border-slate-800 bg-slate-900/60 space-y-1">
+                    <div className="text-slate-400">Response:</div>
+                    <div className="text-white font-sans text-sm">{userSubmission.content}</div>
                   </div>
-                  <div className="p-4 rounded-lg bg-black/60 border border-slate-800 text-slate-200 font-mono text-xs whitespace-pre-line">
-                    {userSubmission.content}
-                  </div>
-                  {userSubmission.status === 'graded' && (
-                    <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-1.5">
-                      <div className="text-emerald-400 font-bold text-sm">
-                        Final Score: {userSubmission.grade} / {selectedAsg.maxScore} pts
-                      </div>
-                      <div className="text-slate-300 text-xs font-sans">
-                        Instructor Feedback: "{userSubmission.feedback}"
-                      </div>
+
+                  {userSubmission.feedback && (
+                    <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-950/30 space-y-1">
+                      <div className="text-emerald-400 font-bold">Faculty Feedback:</div>
+                      <div className="text-emerald-200 font-sans text-sm">{userSubmission.feedback}</div>
                     </div>
                   )}
                 </div>
               ) : (
-                <button
-                  onClick={() => setIsSubmitModalOpen(true)}
-                  className="w-full py-3 min-h-[44px] rounded-xl border border-cyan-400/40 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                >
-                  <Send className="w-4 h-4 text-cyan-300" />
-                  <span>Submit Your Assignment Work</span>
-                </button>
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs text-slate-400">
+                    Submit your solution equations, derivation steps, and answer explanations.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsSubmitModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Submit Work</span>
+                  </button>
+                </div>
               )}
             </div>
           )}
 
-          {/* Teacher Submissions Ledger */}
+          {/* Teacher Grading View */}
           {currentRole === 'teacher' && (
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
-                  Cadet Submissions ({asgSubmissions.length})
-                </h3>
-              </div>
-
-              {asgSubmissions.length === 0 ? (
-                <div className="p-6 rounded-xl border border-slate-800 bg-slate-950/40 text-center text-xs text-slate-500 font-mono">
-                  No submissions recorded yet for this assignment.
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {asgSubmissions.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors"
-                    >
-                      <div className="space-y-0.5 min-w-0">
-                        <div className="text-xs font-bold text-white font-mono">{sub.studentName}</div>
-                        <div className="text-xs text-slate-400 line-clamp-1 italic font-mono">"{sub.content}"</div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0 self-start sm:self-center">
-                        {sub.status === 'graded' ? (
-                          <div className="text-right font-mono text-xs">
-                            <span className="text-emerald-400 font-bold">
-                              {sub.grade} / {selectedAsg.maxScore}
-                            </span>
-                            <div className="text-[10px] text-slate-500">Graded</div>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setGradingSubmission(sub)}
-                            className="px-3.5 py-1.5 min-h-[36px] rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono tracking-wider transition-all cursor-pointer"
-                          >
-                            Review & Grade
-                          </button>
-                        )}
-                      </div>
+            <div className="space-y-4">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                Cadet Submissions ({asgSubmissions.length})
+              </h3>
+              <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/60">
+                {asgSubmissions.map((sub) => (
+                  <div key={sub.id} className="p-4 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-bold text-white font-mono">{sub.studentName}</div>
+                      <div className="text-xs text-slate-400 font-mono italic">"{sub.content}"</div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="flex items-center gap-3">
+                      {sub.status === 'graded' ? (
+                        <span className="text-xs font-mono font-bold text-emerald-400">
+                          {sub.grade} / {selectedAsg.maxScore} pts
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setGradingSubmission(sub)}
+                          className="px-3 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono cursor-pointer"
+                        >
+                          Review & Grade
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
       ) : (
-        /* COMPACT SCANABLE ASSIGNMENTS INDEX TABLE */
+        /* ACADEMIC LEDGER TABULAR VIEW */
         <div className="space-y-4">
-          {/* Filter Bar & Search */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900/60">
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs">
+          {/* Controls Bar: Filters & Search */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900/60">
+            <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
               <button
+                type="button"
                 onClick={() => setFilterMode('all')}
                 className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                   filterMode === 'all' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
@@ -416,6 +441,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                 All ({assignments.length})
               </button>
               <button
+                type="button"
                 onClick={() => setFilterMode('pending')}
                 className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                   filterMode === 'pending' ? 'bg-slate-800 text-amber-300 font-bold' : 'text-slate-400 hover:text-white'
@@ -424,6 +450,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                 Pending
               </button>
               <button
+                type="button"
                 onClick={() => setFilterMode('submitted')}
                 className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                   filterMode === 'submitted' ? 'bg-slate-800 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
@@ -432,6 +459,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                 Submitted
               </button>
               <button
+                type="button"
                 onClick={() => setFilterMode('graded')}
                 className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                   filterMode === 'graded' ? 'bg-slate-800 text-emerald-300 font-bold' : 'text-slate-400 hover:text-white'
@@ -441,84 +469,199 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               </button>
             </div>
 
-            <div className="relative min-w-0 sm:w-64">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search assignments..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
-              />
+            <div className="flex items-center gap-2">
+              {/* Course filter dropdown */}
+              <select
+                value={courseFilter}
+                onChange={(e) => setCourseFilter(e.target.value)}
+                className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-300 focus:outline-none focus:border-cyan-500/50"
+              >
+                <option value="all">All Courses</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.code}
+                  </option>
+                ))}
+              </select>
+
+              <div className="relative w-full sm:w-56">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Filter assignments..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Assignments Table / Rows */}
+          {/* Tabular Ledger */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-sm">
+            {/* Table Header */}
+            <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-slate-800 bg-slate-950/70 text-[11px] font-mono uppercase tracking-wider text-slate-400">
+              <button
+                type="button"
+                onClick={() => toggleSort('title')}
+                className="col-span-4 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+              >
+                <span>Assignment & Category</span>
+                <ArrowUpDown className="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleSort('course')}
+                className="col-span-2 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+              >
+                <span>Course</span>
+                <ArrowUpDown className="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleSort('dueDate')}
+                className="col-span-2 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+              >
+                <span>Due Date</span>
+                <ArrowUpDown className="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleSort('status')}
+                className="col-span-2 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+              >
+                <span>Status & Points</span>
+                <ArrowUpDown className="w-3 h-3" />
+              </button>
+              <div className="col-span-2 text-right">Context Actions</div>
+            </div>
+
+            {/* Table Rows */}
             {filteredAssignments.length === 0 ? (
               <div className="p-12 text-center space-y-2">
                 <FileText className="w-8 h-8 text-slate-600 mx-auto" />
                 <div className="text-sm font-mono font-bold text-slate-300">No Assignments Match Filter</div>
                 <div className="text-xs text-slate-500 font-mono">
-                  {searchQuery ? `No results for "${searchQuery}".` : 'No assignments in this category.'}
+                  {searchQuery ? `No results for "${searchQuery}".` : 'No assignments in this ledger view.'}
                 </div>
               </div>
             ) : (
               <div className="divide-y divide-slate-800/80">
                 {filteredAssignments.map((asg) => {
                   const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === 'student-1');
+                  const linkedLesson = getLinkedLessonName(asg);
 
                   return (
                     <div
                       key={asg.id}
-                      onClick={() => setSelectedAsgId(asg.id)}
-                      className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-800/30 transition-colors cursor-pointer group"
+                      className="p-4 sm:p-5 md:grid md:grid-cols-12 gap-3 items-center hover:bg-slate-800/30 transition-colors group"
                     >
-                      <div className="space-y-1 min-w-0 flex-1">
-                        <div className="flex items-center gap-2 text-xs font-mono">
-                          <span className="font-bold text-cyan-300 group-hover:text-cyan-200">
-                            {asg.className.split(':')[0]}
+                      {/* Column 1: Assignment Title & Category */}
+                      <div
+                        onClick={() => setSelectedAsgId(asg.id)}
+                        className="md:col-span-4 space-y-1 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                            {asg.category}
                           </span>
-                          <span aria-hidden="true" className="text-slate-600">·</span>
-                          <span className="text-slate-400">{asg.category}</span>
-                          <span aria-hidden="true" className="text-slate-600">·</span>
-                          <span className="text-amber-400/90">Due {asg.dueDate}</span>
+                          <span className="text-xs text-slate-400 font-mono truncate">
+                            {linkedLesson}
+                          </span>
                         </div>
-                        <h3 className="text-sm sm:text-base font-semibold text-white group-hover:text-cyan-100 transition-colors truncate">
+                        <h3 className="text-sm font-semibold text-white group-hover:text-cyan-200 transition-colors truncate">
                           {asg.title}
                         </h3>
-                        <p className="text-xs text-slate-400 line-clamp-1">
-                          {asg.description}
-                        </p>
                       </div>
 
-                      <div className="flex items-center gap-4 shrink-0 self-start sm:self-center">
-                        <div className="text-right font-mono text-xs">
-                          {currentRole === 'student' ? (
-                            sub ? (
-                              <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                <span>
-                                  {sub.status === 'graded' ? `${sub.grade} / ${asg.maxScore} pts` : 'Submitted'}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1.5 text-amber-400 font-medium">
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                                <span>Assigned · {asg.maxScore} pts</span>
-                              </div>
-                            )
-                          ) : (
-                            <div className="text-slate-300">
-                              <span className="font-bold text-cyan-300">{asg.submittedCount || 0}</span>
-                              <span className="text-slate-500"> / {asg.totalEnrolled || 3} submitted</span>
-                            </div>
-                          )}
-                        </div>
+                      {/* Column 2: Course */}
+                      <div className="md:col-span-2 text-xs font-mono text-slate-300 truncate">
+                        <span className="font-bold text-cyan-400">{asg.className.split(':')[0]}</span>
+                        <div className="text-[11px] text-slate-500 truncate">{asg.className.split(':')[1] || ''}</div>
+                      </div>
 
-                        <span className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 group-hover:text-white group-hover:border-cyan-500/40 transition-colors">
-                          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                        </span>
+                      {/* Column 3: Due Date */}
+                      <div className="md:col-span-2 text-xs font-mono text-amber-400/90 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
+                        <span>{asg.dueDate}</span>
+                      </div>
+
+                      {/* Column 4: Status & Points */}
+                      <div className="md:col-span-2 font-mono text-xs">
+                        {currentRole === 'student' ? (
+                          sub ? (
+                            <div className="space-y-0.5">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ${
+                                sub.status === 'graded'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                              }`}>
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>{sub.status === 'graded' ? `${sub.grade} / ${asg.maxScore} pts` : 'Submitted'}</span>
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="space-y-0.5">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-slate-800 text-amber-300 border border-amber-500/30 font-medium">
+                                <Clock className="w-3 h-3" />
+                                <span>Pending · {asg.maxScore} pts</span>
+                              </span>
+                            </div>
+                          )
+                        ) : (
+                          <div className="text-slate-300">
+                            <span className="font-bold text-cyan-300">{asg.submittedCount || 0}</span>
+                            <span className="text-slate-500"> / {asg.totalEnrolled || 3} submitted</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Column 5: Contextual Action Buttons */}
+                      <div className="md:col-span-2 flex items-center justify-end gap-1.5 pt-3 md:pt-0">
+                        {onNavigateToContext && (
+                          <button
+                            type="button"
+                            title="Start Focus Block for this assignment"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigateToContext('focus', {
+                                classId: asg.classId,
+                                assignmentId: asg.id,
+                                topic: asg.title
+                              });
+                            }}
+                            className="p-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-mono transition-colors"
+                          >
+                            <Timer className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {onNavigateToContext && (
+                          <button
+                            type="button"
+                            title="Open associated lesson workspace"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigateToContext('lesson_workspace', {
+                                classId: asg.classId,
+                                courseId: asg.classId,
+                                unitId: asg.unitId || 'unit-phys-1',
+                                lessonId: asg.lessonId || 'les-phys-101'
+                              });
+                            }}
+                            className="p-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-colors"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedAsgId(asg.id)}
+                          className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-mono transition-colors"
+                        >
+                          View
+                        </button>
                       </div>
                     </div>
                   );
@@ -529,60 +672,186 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
         </div>
       )}
 
-      {/* MODAL 1: Teacher Create Assignment */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      {/* Student Submit Modal */}
+      {isSubmitModalOpen && selectedAsg && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <PlusCircle className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-sm font-bold font-mono tracking-wider text-white uppercase">
-                  Create New Assignment
-                </h3>
-              </div>
+              <h3 className="text-base font-bold text-white font-mono">
+                Submit Solution: {selectedAsg.title}
+              </h3>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white min-h-[40px] min-w-[40px] flex items-center justify-center"
+                type="button"
+                onClick={() => setIsSubmitModalOpen(false)}
+                className="text-slate-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs font-mono">
-              <div>
-                <label className="block text-slate-400 mb-1">TARGET COURSE</label>
-                <select
-                  value={newClassId}
-                  onChange={(e) => setNewClassId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
-                >
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-slate-900">
-                      {c.code}: {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">ASSIGNMENT TITLE</label>
-                <input
-                  type="text"
+            <form onSubmit={handleStudentSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-mono text-slate-300">Your Derivation & Answer</label>
+                <textarea
+                  rows={5}
+                  value={studentContent}
+                  onChange={(e) => setStudentContent(e.target.value)}
+                  placeholder="Enter your step-by-step reasoning and solution derivation..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500/50"
                   required
-                  placeholder="e.g., Quantum Harmonic Oscillator Problem Set"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-400 mb-1">CATEGORY</label>
+              <div className="space-y-1">
+                <label className="text-xs font-mono text-slate-300">Attachment (Optional filename)</label>
+                <input
+                  type="text"
+                  value={attachedFileName}
+                  onChange={(e) => setAttachedFileName(e.target.value)}
+                  placeholder="e.g. quantum_harmonics_derivation.pdf"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500/50"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSubmitModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 text-xs font-mono hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold"
+                >
+                  Submit for Evaluation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Grade Modal */}
+      {gradingSubmission && selectedAsg && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white font-mono">
+                Grade Submission: {gradingSubmission.studentName}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setGradingSubmission(null)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl border border-slate-800 bg-slate-950 text-xs font-mono space-y-1">
+              <div className="text-slate-500">Student Response:</div>
+              <div className="text-slate-200">{gradingSubmission.content}</div>
+            </div>
+
+            <form onSubmit={handleGradeSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-mono text-slate-300">
+                  Grade Score (Max {selectedAsg.maxScore})
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={selectedAsg.maxScore}
+                  value={gradeScore}
+                  onChange={(e) => setGradeScore(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500/50"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-mono text-slate-300">Feedback to Cadet</label>
+                <textarea
+                  rows={3}
+                  value={gradeFeedback}
+                  onChange={(e) => setGradeFeedback(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-amber-500/50"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setGradingSubmission(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 text-xs font-mono"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl border border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-mono font-bold"
+                >
+                  Submit Grade & Feedback
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Create Assignment Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white font-mono">Create New Assignment</h3>
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSubmit} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-mono text-slate-300">Title</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="e.g. Electromagnetic Tensor Field Derivations"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500/50"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-mono text-slate-300">Target Class</label>
+                  <select
+                    value={newClassId}
+                    onChange={(e) => setNewClassId(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500/50"
+                  >
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.code}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-mono text-slate-300">Category</label>
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value as any)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500/50"
                   >
                     <option value="Worksheet">Worksheet</option>
                     <option value="Lab Report">Lab Report</option>
@@ -590,198 +859,60 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                     <option value="Project">Project</option>
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-slate-400 mb-1">DUE DATE</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-mono text-slate-300">Due Date</label>
                   <input
                     type="date"
-                    required
                     value={newDueDate}
                     onChange={(e) => setNewDueDate(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500/50"
+                    required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-slate-400 mb-1">MAX SCORE</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-mono text-slate-300">Max Score</label>
                   <input
                     type="number"
-                    min="10"
-                    max="500"
                     value={newMaxScore}
                     onChange={(e) => setNewMaxScore(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500/50"
+                    required
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-400 mb-1">SHORT BRIEF</label>
-                <input
-                  type="text"
-                  placeholder="Overview description..."
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">FULL INSTRUCTIONS & PROBLEMS</label>
+              <div className="space-y-1">
+                <label className="text-xs font-mono text-slate-300">Instructions</label>
                 <textarea
                   rows={4}
-                  required
-                  placeholder="Detailed requirements, problem text, and grading criteria..."
                   value={newInstructions}
                   onChange={(e) => setNewInstructions(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white outline-none focus:border-cyan-500"
+                  placeholder="Outline the required problem questions and grading rubric..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-cyan-500/50"
+                  required
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 min-h-[40px] rounded-lg border border-slate-700 text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 text-xs font-mono"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 min-h-[40px] rounded-lg border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 font-bold shadow-md cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold"
                 >
-                  Publish Assignment
+                  Publish to Ledger
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 2: Student Submit Work Modal */}
-      {isSubmitModalOpen && selectedAsg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <div className="text-[10px] font-mono text-cyan-400">COURSEWORK SUBMISSION</div>
-                <h3 className="text-sm font-bold text-white truncate">{selectedAsg.title}</h3>
-              </div>
-              <button
-                onClick={() => setIsSubmitModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white min-h-[40px] min-w-[40px] flex items-center justify-center"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleStudentSubmit} className="space-y-4 text-xs font-mono">
-              <div>
-                <label className="block text-slate-400 mb-1">WRITTEN SOLUTION & DERIVATIONS</label>
-                <textarea
-                  rows={6}
-                  required
-                  placeholder="Provide your step-by-step mathematical derivation, code solution, or written answer..."
-                  value={studentContent}
-                  onChange={(e) => setStudentContent(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">OPTIONAL ATTACHMENT</label>
-                <input
-                  type="text"
-                  placeholder="e.g. quantum_ladder_proof.pdf"
-                  value={attachedFileName}
-                  onChange={(e) => setAttachedFileName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsSubmitModalOpen(false)}
-                  className="px-4 py-2 min-h-[40px] rounded-lg border border-slate-700 text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 min-h-[40px] rounded-lg border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 font-bold shadow-md cursor-pointer"
-                >
-                  Submit Final Work
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 3: Teacher Review & Grade Submission */}
-      {gradingSubmission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <div className="text-[10px] font-mono text-cyan-400">EVALUATION DESK</div>
-                <h3 className="text-sm font-bold text-white">Grading: {gradingSubmission.studentName}</h3>
-              </div>
-              <button
-                onClick={() => setGradingSubmission(null)}
-                className="p-1 text-slate-400 hover:text-white min-h-[40px] min-w-[40px] flex items-center justify-center"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs font-mono">
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 space-y-1">
-                <div className="text-[10px] text-slate-500 uppercase">Student Submission Body</div>
-                <div className="text-xs leading-relaxed whitespace-pre-line font-mono">{gradingSubmission.content}</div>
-              </div>
-
-              <form onSubmit={handleGradeSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-slate-400 mb-1">SCORE (OUT OF {selectedAsg?.maxScore || 100})</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max={selectedAsg?.maxScore || 100}
-                    value={gradeScore}
-                    onChange={(e) => setGradeScore(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500 min-h-[40px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 mb-1">WRITTEN FEEDBACK</label>
-                  <textarea
-                    rows={4}
-                    value={gradeFeedback}
-                    onChange={(e) => setGradeFeedback(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white outline-none focus:border-cyan-500 text-xs font-sans"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setGradingSubmission(null)}
-                    className="px-4 py-2 min-h-[40px] rounded-lg border border-slate-700 text-slate-400 hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 min-h-[40px] rounded-lg border border-emerald-500/40 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold shadow-md cursor-pointer"
-                  >
-                    Publish Grade & Notify Student
-                  </button>
-                </div>
-              </form>
-            </div>
           </div>
         </div>
       )}

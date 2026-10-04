@@ -190,7 +190,11 @@ Unlike wave function collapse, decoherence is a continuous unitary evolution of 
   console.log('\n=== ALL 23 MILESTONE 8 & REGRESSION TESTS PASSED SUCCESSFULLY! ===\n');
 }
 
-runMilestone8Tests().catch((err) => {
-  console.error('[TEST SUITE CRASHED]', err);
-  process.exit(1);
-});
+runMilestone8Tests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('[TEST SUITE CRASHED]', err);
+    process.exit(1);
+  });

@@ -597,6 +597,7 @@ export function App() {
             } else {
               if (educationRole === 'student') setEducationRole('teacher');
               else if (educationRole === 'teacher') setEducationRole('principal');
+              else if (educationRole === 'principal') setEducationRole('parent');
               else setEducationRole('student');
             }
           }}

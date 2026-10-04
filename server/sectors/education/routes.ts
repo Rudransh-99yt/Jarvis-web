@@ -5,11 +5,27 @@ import { classSessionRouter } from './classSessions/classSessionRoutes.ts';
 import { communityRouter } from './community/communityRoutes.ts';
 import { focusRouter } from './focus/focusRoutes.ts';
 import { academicIntegrationRouter } from './academicRoutes.ts';
+import { engagementRouter } from './engagement/engagementRoutes.ts';
+import { teacherRouter } from './teacher/teacherRoutes.ts';
+import { familyRouter } from './family/familyRoutes.ts';
+import { institutionalRouter } from './institutional/institutionalRoutes.ts';
 
 export const educationRouter = Router();
 
+// Phase D.7: Family & Parent Intelligence Routes
+educationRouter.use('/family', familyRouter);
+
+// Phase D.7: Principal & Institutional Intelligence Routes
+educationRouter.use('/institutional', institutionalRouter);
+
+// Phase D.6: Teacher Operating System Routes (Action Queue, Attention, Post-Class Review, Class Intelligence)
+educationRouter.use('/teacher', teacherRouter);
+
 // Phase D: Education OS Shared Academic Integration & Context Routes
 educationRouter.use('/integration', academicIntegrationRouter);
+
+// Phase D.5: Student Personal OS Engagement & Leaderboard Routes
+educationRouter.use('/engagement', engagementRouter);
 
 // Pro Focus / Pomodoro + Focus Lock Routes
 educationRouter.use('/focus', focusRouter);

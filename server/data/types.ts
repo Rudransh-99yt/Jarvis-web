@@ -18,7 +18,7 @@ export * from '../../src/types/video.ts';
 export * from '../../src/types/academicContext.ts';
 
 // 1. User
-export type UserRole = 'admin' | 'commander' | 'teacher' | 'student' | 'guest';
+export type UserRole = 'admin' | 'commander' | 'principal' | 'teacher' | 'parent' | 'student' | 'guest';
 
 export interface User {
   id: string;

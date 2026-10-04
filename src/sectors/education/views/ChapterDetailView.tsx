@@ -11,16 +11,18 @@ import {
   HelpCircle,
   Radio,
   ChevronRight,
-  ArrowLeft,
   Sparkles,
-  BookOpen
+  BookOpen,
+  Award
 } from 'lucide-react';
+import { SharedBackButton } from '../components/SharedBackButton.tsx';
 
 interface ChapterDetailViewProps {
   course: EducationClass;
   unit: CourseUnit;
   onOpenLesson: (lessonId: string) => void;
   onBackToCourse: () => void;
+  onOpenPractice?: (lessonId: string) => void;
   onOpenQuiz?: (quizId: string) => void;
   onLaunchStudyAssistant?: (topic: string) => void;
 }
@@ -30,159 +32,246 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
   unit,
   onOpenLesson,
   onBackToCourse,
+  onOpenPractice,
   onOpenQuiz,
   onLaunchStudyAssistant
 }) => {
+  const [activeTab, setActiveTab] = useState<'lessons' | 'practice' | 'overview' | 'resources'>('lessons');
+
   const completedCount = unit.lessons?.filter((l) => l.isCompleted)?.length || 0;
   const totalCount = unit.lessons?.length || 0;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      {/* 1. Top Breadcrumb & Return Action */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBackToCourse}
-          className="flex items-center gap-1.5 text-xs font-mono text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to {course.code} Course Hub</span>
-        </button>
+    <div className="space-y-6 max-w-4xl mx-auto font-sans">
+      {/* 1. Universal Back Navigation */}
+      <SharedBackButton
+        onBack={onBackToCourse}
+        parentLabel={`${course.code} Course Hub`}
+        currentLabel={`Unit ${unit.number}: ${unit.title}`}
+        hierarchySegments={[
+          { label: course.code, onClick: onBackToCourse },
+          { label: `Unit ${unit.number}: ${unit.title}` }
+        ]}
+      />
 
-        {onLaunchStudyAssistant && (
-          <button
-            onClick={() => onLaunchStudyAssistant(unit.title)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-all cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.15)]"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>AI Chapter Tutor</span>
-          </button>
-        )}
-      </div>
-
-      {/* 2. Chapter Hero Card */}
-      <div className="p-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/50 via-blue-950/30 to-black/70 backdrop-blur-md space-y-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-xs font-mono text-cyan-400/80">
+      {/* 2. Chapter Header */}
+      <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-mono">
             <span className="font-bold text-cyan-300">{course.code}</span>
-            <span aria-hidden="true" className="text-cyan-500/40">·</span>
-            <span>Unit {unit.number}</span>
-            <span aria-hidden="true" className="text-cyan-500/40">·</span>
-            <span>~{unit.estimatedHours} Hours Required</span>
+            <span aria-hidden="true" className="text-slate-600">·</span>
+            <span className="text-slate-400">Unit {unit.number}</span>
+            <span aria-hidden="true" className="text-slate-600">·</span>
+            <span className="text-slate-400">~{unit.estimatedHours} Hours Estimated</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{unit.title}</h1>
-          <p className="text-xs sm:text-sm text-cyan-100/70 leading-relaxed max-w-2xl">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            {unit.title}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
             {unit.description}
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="space-y-1.5 pt-2 border-t border-cyan-500/15">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-cyan-400/70">Chapter Mastery</span>
-            <span className="text-cyan-300 font-bold">
-              {progressPct}% ({completedCount}/{totalCount} Lessons Done)
-            </span>
+        <div className="space-y-1 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="text-slate-400">Chapter Mastery</span>
+            <span className="text-cyan-300 font-bold">{completedCount} / {totalCount} Topics Finished ({progressPct}%)</span>
           </div>
-          <div className="w-full bg-cyan-950/80 rounded-full h-2 overflow-hidden border border-cyan-500/30">
+          <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
             <div
-              className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all"
               style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
       </div>
 
-      {/* 3. Section 1: Learning Objectives */}
-      {unit.learningObjectives && unit.learningObjectives.length > 0 && (
-        <div className="p-5 rounded-xl border border-cyan-500/20 bg-black/40 backdrop-blur-sm space-y-3">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-xs font-bold font-mono tracking-wider text-cyan-300 uppercase">
-              Chapter Learning Objectives
-            </h3>
+      {/* 3. Progressive Disclosure Tabs */}
+      <div className="flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-slate-800 bg-slate-900/60 font-mono text-xs">
+        <button
+          type="button"
+          onClick={() => setActiveTab('lessons')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'lessons' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Lessons ({totalCount})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('practice')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'practice' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+          <span>Practice & Checkpoints</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'overview' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Learning Objectives</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('resources')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'resources' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Formulas & References</span>
+        </button>
+      </div>
+
+      {/* TAB 1: LESSONS LIST */}
+      {activeTab === 'lessons' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+              Curriculum Lessons ({totalCount})
+            </h2>
+            <span className="text-xs font-mono text-slate-500">Click to enter Study Room</span>
           </div>
 
-          <div className="space-y-2">
-            {unit.learningObjectives.map((obj, idx) => (
+          <div className="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 shadow-sm">
+            {unit.lessons?.map((lesson) => (
               <div
-                key={idx}
-                className="p-3 rounded-lg border border-cyan-500/10 bg-black/30 flex items-start gap-3"
+                key={lesson.id}
+                onClick={() => onOpenLesson(lesson.id)}
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-800/40 cursor-pointer transition-colors group"
               >
-                <div className="h-5 w-5 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-300 text-xs font-mono flex items-center justify-center shrink-0 mt-0.5">
-                  {idx + 1}
+                <div className="flex items-start gap-3.5 min-w-0">
+                  <div className="pt-0.5">
+                    {lesson.isCompleted ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    ) : (
+                      <span className="w-4 h-4 rounded-full border border-slate-700 bg-slate-800 inline-block shrink-0" />
+                    )}
+                  </div>
+
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                      <span className="font-bold text-cyan-300">Topic {unit.number}.{lesson.number}</span>
+                      <span aria-hidden="true" className="text-slate-600">·</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-slate-500" />
+                        {lesson.durationMinutes} min
+                      </span>
+                    </div>
+
+                    <h3 className="text-sm sm:text-base font-semibold text-white group-hover:text-cyan-200 transition-colors">
+                      {lesson.title}
+                    </h3>
+
+                    <p className="text-xs text-slate-400 line-clamp-1">
+                      {lesson.description}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-cyan-100/80 leading-relaxed">{obj}</p>
+
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-center font-mono text-xs">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onOpenPractice) onOpenPractice(lesson.id);
+                      else onOpenLesson(lesson.id);
+                    }}
+                    className="px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs transition-colors"
+                  >
+                    Practice
+                  </button>
+
+                  <span className="flex items-center gap-1 text-cyan-400 group-hover:text-cyan-300 font-medium">
+                    <span>Study Room</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* 4. Section 2: Sequential Lessons (Clean Vertical Rows) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
-              Lessons in this Chapter ({unit.lessons?.length || 0})
+      {/* TAB 2: PRACTICE & CHECKPOINTS */}
+      {activeTab === 'practice' && (
+        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+              Diagnostic Practice Checkpoints (+10 pts each)
             </h2>
           </div>
-          <span className="text-xs font-mono text-cyan-400/60">Sequential Study Sequence</span>
-        </div>
 
-        <div className="space-y-2.5">
-          {unit.lessons?.map((lesson) => (
-            <div
-              key={lesson.id}
-              onClick={() => onOpenLesson(lesson.id)}
-              className="p-4 rounded-xl border border-cyan-500/15 bg-black/40 hover:border-cyan-400/50 hover:bg-cyan-950/20 cursor-pointer transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 backdrop-blur-sm group"
-            >
-              <div className="space-y-1 flex-1 min-w-0">
-                <div className="flex items-center gap-2 text-xs font-mono text-cyan-400/70">
-                  <span className="font-bold text-cyan-300">
-                    Lesson {unit.number}.{lesson.number}
-                  </span>
-                  <span aria-hidden="true" className="text-cyan-500/40">·</span>
-                  <span>{lesson.durationMinutes} mins</span>
-                  {lesson.videoId && (
-                    <>
-                      <span aria-hidden="true" className="text-cyan-500/40">·</span>
-                      <span className="text-cyan-400 flex items-center gap-1">
-                        <Video className="w-3 h-3" /> Video Included
-                      </span>
-                    </>
-                  )}
+          <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/60">
+            {unit.lessons?.map((lesson) => (
+              <div
+                key={lesson.id}
+                className="p-4 flex items-center justify-between gap-3 hover:bg-slate-900/40"
+              >
+                <div>
+                  <div className="text-sm font-semibold text-white">{lesson.title} Checkpoint</div>
+                  <div className="text-xs font-mono text-slate-500">Conceptual verification & derivations</div>
                 </div>
-
-                <h3 className="text-sm font-semibold text-white group-hover:text-cyan-200">
-                  {lesson.title}
-                </h3>
-                <p className="text-xs text-cyan-100/70 line-clamp-1">{lesson.description}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenPractice) onOpenPractice(lesson.id);
+                    else onOpenLesson(lesson.id);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-mono cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Launch Practice Test</span>
+                </button>
               </div>
-
-              <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-                {lesson.isCompleted ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-400 font-bold px-2.5 py-1 rounded bg-emerald-950/50 border border-emerald-500/30">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Completed
-                  </span>
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenLesson(lesson.id);
-                    }}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-cyan-400/40 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 group-hover:from-cyan-500/30 group-hover:to-blue-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all shadow-[0_0_10px_rgba(6,182,212,0.15)]"
-                  >
-                    <PlayCircle className="w-4 h-4 text-cyan-300" />
-                    <span>START LESSON</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* TAB 3: LEARNING OBJECTIVES */}
+      {activeTab === 'overview' && (
+        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+            Core Unit Objectives & Competencies
+          </h2>
+          <div className="space-y-2.5">
+            {unit.learningObjectives.map((obj, i) => (
+              <div key={i} className="flex items-start gap-2.5 text-xs text-slate-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5 shrink-0" />
+                <span className="leading-relaxed font-sans">{obj}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: RESOURCES & REFERENCES */}
+      {activeTab === 'resources' && (
+        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+            Formulas, Reference Readings & Proofs
+          </h2>
+          <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 text-xs font-mono space-y-2 text-slate-300">
+            <div className="text-cyan-300 font-bold uppercase">Formulas Sheet</div>
+            <div>• Time-Dependent Schrödinger: iℏ ∂Ψ/∂t = ĤΨ</div>
+            <div>• Probability Density: P(x,t) = |Ψ(x,t)|²</div>
+            <div>• Normalization Condition: ∫ |Ψ|² dV = 1</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

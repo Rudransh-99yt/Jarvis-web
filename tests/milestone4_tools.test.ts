@@ -157,6 +157,7 @@ async function runTestSuite() {
   console.log(`\n=== RESULTS: ${passed}/${total} TESTS PASSED ===\n`);
   if (passed === total) {
     console.log('ALL TESTS PASSED SUCCESSFULLY!');
+    process.exit(0);
   } else {
     process.exit(1);
   }

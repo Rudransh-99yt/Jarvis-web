@@ -272,6 +272,77 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - Compacted course progression and assignments ledgers with dedicated detail workspaces.
   - Verified layout containment and accessibility across 1440x900, 1280x800, 1024x768, 768x1024, 430x932, and 390x844 viewports.
 
+- **Phase D.4: Crystal-Clear Education Information Architecture & UX Hierarchy (Completed)**:
+  - Canonical Education Hierarchy established and enforced across all surfaces:
+    * `My Learning`: Curriculum progression (Course -> Chapter/Unit -> Lesson -> Study Room).
+    * `Classes & Cohorts`: Social and organizational unit (Cohort, Schedule, Teacher, Classmates/Roster, Announcements, Syllabus link, Live Classroom link).
+    * `Class Sessions`: Operational execution (Preparation -> SmartBoard Classroom -> Live Assessment -> Follow-up).
+    * `Assignments`: Structured academic ledger with sortable table (Assignment, Course, Chapter/Lesson, Due Date, Status, Grade/Points, Context Actions).
+    * `Calendar`: Temporal ledger (Day agenda, chronological timeline, color-coded class/deadline/study events with one-click navigation to canonical objects).
+    * `Focus`: Calm study sanctuary with countdown clock, academic target, scratchpad, checklist, distraction blocking, and emergency escape friction.
+    * `Teacher Home`: 5 prioritized action hubs (1. Next lecture to deliver, 2. Student grading queue, 3. Upcoming classes, 4. Active quizzes/polls, 5. Cadets needing remediation).
+    * `Principal / Executive View`: Oversight system (1. High-level institutional health, 2. Cohort completion/retention table, 3. Live Smart Classroom utilization, 4. Faculty workload & velocity).
+    * Visual Hierarchy Rules enforced: One page = one primary job, zero card walls, zero pill overload, contextual AI assist instead of generic AI buttons.
+
+- **Phase D.5: Deep Education Navigation + Student Personal OS + Engagement & Leaderboard Foundation (Completed)**:
+  - Multi-tier canonical curriculum navigation: Course -> Chapter/Unit -> Lesson/Study Room -> Practice Checkpoint -> Results & Conceptual Analysis.
+  - Progressive disclosure with universal `SharedBackButton` and deep breadcrumb trails (`EducationBreadcrumbs`) maintaining contextual history across forward/backward browser navigation.
+  - Student Personal OS foundation: Student Home greeting integrates real-time active streak, verified class rank, and points accumulator without pill clutter or generic AI buttons.
+  - Student Engagement & Standings Foundation:
+    * Authoritative point recording engine (`/api/education/engagement/events`) with anti-gaming idempotency (prevents duplicate submission gaming).
+    * Scoped leaderboards (`class`, `cohort`, `school`) celebrating consistency, completed lessons, and problem sets rather than toxic pressure or grades.
+    * Student Activity Ledger (`/api/education/engagement/my-activity`) providing chronological audit trail of completed tasks and points awarded.
+    * Transparent rules & strict privacy boundaries: opt-out capability and isolation from private academic grade ledgers.
+  - Integrated practice workflow: interactive question evaluation, instant feedback with explanations, points attribution, and one-click return to study room or next lesson.
+
+- **Phase D.6: Teacher Operating System (Completed)**:
+  - **Core Vision Realized**: One connected teacher workflow (TODAY -> PREPARE -> TEACH -> REVIEW -> ACT -> NEXT CLASS) answering critical context automatically without fragmented navigation.
+  - **Teacher Command Center (`TeacherHomeView`)**: Calm vertical information hierarchy replacing dashboard card walls:
+    * *TODAY*: Next scheduled lecture, class, room, preparation status, 1-click launch to SmartBoard or Prep Wizard, and operational headcount overview.
+    * *TEACHER ACTION QUEUE*: First-class aggregated action queue derived dynamically from canonical entities (grading pending submissions, sessions awaiting review, approved sessions ready to schedule, evidence-backed student attention signals, and next curriculum preparation milestones) with filter tabs and deep page jumps.
+    * *TEACHING QUEUE*: Instructional preparation and lifecycle status (DRAFT, GENERATING, READY_FOR_REVIEW, APPROVED, SCHEDULED, LIVE, COMPLETED) with direct links to plan and edit.
+    * *REVIEW QUEUE*: Submissions awaiting grading, inline evaluation, and direct navigation to dedicated `TeacherReviewView`.
+    * *STUDENTS NEEDING ATTENTION*: Evidence-based neutral signals (missed work, practice difficulty detected, low recent activity, unresolved feedback) with verifiable excerpts and suggested pedagogical follow-ups.
+    * *RECENT CLASS ACTIVITY & POST-CLASS REVIEW*: Summary of delivered class session with 1-click navigation to full `PostClassReviewView` analytics and grounded next actions.
+    * *NEXT IN CURRICULUM*: Tomorrow's scheduled class and next unprepared lesson milestone with 1-click "Prepare Tomorrow's Class".
+  - **Dedicated Deep Class Intelligence Surface (`TeacherClassDetailView`)**:
+    * 9-tab progressive disclosure hierarchy: Overview (What is happening? What needs attention? What was recently taught? What is coming next?), Today, Teaching (Curriculum chapters & lesson topics), Students (Enrolled cadet roster & progress), Assignments (Problem sets & submission tracking), Assessments (Formative quizzes & pulse checks), Community (Real-time Class Comm Link), Knowledge (Course syllabi, lecture notes & file uploads), and History (Delivered ClassSessions with Post-Class Review reports).
+  - **Evidence-Grounded Post-Class Review (`PostClassReviewView`)**:
+    * Post-delivery analytics for completed ClassSessions: duration taught, cadet participation rate, formative pulse accuracy, worked examples, and addressed misconceptions.
+    * Grounded Next Actions (reteach, assign diagnostic practice, post formula to community, prepare next lesson) grounded strictly in verified quiz and classroom data.
+  - **Teacher Review & Grading Engine (`TeacherReviewView`)**:
+    * Comprehensive assessment review with status tabs (All, Pending, Graded), course selector, student/task search, in-place rubric scoring (0-100), and feedback publication.
+  - **Evidence-Based Attention Engine (`TeacherAttentionView`)**:
+    * Neutral, non-judgmental signals with verified evidence snippets and actionable remediation targets.
+  - **End-to-End Test Suite (`tests/education_d6_teacher_os.test.ts`)**:
+    * 50/50 test assertions passing across Action Queue derivation, priority sorting, ClassSession teaching anchor, teacher RBAC authorization, evidence-based attention signals, post-class review, and class intelligence.
+
+- **Phase D.7: Family, Principal & Institutional Intelligence OS (Completed)**:
+  - **Multi-Tier Authorized Intelligence Hierarchy**:
+    * Unified canonical academic data model powering distinct, authorized perspectives without database duplication: Student Intelligence → Class Intelligence → Teacher Intelligence → Grade Intelligence → School Intelligence → Principal Intelligence, and separately Family / Parent Intelligence.
+  - **Strict Server-Authoritative RBAC & Privacy Boundary Enforcement**:
+    * Zero trust in client-asserted roles or IDs. Strict enforcement on every intelligence endpoint (`USER → ROLE → INSTITUTION → AUTHORIZED SCOPE → DATA`).
+    * Parents only access their authorized, verified children (`parent-1` → `student-1`, `parent-2` → `student-2`). Requests for unauthorized students strictly rejected with 403 Forbidden.
+    * Students and teachers forbidden from accessing institutional/leadership command endpoints.
+  - **Parent / Family Portal (`ParentHomeView`)**:
+    * Dedicated, non-technical, supportive family experience with multi-parent and multi-child profile switching.
+    * *Recommended Next Step*: Clear, actionable card guiding parents on how to assist their child.
+    * *Today's Learning*: Real-time schedule, room locations, instructor names, and active class statuses.
+    * *Academic Progress*: Visual progress bars, completed lessons tally, current topic milestones.
+    * *Work & Problem Sets*: Problem sets, lab reports, overdue indicators, and student feedback (strictly zero teacher internal notes).
+    * *Test Results & Formative Diagnostics*: Numerical scores, accuracy percentages, and formative feedback (strictly zero answer keys or leaked exam questions).
+    * *Teacher Updates*: Announcements, office hour schedules, and exam formula sheet notices.
+    * *Habits & Consistency*: Weekly study hours in Focus room, consecutive day learning streaks, and homework status.
+  - **Principal & Institutional Intelligence OS (`PrincipalExecutiveView`)**:
+    * *Campus Operational Pulse*: Active classrooms live, scheduled lectures today, enrolled cadet headcount, faculty on duty, and verified overall attendance.
+    * *Principal Command Interface*: Controlled AI diagnostic command generation with full proposal preview (covered topics, difficulty breakdown, duration, question count, sample questions).
+    * *Explicit Approval & Execution Flow*: Strict principal approval required before publishing diagnostic quiz across cohorts via canonical `quizService`/repository.
+    * *Grade Intelligence Drill-Down (`PrincipalGradeView`)*: Comprehensive grade-level overview (Grade 11 & Grade 12), enrolled classes, active courses, assigned faculty, upcoming assessments, evidence-based interventions, and 4-week progression/attendance trends.
+    * *Faculty Leadership Projections (`PrincipalTeachersView`)*: Department velocity, scheduled vs. prepared packages, pending grading queue, and turnaround SLA hours (strictly operational workload, zero crude ratings or toxic rankings).
+    * *Institutional Audit Ledger (`PrincipalAuditView`)*: Immutable governance trail recording actions, actors, scopes, source knowledge objects, generated entities, timestamps, and outcomes.
+  - **End-to-End Test Suite (`tests/education_d7_family_principal_institutional.test.ts`)**:
+    * 70/70 test assertions passing across RBAC boundaries, family intelligence sanitization, school operational pulse, grade drill-down, faculty workload projections, and controlled AI diagnostic generation with audit logging.
+
 ---
 
 ## 6. Current Constraints & Active Invariants

@@ -937,7 +937,11 @@ async function runMilestone12Tests() {
   console.log(`================================================================\n`);
 }
 
-runMilestone12Tests().catch((err) => {
-  console.error('[FATAL] Milestone 12 test suite failed:', err);
-  process.exit(1);
-});
+runMilestone12Tests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('[FATAL] Milestone 12 test suite failed:', err);
+    process.exit(1);
+  });

@@ -33,9 +33,18 @@ import { TeacherHomeView } from './views/TeacherHomeView.tsx';
 import { TeacherClassDetailView } from './views/TeacherClassDetailView.tsx';
 import { TeacherCurriculumModal } from './views/TeacherCurriculumModal.tsx';
 import { TeacherSessionPrepView } from './views/TeacherSessionPrepView.tsx';
+import { TeacherReviewView } from './views/TeacherReviewView.tsx';
+import { TeacherAttentionView } from './views/TeacherAttentionView.tsx';
+import { PostClassReviewView } from './views/PostClassReviewView.tsx';
 
 // Principal View
 import { PrincipalExecutiveView } from './views/PrincipalExecutiveView.tsx';
+import { PrincipalGradeView } from './views/PrincipalGradeView.tsx';
+import { PrincipalTeachersView } from './views/PrincipalTeachersView.tsx';
+import { PrincipalAuditView } from './views/PrincipalAuditView.tsx';
+
+// Parent / Family View
+import { ParentHomeView } from './views/ParentHomeView.tsx';
 
 // Preserved Core Views
 import { SmartClassroomView } from './views/SmartClassroomView.tsx';
@@ -45,6 +54,9 @@ import { AssignmentsView } from './views/AssignmentsView.tsx';
 import { KnowledgeWorkspaceView } from './views/KnowledgeWorkspaceView.tsx';
 import { StudyAssistantView } from './views/StudyAssistantView.tsx';
 import { StudentPersonalNotesView } from './views/StudentPersonalNotesView.tsx';
+import { EngagementLeaderboardView } from './views/EngagementLeaderboardView.tsx';
+import { EngagementActivityView } from './views/EngagementActivityView.tsx';
+import { LessonPracticeView } from './views/LessonPracticeView.tsx';
 
 import { Menu, Home, Layers, Flame, FileCheck2, Building2 } from 'lucide-react';
 
@@ -60,10 +72,20 @@ export type DeepEducationView =
   | 'subject_detail'
   | 'chapter_detail'
   | 'lesson_workspace'
+  | 'lesson_practice'
+  | 'engagement_leaderboard'
+  | 'engagement_activity'
   | 'teacher_home'
   | 'teacher_class_detail'
   | 'teacher_session_prep'
+  | 'teacher_review'
+  | 'teacher_attention'
+  | 'teacher_post_class_review'
   | 'principal_home'
+  | 'principal_grade'
+  | 'principal_teachers'
+  | 'principal_audit'
+  | 'parent_home'
   | 'classroom'
   | 'videos'
   | 'classes'
@@ -84,8 +106,15 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 }) => {
   // Navigation & Hierarchy State
   const [currentView, setCurrentView] = useState<DeepEducationView>(
-    currentRole === 'student' ? 'student_home' : currentRole === 'teacher' ? 'teacher_home' : 'principal_home'
+    currentRole === 'student'
+      ? 'student_home'
+      : currentRole === 'teacher'
+      ? 'teacher_home'
+      : currentRole === 'parent'
+      ? 'parent_home'
+      : 'principal_home'
   );
+  const [activeGradeId, setActiveGradeId] = useState<string>('g11');
   const [activeCourseId, setActiveCourseId] = useState<string>('class-phys-301');
   const [activeUnitId, setActiveUnitId] = useState<string>('unit-phys-2');
   const [activeLessonId, setActiveLessonId] = useState<string>('les-phys-202');
@@ -233,10 +262,13 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
   const handleNavigateWithContext = (
     targetView: DeepEducationView,
-    contextPatch?: Partial<import('../../types/academicContext.ts').AcademicContext>
+    contextPatch?: Partial<import('../../types/academicContext.ts').AcademicContext> & { gradeId?: string }
   ) => {
     if (contextPatch) {
       setAcademicContext((prev) => ({ ...prev, ...contextPatch }));
+      if (contextPatch.gradeId) {
+        setActiveGradeId(contextPatch.gradeId);
+      }
       if (contextPatch.courseId || contextPatch.classId) {
         setActiveCourseId(contextPatch.courseId || contextPatch.classId!);
       }
@@ -281,16 +313,20 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   // Update default view when role switches
   useEffect(() => {
     if (currentRole === 'student') {
-      if (['teacher_home', 'teacher_class_detail', 'principal_home'].includes(currentView)) {
+      if (['teacher_home', 'teacher_class_detail', 'principal_home', 'parent_home'].includes(currentView)) {
         setCurrentView('student_home');
       }
     } else if (currentRole === 'teacher') {
-      if (['student_home', 'student_my_learning', 'principal_home'].includes(currentView)) {
+      if (['student_home', 'student_my_learning', 'principal_home', 'parent_home'].includes(currentView)) {
         setCurrentView('teacher_home');
       }
     } else if (currentRole === 'principal') {
-      if (['student_home', 'student_my_learning', 'teacher_home'].includes(currentView)) {
+      if (['student_home', 'student_my_learning', 'teacher_home', 'parent_home'].includes(currentView)) {
         setCurrentView('principal_home');
+      }
+    } else if (currentRole === 'parent') {
+      if (['student_home', 'student_my_learning', 'teacher_home', 'principal_home'].includes(currentView)) {
+        setCurrentView('parent_home');
       }
     }
   }, [currentRole]);
@@ -605,9 +641,13 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
   // Derive active sidebar section
   const getSidebarActiveSection = (): EducationSidebarSection => {
-    if (['student_home', 'teacher_home'].includes(currentView)) return 'home';
-    if (currentView === 'student_my_learning') return 'my_learning';
+    if (['student_home', 'teacher_home', 'parent_home'].includes(currentView)) return 'home';
+    if (['student_my_learning', 'lesson_practice'].includes(currentView)) return 'my_learning';
     if (['classes', 'subject_detail', 'chapter_detail', 'lesson_workspace', 'teacher_class_detail'].includes(currentView)) return 'classes';
+    if (['engagement_leaderboard', 'engagement_activity'].includes(currentView)) return 'engagement';
+    if (currentView === 'teacher_review') return 'teacher_review';
+    if (currentView === 'teacher_attention') return 'teacher_attention';
+    if (currentView === 'teacher_session_prep' || currentView === 'teacher_post_class_review') return 'teacher_prep';
     if (currentView === 'assignments') return 'assignments';
     if (currentView === 'calendar') return 'calendar';
     if (currentView === 'focus') return 'focus';
@@ -617,22 +657,44 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (currentView === 'notes') return 'notes';
     if (currentView === 'knowledge') return 'knowledge';
     if (currentView === 'videos') return 'videos';
-    if (currentView === 'teacher_session_prep') return 'teacher_prep';
     if (currentView === 'classroom') return 'classroom';
-    if (currentView === 'principal_home') return 'principal_overview';
+    if (['principal_home', 'principal_grade', 'principal_teachers', 'principal_audit'].includes(currentView)) return 'principal_overview';
     return 'home';
   };
 
   const handleSidebarSelectSection = (section: EducationSidebarSection) => {
     switch (section) {
       case 'home':
-        setCurrentView(currentRole === 'student' ? 'student_home' : currentRole === 'teacher' ? 'teacher_home' : 'principal_home');
+        setCurrentView(
+          currentRole === 'student'
+            ? 'student_home'
+            : currentRole === 'teacher'
+            ? 'teacher_home'
+            : currentRole === 'parent'
+            ? 'parent_home'
+            : 'principal_home'
+        );
+        break;
+      case 'principal_overview':
+        setCurrentView('principal_home');
         break;
       case 'teacher_prep':
         setCurrentView('teacher_session_prep');
         break;
+      case 'teacher_review':
+        setCurrentView('teacher_review');
+        break;
+      case 'teacher_attention':
+        setCurrentView('teacher_attention');
+        break;
+      case 'teacher_post_class_review':
+        setCurrentView('teacher_post_class_review');
+        break;
       case 'my_learning':
         setCurrentView('student_my_learning');
+        break;
+      case 'engagement':
+        setCurrentView('engagement_leaderboard');
         break;
       case 'classes':
         setCurrentView('classes');
@@ -721,6 +783,34 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       return items;
     }
 
+    if (currentView === 'parent_home') {
+      items.push({ id: 'parent_home', label: 'Family & Guardian Portal', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'principal_home') {
+      items.push({ id: 'principal_overview', label: 'Executive Leadership Overview', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'principal_grade') {
+      items.push({ id: 'principal_overview', label: 'Executive Leadership Overview', type: 'section', onClick: () => setCurrentView('principal_home') });
+      items.push({ id: 'principal_grade', label: `Grade Intelligence (${activeGradeId.toUpperCase()})`, type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'principal_teachers') {
+      items.push({ id: 'principal_overview', label: 'Executive Leadership Overview', type: 'section', onClick: () => setCurrentView('principal_home') });
+      items.push({ id: 'principal_teachers', label: 'Faculty Leadership Projections', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'principal_audit') {
+      items.push({ id: 'principal_overview', label: 'Executive Leadership Overview', type: 'section', onClick: () => setCurrentView('principal_home') });
+      items.push({ id: 'principal_audit', label: 'Institutional Audit Ledger', type: 'section' });
+      return items;
+    }
+
     if (currentView === 'videos') {
       items.push({ id: 'videos', label: 'Video Library & Q&A', type: 'section' });
       return items;
@@ -733,6 +823,42 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
     if (currentView === 'assignments') {
       items.push({ id: 'assignments', label: 'Assignments & Assessments', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'teacher_review') {
+      items.push({ id: 'teacher_hub', label: 'Faculty Hub', type: 'section', onClick: () => setCurrentView('teacher_home') });
+      items.push({ id: 'teacher_review', label: 'Review Queue & Grading', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'teacher_attention') {
+      items.push({ id: 'teacher_hub', label: 'Faculty Hub', type: 'section', onClick: () => setCurrentView('teacher_home') });
+      items.push({ id: 'teacher_attention', label: 'Students Needing Attention', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'teacher_session_prep') {
+      items.push({ id: 'teacher_hub', label: 'Faculty Hub', type: 'section', onClick: () => setCurrentView('teacher_home') });
+      items.push({ id: 'teacher_prep', label: 'ClassSession Preparation', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'teacher_post_class_review') {
+      items.push({ id: 'teacher_hub', label: 'Faculty Hub', type: 'section', onClick: () => setCurrentView('teacher_home') });
+      items.push({ id: 'post_class', label: 'Post-Class Review & Analytics', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'engagement_leaderboard') {
+      items.push({ id: 'engagement', label: 'Cadet Engagement', type: 'section' });
+      items.push({ id: 'leaderboard', label: 'Standings & Consistency', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'engagement_activity') {
+      items.push({ id: 'engagement', label: 'Cadet Engagement', type: 'section', onClick: () => setCurrentView('engagement_leaderboard') });
+      items.push({ id: 'activity', label: 'My Verified Activity History', type: 'section' });
       return items;
     }
 
@@ -753,7 +879,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       });
     }
 
-    if (['chapter_detail', 'lesson_workspace'].includes(currentView) && activeUnit) {
+    if (['chapter_detail', 'lesson_workspace', 'lesson_practice'].includes(currentView) && activeUnit) {
       items.push({
         id: activeUnit.id,
         label: `Unit ${activeUnit.number}: ${activeUnit.title}`,
@@ -762,11 +888,20 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       });
     }
 
-    if (currentView === 'lesson_workspace' && activeLesson && activeUnit) {
+    if (['lesson_workspace', 'lesson_practice'].includes(currentView) && activeLesson && activeUnit) {
       items.push({
         id: activeLesson.id,
         label: `Lesson ${activeUnit.number}.${activeLesson.number}: ${activeLesson.title}`,
-        type: 'lesson'
+        type: 'lesson',
+        onClick: currentView === 'lesson_practice' ? () => setCurrentView('lesson_workspace') : undefined
+      });
+    }
+
+    if (currentView === 'lesson_practice') {
+      items.push({
+        id: 'practice',
+        label: 'Practice Checkpoint',
+        type: 'section'
       });
     }
 
@@ -886,6 +1021,10 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               unit={activeUnit}
               onOpenLesson={(lId) => handleOpenLesson(activeCourse.id, activeUnit.id, lId)}
               onBackToCourse={() => setCurrentView('subject_detail')}
+              onOpenPractice={(lId) => {
+                setActiveLessonId(lId);
+                setCurrentView('lesson_practice');
+              }}
               onLaunchStudyAssistant={(topic) => {
                 setSelectedSpaceId(activeCourse.id === 'class-math-240' ? 'ks-calculus' : 'ks-quantum');
                 setCurrentView('study');
@@ -901,8 +1040,39 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onToggleComplete={handleToggleLessonComplete}
               onNavigateLesson={(uId, lId) => handleOpenLesson(activeCourse.id, uId, lId)}
               onBackToChapter={() => setCurrentView('chapter_detail')}
+              onOpenPractice={(lId) => {
+                setActiveLessonId(lId);
+                setCurrentView('lesson_practice');
+              }}
               onQueryGrounded={handleQueryGrounded}
               onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
+            />
+          )}
+
+          {currentView === 'lesson_practice' && activeCourse && activeUnit && activeLesson && (
+            <LessonPracticeView
+              course={activeCourse}
+              unit={activeUnit}
+              lesson={activeLesson}
+              onBackToLesson={() => setCurrentView('lesson_workspace')}
+              onCompletePractice={(score, total) => {
+                showNotification(`Practice completed: scored ${score}/${total} (+10 points awarded)`);
+              }}
+            />
+          )}
+
+          {currentView === 'engagement_leaderboard' && (
+            <EngagementLeaderboardView
+              onBack={() => setCurrentView('student_home')}
+              onNavigateToActivity={() => setCurrentView('engagement_activity')}
+              currentClassCode={activeCourse?.code || 'PHYS-301'}
+            />
+          )}
+
+          {currentView === 'engagement_activity' && (
+            <EngagementActivityView
+              onBack={() => setCurrentView('engagement_leaderboard')}
+              onNavigateToLeaderboard={() => setCurrentView('engagement_leaderboard')}
             />
           )}
 
@@ -972,9 +1142,10 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onOpenCreateAssignmentModal={() => setCurrentView('assignments')}
               onSelectSubmissionForGrading={(sub) => {
                 setSelectedGradingSub(sub);
-                setCurrentView('assignments');
+                setCurrentView('teacher_review');
               }}
               onNavigateTab={(t) => setCurrentView(t as any)}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
 
@@ -1004,6 +1175,40 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
                 });
               }}
               onNavigateTab={(t) => setCurrentView(t as any)}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
+            />
+          )}
+
+          {/* Teacher Review Queue & Grading */}
+          {currentView === 'teacher_review' && (
+            <TeacherReviewView
+              classes={classes}
+              assignments={assignments}
+              submissions={submissions}
+              onBack={() => setCurrentView('teacher_home')}
+              onGradeSubmission={(submissionId, grade, feedback) => {
+                handleGradeSubmission(submissionId, grade, feedback);
+              }}
+              selectedSubmission={selectedGradingSub}
+              onSelectSubmission={(sub) => setSelectedGradingSub(sub)}
+            />
+          )}
+
+          {/* Teacher Student Attention & Early Remediation */}
+          {currentView === 'teacher_attention' && (
+            <TeacherAttentionView
+              classes={classes}
+              onBack={() => setCurrentView('teacher_home')}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
+            />
+          )}
+
+          {/* Teacher Post-Class Review & Analytics */}
+          {currentView === 'teacher_post_class_review' && (
+            <PostClassReviewView
+              sessionId={academicContext.classSessionId || 'session-phys-101'}
+              onBack={() => setCurrentView('teacher_home')}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
 
@@ -1019,7 +1224,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             />
           )}
 
-          {/* Principal View */}
+          {/* Principal Views */}
           {currentView === 'principal_home' && (
             <PrincipalExecutiveView
               institution={institution}
@@ -1028,6 +1233,35 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               submissions={submissions}
               onSelectCourse={(id) => handleSelectCourse(id)}
               onNavigateTab={(t) => setCurrentView(t as any)}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
+            />
+          )}
+
+          {currentView === 'principal_grade' && (
+            <PrincipalGradeView
+              gradeId={activeGradeId}
+              onBack={() => setCurrentView('principal_home')}
+              onNavigateToClass={(clsId) => handleSelectCourse(clsId)}
+            />
+          )}
+
+          {currentView === 'principal_teachers' && (
+            <PrincipalTeachersView
+              onBack={() => setCurrentView('principal_home')}
+            />
+          )}
+
+          {currentView === 'principal_audit' && (
+            <PrincipalAuditView
+              onBack={() => setCurrentView('principal_home')}
+            />
+          )}
+
+          {/* Parent / Family View */}
+          {currentView === 'parent_home' && (
+            <ParentHomeView
+              onNavigateTab={(t) => setCurrentView(t as any)}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
 
@@ -1041,7 +1275,16 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           )}
 
           {currentView === 'classes' && (
-            <ClassesView classes={classes} currentRole={currentRole} />
+            <ClassesView
+              classes={classes}
+              currentRole={currentRole}
+              onNavigateWithContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
+              onOpenCourse={(cId) => handleSelectCourse(cId)}
+              onLaunchClassroom={(cId) => {
+                setActiveCourseId(cId);
+                setCurrentView('classroom');
+              }}
+            />
           )}
 
           {currentView === 'assignments' && (

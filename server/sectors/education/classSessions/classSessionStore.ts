@@ -526,6 +526,23 @@ export class ClassSessionStore {
     return session ? JSON.parse(JSON.stringify(session)) : null;
   }
 
+  listSessionsSync(filters?: {
+    workspaceId?: string;
+    schoolId?: string;
+    classId?: string;
+    teacherId?: string;
+    status?: SessionState;
+  }): ClassSession[] {
+    let result = Array.from(this.sessions.values());
+    if (filters?.workspaceId) result = result.filter((s) => s.workspaceId === filters.workspaceId);
+    if (filters?.schoolId) result = result.filter((s) => s.schoolId === filters.schoolId);
+    if (filters?.classId) result = result.filter((s) => s.classId === filters.classId);
+    if (filters?.teacherId) result = result.filter((s) => s.teacherId === filters.teacherId);
+    if (filters?.status) result = result.filter((s) => s.status === filters.status);
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return JSON.parse(JSON.stringify(result));
+  }
+
   async getSession(id: string): Promise<ClassSession | null> {
     const session = this.sessions.get(id);
     return session ? JSON.parse(JSON.stringify(session)) : null;

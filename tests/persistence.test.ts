@@ -196,7 +196,11 @@ async function runPersistenceTests() {
   console.log('\n=== ALL 27 PERSISTENCE & DATA FOUNDATION TESTS PASSED! ===\n');
 }
 
-runPersistenceTests().catch((err) => {
-  console.error('[TEST ERROR]', err);
-  process.exit(1);
-});
+runPersistenceTests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('[TEST ERROR]', err);
+    process.exit(1);
+  });

@@ -227,7 +227,11 @@ async function runSecurityTests() {
   console.log('\n=== ALL 14 MILESTONE 14.2 SECURITY & DATA-HYGIENE TESTS PASSED! ===\n');
 }
 
-runSecurityTests().catch((err) => {
-  console.error('[FAIL] Milestone 14.2 Security Test Failure:', err);
-  process.exit(1);
-});
+runSecurityTests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('[FAIL] Milestone 14.2 Security Test Failure:', err);
+    process.exit(1);
+  });

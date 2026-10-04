@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { EducationClass, Assignment, CourseUnit } from '../../../types/education.ts';
+import type { ClassIntelligenceData } from '../../../types/teacher.ts';
 import {
   Layers,
   Users,
@@ -13,10 +14,18 @@ import {
   UploadCloud,
   CheckCircle2,
   Sparkles,
-  BookOpen
+  BookOpen,
+  Calendar,
+  AlertTriangle,
+  HelpCircle,
+  FileSpreadsheet,
+  History,
+  CheckCircle,
+  ArrowRight
 } from 'lucide-react';
 import { ClassMessagingDeck } from './ClassMessagingDeck.tsx';
 import { FileUploadModal } from '../../../components/files/FileUploadModal.tsx';
+import { SharedBackButton } from '../components/SharedBackButton.tsx';
 import type { FileRecord } from '../../../types/storage.ts';
 
 interface TeacherClassDetailViewProps {
@@ -26,8 +35,20 @@ interface TeacherClassDetailViewProps {
   onOpenUnit: (unitId: string) => void;
   onOpenCreateUnitModal: () => void;
   onOpenCreateLessonModal: (unitId: string) => void;
-  onNavigateTab: (tab: 'classroom' | 'videos' | 'assignments') => void;
+  onNavigateTab: (tab: any) => void;
+  onNavigateToContext?: (view: string, context?: any) => void;
 }
+
+export type ClassIntelligenceTab =
+  | 'overview'
+  | 'today'
+  | 'teaching'
+  | 'students'
+  | 'assignments'
+  | 'assessments'
+  | 'community'
+  | 'knowledge'
+  | 'history';
 
 export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
   course,
@@ -36,48 +57,61 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
   onOpenUnit,
   onOpenCreateUnitModal,
   onOpenCreateLessonModal,
-  onNavigateTab
+  onNavigateTab,
+  onNavigateToContext
 }) => {
-  const [activeSection, setActiveSection] = useState<'curriculum' | 'messages' | 'roster' | 'materials'>('curriculum');
+  const [activeTab, setActiveTab] = useState<ClassIntelligenceTab>('overview');
+  const [intelligence, setIntelligence] = useState<ClassIntelligenceData | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const units = course.units || [];
   const courseAssignments = assignments.filter((a) => a.classId === course.id);
 
+  // Load authoritative Class Intelligence
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`/api/education/teacher/class-intelligence/${course.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted) return;
+        if (data?.intelligence) setIntelligence(data.intelligence);
+      })
+      .catch((err) => console.warn('Could not load class intelligence:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [course.id]);
+
+  const handleLaunchSmartBoard = () => {
+    onNavigateTab('classroom');
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Top Breadcrumb Action */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBackToClasses}
-          className="flex items-center gap-1.5 text-xs font-mono text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to All Managed Classes</span>
-        </button>
+    <div className="space-y-6 max-w-5xl mx-auto w-full font-sans pb-12">
+      {/* 1. Universal Back Navigation */}
+      <SharedBackButton
+        onBack={onBackToClasses}
+        parentLabel="Managed Classes"
+        currentLabel={course.code}
+        hierarchySegments={[
+          { label: 'Faculty Hub', onClick: onBackToClasses },
+          { label: 'Classes', onClick: onBackToClasses },
+          { label: course.code }
+        ]}
+      />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onNavigateTab('classroom')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono transition-all cursor-pointer shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-          >
-            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            Live Classroom Session
-          </button>
-        </div>
-      </div>
-
-      {/* Class Meta Card */}
+      {/* 2. Class Intelligence Hero Banner */}
       <div className="p-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-blue-950/40 via-cyan-950/30 to-black/70 backdrop-blur-md space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono">
               <span className="font-bold text-cyan-300">{course.code}</span>
               <span aria-hidden="true" className="text-cyan-500/40">·</span>
-              <span className="text-cyan-400/80">{course.term}</span>
+              <span className="text-cyan-400/80">{course.term || 'Fall 2026'}</span>
               <span aria-hidden="true" className="text-cyan-500/40">·</span>
-              <span className="text-cyan-400/60">{course.room}</span>
+              <span className="text-cyan-400/60">{course.room || 'Quantum Hall 4B'}</span>
             </div>
             <h1 className="text-2xl font-bold text-white tracking-tight mt-1.5">{course.name}</h1>
             <p className="text-xs sm:text-sm text-cyan-100/70 max-w-2xl mt-1">{course.description}</p>
@@ -85,31 +119,41 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
 
           <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
             <button
+              onClick={handleLaunchSmartBoard}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-400/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+            >
+              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span>Launch SmartBoard</span>
+            </button>
+            <button
               onClick={onOpenCreateUnitModal}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer"
             >
               <PlusCircle className="w-4 h-4 text-cyan-400" />
-              ADD UNIT / CHAPTER
+              <span>Add Chapter</span>
             </button>
           </div>
         </div>
 
+        {/* Operational Overview Numbers */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-cyan-500/15 text-xs font-mono">
           <div>
-            <div className="text-[10px] text-cyan-400/50">SCHEDULE</div>
+            <div className="text-[10px] text-cyan-400/50 uppercase tracking-wider">Schedule</div>
             <div className="text-white font-bold">{course.schedule}</div>
           </div>
           <div>
-            <div className="text-[10px] text-cyan-400/50">STUDENTS ENROLLED</div>
-            <div className="text-cyan-300 font-bold">{course.studentCount} Cadets Active</div>
+            <div className="text-[10px] text-cyan-400/50 uppercase tracking-wider">Cadets Enrolled</div>
+            <div className="text-cyan-300 font-bold">{course.studentCount} Active</div>
           </div>
           <div>
-            <div className="text-[10px] text-cyan-400/50">CURRICULUM UNITS</div>
-            <div className="text-cyan-300 font-bold">{units.length} Chapters Published</div>
+            <div className="text-[10px] text-cyan-400/50 uppercase tracking-wider">Curriculum Progress</div>
+            <div className="text-cyan-300 font-bold">
+              {intelligence?.syllabusCompletionPercent || 25}% Syllabus Covered
+            </div>
           </div>
           <div>
-            <div className="text-[10px] text-cyan-400/50">ASSIGNMENTS</div>
-            <div className="text-cyan-300 font-bold">{courseAssignments.length} Active</div>
+            <div className="text-[10px] text-cyan-400/50 uppercase tracking-wider">Active Problem Sets</div>
+            <div className="text-cyan-300 font-bold">{courseAssignments.length} Published</div>
           </div>
         </div>
       </div>
@@ -121,59 +165,228 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-cyan-500/15 pb-2">
-        <button
-          onClick={() => setActiveSection('curriculum')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-            activeSection === 'curriculum'
-              ? 'border border-cyan-400 bg-cyan-500/20 text-white font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-              : 'border border-cyan-500/15 bg-black/40 text-cyan-400/70 hover:text-cyan-200'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5" />
-          <span>Curriculum & Lessons ({units.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSection('messages')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-            activeSection === 'messages'
-              ? 'border border-cyan-400 bg-cyan-500/20 text-white font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-              : 'border border-cyan-500/15 bg-black/40 text-cyan-400/70 hover:text-cyan-200'
-          }`}
-        >
-          <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-          <span>Class Comm Link</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSection('roster')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-            activeSection === 'roster'
-              ? 'border border-cyan-400 bg-cyan-500/20 text-white font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-              : 'border border-cyan-500/15 bg-black/40 text-cyan-400/70 hover:text-cyan-200'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>Cadet Roster ({course.studentCount})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSection('materials')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-            activeSection === 'materials'
-              ? 'border border-cyan-400 bg-cyan-500/20 text-white font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-              : 'border border-cyan-500/15 bg-black/40 text-cyan-400/70 hover:text-cyan-200'
-          }`}
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span>Course Materials ({course.materials?.length || 0})</span>
-        </button>
+      {/* 3. Class Intelligence Navigation Tabs */}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-cyan-500/15 pb-2 text-xs font-mono">
+        {[
+          { id: 'overview', label: 'Overview', icon: BookOpen },
+          { id: 'today', label: 'Today', icon: Clock },
+          { id: 'teaching', label: `Teaching (${units.length})`, icon: Layers },
+          { id: 'students', label: `Cadets (${course.studentCount})`, icon: Users },
+          { id: 'assignments', label: `Assignments (${courseAssignments.length})`, icon: FileSpreadsheet },
+          { id: 'assessments', label: 'Assessments', icon: HelpCircle },
+          { id: 'community', label: 'Comm Link', icon: MessageSquare },
+          { id: 'knowledge', label: `Materials (${course.materials?.length || 0})`, icon: FileText },
+          { id: 'history', label: 'History', icon: History }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as ClassIntelligenceTab)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                isActive
+                  ? 'border border-cyan-400 bg-cyan-500/20 text-white font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                  : 'border border-cyan-500/15 bg-black/40 text-cyan-400/70 hover:text-cyan-200'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Section 1: Curriculum Management & Units */}
-      {activeSection === 'curriculum' && (
+      {/* 4. Tab Surfaces */}
+
+      {/* TAB 1: OVERVIEW — What is happening? What needs attention? What was recently taught? What is coming next? */}
+      {activeTab === 'overview' && (
+        <div className="space-y-5">
+          {/* Question 1: What is happening today? */}
+          <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm space-y-3">
+            <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider">
+              <Clock className="w-4 h-4 text-cyan-400" />
+              <span>What is happening today?</span>
+            </div>
+            <div className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-bold text-white">
+                  {intelligence?.upcomingClassSession?.topic || 'Harmonic Oscillators & Annihilation Algebra'}
+                </div>
+                <div className="text-xs font-mono text-slate-400 mt-0.5">
+                  Scheduled for 09:00 AM in {course.room || 'Quantum Hall 4B'} · Status: APPROVED
+                </div>
+              </div>
+              <button
+                onClick={handleLaunchSmartBoard}
+                className="px-3.5 py-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold transition-all shrink-0 cursor-pointer"
+              >
+                Launch SmartBoard
+              </button>
+            </div>
+          </div>
+
+          {/* Question 2: What needs attention? */}
+          <div className="p-5 rounded-xl border border-purple-500/20 bg-purple-950/10 backdrop-blur-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-purple-300 text-xs font-mono font-bold uppercase tracking-wider">
+                <AlertTriangle className="w-4 h-4 text-purple-400" />
+                <span>What needs attention? ({intelligence?.attentionCadetsCount || 3} Cadets Detected)</span>
+              </div>
+              <button
+                onClick={() => {
+                  if (onNavigateToContext) {
+                    onNavigateToContext('teacher_attention', { classId: course.id });
+                  } else {
+                    onNavigateTab('teacher_attention' as any);
+                  }
+                }}
+                className="text-xs font-mono text-purple-400 hover:text-purple-200 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>View Signals</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="p-3 rounded-lg border border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs font-mono">
+                <div>
+                  <span className="font-bold text-white">Maya Lin</span> · Practice difficulty detected (64% on Operator Algebra)
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30">
+                  Targeted Review
+                </span>
+              </div>
+              <div className="p-3 rounded-lg border border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs font-mono">
+                <div>
+                  <span className="font-bold text-white">Marcus Vance</span> · Missed problem set due Oct 2
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                  Reminder Sent
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Question 3: What was recently taught? */}
+          <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono font-bold uppercase tracking-wider">
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <span>What was recently taught?</span>
+              </div>
+              <button
+                onClick={() => {
+                  if (onNavigateToContext) {
+                    onNavigateToContext('teacher_post_class_review', { sessionId: 'session-phys-101' });
+                  } else {
+                    onNavigateTab('teacher_post_class_review' as any);
+                  }
+                }}
+                className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>Post-Class Review</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 space-y-1.5">
+              <div className="text-sm font-bold text-white">
+                {intelligence?.recentClassSession?.topic || 'Coulomb’s Law, Electric Fields & Gauss Surface Flux'}
+              </div>
+              <div className="text-xs font-mono text-slate-400">
+                Delivered on Oct 3 · 45 mins · 88% Cadet Attendance · 82% Pulse Quiz Accuracy
+              </div>
+              <p className="text-xs text-slate-300 pt-1 font-sans">
+                Derived Coulomb law vector form and modeled cylindrical Gaussian surface flux.
+              </p>
+            </div>
+          </div>
+
+          {/* Question 4: What is coming next? */}
+          <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider">
+                <Calendar className="w-4 h-4 text-cyan-400" />
+                <span>What is coming next?</span>
+              </div>
+              <button
+                onClick={() => {
+                  if (onNavigateToContext) {
+                    onNavigateToContext('teacher_session_prep', { classId: course.id });
+                  } else {
+                    onNavigateTab('teacher_session_prep' as any);
+                  }
+                }}
+                className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>AI Session Prep</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-bold text-white">
+                  Lesson 1.2: Gauss Theorem Applications & Conductors
+                </div>
+                <div className="text-xs font-mono text-slate-400 mt-0.5">
+                  Scheduled for tomorrow · NCERT Chapter 1 textbook reference attached
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (onNavigateToContext) {
+                    onNavigateToContext('teacher_session_prep', { classId: course.id });
+                  } else {
+                    onNavigateTab('teacher_session_prep' as any);
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold transition-colors cursor-pointer shrink-0"
+              >
+                Prepare Next Lesson
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: TODAY */}
+      {activeTab === 'today' && (
+        <div className="p-5 rounded-xl border border-cyan-500/20 bg-black/40 backdrop-blur-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-cyan-500/10 pb-3">
+            <div>
+              <h3 className="text-base font-bold text-white font-mono">Today's Class Session</h3>
+              <p className="text-xs text-slate-400">PHYS-301 · 09:00 AM - 09:45 AM · Room: {course.room}</p>
+            </div>
+            <button
+              onClick={handleLaunchSmartBoard}
+              className="px-4 py-2 rounded-xl border border-emerald-400/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
+            >
+              <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+              <span>Start Live Presentation</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+            <div className="p-3 rounded-lg border border-slate-800 bg-slate-950/60">
+              <div className="text-[10px] text-slate-500 uppercase">Preparation</div>
+              <div className="text-emerald-400 font-bold mt-0.5">Approved & Ready</div>
+            </div>
+            <div className="p-3 rounded-lg border border-slate-800 bg-slate-950/60">
+              <div className="text-[10px] text-slate-500 uppercase">Interactive Quiz</div>
+              <div className="text-purple-400 font-bold mt-0.5">5 Questions Loaded</div>
+            </div>
+            <div className="p-3 rounded-lg border border-slate-800 bg-slate-950/60">
+              <div className="text-[10px] text-slate-500 uppercase">Expected Cadets</div>
+              <div className="text-cyan-300 font-bold mt-0.5">{course.studentCount} Cadets</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: TEACHING (Curriculum Units & Lessons) */}
+      {activeTab === 'teaching' && (
         <div className="space-y-4">
           {units.map((unit) => (
             <div
@@ -247,17 +460,8 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
         </div>
       )}
 
-      {/* Section 2: Real-time Messaging Deck */}
-      {activeSection === 'messages' && (
-        <ClassMessagingDeck
-          currentClass={course}
-          currentRole="teacher"
-          workspaceId="ws-stark-core"
-        />
-      )}
-
-      {/* Section 3: Cadet Roster */}
-      {activeSection === 'roster' && (
+      {/* TAB 4: STUDENTS / ROSTER */}
+      {activeTab === 'students' && (
         <div className="p-5 rounded-xl border border-cyan-500/20 bg-black/40 backdrop-blur-sm space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
@@ -295,8 +499,75 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
         </div>
       )}
 
-      {/* Section 4: Course Materials */}
-      {activeSection === 'materials' && (
+      {/* TAB 5: ASSIGNMENTS */}
+      {activeTab === 'assignments' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
+              Course Assignments ({courseAssignments.length})
+            </h3>
+            <button
+              onClick={() => onNavigateTab('assignments')}
+              className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <span>Assignment Ledger</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+            {courseAssignments.map((asg) => (
+              <div key={asg.id} className="p-4 flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-mono text-cyan-400 font-bold">Due {asg.dueDate}</div>
+                  <div className="text-sm font-bold text-white">{asg.title}</div>
+                  <div className="text-xs text-slate-400 font-mono">Max Score: {asg.maxScore} pts</div>
+                </div>
+                <button
+                  onClick={() => onNavigateTab('teacher_review')}
+                  className="px-3 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono transition-colors cursor-pointer"
+                >
+                  Review Submissions
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: ASSESSMENTS */}
+      {activeTab === 'assessments' && (
+        <div className="p-5 rounded-xl border border-purple-500/20 bg-black/40 backdrop-blur-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold font-mono tracking-wider text-purple-300 uppercase">
+              Formative Assessments & Live Quizzes
+            </h3>
+            <button
+              onClick={handleLaunchSmartBoard}
+              className="px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 text-xs font-mono cursor-pointer"
+            >
+              SmartBoard Polls
+            </button>
+          </div>
+
+          <div className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 space-y-1">
+            <div className="text-sm font-bold text-white">Quantum Annihilation Operator Diagnostic</div>
+            <div className="text-xs font-mono text-slate-400">5 Questions · Formative Checkpoint · 82% Class Accuracy</div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 7: COMMUNITY */}
+      {activeTab === 'community' && (
+        <ClassMessagingDeck
+          currentClass={course}
+          currentRole="teacher"
+          workspaceId="ws-stark-core"
+        />
+      )}
+
+      {/* TAB 8: KNOWLEDGE / MATERIALS */}
+      {activeTab === 'knowledge' && (
         <div className="p-5 rounded-xl border border-cyan-500/20 bg-black/40 backdrop-blur-sm space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
@@ -322,11 +593,45 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
                   <FileText className="w-4 h-4 text-cyan-400" />
                   <div>
                     <div className="text-xs font-mono font-bold text-white">{mat.title}</div>
-                    <div className="text-[10px] text-cyan-400/60 font-mono">Size: {mat.size} • Uploaded: {mat.uploadedAt}</div>
+                    <div className="text-[10px] text-cyan-400/60 font-mono">
+                      Size: {mat.size} • Uploaded: {mat.uploadedAt}
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 9: HISTORY */}
+      {activeTab === 'history' && (
+        <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm space-y-3">
+          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
+            Delivered Class Sessions History
+          </h3>
+
+          <div className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-bold text-white">
+                Coulomb’s Law, Electric Fields & Gauss Surface Flux
+              </div>
+              <div className="text-xs font-mono text-slate-400 mt-0.5">
+                Delivered on Oct 3, 2026 · 45 mins · 28/32 Cadets Attended
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (onNavigateToContext) {
+                  onNavigateToContext('teacher_post_class_review', { sessionId: 'session-phys-101' });
+                } else {
+                  onNavigateTab('teacher_post_class_review' as any);
+                }
+              }}
+              className="px-3.5 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-colors cursor-pointer shrink-0"
+            >
+              View Post-Class Review
+            </button>
           </div>
         </div>
       )}

@@ -9,7 +9,9 @@ import {
   BookOpen,
   FileCheck2,
   Radio,
-  Sparkles
+  Timer,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 
 interface EducationCalendarViewProps {
@@ -39,7 +41,7 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
   onNavigateWithContext
 }) => {
   const [selectedDate, setSelectedDate] = useState<string>('2026-10-18');
-  const [viewFilter, setViewFilter] = useState<'all' | 'classes' | 'deadlines'>('all');
+  const [viewFilter, setViewFilter] = useState<'all' | 'classes' | 'deadlines' | 'study'>('all');
   const [dynamicEvents, setDynamicEvents] = useState<CalendarEvent[]>([]);
 
   // Fetch real-time integrated academic calendar events
@@ -67,7 +69,7 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
     };
   }, []);
 
-  // Derive schedule events from classes, assignments and dynamic feed
+  // Base schedule events
   const baseEvents: CalendarEvent[] = [
     {
       id: 'evt-phys-1',
@@ -78,6 +80,15 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
       courseCode: 'PHYS-301',
       location: 'Quantum Hall 4B',
       courseId: 'class-phys-301'
+    },
+    {
+      id: 'evt-study-1',
+      title: 'Pomodoro Deep Focus Block: Quantum Operator Algebra',
+      type: 'study_block',
+      time: '02:00 PM - 03:00 PM',
+      date: '2026-10-18',
+      courseCode: 'PHYS-301',
+      location: 'Focus Study Workspace'
     },
     {
       id: 'evt-asg-1',
@@ -118,23 +129,23 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
       courseId: 'class-math-240'
     },
     {
-      id: 'evt-study-1',
-      title: 'Pomodoro Deep Focus Block: Quantum Algebra',
+      id: 'evt-study-2',
+      title: 'Midterm Prep Block: Vector Calculus Review',
       type: 'study_block',
-      time: '05:00 PM - 06:30 PM',
-      date: '2026-10-18',
-      courseCode: 'PHYS-301',
+      time: '04:00 PM - 05:30 PM',
+      date: '2026-10-24',
+      courseCode: 'MATH-240',
       location: 'Personal Study Workspace'
     }
   ];
 
-  // Combine static fallbacks and dynamic live feed without duplicates
   const eventIds = new Set(dynamicEvents.map((e) => e.id));
   const events = [...dynamicEvents, ...baseEvents.filter((b) => !eventIds.has(b.id))];
 
   const filteredEvents = events.filter((e) => {
     if (viewFilter === 'classes') return e.type === 'class';
     if (viewFilter === 'deadlines') return e.type === 'assignment_due' || e.type === 'exam';
+    if (viewFilter === 'study') return e.type === 'study_block';
     return true;
   });
 
@@ -150,23 +161,56 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
     { day: 'Sat', date: '2026-10-24', num: 24, isToday: false, hasEvent: true }
   ];
 
+  const handleOpenCanonical = (evt: CalendarEvent) => {
+    if (!onNavigateWithContext) return;
+    if (evt.type === 'class') {
+      onNavigateWithContext('classroom', { classId: evt.courseId || 'class-phys-301' });
+    } else if (evt.type === 'assignment_due') {
+      onNavigateWithContext('assignments', { classId: evt.courseId || 'class-phys-301' });
+    } else if (evt.type === 'study_block') {
+      onNavigateWithContext('focus', {
+        classId: evt.courseId || 'class-phys-301',
+        topic: evt.title
+      });
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* 1. Page Header */}
-      <div className="space-y-1">
-        <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase">
-          Academic Schedule · Fall 2026
+    <div className="space-y-6 max-w-4xl mx-auto w-full">
+      {/* 1. Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
+        <div className="space-y-1">
+          <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+            <CalendarIcon className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Academic Temporal Ledger</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Schedule & Deadlines
+          </h1>
+          <p className="text-xs text-slate-400 font-mono">
+            Track daily lectures, upcoming assignment cutoffs, and planned focus study blocks.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Academic Calendar & Deadlines
-        </h1>
-        <p className="text-xs sm:text-sm text-cyan-100/70">
-          Track upcoming lectures, problem set due dates, and scheduled focus study blocks.
-        </p>
+
+        {/* Legend Chips */}
+        <div className="flex items-center gap-2 font-mono text-[11px] shrink-0">
+          <span className="flex items-center gap-1 text-blue-300">
+            <span className="h-2 w-2 rounded-full bg-blue-400" />
+            <span>Class</span>
+          </span>
+          <span className="flex items-center gap-1 text-amber-300">
+            <span className="h-2 w-2 rounded-full bg-amber-400" />
+            <span>Due</span>
+          </span>
+          <span className="flex items-center gap-1 text-purple-300">
+            <span className="h-2 w-2 rounded-full bg-purple-400" />
+            <span>Focus</span>
+          </span>
+        </div>
       </div>
 
       {/* 2. Week Strip Navigation */}
-      <div className="p-4 rounded-xl border border-cyan-500/20 bg-black/40 backdrop-blur-md space-y-4">
+      <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-mono font-bold text-white">
             <CalendarIcon className="w-4 h-4 text-cyan-400" />
@@ -174,30 +218,42 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-lg border border-cyan-500/20 bg-black/60 text-xs font-mono">
+          <div className="flex items-center gap-1 p-1 rounded-lg border border-slate-800 bg-slate-950 text-xs font-mono">
             <button
+              type="button"
               onClick={() => setViewFilter('all')}
-              className={`px-3 py-1 rounded transition-colors ${
-                viewFilter === 'all' ? 'bg-cyan-500/20 text-cyan-200 font-bold' : 'text-cyan-400/60 hover:text-white'
+              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                viewFilter === 'all' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
               All
             </button>
             <button
+              type="button"
               onClick={() => setViewFilter('classes')}
-              className={`px-3 py-1 rounded transition-colors ${
-                viewFilter === 'classes' ? 'bg-cyan-500/20 text-cyan-200 font-bold' : 'text-cyan-400/60 hover:text-white'
+              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                viewFilter === 'classes' ? 'bg-slate-800 text-blue-300 font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Lectures
+              Classes
             </button>
             <button
+              type="button"
               onClick={() => setViewFilter('deadlines')}
-              className={`px-3 py-1 rounded transition-colors ${
-                viewFilter === 'deadlines' ? 'bg-cyan-500/20 text-cyan-200 font-bold' : 'text-cyan-400/60 hover:text-white'
+              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                viewFilter === 'deadlines' ? 'bg-slate-800 text-amber-300 font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
               Deadlines
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewFilter('study')}
+              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                viewFilter === 'study' ? 'bg-slate-800 text-purple-300 font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Study
             </button>
           </div>
         </div>
@@ -208,12 +264,13 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
             const isSelected = d.date === selectedDate;
             return (
               <button
+                type="button"
                 key={d.date}
                 onClick={() => setSelectedDate(d.date)}
                 className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
                   isSelected
-                    ? 'border-cyan-400 bg-cyan-500/20 text-white shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-                    : 'border-cyan-500/15 bg-black/30 hover:border-cyan-500/30 text-cyan-300/70 hover:text-white'
+                    ? 'border-cyan-400 bg-cyan-500/20 text-white shadow-[0_0_12px_rgba(6,182,212,0.15)]'
+                    : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 text-slate-400 hover:text-white'
                 }`}
               >
                 <span className="text-[10px] font-mono uppercase">{d.day}</span>
@@ -229,13 +286,13 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
         </div>
       </div>
 
-      {/* 3. Schedule for Selected Day */}
+      {/* 3. Chronological Daily Agenda */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
-            Events for {selectedDate === '2026-10-18' ? 'Today (Sunday, Oct 18)' : selectedDate}
+          <h2 className="text-xs font-mono font-bold tracking-wider text-slate-300 uppercase">
+            Chronological Timeline · {selectedDate === '2026-10-18' ? 'Today (Sunday, Oct 18)' : selectedDate}
           </h2>
-          <span className="text-xs font-mono text-cyan-400/60">
+          <span className="text-xs font-mono text-slate-500">
             {selectedDayEvents.length} scheduled items
           </span>
         </div>
@@ -249,89 +306,93 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
             return (
               <div
                 key={evt.id}
-                className="p-4 rounded-xl border border-cyan-500/15 bg-black/40 backdrop-blur-sm space-y-2 hover:border-cyan-500/35 transition-all"
+                onClick={() => handleOpenCanonical(evt)}
+                className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/40 transition-all cursor-pointer group space-y-2.5 backdrop-blur-sm"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono font-bold text-cyan-300">
                       {evt.courseCode}
                     </span>
-                    <span aria-hidden="true" className="text-cyan-500/40">·</span>
-                    <span className="text-xs font-mono text-cyan-400/70 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
+                    <span aria-hidden="true" className="text-slate-600">·</span>
+                    <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       {evt.time}
                     </span>
                   </div>
 
                   <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded self-start sm:self-auto ${
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded self-start sm:self-auto font-medium ${
                       isClass
                         ? 'bg-blue-950/60 text-blue-300 border border-blue-500/30'
                         : isDue
                         ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
-                        : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-purple-950/60 text-purple-300 border border-purple-500/30'
                     }`}
                   >
-                    {isClass ? 'Lecture Session' : isDue ? 'Assignment Deadline' : 'Study Block'}
+                    {isClass ? 'Lecture Session' : isDue ? 'Assignment Deadline' : 'Focus Study Block'}
                   </span>
                 </div>
 
-                <h3 className="text-sm font-semibold text-white">{evt.title}</h3>
+                <h3 className="text-sm font-semibold text-white group-hover:text-cyan-200 transition-colors">
+                  {evt.title}
+                </h3>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-cyan-400/60 pt-2 border-t border-cyan-500/10">
-                  <span className="flex items-center gap-1">
-                    {evt.location && <MapPin className="w-3.5 h-3.5 text-cyan-400/50" />}
-                    {evt.location || 'Online / Jarvis LMS'}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 pt-2 border-t border-slate-800/80">
+                  <span className="flex items-center gap-1 text-slate-500">
+                    {evt.location && <MapPin className="w-3.5 h-3.5 text-slate-500" />}
+                    <span>{evt.location || 'Online / Jarvis LMS'}</span>
                   </span>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     {isClass && onNavigateWithContext && (
                       <button
+                        type="button"
                         onClick={() =>
-                          onNavigateWithContext('lesson_workspace', {
-                            classId: evt.courseId || 'class-phys-301',
-                            courseId: evt.courseId || 'class-phys-301',
-                            unitId: 'unit-phys-1',
-                            lessonId: 'les-phys-101'
+                          onNavigateWithContext('classroom', {
+                            classId: evt.courseId || 'class-phys-301'
                           })
                         }
-                        className="px-2 py-0.5 rounded bg-blue-950/40 border border-blue-500/30 text-blue-300 hover:text-white transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-300 hover:text-white transition-colors cursor-pointer"
                       >
-                        Open Lesson
+                        Enter Classroom →
                       </button>
                     )}
 
                     {isDue && onNavigateWithContext && (
                       <button
+                        type="button"
                         onClick={() =>
                           onNavigateWithContext('assignments', {
                             classId: evt.courseId || 'class-phys-301'
                           })
                         }
-                        className="px-2 py-0.5 rounded bg-amber-950/40 border border-amber-500/30 text-amber-300 hover:text-white transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300 hover:text-white transition-colors cursor-pointer"
                       >
-                        Open Assignment
+                        Open Assignment →
                       </button>
                     )}
 
-                    {onNavigateWithContext && (
+                    {isStudy && onNavigateWithContext && (
                       <button
+                        type="button"
                         onClick={() =>
                           onNavigateWithContext('focus', {
                             classId: evt.courseId || 'class-phys-301',
                             topic: evt.title
                           })
                         }
-                        className="px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 hover:text-white transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-purple-950/40 border border-purple-500/30 text-purple-300 hover:text-white transition-colors cursor-pointer"
                       >
-                        Focus
+                        Start Focus →
                       </button>
                     )}
 
                     {evt.courseId && (
                       <button
+                        type="button"
                         onClick={() => onSelectCourse(evt.courseId!)}
-                        className="text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer"
+                        className="text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer pl-1"
                       >
                         Syllabus →
                       </button>
@@ -343,11 +404,11 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
           })}
 
           {selectedDayEvents.length === 0 && (
-            <div className="p-8 rounded-xl border border-cyan-500/15 bg-black/20 text-center space-y-2">
-              <CalendarIcon className="w-6 h-6 text-cyan-400/40 mx-auto" />
+            <div className="p-8 rounded-2xl border border-slate-800 bg-slate-900/40 text-center space-y-2">
+              <CalendarIcon className="w-6 h-6 text-slate-600 mx-auto" />
               <div className="text-sm font-mono font-bold text-white">No Scheduled Events</div>
-              <p className="text-xs text-cyan-100/60">
-                You have no lectures or assignment deadlines scheduled for this day.
+              <p className="text-xs text-slate-400">
+                You have no lectures or assignment deadlines scheduled for this date.
               </p>
             </div>
           )}

@@ -93,7 +93,11 @@ async function runEducationTests() {
   console.log('\n=== ALL 11 EDUCATION & KNOWLEDGE TESTS PASSED! ===\n');
 }
 
-runEducationTests().catch((err) => {
-  console.error('[TEST SUITE ERROR]', err);
-  process.exit(1);
-});
+runEducationTests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('[TEST SUITE ERROR]', err);
+    process.exit(1);
+  });

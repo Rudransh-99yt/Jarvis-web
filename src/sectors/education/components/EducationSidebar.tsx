@@ -26,7 +26,11 @@ import {
   ShieldCheck,
   Timer,
   Users,
-  Bookmark
+  Bookmark,
+  Trophy,
+  AlertTriangle,
+  FileSpreadsheet,
+  Heart
 } from 'lucide-react';
 
 export type EducationSidebarSection =
@@ -35,6 +39,7 @@ export type EducationSidebarSection =
   | 'classes'
   | 'assignments'
   | 'calendar'
+  | 'engagement'
   | 'focus'
   | 'workspace'
   | 'community'
@@ -44,7 +49,10 @@ export type EducationSidebarSection =
   | 'videos'
   | 'classroom'
   | 'principal_overview'
-  | 'teacher_prep';
+  | 'teacher_prep'
+  | 'teacher_review'
+  | 'teacher_attention'
+  | 'teacher_post_class_review';
 
 interface EducationSidebarProps {
   currentRole: EducationRole;
@@ -78,9 +86,10 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const roles: Array<{ id: EducationRole; label: string; name: string; icon: any; color: string; department: string }> = [
-    { id: 'student', label: 'Student', name: 'Alex Mercer', icon: GraduationCap, color: 'text-cyan-400', department: 'Class 12 Physics' },
-    { id: 'teacher', label: 'Instructor', name: 'Dr. Helen Cho', icon: BookOpen, color: 'text-blue-400', department: 'Faculty of Physics' },
-    { id: 'principal', label: 'Principal / Dean', name: 'Dean Stark', icon: ShieldAlert, color: 'text-amber-400', department: 'Academic Directorate' }
+    { id: 'student', label: 'Student', name: 'Alex Chen', icon: GraduationCap, color: 'text-cyan-400', department: 'Class 12 Physics' },
+    { id: 'teacher', label: 'Instructor', name: 'Dr. Sarah', icon: BookOpen, color: 'text-blue-400', department: 'Faculty of Physics' },
+    { id: 'principal', label: 'Principal / Dean', name: 'Dean Alistair Vance', icon: ShieldAlert, color: 'text-amber-400', department: 'Academic Directorate' },
+    { id: 'parent', label: 'Parent / Family', name: 'Maria Chen', icon: Heart, color: 'text-rose-400', department: 'Family & Guardian Council' }
   ];
 
   const currentRoleObj = roles.find((r) => r.id === currentRole) || roles[0];
@@ -242,10 +251,10 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
 
       {/* 2. Scrollable Navigation Hierarchy */}
       <div className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar">
-        {/* Primary Workspace Section */}
+        {/* LEARN Section for Students / TEACH Section for Teachers / INSTITUTION for Principal */}
         <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5">
-            {currentRole === 'student' ? 'Primary' : currentRole === 'teacher' ? 'Faculty Command' : 'Executive'}
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+            {currentRole === 'student' ? 'Learn' : currentRole === 'teacher' ? 'Teach' : 'Institution'}
           </div>
 
           {currentRole === 'student' && (
@@ -255,15 +264,18 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               {renderNavButton('classes', 'Classes & Cohorts', BookOpen, classes.length)}
               {renderNavButton('assignments', 'Assignments', FileCheck2, '3 due')}
               {renderNavButton('calendar', 'Academic Calendar', Calendar)}
+              {renderNavButton('engagement', 'Standings & Consistency', Trophy, 'Rank #5')}
             </>
           )}
 
           {currentRole === 'teacher' && (
             <>
-              {renderNavButton('home', 'Teaching Hub', Home)}
+              {renderNavButton('home', 'Command Center', Home)}
+              {renderNavButton('teacher_review', 'Review Queue', FileSpreadsheet, '2 pending')}
+              {renderNavButton('teacher_attention', 'Needs Attention', AlertTriangle, '4 signals')}
               {renderNavButton('teacher_prep', 'Session Prep', Sparkles)}
               {renderNavButton('classes', 'Managed Classes', BookOpen, classes.length)}
-              {renderNavButton('assignments', 'Assignments & Grading', FileCheck2, '2 pending')}
+              {renderNavButton('assignments', 'Assignments', FileCheck2)}
               {renderNavButton('calendar', 'Schedule', Calendar)}
             </>
           )}
@@ -277,32 +289,40 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               {renderNavButton('calendar', 'Calendar', Calendar)}
             </>
           )}
+
+          {currentRole === 'parent' && (
+            <>
+              {renderNavButton('home', 'Family Portal', Heart)}
+              {renderNavButton('calendar', 'School Calendar', Calendar)}
+              {renderNavButton('community', 'School Updates', MessageSquare)}
+            </>
+          )}
         </div>
 
-        {/* Productivity Section */}
+        {/* FOCUS & WORKSPACE Section */}
         <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5">
-            Productivity
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+            Focus & Workspace
           </div>
 
-          {renderNavButton('focus', 'Focus', Timer)}
+          {renderNavButton('focus', 'Focus Room', Timer)}
           {renderNavButton('workspace', 'My Workspace', FileText)}
         </div>
 
-        {/* Community Section */}
+        {/* CONNECT Section */}
         <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5">
-            Community
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+            Connect
           </div>
 
           {renderNavButton('community', 'Community', MessageSquare)}
           {renderNavButton('study_groups', 'Study Groups', Users)}
         </div>
 
-        {/* Knowledge & Learning Tools */}
+        {/* KNOWLEDGE & MEDIA Section */}
         <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5">
-            Knowledge & Media
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+            Knowledge
           </div>
 
           {renderNavButton('notes', 'Notes & Formulas', Bookmark)}
@@ -312,10 +332,10 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         </div>
 
         {/* Course Directory Quick Access */}
-        <div className="space-y-1 pt-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5 flex items-center justify-between">
+        <div className="space-y-1 pt-1 border-t border-slate-800/80">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 flex items-center justify-between font-semibold">
             <span>Enrolled Courses</span>
-            <span className="text-[9px] text-cyan-400/60 font-mono">{classes.length}</span>
+            <span className="text-[9px] text-slate-500 font-mono">{classes.length}</span>
           </div>
 
           <div className="space-y-0.5">

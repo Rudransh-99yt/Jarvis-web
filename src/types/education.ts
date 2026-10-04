@@ -3,7 +3,7 @@
 import type { SourceReference } from './platform.ts';
 import type { AcademicContext } from './academicContext.ts';
 
-export type EducationRole = 'student' | 'teacher' | 'principal';
+export type EducationRole = 'student' | 'teacher' | 'principal' | 'parent';
 export * from './academicContext.ts';
 export * from './workspace.ts';
 export * from './classSession.ts';

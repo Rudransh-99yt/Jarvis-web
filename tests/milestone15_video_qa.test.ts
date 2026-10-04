@@ -141,7 +141,11 @@ async function runMilestone15Tests() {
   console.log('\n=== ALL MILESTONE 15 TESTS PASSED SUCCESSFULLY! ===\n');
 }
 
-runMilestone15Tests().catch((err) => {
-  console.error('[TEST SUITE CRASHED]:', err);
-  process.exit(1);
-});
+runMilestone15Tests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('[TEST SUITE CRASHED]:', err);
+    process.exit(1);
+  });
