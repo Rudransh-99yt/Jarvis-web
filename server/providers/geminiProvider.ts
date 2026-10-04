@@ -12,7 +12,7 @@ Avoid unnecessary verbose disclaimers, bloated preambles, or excessive markdown 
 
 export class GeminiProvider implements AiProvider {
   readonly id = 'gemini';
-  readonly name = 'Google Gemini (gemini-2.5-flash)';
+  readonly name = 'Google Gemini (gemini-3.8-flash)';
   private client: GoogleGenAI | null = null;
   private lastConfiguredKey: string = '';
   private isKeyInvalid: boolean = false;
@@ -111,7 +111,7 @@ export class GeminiProvider implements AiProvider {
       });
 
       const responsePromise = this.client.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents,
         config
       });

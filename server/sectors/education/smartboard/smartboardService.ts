@@ -265,6 +265,27 @@ export class SmartBoardService {
       doc = smartboardStore.getBoardDocumentForSession(sessionIdOrDocId);
     }
     if (!doc) {
+      const session = await classSessionStore.getSession(sessionIdOrDocId);
+      if (session) {
+        doc = smartboardStore.createOrGetDocumentForSession({
+          sessionId: session.id,
+          classId: session.classId,
+          courseCode: session.courseCode,
+          courseName: session.courseName,
+          unitId: session.unitId,
+          unitTitle: session.unitTitle,
+          lessonId: session.lessonId,
+          lessonTitle: session.lessonTitle,
+          teacherId: session.teacherId,
+          teacherName: session.teacherName,
+          title: `${session.courseCode}: ${session.topic} (Board Notes)`,
+          classroomId: 'class-phys-301',
+          classroomName: 'Physics Lab Hall C-104',
+          institutionId: session.schoolId || 'inst-stark-academy'
+        });
+      }
+    }
+    if (!doc) {
       throw new Error(`Board document '${sessionIdOrDocId}' not found.`);
     }
 

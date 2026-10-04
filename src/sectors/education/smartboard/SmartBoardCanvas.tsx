@@ -3,10 +3,12 @@ import type {
   BoardDocument,
   BoardPage,
   BoardElement,
-  BoardElementType,
   BoardStrokePoint,
   BoardSemanticTag,
-  BoardPageBackground
+  BoardPageBackground,
+  SemanticCandidate,
+  BoardAIContext,
+  BoundingBox
 } from '../../../types/smartboard.ts';
 import {
   Pen,
@@ -31,7 +33,16 @@ import {
   FileText,
   Save,
   Layers,
-  HelpCircle
+  HelpCircle,
+  Maximize2,
+  MousePointer,
+  Cpu,
+  Check,
+  X,
+  Eye,
+  EyeOff,
+  Brain,
+  Share2
 } from 'lucide-react';
 
 interface SmartBoardCanvasProps {
@@ -40,7 +51,17 @@ interface SmartBoardCanvasProps {
   isReadOnly?: boolean;
 }
 
-type ActiveTool = 'pen' | 'highlighter' | 'eraser' | 'text' | 'shape_rect' | 'shape_circle' | 'shape_triangle' | 'shape_line' | 'shape_arrow';
+type ActiveTool =
+  | 'select'
+  | 'pen'
+  | 'highlighter'
+  | 'eraser'
+  | 'text'
+  | 'shape_rect'
+  | 'shape_circle'
+  | 'shape_triangle'
+  | 'shape_line'
+  | 'shape_arrow';
 
 const COLOR_PALETTE = [
   '#00f2fe', // Cyan
@@ -55,21 +76,117 @@ const COLOR_PALETTE = [
 
 const STROKE_WIDTHS = [2, 4, 8, 14];
 
+// Helper to compute bounding box for any element on the client
+function getElementBox(elem: BoardElement): BoundingBox {
+  if (elem.type === 'stroke' && elem.points && elem.points.length > 0) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of elem.points) {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    }
+    const pad = (elem.width || 4) / 2;
+    return {
+      minX: Math.max(0, minX - pad),
+      minY: Math.max(0, minY - pad),
+      maxX: maxX + pad,
+      maxY: maxY + pad,
+      width: Math.max(1, maxX - minX + pad * 2),
+      height: Math.max(1, maxY - minY + pad * 2)
+    };
+  }
+
+  if (elem.type === 'shape') {
+    const x = elem.x ?? 0;
+    const y = elem.y ?? 0;
+    const w = elem.widthPx ?? (elem.endX !== undefined ? Math.abs(elem.endX - x) : 60);
+    const h = elem.heightPx ?? (elem.endY !== undefined ? Math.abs(elem.endY - y) : 60);
+    const minX = Math.min(x, elem.endX ?? x);
+    const minY = Math.min(y, elem.endY ?? y);
+    return {
+      minX,
+      minY,
+      maxX: minX + w,
+      maxY: minY + h,
+      width: Math.max(1, w),
+      height: Math.max(1, h)
+    };
+  }
+
+  if (elem.type === 'text') {
+    const x = elem.x ?? 0;
+    const y = elem.y ?? 0;
+    const len = elem.text?.length || 10;
+    const fs = elem.fontSize || 20;
+    const w = len * (fs * 0.6);
+    const h = fs * 1.2;
+    return {
+      minX: x,
+      minY: Math.max(0, y - h),
+      maxX: x + w,
+      maxY: y,
+      width: w,
+      height: h
+    };
+  }
+
+  const x = elem.x ?? 0;
+  const y = elem.y ?? 0;
+  return { minX: x, minY: y, maxX: x + 80, maxY: y + 40, width: 80, height: 40 };
+}
+
 export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   document: initialDoc,
   onAutosave,
   isReadOnly = false
 }) => {
-  const [doc, setDoc] = useState<BoardDocument>(initialDoc);
-  const [activePageIndex, setActivePageIndex] = useState<number>(initialDoc.activePageIndex || 0);
+  // Ensure we always have at least one valid page
+  const sanitizeDoc = (d: BoardDocument): BoardDocument => {
+    if (!d.pages || d.pages.length === 0) {
+      return {
+        ...d,
+        activePageIndex: 0,
+        pages: [
+          {
+            pageId: `page-${d.id || 'board'}-1`,
+            pageIndex: 0,
+            title: 'Page 1 — Main Canvas',
+            background: 'dark_grid',
+            elements: [],
+            semanticCandidates: [],
+            spatialRelationships: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ]
+      };
+    }
+    return d;
+  };
+
+  const [doc, setDoc] = useState<BoardDocument>(() => sanitizeDoc(initialDoc));
+  const [activePageIndex, setActivePageIndex] = useState<number>(() => {
+    const idx = initialDoc.activePageIndex ?? 0;
+    return idx >= 0 && idx < (initialDoc.pages?.length || 1) ? idx : 0;
+  });
+
   const [activeTool, setActiveTool] = useState<ActiveTool>('pen');
   const [selectedColor, setSelectedColor] = useState<string>('#00f2fe');
   const [strokeWidth, setStrokeWidth] = useState<number>(4);
-  const [activeSemanticTag, setActiveSemanticTag] = useState<BoardSemanticTag | undefined>('general_note');
-  
+  const [activeSemanticTag, setActiveSemanticTag] = useState<BoardSemanticTag>('general_note');
+
+  // D.9 Vision Board State
+  const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
+  const [activeCandidate, setActiveCandidate] = useState<SemanticCandidate | null>(null);
+  const [isRecognizing, setIsRecognizing] = useState<boolean>(false);
+  const [showVisionOverlays, setShowVisionOverlays] = useState<boolean>(true);
+  const [aiContextModal, setAiContextModal] = useState<BoardAIContext | null>(null);
+  const [visionNotice, setVisionNotice] = useState<string | null>(null);
+
   // History stack for undo/redo
-  const [history, setHistory] = useState<BoardPage[][]>([]);
-  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [history, setHistory] = useState<BoardPage[][]>(() => [JSON.parse(JSON.stringify(sanitizeDoc(initialDoc).pages))]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
 
   // Autosave status state
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
@@ -82,25 +199,35 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   const currentPointsRef = useRef<BoardStrokePoint[]>([]);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Text input modal/inline state
+  // Text input inline state
   const [textInputPos, setTextInputPos] = useState<{ x: number; y: number } | null>(null);
   const [textInputValue, setTextInputValue] = useState<string>('');
 
   const currentPage = doc.pages[activePageIndex] || doc.pages[0];
 
-  // Sync doc from prop changes if version is newer
+  // Sync doc from prop changes if version is strictly newer from external source
   useEffect(() => {
-    if (initialDoc.version > doc.version) {
-      setDoc(initialDoc);
-      if (initialDoc.activePageIndex !== undefined) {
+    if (initialDoc && initialDoc.version > doc.version) {
+      const sanitized = sanitizeDoc(initialDoc);
+      setDoc(sanitized);
+      if (initialDoc.activePageIndex !== undefined && initialDoc.activePageIndex < sanitized.pages.length) {
         setActivePageIndex(initialDoc.activePageIndex);
       }
     }
   }, [initialDoc]);
 
-  // Trigger autosave debounced
+  // Push to undo/redo history
+  const pushHistory = (newPages: BoardPage[]) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(JSON.parse(JSON.stringify(newPages)));
+    if (newHistory.length > 25) newHistory.shift();
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Schedule background debounced network autosave
   const scheduleAutosave = useCallback(
-    (updatedPages: BoardPage[], newPageIndex?: number) => {
+    (updatedDoc: BoardDocument) => {
       if (isReadOnly) return;
       setSaveStatus('dirty');
 
@@ -110,57 +237,40 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
 
       autosaveTimerRef.current = setTimeout(async () => {
         setSaveStatus('saving');
-        const updatedDoc: BoardDocument = {
-          ...doc,
-          pages: updatedPages,
-          activePageIndex: newPageIndex ?? activePageIndex,
-          version: doc.version + 1,
-          timestamps: {
-            ...doc.timestamps,
-            updatedAt: new Date().toISOString(),
-            lastAutosavedAt: new Date().toISOString()
-          }
-        };
-        setDoc(updatedDoc);
         if (onAutosave) {
           try {
             await onAutosave(updatedDoc);
             setSaveStatus('saved');
-            setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+            setLastSavedTime(
+              new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            );
           } catch {
             setSaveStatus('dirty');
           }
         } else {
           setSaveStatus('saved');
         }
-      }, 1200);
+      }, 1000);
     },
-    [doc, activePageIndex, isReadOnly, onAutosave]
+    [isReadOnly, onAutosave]
   );
 
-  // Push to history
-  const pushHistory = (newPages: BoardPage[]) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(JSON.parse(JSON.stringify(newPages)));
-    if (newHistory.length > 20) newHistory.shift();
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  };
-
   // Render canvas elements
-  const redrawCanvas = useCallback(() => {
+  const redrawCanvas = useCallback((targetPage?: BoardPage) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const pageToDraw = targetPage || currentPage;
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!currentPage) return;
+    if (!pageToDraw || !pageToDraw.elements) return;
 
-    // Render elements in zIndex order
-    const sorted = [...currentPage.elements].sort((a, b) => a.zIndex - b.zIndex);
+    // 1. Render elements in zIndex order
+    const sorted = [...pageToDraw.elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 
     sorted.forEach((elem) => {
       ctx.save();
@@ -173,32 +283,42 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         if (elem.tool === 'highlighter') {
           ctx.globalAlpha = 0.35;
           ctx.lineWidth = (elem.width || 4) * 3;
+        } else {
+          ctx.globalAlpha = elem.opacity ?? 1;
         }
 
         const pts = elem.points;
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) {
-          ctx.lineTo(pts[i].x, pts[i].y);
+        if (pts.length === 1) {
+          ctx.arc(pts[0].x, pts[0].y, (elem.width || 3) / 2, 0, Math.PI * 2);
+          ctx.fillStyle = elem.color || '#00f2fe';
+          ctx.fill();
+        } else {
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (let i = 1; i < pts.length; i++) {
+            ctx.lineTo(pts[i].x, pts[i].y);
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
       } else if (elem.type === 'shape') {
         ctx.strokeStyle = elem.strokeColor || '#00f2fe';
         ctx.lineWidth = elem.width || 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         if (elem.fillColor) {
           ctx.fillStyle = elem.fillColor;
         }
 
-        const x = elem.x || 0;
-        const y = elem.y || 0;
-        const w = elem.widthPx || 100;
-        const h = elem.heightPx || 100;
+        const x = elem.x ?? 0;
+        const y = elem.y ?? 0;
+        const w = elem.widthPx ?? 100;
+        const h = elem.heightPx ?? 100;
 
         if (elem.shapeType === 'rectangle') {
           if (elem.fillColor) ctx.fillRect(x, y, w, h);
           ctx.strokeRect(x, y, w, h);
         } else if (elem.shapeType === 'circle') {
           ctx.beginPath();
-          ctx.arc(x + w / 2, y + h / 2, Math.abs(w / 2), 0, Math.PI * 2);
+          ctx.arc(x + w / 2, y + h / 2, Math.max(1, Math.abs(w / 2)), 0, Math.PI * 2);
           if (elem.fillColor) ctx.fill();
           ctx.stroke();
         } else if (elem.shapeType === 'triangle') {
@@ -242,49 +362,149 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         if (elem.semanticTag && elem.semanticTag !== 'general_note') {
           ctx.fillStyle = '#64748b';
           ctx.font = '10px var(--font-mono, monospace)';
-          ctx.fillText(`[${elem.semanticTag.toUpperCase()}]`, (elem.x || 50), (elem.y || 50) - (elem.fontSize || 20) - 2);
+          ctx.fillText(`[${elem.semanticTag.toUpperCase()}]`, (elem.x || 50), (elem.y || 50) - (elem.fontSize || 20) - 4);
         }
       }
       ctx.restore();
     });
-  }, [currentPage]);
 
-  // Adjust canvas size & redraw
+    // 2. Render Selection Bounding Box Overlays
+    if (selectedElementIds.length > 0) {
+      selectedElementIds.forEach((id) => {
+        const target = pageToDraw.elements.find((e) => e.id === id);
+        if (target) {
+          const b = getElementBox(target);
+          ctx.save();
+          ctx.strokeStyle = '#00f2fe';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.strokeRect(b.minX - 4, b.minY - 4, b.width + 8, b.height + 8);
+
+          // Corner tick marks
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#00f2fe';
+          const tick = 4;
+          ctx.fillRect(b.minX - 4 - tick, b.minY - 4 - tick, tick * 2, tick * 2);
+          ctx.fillRect(b.maxX + 4 - tick, b.minY - 4 - tick, tick * 2, tick * 2);
+          ctx.fillRect(b.minX - 4 - tick, b.maxY + 4 - tick, tick * 2, tick * 2);
+          ctx.fillRect(b.maxX + 4 - tick, b.maxY + 4 - tick, tick * 2, tick * 2);
+          ctx.restore();
+        }
+      });
+    }
+
+    // 3. Render Accepted Vision Semantic Overlays (if enabled)
+    if (showVisionOverlays && pageToDraw.semanticCandidates && pageToDraw.semanticCandidates.length > 0) {
+      pageToDraw.semanticCandidates.forEach((cand) => {
+        const b = cand.boundingBox;
+        ctx.save();
+        ctx.strokeStyle = cand.semanticType === 'EQUATION' ? '#a855f7' : cand.semanticType === 'DIAGRAM' ? '#38bdf8' : '#10b981';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(b.minX - 6, b.minY - 6, b.width + 12, b.height + 12);
+
+        // Header Pill
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#0f172a';
+        const labelText = cand.equation
+          ? `EQ: ${cand.equation.expression} (${Math.round(cand.confidence * 100)}%)`
+          : cand.diagram
+          ? `DIAGRAM: ${cand.diagram.diagramType.toUpperCase()}`
+          : `TEXT: ${(cand.recognizedText || '').slice(0, 15)}`;
+
+        ctx.font = '10px var(--font-mono, monospace)';
+        const textWidth = ctx.measureText(labelText).width;
+        ctx.fillRect(b.minX - 6, Math.max(0, b.minY - 22), textWidth + 12, 16);
+        ctx.strokeStyle = cand.semanticType === 'EQUATION' ? '#a855f7' : '#38bdf8';
+        ctx.strokeRect(b.minX - 6, Math.max(0, b.minY - 22), textWidth + 12, 16);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText(labelText, b.minX, Math.max(12, b.minY - 10));
+        ctx.restore();
+      });
+    }
+  }, [currentPage, selectedElementIds, showVisionOverlays]);
+
+  // Adjust canvas size & redraw on mount/resize with rAF
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const parent = canvas.parentElement;
     if (!parent) return;
 
+    let rafId: number | null = null;
+
+    const resize = () => {
+      const rect = parent.getBoundingClientRect();
+      const targetWidth = Math.max(Math.floor(rect.width), 300);
+      const targetHeight = Math.max(Math.floor(rect.height), 300);
+
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        redrawCanvas();
+      }
+    };
+
+    resize();
+
     const resizeObserver = new ResizeObserver(() => {
-      canvas.width = parent.clientWidth || 1200;
-      canvas.height = Math.max(parent.clientHeight || 700, 600);
-      redrawCanvas();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        resize();
+      });
     });
 
     resizeObserver.observe(parent);
-    canvas.width = parent.clientWidth || 1200;
-    canvas.height = Math.max(parent.clientHeight || 700, 600);
-    redrawCanvas();
-
-    return () => resizeObserver.disconnect();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
+    };
   }, [redrawCanvas]);
 
-  // Pointer event handlers for drawing
+  // Redraw when currentPage or selection changes
+  useEffect(() => {
+    redrawCanvas();
+  }, [currentPage, selectedElementIds, showVisionOverlays, redrawCanvas]);
+
+  // Pointer position helper
   const getCanvasPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: Math.round(e.clientX - rect.left),
+      y: Math.round(e.clientY - rect.top)
     };
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (isReadOnly) return;
     const pos = getCanvasPos(e);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
+    try {
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
+
+    // 1. Select Tool Handling
+    if (activeTool === 'select') {
+      const hitElement = currentPage.elements.slice().reverse().find((elem) => {
+        const b = getElementBox(elem);
+        return pos.x >= b.minX - 10 && pos.x <= b.maxX + 10 && pos.y >= b.minY - 10 && pos.y <= b.maxY + 10;
+      });
+
+      if (hitElement) {
+        setSelectedElementIds((prev) =>
+          prev.includes(hitElement.id) ? prev.filter((id) => id !== hitElement.id) : [...prev, hitElement.id]
+        );
+      } else {
+        // Clicked background -> clear selection
+        setSelectedElementIds([]);
+        setActiveCandidate(null);
+      }
+      return;
+    }
 
     if (activeTool === 'text') {
       setTextInputPos(pos);
@@ -293,23 +513,40 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     }
 
     if (activeTool === 'eraser') {
-      // Point / radius eraser: remove elements within 24px of touch
+      // Point / radius eraser
       const filtered = currentPage.elements.filter((elem) => {
         if (elem.type === 'stroke' && elem.points) {
-          return !elem.points.some((p) => Math.hypot(p.x - pos.x, p.y - pos.y) < 24);
+          return !elem.points.some((p) => Math.hypot(p.x - pos.x, p.y - pos.y) < 28);
         }
         if (elem.x !== undefined && elem.y !== undefined) {
-          return Math.hypot(elem.x - pos.x, elem.y - pos.y) >= 32;
+          return Math.hypot(elem.x - pos.x, elem.y - pos.y) >= 36;
         }
         return true;
       });
 
       if (filtered.length !== currentPage.elements.length) {
+        const updatedPage: BoardPage = {
+          ...currentPage,
+          elements: filtered,
+          updatedAt: new Date().toISOString()
+        };
         const updatedPages = [...doc.pages];
-        updatedPages[activePageIndex] = { ...currentPage, elements: filtered, updatedAt: new Date().toISOString() };
+        updatedPages[activePageIndex] = updatedPage;
+
+        const updatedDoc: BoardDocument = {
+          ...doc,
+          pages: updatedPages,
+          version: doc.version + 1,
+          timestamps: {
+            ...doc.timestamps,
+            updatedAt: new Date().toISOString()
+          }
+        };
+
+        setDoc(updatedDoc);
         pushHistory(updatedPages);
-        scheduleAutosave(updatedPages);
-        redrawCanvas();
+        scheduleAutosave(updatedDoc);
+        redrawCanvas(updatedPage);
       }
       return;
     }
@@ -324,7 +561,6 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     const pos = getCanvasPos(e);
     currentPointsRef.current.push(pos);
 
-    // Live preview on canvas
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -352,15 +588,21 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       ctx.save();
       ctx.strokeStyle = selectedColor;
       ctx.lineWidth = strokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
       const w = pos.x - start.x;
       const h = pos.y - start.y;
 
       if (activeTool === 'shape_rect') {
+        ctx.fillStyle = `${selectedColor}18`;
+        ctx.fillRect(start.x, start.y, w, h);
         ctx.strokeRect(start.x, start.y, w, h);
       } else if (activeTool === 'shape_circle') {
         ctx.beginPath();
-        ctx.arc(start.x + w / 2, start.y + h / 2, Math.abs(w / 2), 0, Math.PI * 2);
+        ctx.arc(start.x + w / 2, start.y + h / 2, Math.max(1, Math.abs(w / 2)), 0, Math.PI * 2);
+        ctx.fillStyle = `${selectedColor}18`;
+        ctx.fill();
         ctx.stroke();
       } else if (activeTool === 'shape_triangle') {
         ctx.beginPath();
@@ -368,12 +610,25 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         ctx.lineTo(start.x + w, start.y + h);
         ctx.lineTo(start.x, start.y + h);
         ctx.closePath();
+        ctx.fillStyle = `${selectedColor}18`;
+        ctx.fill();
         ctx.stroke();
       } else if (activeTool === 'shape_line' || activeTool === 'shape_arrow') {
         ctx.beginPath();
         ctx.moveTo(start.x, start.y);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
+
+        if (activeTool === 'shape_arrow') {
+          const angle = Math.atan2(pos.y - start.y, pos.x - start.x);
+          const headLen = 14;
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          ctx.lineTo(pos.x - headLen * Math.cos(angle - Math.PI / 6), pos.y - headLen * Math.sin(angle - Math.PI / 6));
+          ctx.moveTo(pos.x, pos.y);
+          ctx.lineTo(pos.x - headLen * Math.cos(angle + Math.PI / 6), pos.y - headLen * Math.sin(angle + Math.PI / 6));
+          ctx.stroke();
+        }
       }
       ctx.restore();
     }
@@ -383,6 +638,12 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     if (!isDrawingRef.current || isReadOnly) return;
     isDrawingRef.current = false;
     const pos = getCanvasPos(e);
+
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
 
     const newElementId = `elem-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     let newElement: BoardElement | null = null;
@@ -397,7 +658,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         width: strokeWidth,
         opacity: activeTool === 'highlighter' ? 0.35 : 1,
         semanticTag: activeSemanticTag,
-        zIndex: currentPage.elements.length + 1,
+        zIndex: (currentPage.elements?.length || 0) + 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -422,27 +683,39 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         endX: pos.x,
         endY: pos.y,
         strokeColor: selectedColor,
-        fillColor: `${selectedColor}15`,
+        fillColor: `${selectedColor}18`,
         width: strokeWidth,
         semanticTag: activeSemanticTag,
-        zIndex: currentPage.elements.length + 1,
+        zIndex: (currentPage.elements?.length || 0) + 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
     }
 
     if (newElement) {
-      const updatedElements = [...currentPage.elements, newElement];
-      const updatedPages = [...doc.pages];
-      updatedPages[activePageIndex] = {
+      const updatedElements = [...(currentPage.elements || []), newElement];
+      const updatedPage: BoardPage = {
         ...currentPage,
         elements: updatedElements,
         updatedAt: new Date().toISOString()
       };
+      const updatedPages = [...doc.pages];
+      updatedPages[activePageIndex] = updatedPage;
 
+      const updatedDoc: BoardDocument = {
+        ...doc,
+        pages: updatedPages,
+        version: doc.version + 1,
+        timestamps: {
+          ...doc.timestamps,
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      setDoc(updatedDoc);
       pushHistory(updatedPages);
-      scheduleAutosave(updatedPages);
-      redrawCanvas();
+      scheduleAutosave(updatedDoc);
+      redrawCanvas(updatedPage);
     }
 
     currentPointsRef.current = [];
@@ -457,7 +730,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     }
 
     const newElem: BoardElement = {
-      id: `text-${Date.now()}`,
+      id: `text-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       type: 'text',
       text: textInputValue.trim(),
       x: textInputPos.x,
@@ -467,24 +740,36 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       color: selectedColor,
       semanticTag: activeSemanticTag,
       latexFormula: textInputValue.includes('\\') ? textInputValue.trim() : undefined,
-      zIndex: currentPage.elements.length + 1,
+      zIndex: (currentPage.elements?.length || 0) + 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    const updatedElements = [...currentPage.elements, newElem];
-    const updatedPages = [...doc.pages];
-    updatedPages[activePageIndex] = {
+    const updatedElements = [...(currentPage.elements || []), newElem];
+    const updatedPage: BoardPage = {
       ...currentPage,
       elements: updatedElements,
       updatedAt: new Date().toISOString()
     };
+    const updatedPages = [...doc.pages];
+    updatedPages[activePageIndex] = updatedPage;
 
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      version: doc.version + 1,
+      timestamps: {
+        ...doc.timestamps,
+        updatedAt: new Date().toISOString()
+      }
+    };
+
+    setDoc(updatedDoc);
     pushHistory(updatedPages);
-    scheduleAutosave(updatedPages);
+    scheduleAutosave(updatedDoc);
     setTextInputPos(null);
     setTextInputValue('');
-    redrawCanvas();
+    redrawCanvas(updatedPage);
   };
 
   // Undo / Redo
@@ -493,8 +778,14 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       const newIdx = historyIndex - 1;
       const targetPages = history[newIdx];
       setHistoryIndex(newIdx);
-      setDoc((prev) => ({ ...prev, pages: targetPages }));
-      scheduleAutosave(targetPages);
+      const updatedDoc: BoardDocument = {
+        ...doc,
+        pages: targetPages,
+        version: doc.version + 1
+      };
+      setDoc(updatedDoc);
+      scheduleAutosave(updatedDoc);
+      redrawCanvas(targetPages[activePageIndex]);
     }
   };
 
@@ -503,8 +794,14 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       const newIdx = historyIndex + 1;
       const targetPages = history[newIdx];
       setHistoryIndex(newIdx);
-      setDoc((prev) => ({ ...prev, pages: targetPages }));
-      scheduleAutosave(targetPages);
+      const updatedDoc: BoardDocument = {
+        ...doc,
+        pages: targetPages,
+        version: doc.version + 1
+      };
+      setDoc(updatedDoc);
+      scheduleAutosave(updatedDoc);
+      redrawCanvas(targetPages[activePageIndex]);
     }
   };
 
@@ -516,44 +813,178 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       title: `Page ${doc.pages.length + 1}`,
       background: 'dark_grid',
       elements: [],
+      semanticCandidates: [],
+      spatialRelationships: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
     const updatedPages = [...doc.pages, newPage];
     const newIndex = updatedPages.length - 1;
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      activePageIndex: newIndex,
+      version: doc.version + 1
+    };
+
     setActivePageIndex(newIndex);
+    setDoc(updatedDoc);
     pushHistory(updatedPages);
-    scheduleAutosave(updatedPages, newIndex);
+    scheduleAutosave(updatedDoc);
   };
 
   // Change background style
   const handleBackgroundChange = (bg: BoardPageBackground) => {
-    const updatedPages = [...doc.pages];
-    updatedPages[activePageIndex] = {
+    const updatedPage: BoardPage = {
       ...currentPage,
       background: bg,
       updatedAt: new Date().toISOString()
     };
+    const updatedPages = [...doc.pages];
+    updatedPages[activePageIndex] = updatedPage;
+
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      version: doc.version + 1
+    };
+
+    setDoc(updatedDoc);
     pushHistory(updatedPages);
-    scheduleAutosave(updatedPages);
+    scheduleAutosave(updatedDoc);
   };
 
   // Clear current page elements
   const handleClearPage = () => {
     if (isReadOnly) return;
-    const updatedPages = [...doc.pages];
-    updatedPages[activePageIndex] = {
+    const updatedPage: BoardPage = {
       ...currentPage,
       elements: [],
+      semanticCandidates: [],
       updatedAt: new Date().toISOString()
     };
+    const updatedPages = [...doc.pages];
+    updatedPages[activePageIndex] = updatedPage;
+
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      version: doc.version + 1
+    };
+
+    setDoc(updatedDoc);
+    setSelectedElementIds([]);
+    setActiveCandidate(null);
     pushHistory(updatedPages);
-    scheduleAutosave(updatedPages);
-    redrawCanvas();
+    scheduleAutosave(updatedDoc);
+    redrawCanvas(updatedPage);
   };
 
-  const getBackgroundClass = (bg: BoardPageBackground) => {
+  // D.9 Vision Board: Trigger recognition on selected elements
+  const handleRecognizeSelection = async (type: 'equation' | 'diagram' | 'text') => {
+    const selectedElements = currentPage.elements.filter((e) => selectedElementIds.includes(e.id));
+    const targetElements = selectedElements.length > 0 ? selectedElements : currentPage.elements;
+
+    if (targetElements.length === 0) {
+      setVisionNotice('No canvas elements selected for vision recognition.');
+      setTimeout(() => setVisionNotice(null), 3000);
+      return;
+    }
+
+    setIsRecognizing(true);
+    setVisionNotice(`Recognizing ${type}...`);
+
+    try {
+      const res = await fetch('/api/education/smartboard/vision/recognize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          elements: targetElements,
+          type,
+          options: {
+            courseCode: doc.courseCode,
+            topic: doc.title,
+            lessonTitle: doc.lessonTitle
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (data.candidate) {
+        setActiveCandidate(data.candidate);
+        setVisionNotice(`Recognized candidate: ${data.candidate.equation?.expression || data.candidate.diagram?.diagramType || data.candidate.recognizedText || 'Complete'}`);
+      }
+    } catch (err) {
+      console.warn('Vision recognition error:', err);
+      setVisionNotice('Recognition fallback active.');
+    } finally {
+      setIsRecognizing(false);
+      setTimeout(() => setVisionNotice(null), 4000);
+    }
+  };
+
+  // Accept candidate and attach to page semantic metadata
+  const handleAcceptCandidate = () => {
+    if (!activeCandidate) return;
+
+    const updatedCandidates = [...(currentPage.semanticCandidates || []), { ...activeCandidate, acceptedByTeacher: true }];
+    const updatedPage: BoardPage = {
+      ...currentPage,
+      semanticCandidates: updatedCandidates,
+      updatedAt: new Date().toISOString()
+    };
+    const updatedPages = [...doc.pages];
+    updatedPages[activePageIndex] = updatedPage;
+
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      version: doc.version + 1,
+      timestamps: {
+        ...doc.timestamps,
+        updatedAt: new Date().toISOString()
+      }
+    };
+
+    setDoc(updatedDoc);
+    pushHistory(updatedPages);
+    scheduleAutosave(updatedDoc);
+    setActiveCandidate(null);
+    setSelectedElementIds([]);
+    redrawCanvas(updatedPage);
+    setVisionNotice('Semantic candidate saved to board metadata.');
+    setTimeout(() => setVisionNotice(null), 3000);
+  };
+
+  // Extract Bounded BoardAIContext
+  const handleInspectAIContext = async () => {
+    try {
+      const res = await fetch('/api/education/smartboard/vision/context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          page: currentPage,
+          selectedElementIds,
+          academicContext: {
+            courseCode: doc.courseCode,
+            courseName: doc.courseName,
+            topic: doc.title,
+            lessonTitle: doc.lessonTitle
+          },
+          classSessionId: doc.classSessionId
+        })
+      });
+      const data = await res.json();
+      if (data.aiContext) {
+        setAiContextModal(data.aiContext);
+      }
+    } catch {
+      setVisionNotice('Could not extract AI context.');
+    }
+  };
+
+  const getBackgroundClass = (bg?: BoardPageBackground) => {
     switch (bg) {
       case 'dark_grid':
         return 'bg-slate-950 hud-grid-bg text-cyan-100';
@@ -569,14 +1000,14 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full w-full select-none overflow-hidden bg-black/90 relative">
+    <div className="flex flex-col h-full w-full select-none overflow-hidden bg-black relative">
       {/* 1. Top Surface Command Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-b border-cyan-500/20 bg-slate-950/90 backdrop-blur-md z-20 shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-b border-cyan-500/20 bg-slate-950/95 backdrop-blur-md z-20 shrink-0">
         {/* Left: Document Info & Page Navigator */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 font-mono text-xs">
             <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
-              {doc.courseCode}
+              {doc.courseCode || 'PHYS-301'}
             </span>
             <span className="text-white font-bold max-w-[200px] sm:max-w-xs truncate">{doc.title}</span>
           </div>
@@ -586,7 +1017,12 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
           {/* Page Carousel Buttons */}
           <div className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 rounded-lg p-0.5 text-xs font-mono">
             <button
-              onClick={() => setActivePageIndex((p) => Math.max(0, p - 1))}
+              onClick={() => {
+                const nextIdx = Math.max(0, activePageIndex - 1);
+                setActivePageIndex(nextIdx);
+                setSelectedElementIds([]);
+                setActiveCandidate(null);
+              }}
               disabled={activePageIndex === 0}
               className="p-1 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 cursor-pointer"
               title="Previous Page"
@@ -597,7 +1033,12 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               {activePageIndex + 1} / {doc.pages.length}
             </span>
             <button
-              onClick={() => setActivePageIndex((p) => Math.min(doc.pages.length - 1, p + 1))}
+              onClick={() => {
+                const nextIdx = Math.min(doc.pages.length - 1, activePageIndex + 1);
+                setActivePageIndex(nextIdx);
+                setSelectedElementIds([]);
+                setActiveCandidate(null);
+              }}
               disabled={activePageIndex === doc.pages.length - 1}
               className="p-1 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 cursor-pointer"
               title="Next Page"
@@ -614,28 +1055,66 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               </button>
             )}
           </div>
-        </div>
 
-        {/* Right: Autosave & Semantic Tag Selection */}
-        <div className="flex items-center gap-3 text-xs font-mono">
+          {/* Background switcher */}
           {!isReadOnly && (
-            <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
-              <Tag className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="text-slate-400 text-[11px]">AI Tag:</span>
-              <select
-                value={activeSemanticTag}
-                onChange={(e) => setActiveSemanticTag(e.target.value as BoardSemanticTag)}
-                className="bg-transparent text-cyan-300 font-mono text-[11px] focus:outline-none cursor-pointer"
+            <div className="hidden sm:flex items-center gap-1 bg-slate-900/80 border border-slate-800 rounded-lg p-0.5">
+              <button
+                onClick={() => handleBackgroundChange('dark_grid')}
+                className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer ${
+                  currentPage.background === 'dark_grid' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+                title="Dark Grid"
               >
-                <option value="formula" className="bg-slate-900">Formula / Equation</option>
-                <option value="worked_solution" className="bg-slate-900">Worked Solution</option>
-                <option value="diagram_label" className="bg-slate-900">Diagram / Geometry</option>
-                <option value="key_concept" className="bg-slate-900">Key Concept</option>
-                <option value="misconception_correction" className="bg-slate-900">Misconception Note</option>
-                <option value="general_note" className="bg-slate-900">General Note</option>
-              </select>
+                Grid
+              </button>
+              <button
+                onClick={() => handleBackgroundChange('lined')}
+                className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer ${
+                  currentPage.background === 'lined' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+                title="Ruled Lines"
+              >
+                Lines
+              </button>
+              <button
+                onClick={() => handleBackgroundChange('dark')}
+                className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer ${
+                  currentPage.background === 'dark' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+                title="Pure Dark"
+              >
+                Blank
+              </button>
             </div>
           )}
+        </div>
+
+        {/* Right: Vision Toggle & Autosave */}
+        <div className="flex items-center gap-2.5 text-xs font-mono">
+          {/* Vision Overlays Toggle */}
+          <button
+            onClick={() => setShowVisionOverlays((s) => !s)}
+            className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+              showVisionOverlays
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-white'
+            }`}
+            title="Toggle Vision Object Metadata Overlays"
+          >
+            {showVisionOverlays ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            <span className="hidden md:inline">Vision HUD</span>
+          </button>
+
+          {/* AI Context Inspector Button */}
+          <button
+            onClick={handleInspectAIContext}
+            className="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-[11px] font-mono flex items-center gap-1.5 cursor-pointer"
+            title="Inspect Bounded BoardAIContext"
+          >
+            <Brain className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline">AI Context</span>
+          </button>
 
           {/* Autosave Status Pill */}
           <div className="flex items-center gap-1.5 text-[11px]">
@@ -647,7 +1126,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             ) : saveStatus === 'saved' ? (
               <span className="text-emerald-400 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Autosaved ({lastSavedTime})</span>
+                <span>Autosaved</span>
               </span>
             ) : (
               <span className="text-slate-400">Buffered</span>
@@ -656,6 +1135,13 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         </div>
       </div>
 
+      {/* Vision Notification Strip */}
+      {visionNotice && (
+        <div className="bg-cyan-500/90 text-black font-mono text-xs px-4 py-1 text-center font-bold animate-pulse z-30 shrink-0">
+          {visionNotice}
+        </div>
+      )}
+
       {/* 2. Main Teaching Canvas Area */}
       <div className={`flex-1 relative overflow-hidden ${getBackgroundClass(currentPage.background)}`}>
         <canvas
@@ -663,19 +1149,145 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          className={`w-full h-full touch-none ${isReadOnly ? 'cursor-default' : 'cursor-crosshair'}`}
+          onPointerCancel={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          style={{ touchAction: 'none' }}
+          className={`w-full h-full block select-none ${
+            isReadOnly ? 'cursor-default' : activeTool === 'select' ? 'cursor-default' : 'cursor-crosshair'
+          }`}
         />
+
+        {/* Floating Vision AI Action Toolbar for Selected Elements */}
+        {selectedElementIds.length > 0 && !isReadOnly && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-2xl bg-slate-950/95 border border-cyan-500/50 shadow-2xl backdrop-blur-xl">
+            <span className="text-[11px] font-mono font-bold text-cyan-300 pl-2">
+              {selectedElementIds.length} Selected:
+            </span>
+            <button
+              onClick={() => handleRecognizeSelection('equation')}
+              disabled={isRecognizing}
+              className="px-2.5 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+            >
+              <Cpu className="w-3.5 h-3.5" />
+              <span>Recognize Equation</span>
+            </button>
+            <button
+              onClick={() => handleRecognizeSelection('diagram')}
+              disabled={isRecognizing}
+              className="px-2.5 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Recognize Diagram</span>
+            </button>
+            <button
+              onClick={() => handleRecognizeSelection('text')}
+              disabled={isRecognizing}
+              className="px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+            >
+              <Type className="w-3.5 h-3.5" />
+              <span>Transcribe Text</span>
+            </button>
+            <button
+              onClick={() => {
+                setSelectedElementIds([]);
+                setActiveCandidate(null);
+              }}
+              className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+              title="Deselect"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Recognized Semantic Candidate Inspector Card */}
+        {activeCandidate && !isReadOnly && (
+          <div className="absolute top-16 right-4 z-40 w-80 sm:w-96 rounded-3xl bg-slate-950/95 border border-cyan-500/50 p-4 shadow-2xl backdrop-blur-xl space-y-3 font-mono text-xs">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="font-bold text-white uppercase">{activeCandidate.semanticType} Candidate</span>
+              </div>
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  activeCandidate.source === 'AI_RECOGNIZED'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                }`}
+              >
+                {activeCandidate.source} ({Math.round(activeCandidate.confidence * 100)}%)
+              </span>
+            </div>
+
+            {/* Candidate Content */}
+            {activeCandidate.equation && (
+              <div className="space-y-2 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
+                <div className="text-slate-400 text-[11px]">Normalized Expression:</div>
+                <div className="text-base font-bold text-cyan-300">{activeCandidate.equation.expression}</div>
+                {activeCandidate.equation.latex && (
+                  <div className="text-slate-400 text-[11px] font-sans">
+                    LaTeX: <span className="font-mono text-purple-300">{activeCandidate.equation.latex}</span>
+                  </div>
+                )}
+                {activeCandidate.equation.variables.length > 0 && (
+                  <div className="text-[11px] text-slate-400">
+                    Variables: <span className="text-emerald-300">{activeCandidate.equation.variables.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeCandidate.diagram && (
+              <div className="space-y-2 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Type:</span>
+                  <span className="text-cyan-300 font-bold uppercase">{activeCandidate.diagram.diagramType}</span>
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  Nodes: <span className="text-white font-bold">{activeCandidate.diagram.nodes.length}</span> · Edges: <span className="text-white font-bold">{activeCandidate.diagram.edges.length}</span>
+                </div>
+              </div>
+            )}
+
+            {activeCandidate.recognizedText && (
+              <div className="space-y-1 bg-slate-900/60 p-3 rounded-2xl border border-slate-800 text-slate-200">
+                <div className="text-slate-400 text-[10px]">Transcribed Content:</div>
+                <p className="text-xs font-sans">{activeCandidate.recognizedText}</p>
+              </div>
+            )}
+
+            {/* Acceptance actions */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={handleAcceptCandidate}
+                className="flex-1 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Accept Annotation</span>
+              </button>
+              <button
+                onClick={() => setActiveCandidate(null)}
+                className="px-3 py-1.5 rounded-xl border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-white text-xs cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 font-sans">
+              * Original handwritten chalkboard strokes remain 100% visible and uncorrupted.
+            </p>
+          </div>
+        )}
 
         {/* Inline Text Input Overlay */}
         {textInputPos && !isReadOnly && (
           <div
             className="absolute z-30 flex items-center gap-2 p-2 rounded-xl bg-slate-900/95 border border-cyan-500/50 shadow-2xl backdrop-blur-md"
-            style={{ left: Math.min(textInputPos.x, 800), top: Math.min(textInputPos.y, 500) }}
+            style={{ left: Math.min(textInputPos.x, 600), top: Math.min(textInputPos.y, 400) }}
           >
             <input
               type="text"
               autoFocus
-              placeholder="Write formula or text (LaTeX supported)..."
+              placeholder="Write formula or text (e.g. \lambda = q/L)..."
               value={textInputValue}
               onChange={(e) => setTextInputValue(e.target.value)}
               onKeyDown={(e) => {
@@ -702,9 +1314,20 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
 
       {/* 3. Bottom Floating Teacher Toolbar (Hidden if Read-Only) */}
       {!isReadOnly && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-slate-950/95 border border-cyan-500/40 shadow-2xl backdrop-blur-xl">
-          {/* Main Drawing Tools */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-slate-950/95 border border-cyan-500/40 shadow-2xl backdrop-blur-xl max-w-[95vw]">
+          {/* Main Drawing & Pointer Tools */}
           <div className="flex items-center gap-1 border-r border-slate-800 pr-2">
+            <button
+              onClick={() => setActiveTool('select')}
+              className={`p-2 rounded-xl transition-all cursor-pointer ${
+                activeTool === 'select'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+              title="Select & Inspect Objects"
+            >
+              <MousePointer className="w-5 h-5" />
+            </button>
             <button
               onClick={() => setActiveTool('pen')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
@@ -752,7 +1375,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
           </div>
 
           {/* Geometric Shapes */}
-          <div className="flex items-center gap-1 border-r border-slate-800 pr-2">
+          <div className="hidden sm:flex items-center gap-1 border-r border-slate-800 pr-2">
             <button
               onClick={() => setActiveTool('shape_rect')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
@@ -781,6 +1404,15 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               <Triangle className="w-4 h-4" />
             </button>
             <button
+              onClick={() => setActiveTool('shape_line')}
+              className={`p-2 rounded-xl transition-all cursor-pointer ${
+                activeTool === 'shape_line' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Straight Line"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setActiveTool('shape_arrow')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
                 activeTool === 'shape_arrow' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
@@ -797,7 +1429,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               <button
                 key={c}
                 onClick={() => setSelectedColor(c)}
-                className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
+                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-transform cursor-pointer ${
                   selectedColor === c ? 'scale-125 border-white shadow-md' : 'border-transparent hover:scale-110'
                 }`}
                 style={{ backgroundColor: c }}
@@ -806,12 +1438,12 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
           </div>
 
           {/* Stroke Width Selector */}
-          <div className="flex items-center gap-1 border-r border-slate-800 pr-2">
+          <div className="hidden sm:flex items-center gap-1 border-r border-slate-800 pr-2">
             {STROKE_WIDTHS.map((w) => (
               <button
                 key={w}
                 onClick={() => setStrokeWidth(w)}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono text-xs cursor-pointer ${
+                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center font-mono text-xs cursor-pointer ${
                   strokeWidth === w ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40' : 'text-slate-500 hover:text-white'
                 }`}
               >
@@ -845,6 +1477,70 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             >
               <Trash2 className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. BoardAIContext Modal Dialog */}
+      {aiContextModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl">
+          <div className="w-full max-w-2xl rounded-3xl border border-cyan-500/40 bg-slate-950 p-6 space-y-4 shadow-2xl font-mono text-xs">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-base font-bold text-white">Bounded BoardAIContext</h3>
+              </div>
+              <button
+                onClick={() => setAiContextModal(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 font-sans">
+              This bounded representation encapsulates only authorized chalkboard elements, equations, and spatial relationships without token bloat.
+            </p>
+
+            <div className="space-y-2 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 max-h-72 overflow-y-auto">
+              <div className="text-cyan-300 font-bold">Semantic Summary:</div>
+              <p className="text-slate-200 font-sans">{aiContextModal.semanticSummary}</p>
+
+              {aiContextModal.recognizedEquations.length > 0 && (
+                <div className="pt-2">
+                  <span className="text-purple-400 font-bold">Equations:</span>
+                  <ul className="list-disc pl-4 text-slate-300">
+                    {aiContextModal.recognizedEquations.map((eq) => (
+                      <li key={eq.id}>
+                        {eq.expression} (LaTeX: <code className="text-cyan-300">{eq.latex}</code>) [Confidence: {Math.round(eq.confidence * 100)}%]
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {aiContextModal.spatialRelations.length > 0 && (
+                <div className="pt-2">
+                  <span className="text-amber-400 font-bold">Spatial Graph ({aiContextModal.spatialRelations.length} relations):</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                    {aiContextModal.spatialRelations.slice(0, 8).map((rel, idx) => (
+                      <div key={idx} className="p-1.5 rounded bg-black/60 border border-slate-800 text-[10px] text-slate-300">
+                        <span className="text-cyan-400 font-bold">{rel.relation}</span> ({rel.sourceId.slice(0, 8)} → {rel.targetId.slice(0, 8)})
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setAiContextModal(null)}
+                className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold cursor-pointer"
+              >
+                Close Context
+              </button>
+            </div>
           </div>
         </div>
       )}

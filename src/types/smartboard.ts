@@ -62,6 +62,142 @@ export interface BoardStrokePoint {
   pressure?: number;
 }
 
+export interface BoundingBox {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  width: number;
+  height: number;
+}
+
+export type BoardSemanticType =
+  | 'HANDWRITING'
+  | 'TEXT'
+  | 'EQUATION'
+  | 'SHAPE'
+  | 'DIAGRAM'
+  | 'GRAPH'
+  | 'IMAGE'
+  | 'ARROW'
+  | 'ANNOTATION';
+
+export type RecognitionSource =
+  | 'AI_RECOGNIZED'
+  | 'LOCAL_DETERMINISTIC'
+  | 'USER_ANNOTATED'
+  | 'UNRECOGNIZED';
+
+export type SpatialRelationType =
+  | 'ABOVE'
+  | 'BELOW'
+  | 'LEFT_OF'
+  | 'RIGHT_OF'
+  | 'NEAR'
+  | 'CONTAINS'
+  | 'CONNECTS_TO'
+  | 'LABELS';
+
+export interface SpatialRelationship {
+  sourceId: string;
+  targetId: string;
+  relation: SpatialRelationType;
+  distancePx?: number;
+  confidence: number;
+}
+
+export interface EquationObject {
+  id: string;
+  expression: string;
+  normalizedExpression: string;
+  latex: string;
+  variables: string[];
+  constants?: string[];
+  confidence: number;
+  sourceElementIds: string[];
+  boundingBox: BoundingBox;
+  academicContext?: {
+    courseCode?: string;
+    topic?: string;
+  };
+}
+
+export interface DiagramNode {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  shapeType?: string;
+  elementId?: string;
+}
+
+export interface DiagramEdge {
+  id: string;
+  sourceNodeId?: string;
+  targetNodeId?: string;
+  label?: string;
+  direction: 'directed' | 'undirected' | 'bidirectional';
+  arrowElementId?: string;
+}
+
+export interface DiagramLabel {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  attachedElementId?: string;
+}
+
+export interface DiagramObject {
+  id: string;
+  diagramType: 'flowchart' | 'circuit' | 'free_body' | 'geometric' | 'coordinate_system' | 'general';
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
+  labels: DiagramLabel[];
+  sourceElementIds: string[];
+  boundingBox: BoundingBox;
+  confidence: number;
+}
+
+export interface SemanticCandidate {
+  id: string;
+  semanticType: BoardSemanticType;
+  confidence: number;
+  source: RecognitionSource;
+  detectedAt: string;
+  boundingBox: BoundingBox;
+  relatedElementIds: string[];
+  equation?: EquationObject;
+  diagram?: DiagramObject;
+  recognizedText?: string;
+  academicContext?: {
+    courseCode?: string;
+    topic?: string;
+    lessonTitle?: string;
+  };
+  acceptedByTeacher?: boolean;
+}
+
+export interface BoardAIContext {
+  pageId: string;
+  pageIndex: number;
+  selectedElementIds: string[];
+  recognizedEquations: EquationObject[];
+  recognizedDiagrams: DiagramObject[];
+  recognizedText: string[];
+  semanticSummary: string;
+  spatialRelations: SpatialRelationship[];
+  academicContext: {
+    courseCode?: string;
+    courseName?: string;
+    topic?: string;
+    lessonTitle?: string;
+  };
+  classSessionId: string;
+}
+
 export type BoardSemanticTag =
   | 'formula'
   | 'diagram_label'
@@ -74,6 +210,16 @@ export type BoardSemanticTag =
 export interface BoardElement {
   id: string;
   type: BoardElementType;
+  semanticType?: BoardSemanticType;
+  boundingBox?: BoundingBox;
+  semanticMetadata?: {
+    confidence?: number;
+    source?: RecognitionSource;
+    detectedAt?: string;
+    relatedElementIds?: string[];
+    equation?: EquationObject;
+    diagram?: DiagramObject;
+  };
   // Stroke specific
   points?: BoardStrokePoint[];
   tool?: 'pen' | 'highlighter' | 'eraser';
@@ -117,6 +263,8 @@ export interface BoardPage {
   title: string;
   background: BoardPageBackground;
   elements: BoardElement[];
+  semanticCandidates?: SemanticCandidate[];
+  spatialRelationships?: SpatialRelationship[];
   slideReferenceIndex?: number;
   thumbnail?: string;
   createdAt: string;

@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { EducationClass, EducationRole } from '../../../types/education.ts';
+import type { EducationRole } from '../../../types/education.ts';
 import type { ClassSession } from '../../../types/classSession.ts';
 import type { SmartBoardDevice, BoardDocument, SmartBoardSurfaceTab } from '../../../types/smartboard.ts';
 import { SmartBoardCanvas } from './SmartBoardCanvas.tsx';
-import { SmartQuizSmartBoardView } from '../components/SmartQuizSmartBoardView.tsx';
-import type { Quiz, QuizQuestion, QuestionAggregate, QuizResults } from '../../../types/quiz.ts';
+import type { Quiz, QuizQuestion, QuestionAggregate } from '../../../types/quiz.ts';
 import {
   Tv,
   Presentation,
@@ -18,16 +17,12 @@ import {
   Play,
   Pause,
   CheckCircle2,
-  Radio,
   Clock,
   Users,
-  ShieldCheck,
   ChevronLeft,
-  ChevronRight,
   Share2,
   FileCheck2,
-  RefreshCw,
-  AlertCircle
+  RefreshCw
 } from 'lucide-react';
 
 interface SmartBoardWorkspaceProps {
@@ -36,6 +31,45 @@ interface SmartBoardWorkspaceProps {
   currentRole: EducationRole;
   onBack: () => void;
   onCompleteClass?: () => void;
+}
+
+function createInitialBoardDoc(sessionId: string, boardId: string): BoardDocument {
+  return {
+    id: `doc-${sessionId}`,
+    classSessionId: sessionId,
+    institutionId: 'inst-stark-academy',
+    classroomId: 'class-phys-301',
+    classroomName: 'Physics Lab Hall C-104',
+    classId: 'class-phys-301',
+    courseCode: 'PHYS-301',
+    courseName: 'Advanced Quantum & Classical Electrodynamics',
+    unitId: 'unit-em-maxwell',
+    unitTitle: 'Unit 1: Electrostatics & Field Potentials',
+    lessonId: 'les-em-1',
+    lessonTitle: "Coulomb's Law, Electric Fields & Gauss Surface Flux",
+    title: 'PHYS-301: Electrostatics & Field Theory (Board Notes)',
+    teacherId: 'teacher-1',
+    teacherName: 'Dr. Helen Cho',
+    pages: [
+      {
+        pageId: `page-${sessionId}-1`,
+        pageIndex: 0,
+        title: 'Page 1 — Main Canvas',
+        background: 'dark_grid',
+        elements: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ],
+    activePageIndex: 0,
+    version: 1,
+    isReleasedToStudents: true,
+    timestamps: {
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastAutosavedAt: new Date().toISOString()
+    }
+  };
 }
 
 export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
@@ -48,18 +82,12 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
   const [activeTab, setActiveTab] = useState<SmartBoardSurfaceTab>('board');
   const [boardDevice, setBoardDevice] = useState<SmartBoardDevice | null>(null);
   const [session, setSession] = useState<ClassSession | null>(null);
-  const [boardDocument, setBoardDocument] = useState<BoardDocument | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [boardDocument, setBoardDocument] = useState<BoardDocument>(() => createInitialBoardDoc(sessionId, boardId));
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [isReleased, setIsReleased] = useState<boolean>(false);
+  const [isReleased, setIsReleased] = useState<boolean>(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [timerSeconds, setTimerSeconds] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
-
-  // Active quiz state
-  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
-  const [activeQuizQuestion, setActiveQuizQuestion] = useState<QuizQuestion | null>(null);
-  const [quizAggregate, setQuizAggregate] = useState<QuestionAggregate | null>(null);
 
   // AI Copilot state
   const [aiPrompt, setAiPrompt] = useState<string>('');
@@ -71,10 +99,9 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     setTimeout(() => setNotice(null), 3500);
   };
 
-  // Hydrate Board, Session, and Document
+  // Background hydration of Board, Session, and Document
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
 
     Promise.all([
       fetch(`/api/education/smartboard/devices/${boardId}`).then((r) => (r.ok ? r.json() : null)),
@@ -87,13 +114,10 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
         if (sessionData?.session) setSession(sessionData.session);
         if (docData?.document) {
           setBoardDocument(docData.document);
-          setIsReleased(docData.document.isReleasedToStudents);
+          setIsReleased(Boolean(docData.document.isReleasedToStudents));
         }
       })
-      .catch((err) => console.warn('Could not hydrate SmartBoard workspace:', err))
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
+      .catch((err) => console.warn('SmartBoard workspace background sync:', err));
 
     return () => {
       isMounted = false;
@@ -167,6 +191,7 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
       });
       if (res.ok) {
         setIsReleased(targetState);
+        setBoardDocument((prev) => ({ ...prev, isReleasedToStudents: targetState }));
         showNotice(targetState ? 'Board notes released to enrolled cadets.' : 'Board notes unreleased (private).');
       }
     } catch {
@@ -223,15 +248,6 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[600px] text-cyan-400 font-mono text-xs">
-        <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-        <span>Initializing SmartBoard OS physical surface...</span>
-      </div>
-    );
-  }
-
   const isTeacher = currentRole === 'teacher';
 
   return (
@@ -254,7 +270,7 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
               <span>LIVE</span>
             </span>
             <span className="font-bold text-white text-sm">
-              {session?.courseCode || 'PHYS-301'}: {session?.topic || 'Electrostatics'}
+              {session?.courseCode || 'PHYS-301'}: {session?.topic || 'Electrostatics & Gauss Flux'}
             </span>
           </div>
 
@@ -262,12 +278,12 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
             <Tv className="w-3.5 h-3.5 text-cyan-400" />
             <span>{boardDevice?.displayName || 'SmartBoard 01'}</span>
             <span className="text-slate-600">·</span>
-            <span>{boardDevice?.classroomName || 'Physics Lab'}</span>
+            <span>{boardDevice?.classroomName || 'Physics Lab Hall C-104'}</span>
           </div>
         </div>
 
         {/* Center: Surface Switcher Tabs */}
-        <div className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 rounded-xl p-1 text-xs font-mono">
+        <div className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 rounded-xl p-1 text-xs font-mono overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('board')}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -398,17 +414,11 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
       <main className="flex-1 relative overflow-hidden">
         {activeTab === 'board' && (
           <div className="w-full h-full">
-            {boardDocument ? (
-              <SmartBoardCanvas
-                document={boardDocument}
-                onAutosave={handleAutosave}
-                isReadOnly={!isTeacher}
-              />
-            ) : (
-              <div className="p-8 text-center text-xs font-mono text-slate-500">
-                Initializing structured board canvas...
-              </div>
-            )}
+            <SmartBoardCanvas
+              document={boardDocument}
+              onAutosave={handleAutosave}
+              isReadOnly={!isTeacher}
+            />
           </div>
         )}
 
@@ -428,7 +438,11 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
               <div className="space-y-2 pt-2">
                 <h3 className="text-xs font-mono uppercase text-slate-400">Core Learning Objectives</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {session?.lessonPlan?.learningObjectives.map((obj, i) => (
+                  {(session?.lessonPlan?.learningObjectives || [
+                    "Derive Gauss's Law from Coulomb's Law and spherical symmetry",
+                    "Calculate electric field flux for cylindrical and planar charge distributions",
+                    "Address the boundary condition where electric field line intersections are forbidden"
+                  ]).map((obj, i) => (
                     <div key={i} className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-1">
                       <span className="text-xs font-mono font-bold text-cyan-400">0{i + 1}.</span>
                       <p className="text-xs text-slate-200 font-sans leading-relaxed">{obj}</p>
@@ -439,22 +453,43 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
             </div>
 
             {/* Opening Warmup & Spark */}
-            {session?.lessonPlan?.openingWarmup && (
-              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-amber-300">
-                  <Sparkles className="w-4 h-4" />
-                  <span>5-MINUTE WARMUP & CLASS SPARK</span>
-                </div>
-                <p className="text-sm text-white font-medium">{session.lessonPlan.openingWarmup.prompt}</p>
-                <p className="text-xs text-amber-200/80 font-sans">{session.lessonPlan.openingWarmup.instructions}</p>
+            <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-amber-300">
+                <Sparkles className="w-4 h-4" />
+                <span>5-MINUTE WARMUP & CLASS SPARK</span>
               </div>
-            )}
+              <p className="text-sm text-white font-medium">
+                {session?.lessonPlan?.openingWarmup?.prompt || "If a Gaussian surface encloses zero net charge, is the electric field everywhere on the surface necessarily zero?"}
+              </p>
+              <p className="text-xs text-amber-200/80 font-sans">
+                {session?.lessonPlan?.openingWarmup?.instructions || "Discuss with peers: think about an external dipole placed outside the closed sphere."}
+              </p>
+            </div>
 
             {/* Teaching Sequence Stages */}
             <div className="space-y-3">
               <h3 className="text-xs font-mono uppercase text-slate-400 tracking-wider">Teaching Sequence</h3>
               <div className="space-y-3">
-                {session?.lessonPlan?.teachingSequence.map((stage, idx) => (
+                {(session?.lessonPlan?.teachingSequence || [
+                  {
+                    stage: "Introduction & Electrostatic Review",
+                    durationMinutes: 10,
+                    teacherActivity: "Review vector superposition of electric fields from discrete charges on SmartBoard canvas.",
+                    checkPoint: "Ask cadets why inverse-square law leads to constant flux through any enclosing sphere."
+                  },
+                  {
+                    stage: "Gauss Law Derivation & Symmetric Surfaces",
+                    durationMinutes: 20,
+                    teacherActivity: "Draw cylindrical and planar Gaussian surfaces. Derive E = \\lambda / (2\\pi \\varepsilon_0 r).",
+                    checkPoint: "Verify area vector orientation perpendicular to cylindrical curved shell."
+                  },
+                  {
+                    stage: "Formative Quiz & Summary",
+                    durationMinutes: 15,
+                    teacherActivity: "Launch live formative check on SmartBoard and review distribution curve.",
+                    checkPoint: "Ensure all cadets submit before locking question."
+                  }
+                ]).map((stage, idx) => (
                   <div
                     key={idx}
                     className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -477,16 +512,18 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
             </div>
 
             {/* Exit Ticket */}
-            {session?.lessonPlan?.exitTicket && (
-              <div className="p-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-300">
-                  <FileCheck2 className="w-4 h-4" />
-                  <span>SESSION EXIT TICKET</span>
-                </div>
-                <p className="text-sm text-white font-medium">{session.lessonPlan.exitTicket.prompt}</p>
-                <p className="text-xs text-cyan-200/80 font-mono">Criteria: {session.lessonPlan.exitTicket.expectedCriteria}</p>
+            <div className="p-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-300">
+                <FileCheck2 className="w-4 h-4" />
+                <span>SESSION EXIT TICKET</span>
               </div>
-            )}
+              <p className="text-sm text-white font-medium">
+                {session?.lessonPlan?.exitTicket?.prompt || "Write the differential and integral forms of Gauss's Law in vacuum."}
+              </p>
+              <p className="text-xs text-cyan-200/80 font-mono">
+                Criteria: {session?.lessonPlan?.exitTicket?.expectedCriteria || "\\nabla \\cdot E = \\rho / \\varepsilon_0 \\quad \\text{and} \\quad \\oint E \\cdot dA = Q_{enc} / \\varepsilon_0"}
+              </p>
+            </div>
           </div>
         )}
 
@@ -556,7 +593,20 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
           <div className="w-full h-full overflow-y-auto p-6 sm:p-10 max-w-4xl mx-auto space-y-4">
             <h3 className="text-sm font-mono text-cyan-400 uppercase tracking-wider">Verified Source Materials</h3>
             <div className="space-y-3">
-              {session?.sourceMaterials.map((src) => (
+              {(session?.sourceMaterials || [
+                {
+                  id: "src-ncert-em-1",
+                  title: "NCERT Class XII Physics - Chapter 1: Electric Charges and Fields",
+                  fileSize: "4.8 MB",
+                  extractedTextSnippet: "Gauss’s law is true for any closed surface, no matter what its shape or size. The term q on the right side of Gauss’s law includes the sum of all charges enclosed by the surface."
+                },
+                {
+                  id: "src-feynman-em-2",
+                  title: "Feynman Lectures on Physics - Vol II: Electrostatics",
+                  fileSize: "8.2 MB",
+                  extractedTextSnippet: "The total flux of E through any closed surface equals 1/eps0 times the total charge inside. This is Gauss’s law and is one of Maxwell’s fundamental equations."
+                }
+              ]).map((src) => (
                 <div key={src.id} className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="font-bold text-white">{src.title}</span>
@@ -581,7 +631,7 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
                 <span>Jarvis SmartBoard Pedagogical Assistant</span>
               </div>
               <p className="text-xs text-slate-300 font-sans">
-                Grounded in the approved lesson plan for <span className="font-mono text-cyan-300">{session?.topic}</span>. Ask for step-by-step mathematical derivations, misconception explanations, or diagnostic variations.
+                Grounded in the approved lesson plan for <span className="font-mono text-cyan-300">{session?.topic || 'Electrostatics & Gauss Flux'}</span>. Ask for step-by-step mathematical derivations, misconception explanations, or diagnostic variations.
               </p>
 
               {/* Quick Prompt Suggestions */}

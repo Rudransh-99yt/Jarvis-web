@@ -202,3 +202,66 @@ smartboardRouter.get('/history', async (req: Request, res: Response) => {
     handleRouteError(err, res);
   }
 });
+
+// 12. Vision Board: Recognize elements (Equation, Diagram, Text)
+smartboardRouter.post('/vision/recognize', async (req: Request, res: Response) => {
+  try {
+    const user = await authenticateRequest(req);
+    const { elements, type = 'equation', options = {} } = req.body;
+    if (!Array.isArray(elements) || elements.length === 0) {
+      res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'elements array is required.' } });
+      return;
+    }
+    const { boardRecognitionService } = await import('./vision/boardRecognitionService.ts');
+    const candidate = await boardRecognitionService.createSemanticCandidate(elements, type, options);
+    res.json({ ok: true, candidate });
+  } catch (err: any) {
+    handleRouteError(err, res);
+  }
+});
+
+// 13. Vision Board: Generate Bounded BoardAIContext
+smartboardRouter.post('/vision/context', async (req: Request, res: Response) => {
+  try {
+    const user = await authenticateRequest(req);
+    const { page, selectedElementIds = [], academicContext = {}, classSessionId = 'session-phys-101' } = req.body;
+    if (!page) {
+      res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'page object is required.' } });
+      return;
+    }
+    const { boardRecognitionService } = await import('./vision/boardRecognitionService.ts');
+    const aiContext = boardRecognitionService.buildAIContext(page, selectedElementIds, academicContext, classSessionId);
+    res.json({ ok: true, aiContext });
+  } catch (err: any) {
+    handleRouteError(err, res);
+  }
+});
+
+// 14. Vision Board: Spatial Analysis & Handwriting Grouping
+smartboardRouter.post('/vision/spatial', async (req: Request, res: Response) => {
+  try {
+    const user = await authenticateRequest(req);
+    const { elements = [] } = req.body;
+    const { SpatialEngine } = await import('./vision/spatialEngine.ts');
+    const relationships = SpatialEngine.computePageSpatialRelationships(elements);
+    const clusters = SpatialEngine.groupStrokesIntoCandidateClusters(elements);
+    res.json({ ok: true, relationships, clustersCount: clusters.length, clusters });
+  } catch (err: any) {
+    handleRouteError(err, res);
+  }
+});
+
+// 15. Vision Board: Ingest Released Board Document to RAG
+smartboardRouter.post('/documents/:docId/rag-ingest', async (req: Request, res: Response) => {
+  try {
+    const user = await authenticateRequest(req);
+    const docId = getParam(req.params.docId);
+    const { targetSpaceId } = req.body;
+    const doc = await smartboardService.getBoardDocument(user, docId);
+    const { boardRagBridge } = await import('./vision/boardRagBridge.ts');
+    const result = await boardRagBridge.ingestBoardDocumentToRag(user, doc, targetSpaceId);
+    res.json({ ok: true, result });
+  } catch (err: any) {
+    handleRouteError(err, res);
+  }
+});

@@ -287,6 +287,10 @@ export class ProviderManager {
     this.providers.set(provider.id, provider);
   }
 
+  getProvider(id: string): AiProvider | undefined {
+    return this.providers.get(id);
+  }
+
   getFallbackProvider(): AiProvider {
     return this.fallbackProvider;
   }

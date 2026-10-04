@@ -325,10 +325,143 @@ export const listBoardHistoryTool: ToolDefinition<ListBoardHistoryArgs> = {
   }
 };
 
+// 6. Tool: smartboard.vision.recognize
+interface VisionRecognizeArgs {
+  sessionId?: string;
+  docId?: string;
+  pageIndex?: number;
+  type?: 'equation' | 'diagram' | 'text';
+  topic?: string;
+}
+
+export const visionRecognizeTool: ToolDefinition<VisionRecognizeArgs> = {
+  name: 'smartboard.vision.recognize',
+  sector: 'education',
+  aliases: ['recognize_board_content', 'recognize_equation_or_diagram'],
+  description: 'Applies AI/deterministic vision recognition to chalkboard equations, diagrams, and handwriting on a SmartBoard page.',
+  declaration: {
+    name: 'smartboard_vision_recognize',
+    description: 'Recognizes handwritten mathematical equations, diagrams, and text on a SmartBoard.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        sessionId: {
+          type: Type.STRING,
+          description: 'ClassSession ID (e.g. session-phys-101).'
+        },
+        type: {
+          type: Type.STRING,
+          description: 'Type of recognition target: equation, diagram, or text.'
+        },
+        topic: {
+          type: Type.STRING,
+          description: 'Optional academic topic context.'
+        }
+      }
+    }
+  },
+  validate(args: unknown): ValidationResult<VisionRecognizeArgs> {
+    const a = (args && typeof args === 'object' ? args : {}) as any;
+    return {
+      valid: true,
+      data: {
+        sessionId: typeof a.sessionId === 'string' ? a.sessionId.trim() : 'session-phys-101',
+        type: a.type === 'diagram' || a.type === 'text' ? a.type : 'equation',
+        topic: typeof a.topic === 'string' ? a.topic.trim() : undefined
+      }
+    };
+  },
+  async execute(args: VisionRecognizeArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    try {
+      const user = await resolveUserFromContext(context);
+      const doc = await smartboardService.getBoardDocument(user, args.sessionId || 'session-phys-101');
+      const page = doc.pages[0];
+      const { boardRecognitionService } = await import('./vision/boardRecognitionService.ts');
+      const candidate = await boardRecognitionService.createSemanticCandidate(
+        page.elements,
+        args.type || 'equation',
+        { topic: args.topic || doc.lessonTitle || doc.title, courseCode: doc.courseCode }
+      );
+      return {
+        ok: true,
+        data: {
+          sessionId: args.sessionId,
+          candidateType: candidate.semanticType,
+          confidence: candidate.confidence,
+          source: candidate.source,
+          equation: candidate.equation,
+          diagram: candidate.diagram,
+          recognizedText: candidate.recognizedText
+        }
+      };
+    } catch (err: any) {
+      return { ok: false, error: { code: 'VISION_ERROR', message: err.message || 'Recognition failed' } };
+    }
+  }
+};
+
+// 7. Tool: smartboard.vision.context
+interface VisionContextArgs {
+  sessionId?: string;
+}
+
+export const visionContextTool: ToolDefinition<VisionContextArgs> = {
+  name: 'smartboard.vision.context',
+  sector: 'education',
+  aliases: ['get_board_ai_context', 'extract_board_context'],
+  description: 'Extracts a bounded BoardAIContext representation suitable for feeding to pedagogical copilot agents.',
+  declaration: {
+    name: 'smartboard_vision_context',
+    description: 'Builds bounded AI context from active SmartBoard canvas for pedagogical guidance.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        sessionId: {
+          type: Type.STRING,
+          description: 'ClassSession ID (e.g. session-phys-101).'
+        }
+      }
+    }
+  },
+  validate(args: unknown): ValidationResult<VisionContextArgs> {
+    const a = (args && typeof args === 'object' ? args : {}) as any;
+    return {
+      valid: true,
+      data: {
+        sessionId: typeof a.sessionId === 'string' ? a.sessionId.trim() : 'session-phys-101'
+      }
+    };
+  },
+  async execute(args: VisionContextArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    try {
+      const user = await resolveUserFromContext(context);
+      const doc = await smartboardService.getBoardDocument(user, args.sessionId || 'session-phys-101');
+      const page = doc.pages[0];
+      const { boardRecognitionService } = await import('./vision/boardRecognitionService.ts');
+      const aiContext = boardRecognitionService.buildAIContext(
+        page,
+        [],
+        { courseCode: doc.courseCode, courseName: doc.courseName, topic: doc.lessonTitle || doc.title },
+        doc.classSessionId
+      );
+      return {
+        ok: true,
+        data: {
+          aiContext
+        }
+      };
+    } catch (err: any) {
+      return { ok: false, error: { code: 'VISION_ERROR', message: err.message || 'Failed to build context' } };
+    }
+  }
+};
+
 export const smartboardTools = [
   listBoardsTool,
   sendSessionToBoardTool,
   boardStatusTool,
   getBoardDocumentTool,
-  listBoardHistoryTool
+  listBoardHistoryTool,
+  visionRecognizeTool,
+  visionContextTool
 ];

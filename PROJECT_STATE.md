@@ -343,6 +343,34 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - **End-to-End Test Suite (`tests/education_d7_family_principal_institutional.test.ts`)**:
     * 70/70 test assertions passing across RBAC boundaries, family intelligence sanitization, school operational pulse, grade drill-down, faculty workload projections, and controlled AI diagnostic generation with audit logging.
 
+- **Phase D.8: SmartBoard OS Foundation & Live Teaching Surface (Completed)**:
+  - **First-Class Physical Classroom Surface**:
+    * Canonical device model `SmartBoardDevice` with status lifecycle (`OFFLINE`, `AVAILABLE`, `PAIRING`, `READY`, `LIVE`, `DISCONNECTED`), hardware capabilities (touch, pen, multiTouch, resolution), and physical classroom binding.
+  - **Cryptographic Pairing & Scoped Ticket Auth**:
+    * Ephemeral 6-digit PIN with 5-minute TTL and HMAC-SHA256 cryptographically signed board tickets scoped strictly to user, board, and active class session.
+  - **Structured BoardDocument & Responsive Canvas**:
+    * Canonical `BoardDocument` with multi-page support (`BoardPage`), element models (`BoardElement`: stroke, shape, text, formula, arrow), zero-blocker canvas initialization, monotonic autosave, and undo/redo history.
+  - **Role-Based Sanitization & Board History**:
+    * Strict stripping of private teacher notes and answer keys from physical board payloads; student board history access strictly restricted to teacher-released documents.
+
+- **Phase D.9: Vision Board Foundation (Completed)**:
+  - **Semantic Object Model & Handwriting Grouping**:
+    * Extensible semantic categories (`HANDWRITING`, `TEXT`, `EQUATION`, `SHAPE`, `DIAGRAM`, `GRAPH`, `IMAGE`, `ARROW`, `ANNOTATION`) with bounding boxes, confidence metrics, and non-destructive binding preserving original handwriting strokes.
+    * Spatial clustering grouping nearby strokes into candidate regions based on Euclidean distance and bounding box proximity.
+  - **Text, Equation & Diagram Recognition Foundation**:
+    * `BoardRecognitionService` with capability boundaries for `recognizeText`, `recognizeEquation`, and `recognizeDiagram`.
+    * Clean provenance tracking distinguishing `AI_RECOGNIZED`, `LOCAL_DETERMINISTIC`, and `UNRECOGNIZED` with zero fabricated AI labels.
+    * Robust fallback supporting physics and math curricula with variables, constants, and LaTeX generation.
+    * Structured `DiagramObject` topology with nodes, edges, labels, and geometry.
+  - **Spatial Understanding Engine (`SpatialEngine`)**:
+    * Real geometry-based relationship inference supporting `ABOVE`, `BELOW`, `LEFT_OF`, `RIGHT_OF`, `NEAR`, `CONTAINS`, `CONNECTS_TO`, and `LABELS` using horizontal/vertical overlap thresholds.
+  - **Bounded BoardAIContext & RAG Knowledge Bridge**:
+    * Bounded `BoardAIContext` restricting context payload to selected page/elements, recognized equations, diagrams, and curriculum grounding.
+    * `BoardRagBridge` ingesting released board documents into vector spaces with strict 403 authorization checks.
+    * Sandboxed tools: `smartboard.vision.recognize` and `smartboard.vision.context`.
+  - **End-to-End Test Suite (`tests/education_d9_vision_board.test.ts`)**:
+    * 100% passing across semantic models, handwriting grouping, spatial relationships, equation & diagram recognition, AI context generation, RAG ingestion, and simulation scenarios with byte-identical `data/jarvis-db.json` preservation.
+
 ---
 
 ## 6. Current Constraints & Active Invariants

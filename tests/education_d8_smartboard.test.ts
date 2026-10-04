@@ -275,6 +275,77 @@ async function runD8SmartBoardTests() {
   assert(savedDoc.pages[0].elements.length === updatedPages[0].elements.length, '6.4 Preserves all structured stroke and formula elements');
   assert(Boolean(savedDoc.timestamps.lastAutosavedAt), '6.5 Updates lastAutosavedAt timestamp');
 
+  // Verify pen stroke element structure
+  const strokeElem = savedDoc.pages[0].elements.find((e) => e.type === 'stroke');
+  assert(Boolean(strokeElem && strokeElem.points && strokeElem.points.length >= 2), '6.5.a Pen stroke element contains structured coordinate points');
+  assert(strokeElem?.tool === 'pen' || strokeElem?.tool === 'highlighter', '6.5.b Pen stroke records active tool type');
+
+  // Verify shape element structure
+  const shapeElem: import('../src/types/smartboard.ts').BoardElement = {
+    id: 'shape-test-1',
+    type: 'shape',
+    shapeType: 'rectangle',
+    x: 100,
+    y: 150,
+    widthPx: 200,
+    heightPx: 120,
+    strokeColor: '#00f2fe',
+    fillColor: '#00f2fe18',
+    width: 4,
+    zIndex: 4,
+    semanticTag: 'diagram_label',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  const docWithShape = await smartboardService.autosaveDocument(teacherUser, doc.id, {
+    pages: [
+      {
+        ...savedDoc.pages[0],
+        elements: [...savedDoc.pages[0].elements, shapeElem]
+      }
+    ],
+    expectedVersion: savedDoc.version
+  });
+  assert(docWithShape.pages[0].elements.some((e) => e.type === 'shape' && e.shapeType === 'rectangle'), '6.5.c Geometric shape rectangle successfully added and persisted');
+
+  // Verify multi-page creation and preservation
+  const page2: import('../src/types/smartboard.ts').BoardPage = {
+    pageId: `page-${doc.id}-2`,
+    pageIndex: 1,
+    title: 'Page 2 — Gauss Derivation Steps',
+    background: 'lined',
+    elements: [
+      {
+        id: 'elem-p2-line1',
+        type: 'text',
+        text: 'E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r}',
+        fontSize: 24,
+        fontFamily: 'font-mono',
+        x: 80,
+        y: 60,
+        color: '#38bdf8',
+        semanticTag: 'formula',
+        latexFormula: 'E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r}',
+        zIndex: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  const docMultiPage = await smartboardService.autosaveDocument(teacherUser, doc.id, {
+    pages: [...docWithShape.pages, page2],
+    activePageIndex: 1,
+    expectedVersion: docWithShape.version
+  });
+  assert(docMultiPage.pages.length === 2, '6.5.d Multi-page creation preserves previous pages and creates Page 2');
+  assert(docMultiPage.pages[1].background === 'lined', '6.5.e Page 2 background style preserved');
+
+  // Verify unblocked document fetch for ANY class session
+  const autoCreatedDoc = await smartboardService.getBoardDocument(teacherUser, 'session-phys-101');
+  assert(Boolean(autoCreatedDoc && autoCreatedDoc.id), '6.5.f Unblocked canvas: getBoardDocument seamlessly loads/creates document without UI blocker');
+
   // Student trying to edit board document is rejected
   let studentEditFailed = false;
   try {
