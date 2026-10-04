@@ -74,19 +74,25 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
     const sessionId = getParam(req.params.id);
     let currentUser: User | null = null;
 
-    // 1. Authenticate via short-lived SSE ticket or auth token
+    // 1. Authenticate via short-lived SSE ticket, auth headers, or registered SSE identity
     if (typeof req.query.ticket === 'string' && req.query.ticket.trim().length > 0) {
       const verified = await ticketService.verifySSETicket(req.query.ticket.trim(), sessionId);
       currentUser = verified.user;
     } else {
-      const token = extractAuthToken(req);
+      const token = extractAuthToken(req) || (typeof req.query.userId === 'string' ? req.query.userId.trim() : null);
       if (!token) {
         res.status(401).json({
           error: { code: 'UNAUTHENTICATED', message: 'Authentication required for classroom stream.' }
         });
         return;
       }
-      currentUser = await authenticateRequest(req);
+      currentUser = await jarvisData.users.getById(token);
+      if (!currentUser) {
+        res.status(401).json({
+          error: { code: 'INVALID_CREDENTIALS', message: `User '${token}' not recognized.` }
+        });
+        return;
+      }
     }
 
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';

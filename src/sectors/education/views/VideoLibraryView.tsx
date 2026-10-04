@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { EducationRole, EducationClass } from '../../../types/education.ts';
 import type { VideoRecord, VideoSearchResult, VideoQAResult, VideoCitation } from '../../../types/video.ts';
 import { VideoPlayer } from '../../../components/video/VideoPlayer.tsx';
-import { authClient } from '../../../services/authClient.ts';
 import {
   Video,
   Upload,
@@ -82,7 +81,8 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
     setIsLoading(true);
     try {
       const headers: Record<string, string> = {
-        ...authClient.getAuthHeaders()
+        'x-user-id': currentRole === 'teacher' ? 'teacher-1' : 'student-1',
+        'x-user-role': currentRole
       };
       const res = await fetch('/api/education/videos', { headers });
       if (res.ok) {
@@ -114,7 +114,8 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
     const fetchPlaybackTicket = async () => {
       try {
         const headers: Record<string, string> = {
-          ...authClient.getAuthHeaders()
+          'x-user-id': currentRole === 'teacher' ? 'teacher-1' : 'student-1',
+          'x-user-role': currentRole
         };
         const res = await fetch(`/api/education/videos/${selectedVideo.id}/playback?workspaceId=${selectedVideo.workspaceId}`, {
           headers
@@ -150,7 +151,8 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
     setHasDiscovered(true);
     try {
       const headers: Record<string, string> = {
-        ...authClient.getAuthHeaders()
+        'x-user-id': currentRole === 'teacher' ? 'teacher-1' : 'student-1',
+        'x-user-role': currentRole
       };
       const res = await fetch(`/api/education/videos/search?q=${encodeURIComponent(q)}`, { headers });
       if (res.ok) {
@@ -192,7 +194,8 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...authClient.getAuthHeaders()
+        'x-user-id': currentRole === 'teacher' ? 'teacher-1' : 'student-1',
+        'x-user-role': currentRole
       };
 
       const url = selectedVideo
@@ -236,7 +239,8 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...authClient.getAuthHeaders()
+        'x-user-id': 'teacher-1',
+        'x-user-role': 'teacher'
       };
 
       let base64Data: string | undefined;
@@ -298,7 +302,8 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
     if (!confirm('Are you sure you want to permanently delete this video lecture?')) return;
     try {
       const headers: Record<string, string> = {
-        ...authClient.getAuthHeaders()
+        'x-user-id': 'teacher-1',
+        'x-user-role': 'teacher'
       };
       const res = await fetch(`/api/education/videos/${videoId}`, {
         method: 'DELETE',

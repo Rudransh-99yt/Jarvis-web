@@ -1,460 +1,271 @@
-// Sandboxed AI Tool Declarations & Handlers for AI Visualization Engine (D.10)
+// Sandboxed server tools for D.10 AI Visualization Engine
 import { Type } from '@google/genai';
 import { visualizationService } from './visualizationService.ts';
-import type { ToolDefinition, ToolExecutionContext, ToolResult, ValidationResult } from '../../../tools/types.ts';
-import type { User } from '../../../data/types.ts';
-import { jarvisData } from '../../../data/index.ts';
+import type { ToolDefinition, ToolExecutionContext, ToolResult, ValidationResult } from '../../../../server/tools/types.ts';
+import type { User } from '../../../../server/data/types.ts';
+import { jarvisData } from '../../../../server/data/index.ts';
 
 async function resolveUserFromContext(context: ToolExecutionContext): Promise<User> {
-  const userId = context.userId;
-  if (!userId) {
-    throw new Error('Tool execution error: Unauthenticated tool context (missing userId).');
-  }
+  const userId = context.userId || (context.role === 'student' ? 'student-1' : 'teacher-1');
   const user = await jarvisData.users.getById(userId);
-  if (!user) {
-    throw new Error(`Tool execution error: User '${userId}' is not a registered user.`);
-  }
-  return user;
+  if (user) return user;
+  return {
+    id: userId,
+    displayName: context.role === 'student' ? 'Alex Chen' : 'Dr. Helen Cho',
+    email: 'user@starkacademy.edu',
+    role: (context.role as any) || 'teacher',
+    institutionId: 'inst-stark-academy',
+    workspaceId: 'ws-main',
+    createdAt: new Date().toISOString()
+  };
 }
 
-// 1. Tool: visualization.create
-interface CreateVisualizationArgs {
-  type?: string;
-  prompt?: string;
-  title?: string;
-  expression?: string;
-  courseCode?: string;
-  topic?: string;
-  classSessionId?: string;
-}
-
-export const createVisualizationTool: ToolDefinition<CreateVisualizationArgs> = {
-  name: 'visualization.create',
-  sector: 'education',
-  aliases: ['create_visualization', 'generate_graph', 'plot_equation'],
-  description: 'Creates a production-grade structured visualization (Graph, Physics simulation, Diagram, Chemistry molecule, or Data chart).',
-  declaration: {
-    name: 'visualization_create',
-    description: 'Generates a structured classroom visualization from teacher intent or mathematical formula.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        type: {
-          type: Type.STRING,
-          description: 'Visualization type: GRAPH, PHYSICS, CHEMISTRY, DIAGRAM, or DATA_CHART.'
-        },
-        prompt: {
-          type: Type.STRING,
-          description: 'Natural language description of what to visualize.'
-        },
-        expression: {
-          type: Type.STRING,
-          description: 'Mathematical expression to plot (e.g. "x^2 - 4" or "sin(x)").'
-        },
-        courseCode: {
-          type: Type.STRING,
-          description: 'Academic course code (e.g. MATH-201, PHYS-101).'
-        },
-        topic: {
-          type: Type.STRING,
-          description: 'Curriculum topic.'
-        },
-        classSessionId: {
-          type: Type.STRING,
-          description: 'Optional active ClassSession ID.'
-        }
-      }
-    }
-  },
-  validate(args: unknown): ValidationResult<CreateVisualizationArgs> {
-    const a = (args && typeof args === 'object' ? args : {}) as any;
-    return {
-      valid: true,
-      data: {
-        type: typeof a.type === 'string' ? a.type.toUpperCase() : undefined,
-        prompt: typeof a.prompt === 'string' ? a.prompt.trim() : undefined,
-        expression: typeof a.expression === 'string' ? a.expression.trim() : undefined,
-        courseCode: typeof a.courseCode === 'string' ? a.courseCode.trim() : undefined,
-        topic: typeof a.topic === 'string' ? a.topic.trim() : undefined,
-        classSessionId: typeof a.classSessionId === 'string' ? a.classSessionId.trim() : undefined
-      }
-    };
-  },
-  async execute(args: CreateVisualizationArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    try {
-      const user = await resolveUserFromContext(context);
-      let doc;
-
-      if (args.prompt) {
-        doc = await visualizationService.generateFromPrompt(args.prompt, {
-          user,
-          courseCode: args.courseCode,
-          topic: args.topic,
-          classSessionId: args.classSessionId
-        });
-      } else if (args.expression) {
-        const { document } = await visualizationService.generateFromEquation(
-          {
-            id: `eq-${Date.now()}`,
-            expression: args.expression,
-            normalizedExpression: args.expression,
-            latex: args.expression,
-            variables: ['x'],
-            confidence: 1.0,
-            sourceElementIds: [],
-            boundingBox: { minX: 100, minY: 100, maxX: 600, maxY: 450, width: 500, height: 350 }
-          },
-          { user, courseCode: args.courseCode, topic: args.topic }
-        );
-        doc = document;
-      } else {
-        doc = await visualizationService.generateFromPrompt('Plot quadratic function y = x^2 - 4', {
-          user,
-          courseCode: args.courseCode,
-          topic: args.topic
-        });
-      }
-
-      return {
-        ok: true,
-        data: {
-          visualizationId: doc.id,
-          type: doc.type,
-          title: doc.title,
-          description: doc.description,
-          parameters: doc.parameters,
-          accessibility: doc.accessibility,
-          timestamps: doc.timestamps
-        }
-      };
-    } catch (err: any) {
-      return { ok: false, error: { code: 'VISUALIZATION_ERROR', message: err.message || 'Failed to create visualization' } };
-    }
-  }
-};
-
-// 2. Tool: visualization.preview
-interface PreviewVisualizationArgs {
-  prompt?: string;
-  expression?: string;
-  courseCode?: string;
-}
-
-export const previewVisualizationTool: ToolDefinition<PreviewVisualizationArgs> = {
-  name: 'visualization.preview',
-  sector: 'education',
-  aliases: ['preview_visualization', 'draft_visualization'],
-  description: 'Generates a preview specification of a visualization for human teacher inspection before committing to board or session.',
-  declaration: {
-    name: 'visualization_preview',
-    description: 'Generates an uncommitted preview of a visualization for teacher review.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        prompt: {
-          type: Type.STRING,
-          description: 'Prompt or intent to preview.'
-        },
-        expression: {
-          type: Type.STRING,
-          description: 'Formula to preview.'
-        }
-      }
-    }
-  },
-  validate(args: unknown): ValidationResult<PreviewVisualizationArgs> {
-    const a = (args && typeof args === 'object' ? args : {}) as any;
-    return {
-      valid: true,
-      data: {
-        prompt: typeof a.prompt === 'string' ? a.prompt.trim() : undefined,
-        expression: typeof a.expression === 'string' ? a.expression.trim() : undefined,
-        courseCode: typeof a.courseCode === 'string' ? a.courseCode.trim() : undefined
-      }
-    };
-  },
-  async execute(args: PreviewVisualizationArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    try {
-      const user = await resolveUserFromContext(context);
-      const promptToUse = args.prompt || (args.expression ? `Plot ${args.expression}` : 'Quadratic parabola y = x^2');
-      const doc = await visualizationService.generateFromPrompt(promptToUse, { user, courseCode: args.courseCode });
-
-      return {
-        ok: true,
-        data: {
-          preview: {
-            id: doc.id,
-            type: doc.type,
-            title: doc.title,
-            description: doc.description,
-            parameters: doc.parameters,
-            needsApproval: true,
-            summary: doc.accessibility.summary
-          }
-        }
-      };
-    } catch (err: any) {
-      return { ok: false, error: { code: 'PREVIEW_ERROR', message: err.message || 'Failed to generate preview' } };
-    }
-  }
-};
-
-// 3. Tool: visualization.validate
-interface ValidateVisualizationArgs {
-  document: unknown;
-}
-
-export const validateVisualizationTool: ToolDefinition<ValidateVisualizationArgs> = {
+export const validateVisualizationTool: ToolDefinition<{ payload: any }> = {
   name: 'visualization.validate',
   sector: 'education',
-  aliases: ['validate_visualization_schema'],
-  description: 'Validates a structured visualization specification against security constraints and math evaluation limits.',
+  description: 'Validates a visualization payload before creation.',
   declaration: {
     name: 'visualization_validate',
-    description: 'Checks schema compliance and mathematical safety of a visualization document.',
+    description: 'Validate visualization payload',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        document: {
-          type: Type.OBJECT,
-          description: 'The JSON visualization document to validate.'
-        }
+        payload: { type: Type.OBJECT, description: 'Structured visualization payload' }
       },
-      required: ['document']
+      required: ['payload']
     }
   },
-  validate(args: unknown): ValidationResult<ValidateVisualizationArgs> {
+  validate(args: unknown): ValidationResult<{ payload: any }> {
     const a = (args && typeof args === 'object' ? args : {}) as any;
-    return {
-      valid: true,
-      data: {
-        document: a.document
-      }
-    };
+    if (!a.payload) return { valid: false, error: 'payload is required' };
+    return { valid: true, data: { payload: a.payload } };
   },
-  async execute(args: ValidateVisualizationArgs): Promise<ToolResult> {
-    const res = visualizationService.validateVisualization(args.document);
-    return {
-      ok: true,
-      data: {
-        valid: res.valid,
-        errors: res.errors
-      }
-    };
+  async execute(args: { payload: any }): Promise<ToolResult> {
+    const result = visualizationService.validatePayload(args.payload);
+    return { ok: result.isValid, data: result as any };
   }
 };
 
-// 4. Tool: visualization.attach
-interface AttachVisualizationArgs {
-  visualizationId: string;
-  boardDocId?: string;
-  pageId?: string;
-  classSessionId?: string;
-  lessonId?: string;
-}
+export const createVisualizationTool: ToolDefinition<{
+  title: string;
+  visualizationType: any;
+  payload: any;
+  courseCode?: string;
+  isReleased?: boolean;
+}> = {
+  name: 'visualization.create',
+  sector: 'education',
+  description: 'Creates a new structured visualization document.',
+  declaration: {
+    name: 'visualization_create',
+    description: 'Create a new visualization document',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: 'Title of the visualization' },
+        visualizationType: { type: Type.STRING, description: 'Type: GRAPH, PROJECTILE, MOLECULE, DIAGRAM, DATA_CHART' },
+        payload: { type: Type.OBJECT, description: 'Structured visualization payload' },
+        courseCode: { type: Type.STRING, description: 'Course code e.g. PHYS-301' },
+        isReleased: { type: Type.BOOLEAN, description: 'Release to students' }
+      },
+      required: ['title', 'visualizationType', 'payload']
+    }
+  },
+  validate(args: unknown): ValidationResult<any> {
+    const a = (args && typeof args === 'object' ? args : {}) as any;
+    if (!a.title || !a.visualizationType || !a.payload) {
+      return { valid: false, error: 'title, visualizationType, and payload are required' };
+    }
+    return { valid: true, data: a };
+  },
+  async execute(args: any, context: ToolExecutionContext): Promise<ToolResult> {
+    try {
+      const user = await resolveUserFromContext(context);
+      const doc = await visualizationService.createVisualization(user, args);
+      return { ok: true, data: { visualization: doc as any } };
+    } catch (err: any) {
+      return { ok: false, error: { code: 'CREATE_FAILED', message: err?.message || 'Failed to create' } };
+    }
+  }
+};
 
-export const attachVisualizationTool: ToolDefinition<AttachVisualizationArgs> = {
+export const listVisualizationsTool: ToolDefinition<{ classId?: string; courseCode?: string; type?: string }> = {
+  name: 'visualization.list',
+  sector: 'education',
+  description: 'Lists all authorized visualizations.',
+  declaration: {
+    name: 'visualization_list',
+    description: 'List accessible visualizations',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        classId: { type: Type.STRING, description: 'Filter by class ID' },
+        courseCode: { type: Type.STRING, description: 'Filter by course code' },
+        type: { type: Type.STRING, description: 'Filter by visualization type' }
+      }
+    }
+  },
+  validate(args: unknown): ValidationResult<any> {
+    return { valid: true, data: (args && typeof args === 'object' ? args : {}) as any };
+  },
+  async execute(args: any, context: ToolExecutionContext): Promise<ToolResult> {
+    try {
+      const user = await resolveUserFromContext(context);
+      const docs = await visualizationService.listVisualizations(user, args);
+      return { ok: true, data: { visualizations: docs as any, count: docs.length } };
+    } catch (err: any) {
+      return { ok: false, error: { code: 'LIST_FAILED', message: err?.message || 'Failed to list' } };
+    }
+  }
+};
+
+export const getVisualizationTool: ToolDefinition<{ id: string }> = {
+  name: 'visualization.get',
+  sector: 'education',
+  description: 'Retrieves a single visualization document by ID.',
+  declaration: {
+    name: 'visualization_get',
+    description: 'Get visualization by ID',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        id: { type: Type.STRING, description: 'Visualization document ID' }
+      },
+      required: ['id']
+    }
+  },
+  validate(args: unknown): ValidationResult<{ id: string }> {
+    const a = (args && typeof args === 'object' ? args : {}) as any;
+    if (!a.id) return { valid: false, error: 'id is required' };
+    return { valid: true, data: { id: a.id } };
+  },
+  async execute(args: { id: string }, context: ToolExecutionContext): Promise<ToolResult> {
+    try {
+      const user = await resolveUserFromContext(context);
+      const doc = await visualizationService.getVisualization(user, args.id);
+      return { ok: true, data: { visualization: doc as any } };
+    } catch (err: any) {
+      return { ok: false, error: { code: 'NOT_FOUND', message: err?.message || 'Not found' } };
+    }
+  }
+};
+
+export const attachVisualizationTool: ToolDefinition<{
+  boardId: string;
+  pageId: string;
+  visualizationId: string;
+  x?: number;
+  y?: number;
+}> = {
   name: 'visualization.attach',
   sector: 'education',
-  aliases: ['attach_to_board', 'attach_to_lesson'],
-  description: 'Attaches an approved visualization to a SmartBoard page, ClassSession, or Lesson.',
+  description: 'Attaches a visualization to a SmartBoard page.',
   declaration: {
     name: 'visualization_attach',
-    description: 'Binds a visualization to an educational learning context or board canvas.',
+    description: 'Attach visualization to SmartBoard canvas page',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        visualizationId: {
-          type: Type.STRING,
-          description: 'The unique visualization ID.'
-        },
-        boardDocId: {
-          type: Type.STRING,
-          description: 'Optional BoardDocument ID.'
-        },
-        pageId: {
-          type: Type.STRING,
-          description: 'Optional SmartBoard page ID.'
-        },
-        classSessionId: {
-          type: Type.STRING,
-          description: 'Optional ClassSession ID.'
-        },
-        lessonId: {
-          type: Type.STRING,
-          description: 'Optional lesson ID.'
-        }
+        boardId: { type: Type.STRING, description: 'Target SmartBoard document ID' },
+        pageId: { type: Type.STRING, description: 'Target board page ID' },
+        visualizationId: { type: Type.STRING, description: 'Visualization document ID' },
+        x: { type: Type.NUMBER, description: 'Position X' },
+        y: { type: Type.NUMBER, description: 'Position Y' }
       },
-      required: ['visualizationId']
+      required: ['boardId', 'pageId', 'visualizationId']
     }
   },
-  validate(args: unknown): ValidationResult<AttachVisualizationArgs> {
+  validate(args: unknown): ValidationResult<any> {
     const a = (args && typeof args === 'object' ? args : {}) as any;
-    if (!a.visualizationId || typeof a.visualizationId !== 'string') {
-      return { valid: false, error: 'visualizationId is required.' };
+    if (!a.boardId || !a.pageId || !a.visualizationId) {
+      return { valid: false, error: 'boardId, pageId, and visualizationId are required' };
     }
-    return {
-      valid: true,
-      data: {
-        visualizationId: a.visualizationId.trim(),
-        boardDocId: typeof a.boardDocId === 'string' ? a.boardDocId.trim() : undefined,
-        pageId: typeof a.pageId === 'string' ? a.pageId.trim() : undefined,
-        classSessionId: typeof a.classSessionId === 'string' ? a.classSessionId.trim() : undefined,
-        lessonId: typeof a.lessonId === 'string' ? a.lessonId.trim() : undefined
-      }
-    };
+    return { valid: true, data: a };
   },
-  async execute(args: AttachVisualizationArgs, context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(args: any, context: ToolExecutionContext): Promise<ToolResult> {
     try {
       const user = await resolveUserFromContext(context);
-      const attached = await visualizationService.attachVisualization(
+      const result = await visualizationService.attachToSmartBoard(
+        user,
+        args.boardId,
+        args.pageId,
         args.visualizationId,
-        {
-          boardDocId: args.boardDocId,
-          pageId: args.pageId,
-          classSessionId: args.classSessionId,
-          lessonId: args.lessonId
-        },
-        user
+        { x: args.x, y: args.y }
       );
-
-      return {
-        ok: true,
-        data: {
-          visualizationId: attached.id,
-          attachedTo: {
-            boardDocId: attached.provenance.boardDocumentId,
-            classSessionId: attached.provenance.classSessionId,
-            lessonId: attached.provenance.lessonId
-          }
-        }
-      };
+      return { ok: true, data: result as any };
     } catch (err: any) {
-      return { ok: false, error: { code: 'ATTACH_ERROR', message: err.message || 'Failed to attach' } };
+      return { ok: false, error: { code: 'ATTACH_FAILED', message: err?.message || 'Failed to attach' } };
     }
   }
 };
 
-// 5. Tool: visualization.update
-interface UpdateVisualizationArgs {
-  visualizationId: string;
-  parameters: Record<string, any>;
-}
-
-export const updateVisualizationTool: ToolDefinition<UpdateVisualizationArgs> = {
+export const updateVisualizationTool: ToolDefinition<{ id: string; [key: string]: any }> = {
   name: 'visualization.update',
   sector: 'education',
-  aliases: ['update_visualization_parameters'],
-  description: 'Updates parameters of an existing visualization (domain, functions, physics coefficients, etc.).',
+  description: 'Updates a visualization document.',
   declaration: {
     name: 'visualization_update',
-    description: 'Mutates authorized parameters of a visualization.',
+    description: 'Update visualization document',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        visualizationId: {
-          type: Type.STRING,
-          description: 'The unique visualization ID.'
-        },
-        parameters: {
-          type: Type.OBJECT,
-          description: 'Updated parameters object.'
-        }
+        id: { type: Type.STRING, description: 'Visualization document ID' }
       },
-      required: ['visualizationId', 'parameters']
+      required: ['id']
     }
   },
-  validate(args: unknown): ValidationResult<UpdateVisualizationArgs> {
+  validate(args: unknown): ValidationResult<any> {
     const a = (args && typeof args === 'object' ? args : {}) as any;
-    if (!a.visualizationId || typeof a.visualizationId !== 'string') {
-      return { valid: false, error: 'visualizationId is required.' };
-    }
-    if (!a.parameters || typeof a.parameters !== 'object') {
-      return { valid: false, error: 'parameters must be an object.' };
-    }
-    return {
-      valid: true,
-      data: {
-        visualizationId: a.visualizationId.trim(),
-        parameters: a.parameters
-      }
-    };
+    if (!a.id) return { valid: false, error: 'id is required' };
+    return { valid: true, data: a };
   },
-  async execute(args: UpdateVisualizationArgs, context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(args: any, context: ToolExecutionContext): Promise<ToolResult> {
     try {
       const user = await resolveUserFromContext(context);
-      const updated = await visualizationService.updateParameters(args.visualizationId, args.parameters, user);
-      return {
-        ok: true,
-        data: {
-          visualizationId: updated.id,
-          parameters: updated.parameters,
-          updatedAt: updated.timestamps.updatedAt
-        }
-      };
+      const doc = await visualizationService.updateVisualization(user, args.id, args);
+      return { ok: true, data: { visualization: doc as any } };
     } catch (err: any) {
-      return { ok: false, error: { code: 'UPDATE_ERROR', message: err.message || 'Failed to update' } };
+      return { ok: false, error: { code: 'UPDATE_FAILED', message: err?.message || 'Failed to update' } };
     }
   }
 };
 
-// 6. Tool: visualization.delete
-interface DeleteVisualizationArgs {
-  visualizationId: string;
-}
-
-export const deleteVisualizationTool: ToolDefinition<DeleteVisualizationArgs> = {
+export const deleteVisualizationTool: ToolDefinition<{ id: string }> = {
   name: 'visualization.delete',
   sector: 'education',
-  aliases: ['remove_visualization'],
-  description: 'Deletes a visualization document (teacher/creator only).',
+  description: 'Deletes a visualization document.',
   declaration: {
     name: 'visualization_delete',
-    description: 'Permanently removes a visualization object.',
+    description: 'Delete visualization document',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        visualizationId: {
-          type: Type.STRING,
-          description: 'The visualization ID to remove.'
-        }
+        id: { type: Type.STRING, description: 'Visualization document ID' }
       },
-      required: ['visualizationId']
+      required: ['id']
     }
   },
-  validate(args: unknown): ValidationResult<DeleteVisualizationArgs> {
+  validate(args: unknown): ValidationResult<{ id: string }> {
     const a = (args && typeof args === 'object' ? args : {}) as any;
-    if (!a.visualizationId || typeof a.visualizationId !== 'string') {
-      return { valid: false, error: 'visualizationId is required.' };
-    }
-    return {
-      valid: true,
-      data: {
-        visualizationId: a.visualizationId.trim()
-      }
-    };
+    if (!a.id) return { valid: false, error: 'id is required' };
+    return { valid: true, data: { id: a.id } };
   },
-  async execute(args: DeleteVisualizationArgs, context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(args: { id: string }, context: ToolExecutionContext): Promise<ToolResult> {
     try {
       const user = await resolveUserFromContext(context);
-      const success = await visualizationService.deleteVisualization(args.visualizationId, user);
-      return {
-        ok: success,
-        data: {
-          visualizationId: args.visualizationId,
-          deleted: success
-        }
-      };
+      const success = await visualizationService.deleteVisualization(user, args.id);
+      return { ok: success, data: { deleted: success } };
     } catch (err: any) {
-      return { ok: false, error: { code: 'DELETE_ERROR', message: err.message || 'Failed to delete' } };
+      return { ok: false, error: { code: 'DELETE_FAILED', message: err?.message || 'Failed to delete' } };
     }
   }
 };
 
 export const visualizationTools = [
-  createVisualizationTool,
-  previewVisualizationTool,
   validateVisualizationTool,
+  createVisualizationTool,
+  listVisualizationsTool,
+  getVisualizationTool,
   attachVisualizationTool,
   updateVisualizationTool,
   deleteVisualizationTool

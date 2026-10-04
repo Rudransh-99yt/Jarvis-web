@@ -1,7 +1,6 @@
 // Milestone 13: Smart Quiz Teacher Control Dashboard
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Quiz, QuizQuestion, QuestionAggregate, QuizResults } from '../../../types/quiz.ts';
-import { authClient } from '../../../services/authClient.ts';
 import {
   HelpCircle,
   Plus,
@@ -70,7 +69,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
     try {
       setIsLoading(true);
       const res = await fetch(`/api/classroom/quizzes?sessionId=${sessionId}&classId=${classId}&workspaceId=ws-stark-core`, {
-        headers: { ...authClient.getAuthHeaders() }
+        headers: { 'x-user-id': userId, 'x-user-role': 'teacher' }
       });
       if (res.ok) {
         const data = await res.json();
@@ -111,7 +110,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
     if (!quizId) return;
     try {
       const res = await fetch(`/api/classroom/quizzes/${quizId}?workspaceId=ws-stark-core`, {
-        headers: { ...authClient.getAuthHeaders() }
+        headers: { 'x-user-id': userId, 'x-user-role': 'teacher' }
       });
       if (res.ok) {
         const data = await res.json();
@@ -128,7 +127,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
 
           // Fetch live active question & aggregate
           const stateRes = await fetch(`/api/classroom/quizzes/${quizId}/active-question?workspaceId=ws-stark-core`, {
-            headers: { ...authClient.getAuthHeaders() }
+            headers: { 'x-user-id': userId, 'x-user-role': 'teacher' }
           });
           if (stateRes.ok) {
             const stateData = await stateRes.json();
@@ -139,7 +138,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
 
           // Fetch results
           const resRes = await fetch(`/api/classroom/quizzes/${quizId}/results?workspaceId=ws-stark-core`, {
-            headers: { ...authClient.getAuthHeaders() }
+            headers: { 'x-user-id': userId, 'x-user-role': 'teacher' }
           });
           if (resRes.ok) {
             const resData = await resRes.json();
@@ -177,7 +176,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({
           classId,
@@ -220,7 +220,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({
           questionText: qText.trim(),
@@ -256,7 +257,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
@@ -283,7 +285,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
@@ -310,7 +313,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
@@ -334,7 +338,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
@@ -368,7 +373,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
@@ -394,7 +400,8 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
+          'x-user-id': userId,
+          'x-user-role': 'teacher'
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });

@@ -1,203 +1,187 @@
-// Structured Chemistry Visualization Foundation (D.10)
-// Canonical molecule models, atom topology, bonds, and CPK standard colors.
+// Safe molecular topology and 2D chemical structure validator
 
-import type {
-  ChemistryParameters,
-  MoleculeAtom,
-  MoleculeBond
-} from '../../../../src/types/visualization.ts';
+import type { MoleculeAtom, MoleculeBond, MoleculeVisualizationPayload } from '../../../../src/types/visualization.ts';
 
-export const CPK_COLORS: Record<string, string> = {
-  H: '#f8fafc', // White / Off-white
-  C: '#334155', // Charcoal / Black
-  O: '#ef4444', // Red
-  N: '#3b82f6', // Blue
-  Cl: '#22c55e', // Green
-  F: '#10b981', // Pale green
-  Br: '#991b1b', // Dark red
-  I: '#7c3aed', // Purple
-  S: '#eab308', // Yellow
-  P: '#f97316', // Orange
-  Na: '#a855f7', // Purple/Violet
-  Fe: '#ea580c', // Rust/Orange
-  DEFAULT: '#94a3b8'
+export const COMMON_ELEMENTS: Record<string, { name: string; valency: number; color: string; radius: number; mass: number }> = {
+  H: { name: 'Hydrogen', valency: 1, color: '#f8fafc', radius: 14, mass: 1.008 },
+  C: { name: 'Carbon', valency: 4, color: '#64748b', radius: 22, mass: 12.011 },
+  N: { name: 'Nitrogen', valency: 3, color: '#3b82f6', radius: 20, mass: 14.007 },
+  O: { name: 'Oxygen', valency: 2, color: '#ef4444', radius: 20, mass: 15.999 },
+  F: { name: 'Fluorine', valency: 1, color: '#10b981', radius: 18, mass: 18.998 },
+  P: { name: 'Phosphorus', valency: 5, color: '#f59e0b', radius: 24, mass: 30.974 },
+  S: { name: 'Sulfur', valency: 2, color: '#eab308', radius: 24, mass: 32.06 },
+  Cl: { name: 'Chlorine', valency: 1, color: '#22c55e', radius: 22, mass: 35.45 },
+  Br: { name: 'Bromine', valency: 1, color: '#b91c1c', radius: 24, mass: 79.904 },
+  I: { name: 'Iodine', valency: 1, color: '#7c3aed', radius: 26, mass: 126.90 },
+  Na: { name: 'Sodium', valency: 1, color: '#8b5cf6', radius: 26, mass: 22.990 },
+  K: { name: 'Potassium', valency: 1, color: '#a855f7', radius: 28, mass: 39.098 },
+  Ca: { name: 'Calcium', valency: 2, color: '#6366f1', radius: 28, mass: 40.078 },
+  Fe: { name: 'Iron', valency: 3, color: '#f97316', radius: 26, mass: 55.845 }
 };
 
 export class ChemistryEngine {
-  /**
-   * Retrieves or builds a canonical molecule model.
-   */
-  public static getMolecule(identifier: string): ChemistryParameters {
-    const key = identifier.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  public static validateMolecule(payload: Partial<MoleculeVisualizationPayload>): { isValid: boolean; errors: string[]; sanitized?: MoleculeVisualizationPayload } {
+    const errors: string[] = [];
 
-    switch (key) {
-      case 'h2o':
-      case 'water':
-        return this.buildWater();
-      case 'co2':
-      case 'carbondioxide':
-        return this.buildCarbonDioxide();
-      case 'ch4':
-      case 'methane':
-        return this.buildMethane();
-      case 'nh3':
-      case 'ammonia':
-        return this.buildAmmonia();
-      case 'c6h6':
-      case 'benzene':
-        return this.buildBenzene();
-      default:
-        return this.buildGenericMolecule(identifier);
+    if (!payload.chemicalFormula || typeof payload.chemicalFormula !== 'string') {
+      errors.push('Chemical formula is required');
     }
-  }
+    if (!payload.commonName || typeof payload.commonName !== 'string') {
+      errors.push('Common molecule name is required');
+    }
 
-  public static buildWater(): ChemistryParameters {
-    const atoms: MoleculeAtom[] = [
-      { id: 'O1', element: 'O', x: 200, y: 150, label: 'O', color: CPK_COLORS.O },
-      { id: 'H1', element: 'H', x: 130, y: 220, label: 'H', color: CPK_COLORS.H },
-      { id: 'H2', element: 'H', x: 270, y: 220, label: 'H', color: CPK_COLORS.H }
-    ];
-
-    const bonds: MoleculeBond[] = [
-      { id: 'b1', atom1Id: 'O1', atom2Id: 'H1', order: 1, type: 'covalent' },
-      { id: 'b2', atom1Id: 'O1', atom2Id: 'H2', order: 1, type: 'covalent' }
-    ];
-
-    return {
-      moleculeName: 'Water',
-      formula: 'H₂O',
-      molecularWeight: 18.015,
-      atoms,
-      bonds,
-      geometryDescription: 'Bent molecular geometry with bond angle ~104.5°'
-    };
-  }
-
-  public static buildCarbonDioxide(): ChemistryParameters {
-    const atoms: MoleculeAtom[] = [
-      { id: 'C1', element: 'C', x: 200, y: 180, label: 'C', color: CPK_COLORS.C },
-      { id: 'O1', element: 'O', x: 100, y: 180, label: 'O', color: CPK_COLORS.O },
-      { id: 'O2', element: 'O', x: 300, y: 180, label: 'O', color: CPK_COLORS.O }
-    ];
-
-    const bonds: MoleculeBond[] = [
-      { id: 'b1', atom1Id: 'O1', atom2Id: 'C1', order: 2, type: 'covalent' },
-      { id: 'b2', atom1Id: 'C1', atom2Id: 'O2', order: 2, type: 'covalent' }
-    ];
-
-    return {
-      moleculeName: 'Carbon Dioxide',
-      formula: 'CO₂',
-      molecularWeight: 44.01,
-      atoms,
-      bonds,
-      geometryDescription: 'Linear molecular geometry with 180° bond angle and two double bonds'
-    };
-  }
-
-  public static buildMethane(): ChemistryParameters {
-    const atoms: MoleculeAtom[] = [
-      { id: 'C1', element: 'C', x: 200, y: 180, label: 'C', color: CPK_COLORS.C },
-      { id: 'H1', element: 'H', x: 200, y: 90, label: 'H', color: CPK_COLORS.H },
-      { id: 'H2', element: 'H', x: 110, y: 220, label: 'H', color: CPK_COLORS.H },
-      { id: 'H3', element: 'H', x: 200, y: 270, label: 'H', color: CPK_COLORS.H },
-      { id: 'H4', element: 'H', x: 290, y: 220, label: 'H', color: CPK_COLORS.H }
-    ];
-
-    const bonds: MoleculeBond[] = [
-      { id: 'b1', atom1Id: 'C1', atom2Id: 'H1', order: 1, type: 'covalent' },
-      { id: 'b2', atom1Id: 'C1', atom2Id: 'H2', order: 1, type: 'covalent' },
-      { id: 'b3', atom1Id: 'C1', atom2Id: 'H3', order: 1, type: 'covalent' },
-      { id: 'b4', atom1Id: 'C1', atom2Id: 'H4', order: 1, type: 'covalent' }
-    ];
-
-    return {
-      moleculeName: 'Methane',
-      formula: 'CH₄',
-      molecularWeight: 16.04,
-      atoms,
-      bonds,
-      geometryDescription: 'Tetrahedral geometry with sp³ hybridization and 109.5° bond angles'
-    };
-  }
-
-  public static buildAmmonia(): ChemistryParameters {
-    const atoms: MoleculeAtom[] = [
-      { id: 'N1', element: 'N', x: 200, y: 150, label: 'N', color: CPK_COLORS.N },
-      { id: 'H1', element: 'H', x: 130, y: 220, label: 'H', color: CPK_COLORS.H },
-      { id: 'H2', element: 'H', x: 200, y: 250, label: 'H', color: CPK_COLORS.H },
-      { id: 'H3', element: 'H', x: 270, y: 220, label: 'H', color: CPK_COLORS.H }
-    ];
-
-    const bonds: MoleculeBond[] = [
-      { id: 'b1', atom1Id: 'N1', atom2Id: 'H1', order: 1, type: 'covalent' },
-      { id: 'b2', atom1Id: 'N1', atom2Id: 'H2', order: 1, type: 'covalent' },
-      { id: 'b3', atom1Id: 'N1', atom2Id: 'H3', order: 1, type: 'covalent' }
-    ];
-
-    return {
-      moleculeName: 'Ammonia',
-      formula: 'NH₃',
-      molecularWeight: 17.031,
-      atoms,
-      bonds,
-      geometryDescription: 'Trigonal pyramidal geometry with lone pair causing ~107° bond angles'
-    };
-  }
-
-  public static buildBenzene(): ChemistryParameters {
-    const center = { x: 200, y: 180 };
-    const radius = 60;
     const atoms: MoleculeAtom[] = [];
+    const atomIdSet = new Set<string>();
+
+    if (Array.isArray(payload.atoms)) {
+      for (const a of payload.atoms) {
+        if (!a.id || typeof a.id !== 'string') {
+          errors.push('Atom ID must be a non-empty string');
+          continue;
+        }
+        if (atomIdSet.has(a.id)) {
+          errors.push(`Duplicate atom ID: ${a.id}`);
+          continue;
+        }
+        atomIdSet.add(a.id);
+
+        const elemSymbol = (a.element || '').trim();
+        if (!elemSymbol || !/^[A-Z][a-z]?$/.test(elemSymbol)) {
+          errors.push(`Invalid element symbol '${elemSymbol}' for atom ${a.id}`);
+        }
+
+        atoms.push({
+          id: a.id,
+          element: elemSymbol,
+          x: Number(a.x) || 0,
+          y: Number(a.y) || 0,
+          z: a.z !== undefined ? Number(a.z) : undefined,
+          label: typeof a.label === 'string' ? a.label.slice(0, 50) : undefined,
+          charge: typeof a.charge === 'number' ? a.charge : undefined
+        });
+      }
+    }
+
     const bonds: MoleculeBond[] = [];
+    const bondIdSet = new Set<string>();
 
-    for (let i = 0; i < 6; i++) {
-      const angle = (i * 60 * Math.PI) / 180;
-      const x = center.x + radius * Math.cos(angle);
-      const y = center.y + radius * Math.sin(angle);
-      atoms.push({
-        id: `C${i + 1}`,
-        element: 'C',
-        x: Math.round(x),
-        y: Math.round(y),
-        label: 'C',
-        color: CPK_COLORS.C
-      });
+    if (Array.isArray(payload.bonds)) {
+      for (const b of payload.bonds) {
+        if (!b.id || typeof b.id !== 'string') {
+          errors.push('Bond ID must be a non-empty string');
+          continue;
+        }
+        if (bondIdSet.has(b.id)) {
+          errors.push(`Duplicate bond ID: ${b.id}`);
+          continue;
+        }
+        bondIdSet.add(b.id);
+
+        if (!atomIdSet.has(b.sourceAtomId)) {
+          errors.push(`Bond ${b.id} references non-existent source atom '${b.sourceAtomId}'`);
+        }
+        if (!atomIdSet.has(b.targetAtomId)) {
+          errors.push(`Bond ${b.id} references non-existent target atom '${b.targetAtomId}'`);
+        }
+
+        bonds.push({
+          id: b.id,
+          sourceAtomId: b.sourceAtomId,
+          targetAtomId: b.targetAtomId,
+          bondType: ['single', 'double', 'triple', 'aromatic', 'hydrogen'].includes(b.bondType) ? b.bondType : 'single'
+        });
+      }
     }
 
-    for (let i = 0; i < 6; i++) {
-      const next = (i + 1) % 6;
-      bonds.push({
-        id: `b${i + 1}`,
-        atom1Id: `C${i + 1}`,
-        atom2Id: `C${next + 1}`,
-        order: i % 2 === 0 ? 2 : 1,
-        type: 'covalent'
-      });
+    if (errors.length > 0) {
+      return { isValid: false, errors };
     }
 
-    return {
-      moleculeName: 'Benzene',
-      formula: 'C₆H₆',
-      molecularWeight: 78.11,
+    const sanitized: MoleculeVisualizationPayload = {
+      type: 'MOLECULE',
+      title: (payload.title || payload.commonName || 'Molecule').slice(0, 100),
+      chemicalFormula: (payload.chemicalFormula || '').slice(0, 50),
+      commonName: (payload.commonName || '').slice(0, 100),
+      iupacName: payload.iupacName ? payload.iupacName.slice(0, 150) : undefined,
+      molecularWeight: payload.molecularWeight ? Number(payload.molecularWeight) : undefined,
       atoms,
       bonds,
-      geometryDescription: 'Planar aromatic ring with delocalized pi-electron cloud'
+      representation: ['ball_and_stick', 'space_filling', 'skeletal'].includes(payload.representation as string)
+        ? (payload.representation as any)
+        : 'ball_and_stick'
     };
+
+    return { isValid: true, errors: [], sanitized };
   }
 
-  private static buildGenericMolecule(formula: string): ChemistryParameters {
-    return {
-      moleculeName: formula,
-      formula: formula,
-      atoms: [
-        { id: 'A1', element: 'C', x: 160, y: 180, label: 'C', color: CPK_COLORS.C },
-        { id: 'A2', element: 'O', x: 240, y: 180, label: 'O', color: CPK_COLORS.O }
-      ],
-      bonds: [
-        { id: 'b1', atom1Id: 'A1', atom2Id: 'A2', order: 1, type: 'covalent' }
-      ],
-      geometryDescription: `2D topological structure for ${formula}`
-    };
+  /**
+   * Generates standard molecular presets (e.g. H2O, CH4, CO2, C6H12O6, NH3)
+   */
+  public static getStandardPreset(formula: string): MoleculeVisualizationPayload | null {
+    const norm = formula.trim().toUpperCase();
+    if (norm === 'H2O' || norm === 'WATER') {
+      return {
+        type: 'MOLECULE',
+        title: 'Water Molecule (H₂O)',
+        chemicalFormula: 'H2O',
+        commonName: 'Water',
+        iupacName: 'Oxidane',
+        molecularWeight: 18.015,
+        representation: 'ball_and_stick',
+        atoms: [
+          { id: 'O1', element: 'O', x: 200, y: 150 },
+          { id: 'H1', element: 'H', x: 130, y: 220 },
+          { id: 'H2', element: 'H', x: 270, y: 220 }
+        ],
+        bonds: [
+          { id: 'b1', sourceAtomId: 'O1', targetAtomId: 'H1', bondType: 'single' },
+          { id: 'b2', sourceAtomId: 'O1', targetAtomId: 'H2', bondType: 'single' }
+        ]
+      };
+    }
+    if (norm === 'CO2' || norm === 'CARBON DIOXIDE') {
+      return {
+        type: 'MOLECULE',
+        title: 'Carbon Dioxide (CO₂)',
+        chemicalFormula: 'CO2',
+        commonName: 'Carbon Dioxide',
+        iupacName: 'Carbon Dioxide',
+        molecularWeight: 44.01,
+        representation: 'ball_and_stick',
+        atoms: [
+          { id: 'C1', element: 'C', x: 200, y: 180 },
+          { id: 'O1', element: 'O', x: 90, y: 180 },
+          { id: 'O2', element: 'O', x: 310, y: 180 }
+        ],
+        bonds: [
+          { id: 'b1', sourceAtomId: 'C1', targetAtomId: 'O1', bondType: 'double' },
+          { id: 'b2', sourceAtomId: 'C1', targetAtomId: 'O2', bondType: 'double' }
+        ]
+      };
+    }
+    if (norm === 'CH4' || norm === 'METHANE') {
+      return {
+        type: 'MOLECULE',
+        title: 'Methane (CH₄)',
+        chemicalFormula: 'CH4',
+        commonName: 'Methane',
+        molecularWeight: 16.04,
+        representation: 'ball_and_stick',
+        atoms: [
+          { id: 'C1', element: 'C', x: 200, y: 180 },
+          { id: 'H1', element: 'H', x: 200, y: 80 },
+          { id: 'H2', element: 'H', x: 100, y: 240 },
+          { id: 'H3', element: 'H', x: 300, y: 240 },
+          { id: 'H4', element: 'H', x: 200, y: 260 }
+        ],
+        bonds: [
+          { id: 'b1', sourceAtomId: 'C1', targetAtomId: 'H1', bondType: 'single' },
+          { id: 'b2', sourceAtomId: 'C1', targetAtomId: 'H2', bondType: 'single' },
+          { id: 'b3', sourceAtomId: 'C1', targetAtomId: 'H3', bondType: 'single' },
+          { id: 'b4', sourceAtomId: 'C1', targetAtomId: 'H4', bondType: 'single' }
+        ]
+      };
+    }
+    return null;
   }
 }

@@ -81,22 +81,6 @@ export function getElementBoundingBox(elem: BoardElement): BoundingBox {
     };
   }
 
-  if (elem.type === 'visualization') {
-    const x = elem.x ?? 100;
-    const y = elem.y ?? 100;
-    const w = elem.widthPx ?? 500;
-    const h = elem.heightPx ?? 350;
-
-    return {
-      minX: x,
-      minY: y,
-      maxX: x + w,
-      maxY: y + h,
-      width: Math.max(1, w),
-      height: Math.max(1, h)
-    };
-  }
-
   const x = elem.x ?? 0;
   const y = elem.y ?? 0;
   return {
@@ -298,24 +282,6 @@ export function doesEraserIntersectElement(
     return false;
   }
 
-  // 4. Visualization Elements (Phase D.10)
-  if (elem.type === 'visualization') {
-    const box = getElementBoundingBox(elem);
-    const inBox = (p: Point) =>
-      p.x >= box.minX - effectiveRadius &&
-      p.x <= box.maxX + effectiveRadius &&
-      p.y >= box.minY - effectiveRadius &&
-      p.y <= box.maxY + effectiveRadius;
-
-    if (inBox(p1) || inBox(p2)) return true;
-
-    const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 };
-    if (distanceToSegment(center, p1, p2) <= effectiveRadius + Math.max(box.width, box.height) / 2) {
-      return true;
-    }
-    return false;
-  }
-
   // Fallback
   const box = getElementBoundingBox(elem);
   const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 };
@@ -478,27 +444,6 @@ export function scaleElements(
         x: newX,
         y: newY,
         fontSize: newFs,
-        updatedAt: now
-      };
-    }
-
-    if (elem.type === 'visualization') {
-      const origX = elem.x ?? anchor.x;
-      const origY = elem.y ?? anchor.y;
-      const origW = elem.widthPx ?? 500;
-      const origH = elem.heightPx ?? 350;
-
-      const newX = Math.round(anchor.x + (origX - anchor.x) * scaleX);
-      const newY = Math.round(anchor.y + (origY - anchor.y) * scaleY);
-      const newW = Math.max(200, Math.round(origW * Math.abs(scaleX)));
-      const newH = Math.max(150, Math.round(origH * Math.abs(scaleY)));
-
-      return {
-        ...elem,
-        x: newX,
-        y: newY,
-        widthPx: newW,
-        heightPx: newH,
         updatedAt: now
       };
     }

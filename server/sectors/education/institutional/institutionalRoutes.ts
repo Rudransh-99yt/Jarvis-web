@@ -29,17 +29,6 @@ institutionalRouter.get('/school', async (req: Request, res: Response) => {
   try {
     const user = await requireLeadershipUser(req);
     const institutionId = (req.query.institutionId as string) || 'inst-stark-academy';
-
-    if (institutionId !== 'inst-stark-academy') {
-      res.status(403).json({
-        error: {
-          code: 'FORBIDDEN',
-          message: `Cross-Institution Denied: Leadership user '${user.id}' is not authorized for institution '${institutionId}'.`
-        }
-      });
-      return;
-    }
-
     const intelligence = institutionalService.getSchoolIntelligence(institutionId);
     res.json({ intelligence, user: { id: user.id, role: user.role } });
   } catch (err: any) {

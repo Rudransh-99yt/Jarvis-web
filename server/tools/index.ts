@@ -110,9 +110,15 @@ for (const tool of smartboardTools) {
   toolRegistry.register(tool);
 }
 
-// 10. Register AI Visualization Engine Tools (Phase D.10)
+// 10. Register AI Visualization Engine Tools (D.10)
 import { visualizationTools } from '../sectors/education/visualization/visualizationTools.ts';
 for (const tool of visualizationTools) {
+  toolRegistry.register(tool);
+}
+
+// 11. Register Real-Time Teaching Copilot Tools (D.11)
+import { copilotTools } from '../sectors/education/copilot/copilotTools.ts';
+for (const tool of copilotTools) {
   toolRegistry.register(tool);
 }
 

@@ -15,7 +15,6 @@ import { classroomEventBus } from '../server/sectors/education/classroomEventBus
 import { classroomRouter } from '../server/sectors/education/classroomRoutes.ts';
 import { quizRouter } from '../server/sectors/education/quizRoutes.ts';
 import { toolRegistry, toolExecutor } from '../server/tools/index.ts';
-import { authService } from '../server/auth/index.ts';
 import type { User } from '../server/data/types.ts';
 import type { ToolExecutionContext } from '../server/tools/types.ts';
 import type { RealtimeClassroomEvent } from '../src/types/classroom.ts';
@@ -584,9 +583,6 @@ async function runMilestone13Tests() {
   const address = server.address() as any;
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
-  const teacherToken = authService.issueToken(teacherUser);
-  const studentToken = authService.issueToken(studentUser);
-
   try {
     // 1. Unauthenticated request rejected (401)
     const unauthRes = await fetch(`${baseUrl}/api/classroom/quizzes`);
@@ -594,7 +590,7 @@ async function runMilestone13Tests() {
 
     // 2. Authenticated list quizzes (200)
     const listRes = await fetch(`${baseUrl}/api/classroom/quizzes?sessionId=${sessionId}&classId=${classId}&workspaceId=${workspaceId}`, {
-      headers: { 'Authorization': `Bearer ${teacherToken}` }
+      headers: { 'x-user-id': teacherUser.id, 'x-user-role': teacherUser.role }
     });
     assert(listRes.status === 200, '79. HTTP GET /api/classroom/quizzes with teacher credentials returns 200 OK');
     const listData = await listRes.json();
@@ -605,7 +601,8 @@ async function runMilestone13Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${studentToken}`
+        'x-user-id': studentUser.id,
+        'x-user-role': studentUser.role
       },
       body: JSON.stringify({
         classId,
@@ -618,13 +615,13 @@ async function runMilestone13Tests() {
 
     // 4. Cross-workspace access rejected
     const crossWsRes = await fetch(`${baseUrl}/api/classroom/quizzes?workspaceId=ws-other-alien`, {
-      headers: { 'Authorization': `Bearer ${teacherToken}` }
+      headers: { 'x-user-id': teacherUser.id, 'x-user-role': teacherUser.role }
     });
     assert(crossWsRes.status === 403 || crossWsRes.status === 404, '82. HTTP Cross-workspace query rejected with 403/404');
 
     // 5. Student recovery: fetch active question state
     const recoveryRes = await fetch(`${baseUrl}/api/classroom/quizzes/${createdQuiz.id}/active-question?workspaceId=${workspaceId}`, {
-      headers: { 'Authorization': `Bearer ${studentToken}` }
+      headers: { 'x-user-id': studentUser.id, 'x-user-role': studentUser.role }
     });
     assert(recoveryRes.status === 200, '83. HTTP GET /active-question returns 200 OK for student recovery');
     const recoveryData = await recoveryRes.json();
@@ -632,7 +629,7 @@ async function runMilestone13Tests() {
 
     // 6. Query results via HTTP
     const httpResultsRes = await fetch(`${baseUrl}/api/classroom/quizzes/${createdQuiz.id}/results?workspaceId=${workspaceId}`, {
-      headers: { 'Authorization': `Bearer ${teacherToken}` }
+      headers: { 'x-user-id': teacherUser.id, 'x-user-role': teacherUser.role }
     });
     assert(httpResultsRes.status === 200, '85. HTTP GET /results returns 200 OK');
     const httpResultsData = await httpResultsRes.json();

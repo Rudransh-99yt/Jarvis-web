@@ -392,23 +392,22 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - **End-to-End Test Suite (`tests/education_d9_vision_board.test.ts`)**:
     * 100% passing across semantic models, handwriting grouping, spatial relationships, equation & diagram recognition, AI context generation, RAG ingestion, and simulation scenarios with byte-identical `data/jarvis-db.json` preservation.
 
-- **Phase D.10: AI Visualization Engine Foundation (Completed)**:
-  - **Canonical Visualization Object Model (`VisualizationDocument`)**:
-    * Structured, inspectable, and editable JSON representation supporting `GRAPH`, `EQUATION`, `GEOMETRY`, `DIAGRAM`, `FLOW`, `TIMELINE`, `PHYSICS`, `CHEMISTRY`, `DATA_CHART`, `ALGORITHM`, and `CONCEPT_MAP`.
-    * Complete provenance tracking (`AI_GENERATED`, `TEACHER_CREATED`, `SYSTEM_PRESET`, `RECOGNIZED_EQUATION`), semantic context, mathematical formulas, and simulation parameters.
-  - **Deterministic Math & Physics AST Engines**:
-    * Pure AST/RPN mathematical evaluator (`MathEvaluator`) with zero `eval()` or dynamic code execution, full implicit multiplication, trigonometric/exponential functions, roots, and extrema detection.
-    * Real-time Physics Engine (`PhysicsEngine`) computing multi-parameter projectile motion trajectories, apex, range, flight time, and time-series points.
-    * Structured Chemistry (`ChemistryEngine`) and Diagram (`DiagramEngine`) generators for molecular structures (H2O, CO2, CH4 with standard CPK color coding) and closed-loop electrical circuits.
-  - **Vision Board Equation → Graph Bridge**:
-    * Direct conversion from D.9 recognized mathematical equations to editable `GRAPH` visualization elements with teacher preview and confidence approval workflows.
-  - **SmartBoard Canvas Native Integration**:
-    * First-class `visualization` BoardElement support on SmartBoard canvas with interactive vector renderers, group translation, proportional corner resizing, continuous multi-stroke erasing, and clean duplication.
-  - **Full-Stack Sandboxed AI Tools & Authorization (RBAC)**:
-    * 6 registered tools: `visualization.create`, `visualization.preview`, `visualization.validate`, `visualization.attach`, `visualization.update`, `visualization.delete`.
-    * Strict role-based authorization restricting creation/update/delete to teachers while granting students read-only exploration and inspection rights.
-  - **End-to-End Test Suite (`tests/education_d10_visualization_engine.test.ts`)**:
-    * 56 of 56 assertions passing 100% with absolute byte-identical `data/jarvis-db.json` data hygiene.
+- **Phase D.10: AI Visualization Engine & SmartBoard Integration (Completed)**:
+  - Safe, deterministic, bounded mathematical expression evaluator (`MathEvaluator`) with zero `eval()` / `Function()` execution vectors and prototype pollution defenses.
+  - Interactive renderers for Math Graphs (dynamic sampling, multiple parameter sliders), 2D Kinematics Projectile Motion with trajectory physics, Molecular Structures (covalent bonds, element metadata), Diagrams, and Data Charts.
+  - Server-authoritative `visualizationService`, atomic storage, RBAC controls, and sandboxed tools (`visualization.validate`, `visualization.create`, `visualization.list`, `visualization.get`, `visualization.attach`).
+  - Automated test suite (`tests/education_d10_visualization_engine.test.ts`): 100% PASS.
+
+- **Phase D.11: Real-Time Teaching Copilot & Action Planning Engine (Completed)**:
+  - Server-authoritative action classification (`SAFE_READ`, `TEACHER_CONFIRMATION`, `HIGH_IMPACT`) with bounded prompt context assembly.
+  - Safe reads execute immediately; high-impact actions (quizzes, board mutations, assignments) create structured proposals requiring explicit teacher approval/rejection.
+  - Sandboxed tools (`copilot.command`, `copilot.proposals.review`), REST endpoints, and immutable audit event ledger.
+  - Automated test suite (`tests/education_d11_teaching_copilot.test.ts`): 100% PASS.
+
+- **Phase D.12: Mobile Control Plane & Classroom Surface Integration (Completed)**:
+  - Ephemeral 6-digit PIN challenges, QR payload generation, and HMAC cryptographic ticket verification for pairing teacher mobile devices to physical smartboards.
+  - Remote actions (`NEXT_PAGE`, `PREV_PAGE`, `GOTO_PAGE`, `CLEAR_PAGE`, `TOGGLE_LASER`, `FIT_VIEW`) and idempotent session delivery.
+  - Automated test suite (`tests/education_d12_mobile_control_plane.test.ts`): 100% PASS.
 
 ---
 

@@ -1,23 +1,6 @@
 import { Type } from '@google/genai';
 import type { ToolDefinition, ToolExecutionContext, ToolResult, ValidationResult } from '../../tools/types.ts';
 import { educationStore } from './educationStore.ts';
-import { educationPolicy } from './educationPolicy.ts';
-import { familyService } from './family/familyService.ts';
-import { jarvisData } from '../../data/index.ts';
-import type { User } from '../../data/types.ts';
-
-// Helper to resolve authenticated user strictly from tool execution context
-async function resolveUserFromContext(context: ToolExecutionContext): Promise<User> {
-  const userId = context.userId;
-  if (!userId) {
-    throw new Error('Tool execution error: Unauthenticated tool context (missing userId).');
-  }
-  const existing = await jarvisData.users.getById(userId);
-  if (!existing) {
-    throw new Error(`Tool execution error: User '${userId}' is not a registered user.`);
-  }
-  return existing;
-}
 
 // Tool 1: education.class.list
 export const listClassesTool: ToolDefinition<{}> = {
@@ -209,63 +192,40 @@ export const createAssignmentTool: ToolDefinition<CreateAssignmentArgs> = {
       }
     };
   },
-  async execute(args: CreateAssignmentArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    try {
-      const user = await resolveUserFromContext(context);
-      const manageCheck = educationPolicy.canManageClass(user, args.classId);
-      if (!manageCheck.allowed) {
-        return {
-          ok: false,
-          error: {
-            code: 'FORBIDDEN',
-            message: manageCheck.reason || `User '${user.id}' is not authorized to create assignments for class '${args.classId}'.`
-          }
-        };
-      }
-
-      const cls = educationStore.getClass(args.classId);
-      if (!cls) {
-        return {
-          ok: false,
-          error: {
-            code: 'CLASS_NOT_FOUND',
-            message: `Class '${args.classId}' was not found in Jarvis Education directory.`
-          }
-        };
-      }
-
-      const created = educationStore.createAssignment({
-        classId: args.classId,
-        title: args.title,
-        description: args.description,
-        instructions: args.instructions,
-        dueDate: args.dueDate,
-        maxScore: args.maxScore || 100,
-        category: args.category,
-        teacherId: user.id
-      });
-
-      return {
-        ok: true,
-        data: {
-          id: created.id,
-          title: created.title,
-          className: created.className,
-          dueDate: created.dueDate,
-          maxScore: created.maxScore,
-          category: created.category,
-          message: `Assignment '${created.title}' successfully published to ${created.className}.`
-        }
-      };
-    } catch (err: any) {
+  async execute(args: CreateAssignmentArgs, _context: ToolExecutionContext): Promise<ToolResult> {
+    const cls = educationStore.getClass(args.classId);
+    if (!cls) {
       return {
         ok: false,
         error: {
-          code: 'UNAUTHENTICATED',
-          message: err.message || 'Authentication required for assignment creation.'
+          code: 'CLASS_NOT_FOUND',
+          message: `Class '${args.classId}' was not found in Jarvis Education directory.`
         }
       };
     }
+
+    const created = educationStore.createAssignment({
+      classId: args.classId,
+      title: args.title,
+      description: args.description,
+      instructions: args.instructions,
+      dueDate: args.dueDate,
+      maxScore: args.maxScore || 100,
+      category: args.category
+    });
+
+    return {
+      ok: true,
+      data: {
+        id: created.id,
+        title: created.title,
+        className: created.className,
+        dueDate: created.dueDate,
+        maxScore: created.maxScore,
+        category: created.category,
+        message: `Assignment '${created.title}' successfully published to ${created.className}.`
+      }
+    };
   }
 };
 
@@ -278,126 +238,70 @@ export const studentProgressTool: ToolDefinition<StudentProgressArgs> = {
   name: 'education.student.progress',
   sector: 'education',
   aliases: ['get_student_progress', 'student_progress', 'education_progress'],
-  description: 'Returns academic progress, submitted assignments, grades, and pending tasks for an authorized student.',
+  description: 'Returns academic progress, submitted assignments, grades, and pending tasks for a student.',
   declaration: {
     name: 'education_student_progress',
-    description: 'Retrieve student submission history, grades, and pending homework assignments for an authorized user.',
+    description: 'Retrieve student submission history, grades, and pending homework assignments.',
     parameters: {
       type: Type.OBJECT,
       properties: {
         studentId: {
           type: Type.STRING,
-          description: 'Optional student identifier to query progress for (authorized roles only).'
+          description: "Optional student identifier (defaults to current student 'student-1')."
         }
       }
     }
   },
   validate(args: unknown): ValidationResult<StudentProgressArgs> {
     if (!args || typeof args !== 'object') {
-      return { valid: true, data: {} };
+      return { valid: true, data: { studentId: 'student-1' } };
     }
     const raw = args as Record<string, unknown>;
     return {
       valid: true,
       data: {
-        studentId: typeof raw.studentId === 'string' && raw.studentId.trim().length > 0 ? raw.studentId.trim() : undefined
+        studentId: typeof raw.studentId === 'string' ? raw.studentId.trim() : 'student-1'
       }
     };
   },
-  async execute(args: StudentProgressArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    try {
-      const user = await resolveUserFromContext(context);
-      let targetStudentId = args.studentId || user.id;
+  async execute(args: StudentProgressArgs, _context: ToolExecutionContext): Promise<ToolResult> {
+    const studentId = args.studentId || 'student-1';
+    const allAssignments = educationStore.getAssignments();
+    const submissions = educationStore.getSubmissions(studentId);
 
-      // 1. Student Privacy: Students can only view their own progress
-      if (user.role === 'student') {
-        if (args.studentId && args.studentId !== user.id) {
-          return {
-            ok: false,
-            error: {
-              code: 'FORBIDDEN',
-              message: `Privacy Violation: Student '${user.id}' is not authorized to access progress for student '${args.studentId}'.`
-            }
-          };
-        }
-        targetStudentId = user.id;
+    const graded = submissions.filter((s) => s.status === 'graded');
+    const averageGrade = graded.length > 0
+      ? Math.round(graded.reduce((sum, s) => sum + (s.grade || 0), 0) / graded.length)
+      : 96;
+
+    const submittedAsgIds = new Set(submissions.map((s) => s.assignmentId));
+    const pending = allAssignments.filter((a) => !submittedAsgIds.has(a.id));
+
+    return {
+      ok: true,
+      data: {
+        studentId,
+        studentName: studentId === 'student-1' ? 'Alex Chen' : studentId,
+        totalSubmissions: submissions.length,
+        gradedSubmissions: graded.length,
+        averageGradePercentage: averageGrade,
+        pendingAssignmentsCount: pending.length,
+        pendingAssignments: pending.map((p) => ({
+          id: p.id,
+          title: p.title,
+          className: p.className,
+          dueDate: p.dueDate
+        })),
+        recentSubmissions: submissions.map((s) => ({
+          id: s.id,
+          assignmentTitle: s.assignmentTitle,
+          className: s.className,
+          status: s.status,
+          grade: s.grade,
+          feedback: s.feedback
+        }))
       }
-
-      // 2. Parent Privacy: Parents can only view their linked children
-      if (user.role === 'parent') {
-        const isLinked = await familyService.verifyParentChildAccess(user.id, targetStudentId);
-        if (!isLinked) {
-          return {
-            ok: false,
-            error: {
-              code: 'FORBIDDEN',
-              message: `Privacy Violation: Parent '${user.id}' is not authorized to access progress for unlinked student '${targetStudentId}'.`
-            }
-          };
-        }
-      }
-
-      // 3. Teacher Privacy: Teachers can only view students enrolled in their assigned classes
-      if (user.role === 'teacher') {
-        const teacherClasses = educationStore.getClasses().filter((c) => (c.instructorId || (c as any).teacherId) === user.id);
-        const enrolledStudents = new Set(teacherClasses.flatMap((c) => (Array.isArray(c.studentIds) ? c.studentIds : [])));
-        if (!enrolledStudents.has(targetStudentId)) {
-          return {
-            ok: false,
-            error: {
-              code: 'FORBIDDEN',
-              message: `Instructional Boundary: Teacher '${user.id}' is not assigned to student '${targetStudentId}'.`
-            }
-          };
-        }
-      }
-
-      const targetUser = await jarvisData.users.getById(targetStudentId);
-      const allAssignments = educationStore.getAssignments();
-      const submissions = educationStore.getSubmissions(targetStudentId);
-
-      const graded = submissions.filter((s) => s.status === 'graded');
-      const averageGrade = graded.length > 0
-        ? Math.round(graded.reduce((sum, s) => sum + (s.grade || 0), 0) / graded.length)
-        : 96;
-
-      const submittedAsgIds = new Set(submissions.map((s) => s.assignmentId));
-      const pending = allAssignments.filter((a) => !submittedAsgIds.has(a.id));
-
-      return {
-        ok: true,
-        data: {
-          studentId: targetStudentId,
-          studentName: targetUser?.displayName || targetStudentId,
-          totalSubmissions: submissions.length,
-          gradedSubmissions: graded.length,
-          averageGradePercentage: averageGrade,
-          pendingAssignmentsCount: pending.length,
-          pendingAssignments: pending.map((p) => ({
-            id: p.id,
-            title: p.title,
-            className: p.className,
-            dueDate: p.dueDate
-          })),
-          recentSubmissions: submissions.map((s) => ({
-            id: s.id,
-            assignmentTitle: s.assignmentTitle,
-            className: s.className,
-            status: s.status,
-            grade: s.grade,
-            feedback: s.feedback
-          }))
-        }
-      };
-    } catch (err: any) {
-      return {
-        ok: false,
-        error: {
-          code: 'UNAUTHENTICATED',
-          message: err.message || 'Authentication required for student progress tool.'
-        }
-      };
-    }
+    };
   }
 };
 

@@ -1,229 +1,211 @@
-// Canonical Visualization Object Model for JARVIS AI Visualization Engine (Phase D.10)
-import type { BoundingBox } from './smartboard.ts';
+// Domain Models for D.10: AI Visualization Engine & SmartBoard Integration
+import type { AcademicContext } from './academicContext.ts';
 
 export type VisualizationType =
   | 'GRAPH'
-  | 'EQUATION'
-  | 'GEOMETRY'
+  | 'PROJECTILE'
+  | 'MOLECULE'
   | 'DIAGRAM'
-  | 'FLOW'
-  | 'TIMELINE'
-  | 'PHYSICS'
-  | 'CHEMISTRY'
-  | 'DATA_CHART'
-  | 'ALGORITHM'
-  | 'CONCEPT_MAP';
+  | 'DATA_CHART';
 
-export type VisualizationSource =
+export type VisualizationProvenance =
   | 'AI_GENERATED'
   | 'TEACHER_CREATED'
-  | 'EQUATION_RECOGNITION'
-  | 'STUDENT_EXPLORATION';
+  | 'SYSTEM_PRESET'
+  | 'RECOGNIZED_EQUATION';
 
-export interface SemanticVisualizationContext {
-  courseCode?: string;
-  courseName?: string;
-  topic?: string;
-  gradeLevel?: string;
-  tags?: string[];
-  targetAudience?: 'student' | 'teacher' | 'all';
-}
+export type VisualizationStatus =
+  | 'DRAFT'
+  | 'PREVIEW'
+  | 'VALIDATED'
+  | 'RELEASED'
+  | 'ARCHIVED';
 
-export interface VisualizationInteractions {
-  canPan: boolean;
-  canZoom: boolean;
-  canInspectPoints: boolean;
-  canEditParameters: boolean;
-  canToggleFunctions?: boolean;
-  canAnimate?: boolean;
-}
-
-export interface VisualizationAnimationState {
-  isPlaying?: boolean;
-  currentStep?: number;
-  totalSteps?: number;
-  durationMs?: number;
-  speedMultiplier?: number;
-  loop?: boolean;
-}
-
-export interface VisualizationAccessibility {
-  ariaLabel: string;
-  summary: string;
-  transcriptOrTable: string;
-  keyboardShortcutsDescription: string;
-}
-
-export interface VisualizationProvenance {
-  createdByUserId: string;
-  createdByRole: 'teacher' | 'student' | 'admin' | 'principal' | 'system';
-  createdByName?: string;
-  promptUsed?: string;
-  confidence?: number;
-  modelVersion?: string;
-  approvedByTeacher: boolean;
-  sourceElementIds?: string[];
-  institutionId?: string;
-  classroomId?: string;
-  classSessionId?: string;
-  lessonId?: string;
-  boardDocumentId?: string;
-  boardPageId?: string;
-}
-
-// 1. Math Graph Specification
-export interface GraphFunction {
+// 1. Math Graph Payload
+export interface GraphSeries {
   id: string;
-  expression: string; // e.g. "x^2 - 4" or "sin(x)"
-  label?: string;
+  name: string;
+  expression: string; // e.g. "sin(x)", "x^2 - 4*x + 3"
   color: string;
+  strokeWidth?: number;
   style?: 'solid' | 'dashed' | 'dotted';
-  visible: boolean;
-  keyPoints?: Array<{
-    x: number;
-    y: number;
-    type: 'root' | 'vertex' | 'intercept' | 'inflection' | 'custom';
-    label: string;
-  }>;
 }
 
-export interface GraphParameters {
-  domain: [number, number]; // [xMin, xMax]
-  range: [number, number];  // [yMin, yMax]
-  functions: GraphFunction[];
-  showGrid: boolean;
-  showLabels: boolean;
-  step?: number;
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  plottedPoints?: Array<{ x: number; y: number; label?: string; color?: string }>;
+export interface GraphParameter {
+  name: string; // e.g. "a", "k", "omega"
+  label?: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
 }
 
-// 2. Physics Simulation Specification (e.g. Projectile Motion)
-export interface PhysicsParameters {
-  subType: 'projectile_motion' | 'harmonic_oscillator' | 'gravity_orbit' | 'circuit_dc';
-  v0: number;        // Initial velocity (m/s)
-  angleDeg: number;  // Launch angle (degrees)
-  g: number;         // Gravitational acceleration (m/s^2), default 9.8
-  h0: number;        // Initial launch height (m), default 0
-  massKg?: number;
-  airResistanceCoeff?: number;
-  // Computed metrics
+export interface GraphVisualizationPayload {
+  type: 'GRAPH';
+  title: string;
+  series: GraphSeries[];
+  parameters?: GraphParameter[];
+  xDomain: [number, number]; // e.g. [-10, 10]
+  yDomain: [number, number]; // e.g. [-5, 5]
+  xLabel?: string;
+  yLabel?: string;
+  grid?: boolean;
+  showCoordinates?: boolean;
+}
+
+// 2. Physics Projectile Payload
+export interface ProjectileVisualizationPayload {
+  type: 'PROJECTILE';
+  title: string;
+  initialVelocity: number; // m/s
+  launchAngleDeg: number; // 0 to 90 degrees
+  initialHeight: number; // meters
+  gravity: number; // m/s^2 (default 9.8)
+  timeStep?: number;
+  maxRange?: number;
   maxHeight?: number;
-  range?: number;
-  timeOfFlight?: number;
-  trajectoryPoints?: Array<{ x: number; y: number; t: number; vx: number; vy: number }>;
+  flightTime?: number;
+  color?: string;
+  showApex?: boolean;
+  showTrajectory?: boolean;
+  showVectors?: boolean;
+  calculatedMetrics?: {
+    flightTimeSeconds: number;
+    maxHeightMeters: number;
+    horizontalRangeMeters: number;
+    trajectoryPoints: Array<{ x: number; y: number; t: number }>;
+  };
 }
 
-// 3. Chemistry Molecule Specification
+// 3. Chemistry Molecule Payload
 export interface MoleculeAtom {
   id: string;
-  element: string; // H, C, O, N, Cl, S, P, etc.
+  element: string; // "C", "H", "O", "N", etc.
   x: number;
   y: number;
   z?: number;
-  charge?: number;
   label?: string;
-  color?: string;
+  charge?: number;
 }
 
 export interface MoleculeBond {
   id: string;
-  atom1Id: string;
-  atom2Id: string;
-  order: 1 | 2 | 3;
-  type: 'covalent' | 'ionic' | 'hydrogen';
+  sourceAtomId: string;
+  targetAtomId: string;
+  bondType: 'single' | 'double' | 'triple' | 'aromatic' | 'hydrogen';
 }
 
-export interface ChemistryParameters {
-  moleculeName: string;
-  formula: string;
+export interface MoleculeVisualizationPayload {
+  type: 'MOLECULE';
+  title: string;
+  chemicalFormula: string; // e.g. "H2O", "C6H12O6", "CH4"
+  commonName: string;
+  iupacName?: string;
   molecularWeight?: number;
   atoms: MoleculeAtom[];
   bonds: MoleculeBond[];
-  geometryDescription?: string;
+  representation: 'ball_and_stick' | 'space_filling' | 'skeletal';
 }
 
-// 4. Diagram Specification (Circuit, Flow, Concept Map)
-export interface DiagramVisualNode {
+// 4. Diagram Payload
+export interface DiagramNodeItem {
   id: string;
   label: string;
-  subType: 'box' | 'circle' | 'diamond' | 'component' | 'terminal';
+  type: 'start' | 'end' | 'process' | 'decision' | 'resistor' | 'capacitor' | 'battery' | 'source' | 'mass' | 'vector' | 'default';
   x: number;
   y: number;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   color?: string;
-  icon?: string;
+  value?: string;
 }
 
-export interface DiagramVisualEdge {
+export interface DiagramEdgeItem {
   id: string;
-  sourceId: string;
-  targetId: string;
+  sourceNodeId: string;
+  targetNodeId: string;
   label?: string;
-  direction: 'directed' | 'undirected' | 'bidirectional';
+  directed: boolean;
   style?: 'solid' | 'dashed';
+  arrowColor?: string;
 }
 
-export interface DiagramParameters {
-  diagramType: 'circuit' | 'flowchart' | 'concept_map' | 'system';
-  nodes: DiagramVisualNode[];
-  edges: DiagramVisualEdge[];
+export interface DiagramVisualizationPayload {
+  type: 'DIAGRAM';
+  title: string;
+  diagramCategory: 'circuit' | 'flowchart' | 'free_body' | 'concept_map' | 'optics';
+  nodes: DiagramNodeItem[];
+  edges: DiagramEdgeItem[];
 }
 
-// 5. Data Chart Specification
-export interface DataSeries {
-  id: string;
+// 5. Data Chart Payload
+export interface DataChartPoint {
+  label: string;
+  [seriesKey: string]: number | string;
+}
+
+export interface DataChartSeriesDef {
+  key: string;
   name: string;
   color: string;
-  data: number[] | Array<{ x: number | string; y: number }>;
-}
-
-export interface DataChartParameters {
-  chartType: 'bar' | 'line' | 'scatter';
-  categories?: string[];
-  series: DataSeries[];
-  xAxisLabel?: string;
-  yAxisLabel?: string;
   unit?: string;
 }
 
-// Unified Visualization Object
-export interface VisualizationAnnotation {
-  id: string;
-  x: number;
-  y: number;
-  label: string;
-  detail?: string;
-  color?: string;
+export interface DataChartVisualizationPayload {
+  type: 'DATA_CHART';
+  title: string;
+  chartType: 'bar' | 'line' | 'scatter' | 'area';
+  xAxisKey: string;
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  series: DataChartSeriesDef[];
+  data: DataChartPoint[];
 }
 
+export type VisualizationPayload =
+  | GraphVisualizationPayload
+  | ProjectileVisualizationPayload
+  | MoleculeVisualizationPayload
+  | DiagramVisualizationPayload
+  | DataChartVisualizationPayload;
+
+// Canonical Visualization Document Model
 export interface VisualizationDocument {
   id: string;
-  type: VisualizationType;
+  institutionId: string;
+  workspaceId: string;
+  classId?: string;
+  courseCode?: string;
+  unitId?: string;
+  lessonId?: string;
+  classSessionId?: string;
+  creatorId: string;
+  creatorRole: 'teacher' | 'student' | 'system';
   title: string;
-  description: string;
-  semanticContext: SemanticVisualizationContext;
-  source: VisualizationSource;
-  parameters: GraphParameters | PhysicsParameters | ChemistryParameters | DiagramParameters | DataChartParameters | Record<string, any>;
-  objects: any[];
-  relationships: any[];
-  annotations: VisualizationAnnotation[];
-  interactions: VisualizationInteractions;
-  animationState?: VisualizationAnimationState;
-  accessibility: VisualizationAccessibility;
+  description?: string;
+  visualizationType: VisualizationType;
   provenance: VisualizationProvenance;
-  timestamps: {
-    createdAt: string;
-    updatedAt: string;
+  status: VisualizationStatus;
+  isReleasedToStudents: boolean;
+  releasedAt?: string;
+  version: number;
+  payload: VisualizationPayload;
+  recognizedEquationId?: string; // Links to D.9 recognized equation
+  sourceElementIds?: string[]; // Links to board handwritten strokes
+  boardReference?: {
+    boardId: string;
+    pageId: string;
+    elementId?: string;
   };
-  boundingBox?: BoundingBox;
+  academicContext?: AcademicContext;
+  validationErrors?: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Result of schema validation
 export interface VisualizationValidationResult {
-  valid: boolean;
+  isValid: boolean;
   errors: string[];
-  sanitizedDoc?: VisualizationDocument;
+  warnings: string[];
+  sanitizedPayload?: VisualizationPayload;
 }

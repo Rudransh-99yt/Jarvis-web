@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ClassSession } from '../../../types/classSession.ts';
 import type { SmartBoardDevice } from '../../../types/smartboard.ts';
-import { authClient } from '../../../services/authClient.ts';
 import {
   Tv,
   CheckCircle2,
@@ -49,9 +48,7 @@ export const SendToSmartBoardModal: React.FC<SendToSmartBoardModalProps> = ({
     setError(null);
     setSuccessResult(null);
 
-    fetch(`/api/education/smartboard/devices?classroomId=${session.classId}`, {
-      headers: { ...authClient.getAuthHeaders() }
-    })
+    fetch(`/api/education/smartboard/devices?classroomId=${session.classId}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.devices && data.devices.length > 0) {
@@ -59,9 +56,7 @@ export const SendToSmartBoardModal: React.FC<SendToSmartBoardModalProps> = ({
           setSelectedBoardId(data.devices[0].id);
         } else {
           // Fallback to all devices
-          fetch('/api/education/smartboard/devices', {
-            headers: { ...authClient.getAuthHeaders() }
-          })
+          fetch('/api/education/smartboard/devices')
             .then((r) => (r.ok ? r.json() : null))
             .then((allData) => {
               if (allData?.devices) {
@@ -87,7 +82,7 @@ export const SendToSmartBoardModal: React.FC<SendToSmartBoardModalProps> = ({
       // 1. Send session to board
       const res = await fetch('/api/education/smartboard/send-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           boardId: selectedBoardId,
           sessionId: session.id

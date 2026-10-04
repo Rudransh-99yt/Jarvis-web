@@ -61,7 +61,7 @@ export class CommunityPolicy {
         return { allowed: false, statusCode: 404, reason: `Associated class '${channel.classId}' not found.` };
       }
 
-      if (user.role === 'student' && (!Array.isArray(cls.studentIds) || !cls.studentIds.includes(user.id))) {
+      if (user.role === 'student' && !cls.studentIds.includes(user.id)) {
         return {
           allowed: false,
           statusCode: 403,

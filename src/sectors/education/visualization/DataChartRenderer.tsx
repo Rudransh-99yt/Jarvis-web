@@ -1,244 +1,152 @@
-// Accessible Data Chart Renderer (Phase D.10)
-import React, { useState } from 'react';
-import type { DataChartParameters } from '../../../types/visualization.ts';
+import React from 'react';
+import type { DataChartVisualizationPayload } from '../../../types/visualization.ts';
+import { BarChart3 } from 'lucide-react';
 
-interface DataChartRendererProps {
-  parameters: DataChartParameters;
+interface Props {
+  payload: DataChartVisualizationPayload;
   width?: number;
   height?: number;
+  interactive?: boolean;
 }
 
-export const DataChartRenderer: React.FC<DataChartRendererProps> = ({
-  parameters,
+export const DataChartRenderer: React.FC<Props> = ({
+  payload,
   width = 600,
-  height = 400
+  height = 360,
+  interactive = true
 }) => {
-  const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
-  const [hoveredPoint, setHoveredPoint] = useState<{ series: string; label: string; value: number } | null>(null);
+  const padding = { top: 30, right: 30, bottom: 45, left: 55 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
 
-  const series = parameters.series || [];
-  const categories = parameters.categories || [];
-  const chartType = parameters.chartType || 'bar';
-
-  // Calculate value range
-  let maxVal = -Infinity;
-  let minVal = 0;
-  series.forEach((s) => {
-    (s.data as any[]).forEach((val) => {
-      const num = typeof val === 'number' ? val : (val?.y ?? 0);
-      if (num > maxVal) maxVal = num;
-      if (num < minVal) minVal = num;
+  // Extract all numeric values across series
+  const allValues: number[] = [];
+  payload.data.forEach((row) => {
+    payload.series.forEach((s) => {
+      const v = Number(row[s.key]);
+      if (!isNaN(v) && isFinite(v)) allValues.push(v);
     });
   });
-  if (maxVal === -Infinity) maxVal = 100;
-  maxVal = Math.max(1, maxVal * 1.15);
 
-  const padding = { top: 30, right: 30, bottom: 45, left: 50 };
-  const plotWidth = Math.max(100, width - padding.left - padding.right);
-  const plotHeight = Math.max(100, height - padding.top - padding.bottom);
+  const maxVal = Math.max(10, Math.ceil((Math.max(...allValues, 10) * 1.15) / 10) * 10);
+  const minVal = Math.min(0, Math.floor(Math.min(...allValues, 0) / 10) * 10);
 
-  const toScreenY = (v: number) => padding.top + (1 - v / maxVal) * plotHeight;
+  const toSvgY = (v: number) => padding.top + plotHeight - ((v - minVal) / (maxVal - minVal)) * plotHeight;
+
+  const barGroupWidth = plotWidth / Math.max(1, payload.data.length);
+  const barWidth = Math.max(8, (barGroupWidth * 0.7) / Math.max(1, payload.series.length));
 
   return (
-    <div className="flex flex-col select-none rounded-xl bg-slate-900 border border-slate-800 p-3 shadow-xl">
-      {/* Top Bar with Chart / Table Toggle */}
-      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 text-xs">
-        <div className="flex items-center gap-3">
-          <span className="font-bold text-slate-200 capitalize">
-            {chartType} Chart
-          </span>
-          {/* Series Badges */}
-          <div className="flex items-center gap-2">
-            {series.map((s) => (
-              <span key={s.id} className="flex items-center gap-1 text-[11px] text-slate-300">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                <span>{s.name}</span>
-              </span>
-            ))}
-          </div>
+    <div className="flex flex-col gap-3 w-full bg-slate-950/80 border border-slate-800/80 rounded-lg p-3 text-slate-200">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/60 pb-2">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-cyan-400" />
+          <h4 className="text-sm font-semibold tracking-wide text-cyan-300 font-hud">{payload.title}</h4>
         </div>
-
-        <button
-          onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}
-          className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium transition-colors"
-        >
-          {viewMode === 'chart' ? 'View Data Table' : 'View Visual Chart'}
-        </button>
+        {/* Series Legend */}
+        <div className="flex items-center gap-3 text-xs font-mono">
+          {payload.series.map((s) => (
+            <div key={s.key} className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: s.color }} />
+              <span className="text-slate-300">{s.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Main View Area */}
-      {viewMode === 'table' ? (
-        <div className="overflow-x-auto max-h-[360px] rounded-lg bg-slate-950 border border-slate-800 p-2">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-900 text-slate-400 font-mono text-[11px] uppercase border-b border-slate-800">
-              <tr>
-                <th className="p-2">Category</th>
-                {series.map((s) => (
-                  <th key={s.id} className="p-2" style={{ color: s.color }}>
-                    {s.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
-              {categories.map((cat, idx) => (
-                <tr key={idx} className="hover:bg-slate-900/50">
-                  <td className="p-2 font-medium text-slate-200">{cat}</td>
-                  {series.map((s) => {
-                    const raw = (s.data as any[])[idx];
-                    const val = typeof raw === 'number' ? raw : (raw?.y ?? '-');
-                    return (
-                      <td key={s.id} className="p-2">
-                        {val} {parameters.unit || ''}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="relative overflow-hidden rounded-lg bg-slate-950 border border-slate-800/50">
-          <svg width={width} height={height} className="block">
-            {/* Grid & Axes */}
-            <line
-              x1={padding.left}
-              y1={height - padding.bottom}
-              x2={width - padding.right}
-              y2={height - padding.bottom}
-              stroke="#475569"
-              strokeWidth="1.5"
-            />
-            <line
-              x1={padding.left}
-              y1={padding.top}
-              x2={padding.left}
-              y2={height - padding.bottom}
-              stroke="#475569"
-              strokeWidth="1.5"
-            />
+      {/* SVG Canvas */}
+      <div className="relative w-full overflow-hidden flex justify-center items-center">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[360px] select-none">
+          {/* Grid lines */}
+          <g opacity="0.2">
+            {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => {
+              const val = minVal + pct * (maxVal - minVal);
+              const y = toSvgY(val);
+              return (
+                <g key={i}>
+                  <line x1={padding.left} y1={y} x2={padding.left + plotWidth} y2={y} stroke="#475569" strokeWidth="1" />
+                  <text x={padding.left - 8} y={y + 4} textAnchor="end" className="text-[10px] fill-slate-400 font-mono">
+                    {val.toFixed(0)}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
 
-            {/* Bars */}
-            {chartType === 'bar' &&
-              categories.map((cat, cIdx) => {
-                const groupWidth = plotWidth / categories.length;
-                const groupX = padding.left + cIdx * groupWidth;
-                const barWidth = Math.max(6, (groupWidth * 0.7) / series.length);
+          {/* Baseline */}
+          <line
+            x1={padding.left}
+            y1={toSvgY(0)}
+            x2={padding.left + plotWidth}
+            y2={toSvgY(0)}
+            stroke="#64748b"
+            strokeWidth="1.5"
+          />
 
+          {/* Render Bars or Lines */}
+          {payload.chartType === 'bar' ? (
+            <g>
+              {payload.data.map((row, groupIdx) => {
+                const groupX = padding.left + groupIdx * barGroupWidth + (barGroupWidth - barWidth * payload.series.length) / 2;
                 return (
-                  <g key={`group-${cIdx}`}>
-                    {series.map((s, sIdx) => {
-                      const raw = (s.data as any[])[cIdx];
-                      const val = typeof raw === 'number' ? raw : (raw?.y ?? 0);
-                      const barX = groupX + groupWidth * 0.15 + sIdx * barWidth;
-                      const barY = toScreenY(val);
-                      const barH = height - padding.bottom - barY;
+                  <g key={groupIdx}>
+                    {payload.series.map((s, sIdx) => {
+                      const v = Number(row[s.key]) || 0;
+                      const bx = groupX + sIdx * barWidth;
+                      const by = toSvgY(Math.max(0, v));
+                      const bh = Math.abs(toSvgY(v) - toSvgY(0));
 
                       return (
                         <rect
-                          key={`bar-${s.id}-${cIdx}`}
-                          x={barX}
-                          y={barY}
+                          key={s.key}
+                          x={bx}
+                          y={by}
                           width={barWidth - 2}
-                          height={Math.max(1, barH)}
+                          height={Math.max(2, bh)}
                           fill={s.color}
                           rx="2"
-                          className="hover:opacity-80 transition-opacity cursor-pointer"
-                          onPointerEnter={() => setHoveredPoint({ series: s.name, label: cat, value: val })}
-                          onPointerLeave={() => setHoveredPoint(null)}
+                          className="hover:opacity-80 transition-opacity"
                         />
                       );
                     })}
-
-                    {/* Category Label */}
+                    {/* X-axis label */}
                     <text
-                      x={groupX + groupWidth / 2}
-                      y={height - padding.bottom + 16}
+                      x={padding.left + groupIdx * barGroupWidth + barGroupWidth / 2}
+                      y={padding.top + plotHeight + 18}
                       textAnchor="middle"
-                      fill="#94a3b8"
-                      fontSize="10"
-                      fontFamily="sans-serif"
+                      className="text-[10px] fill-slate-400 font-mono"
                     >
-                      {cat}
+                      {row[payload.xAxisKey]}
                     </text>
                   </g>
                 );
               })}
-
-            {/* Line / Scatter */}
-            {chartType !== 'bar' &&
-              series.map((s) => {
-                const points = categories.map((cat, idx) => {
-                  const raw = (s.data as any[])[idx];
-                  const val = typeof raw === 'number' ? raw : (raw?.y ?? 0);
-                  const x = padding.left + (idx / Math.max(1, categories.length - 1)) * plotWidth;
-                  const y = toScreenY(val);
-                  return { x, y, val, cat };
+            </g>
+          ) : (
+            <g>
+              {/* Line chart paths */}
+              {payload.series.map((s) => {
+                const pts = payload.data.map((row, idx) => {
+                  const x = padding.left + idx * (plotWidth / Math.max(1, payload.data.length - 1));
+                  const y = toSvgY(Number(row[s.key]) || 0);
+                  return { x, y };
                 });
-
-                const lineD = points.reduce(
-                  (acc, p, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`,
-                  ''
-                );
+                const pathD = pts.reduce((acc, pt, idx) => (idx === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`), '');
 
                 return (
-                  <g key={`line-series-${s.id}`}>
-                    {chartType === 'line' && (
-                      <path
-                        d={lineD}
-                        fill="none"
-                        stroke={s.color}
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    )}
-                    {points.map((p, pIdx) => (
-                      <circle
-                        key={`pt-${s.id}-${pIdx}`}
-                        cx={p.x}
-                        cy={p.y}
-                        r="4"
-                        fill={s.color}
-                        stroke="#0f172a"
-                        strokeWidth="2"
-                        className="cursor-pointer hover:r-6"
-                        onPointerEnter={() => setHoveredPoint({ series: s.name, label: p.cat, value: p.val })}
-                        onPointerLeave={() => setHoveredPoint(null)}
-                      />
+                  <g key={s.key}>
+                    <path d={pathD} fill="none" stroke={s.color} strokeWidth="2.5" />
+                    {pts.map((pt, pIdx) => (
+                      <circle key={pIdx} cx={pt.x} cy={pt.y} r="3.5" fill={s.color} stroke="#0f172a" strokeWidth="1.5" />
                     ))}
                   </g>
                 );
               })}
-
-            {/* X Axis Labels for Line */}
-            {chartType !== 'bar' &&
-              categories.map((cat, idx) => {
-                const x = padding.left + (idx / Math.max(1, categories.length - 1)) * plotWidth;
-                return (
-                  <text
-                    key={`lx-${idx}`}
-                    x={x}
-                    y={height - padding.bottom + 16}
-                    textAnchor="middle"
-                    fill="#94a3b8"
-                    fontSize="10"
-                  >
-                    {cat}
-                  </text>
-                );
-              })}
-          </svg>
-
-          {/* Hover Tooltip */}
-          {hoveredPoint && (
-            <div className="absolute top-2 right-2 rounded bg-slate-900/95 border border-slate-700 px-2.5 py-1 text-xs font-mono text-cyan-400 shadow-md">
-              {hoveredPoint.series}: {hoveredPoint.label} = <span className="font-bold text-white">{hoveredPoint.value}</span> {parameters.unit || ''}
-            </div>
+            </g>
           )}
-        </div>
-      )}
+        </svg>
+      </div>
     </div>
   );
 };

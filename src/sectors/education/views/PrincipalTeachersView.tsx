@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { TeacherLeadershipProjection } from '../../../types/institutional.ts';
 import { SharedBackButton } from '../components/SharedBackButton.tsx';
-import { authClient } from '../../../services/authClient.ts';
 import {
   Users,
   GraduationCap,
@@ -27,7 +26,8 @@ export const PrincipalTeachersView: React.FC<PrincipalTeachersViewProps> = ({ on
 
     fetch('/api/education/institutional/teachers', {
       headers: {
-        ...authClient.getAuthHeaders()
+        'x-user-id': 'principal-1',
+        'x-user-role': 'principal'
       }
     })
       .then((res) => (res.ok ? res.json() : null))

@@ -16,7 +16,6 @@ import { classroomRouter } from './server/sectors/education/classroomRoutes.ts';
 import { quizRouter } from './server/sectors/education/quizRoutes.ts';
 import { storageManager } from './server/storage/index.ts';
 import { jarvisData } from './server/data/index.ts';
-import { authRouter } from './server/auth/authRoutes.ts';
 
 function getArg(flag: string): string | undefined {
   const idx = process.argv.indexOf(flag);
@@ -76,7 +75,6 @@ app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) =>
 });
 
 // Core Platform REST Routes
-app.use('/api/auth', authRouter);
 app.use('/api/workspaces', workspaceRouter);
 app.use('/api/conversations', conversationRouter);
 app.use('/api/knowledge-spaces', knowledgeRouter);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { InstitutionalAuditEvent } from '../../../types/institutional.ts';
 import { SharedBackButton } from '../components/SharedBackButton.tsx';
-import { authClient } from '../../../services/authClient.ts';
 import {
   History,
   ShieldCheck,
@@ -27,7 +26,8 @@ export const PrincipalAuditView: React.FC<PrincipalAuditViewProps> = ({ onBack }
 
     fetch('/api/education/institutional/audit', {
       headers: {
-        ...authClient.getAuthHeaders()
+        'x-user-id': 'principal-1',
+        'x-user-role': 'principal'
       }
     })
       .then((res) => (res.ok ? res.json() : null))

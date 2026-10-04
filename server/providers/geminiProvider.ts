@@ -176,7 +176,7 @@ export class GeminiProvider implements AiProvider {
       const contents = this.formatContents(messages, options);
 
       const stream = await this.client.models.generateContentStream({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents,
         config: {
           systemInstruction: JARVIS_SYSTEM_INSTRUCTION,

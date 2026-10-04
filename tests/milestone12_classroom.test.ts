@@ -14,7 +14,6 @@ import { ClassroomService } from '../server/sectors/education/classroomService.t
 import { classroomEventBus } from '../server/sectors/education/classroomEventBus.ts';
 import { classroomRouter } from '../server/sectors/education/classroomRoutes.ts';
 import { toolExecutor } from '../server/tools/index.ts';
-import { authService, ticketService } from '../server/auth/index.ts';
 import type { User } from '../server/data/types.ts';
 import type { ToolExecutionContext } from '../server/tools/types.ts';
 import type { RealtimeClassroomEvent } from '../src/types/classroom.ts';
@@ -687,12 +686,6 @@ async function runMilestone12Tests() {
     const unauthBody = await unauthHttpRes.json();
     assert(unauthBody.error?.code === 'UNAUTHENTICATED', '42b. HTTP: Returns code UNAUTHENTICATED');
 
-    // Issue signed auth tokens for test subjects
-    const teacherToken = authService.issueToken(teacherUser);
-    const studentToken = authService.issueToken(studentUser);
-    const nonEnrolledToken = authService.issueToken(nonEnrolledStudent);
-    const unauthorizedTeacherToken = authService.issueToken(unauthorizedTeacher);
-
     // 43. Invalid identity / unknown user ID header -> 401
     const invalidUserRes = await fetch(`${baseUrl}/active?classId=${classId}&workspaceId=${workspaceId}`, {
       headers: { 'x-user-id': 'user-unknown-adversary' }
@@ -713,12 +706,12 @@ async function runMilestone12Tests() {
       forgedIdRes.status
     );
 
-    // 45. Forged user role header (student passes role: teacher with valid student token) -> 403
+    // 45. Forged user role header (student passes role: teacher to control session) -> 403
     const forgedRoleRes = await fetch(`${baseUrl}/${httpTestSession.id}/pause`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${studentToken}`,
+        'x-user-id': studentUser.id,
         'x-user-role': 'teacher' // Client attempts to forge role!
       },
       body: JSON.stringify({ workspaceId })
@@ -734,7 +727,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${studentToken}`
+        'x-user-id': studentUser.id
       },
       body: JSON.stringify({ workspaceId })
     });
@@ -749,7 +742,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${nonEnrolledToken}`
+        'x-user-id': nonEnrolledStudent.id
       },
       body: JSON.stringify({ workspaceId, deviceType: 'web' })
     });
@@ -764,7 +757,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${unauthorizedTeacherToken}`
+        'x-user-id': unauthorizedTeacher.id
       },
       body: JSON.stringify({ workspaceId })
     });
@@ -776,7 +769,7 @@ async function runMilestone12Tests() {
 
     // 49. Cross-workspace access rejected -> 403 / 404
     const crossWsRes = await fetch(`${baseUrl}/${httpTestSession.id}?workspaceId=ws-other-unauthorized`, {
-      headers: { 'Authorization': `Bearer ${teacherToken}` }
+      headers: { 'x-user-id': teacherUser.id }
     });
     assert(
       crossWsRes.status === 403 || crossWsRes.status === 404,
@@ -794,13 +787,12 @@ async function runMilestone12Tests() {
       createdAt: new Date().toISOString()
     };
     await isolatedRepo.users.create(outsiderUser);
-    const outsiderToken = authService.issueToken(outsiderUser);
 
     const outsiderJoinRes = await fetch(`${baseUrl}/${httpTestSession.id}/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${outsiderToken}`
+        'x-user-id': outsiderUser.id
       },
       body: JSON.stringify({ workspaceId })
     });
@@ -824,9 +816,7 @@ async function runMilestone12Tests() {
     );
 
     // 51c. Non-enrolled student on stream -> 403
-    const rogueStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}`, {
-      headers: { 'Authorization': `Bearer ${nonEnrolledToken}` }
-    });
+    const rogueStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&userId=${nonEnrolledStudent.id}`);
     assert(
       rogueStreamRes.status === 403,
       '51c. HTTP: Non-enrolled student SSE stream subscription rejected with 403 Forbidden',
@@ -834,9 +824,7 @@ async function runMilestone12Tests() {
     );
 
     // 51d. Teacher from another class on stream -> 403
-    const otherTeacherStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}`, {
-      headers: { 'Authorization': `Bearer ${unauthorizedTeacherToken}` }
-    });
+    const otherTeacherStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&userId=${unauthorizedTeacher.id}`);
     assert(
       otherTeacherStreamRes.status === 403,
       '51d. HTTP: Unauthorized teacher SSE stream subscription rejected with 403 Forbidden',
@@ -848,7 +836,7 @@ async function runMilestone12Tests() {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${studentToken}`
+        'x-user-id': studentUser.id
       },
       body: JSON.stringify({ state: 'question', workspaceId })
     });
@@ -864,7 +852,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${studentToken}`
+        'x-user-id': studentUser.id
       },
       body: JSON.stringify({ workspaceId, deviceType: 'software_remote' })
     });
@@ -875,7 +863,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${studentToken}`
+        'x-user-id': studentUser.id
       },
       body: JSON.stringify({ workspaceId })
     });
@@ -886,7 +874,7 @@ async function runMilestone12Tests() {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${teacherToken}`
+        'x-user-id': teacherUser.id
       },
       body: JSON.stringify({ state: 'lesson', currentTopic: 'Quantum Electrodynamics', workspaceId })
     });
@@ -897,7 +885,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${teacherToken}`
+        'x-user-id': teacherUser.id
       },
       body: JSON.stringify({ workspaceId })
     });

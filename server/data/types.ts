@@ -28,6 +28,8 @@ export interface User {
   role: UserRole;
   avatarUrl?: string;
   department?: string;
+  institutionId?: string;
+  workspaceId?: string;
   createdAt: string;
 }
 

@@ -1,186 +1,134 @@
-// Structured Diagram Renderer (Phase D.10)
-import React, { useState } from 'react';
-import type { DiagramParameters, DiagramVisualNode } from '../../../types/visualization.ts';
+import React from 'react';
+import type { DiagramVisualizationPayload } from '../../../types/visualization.ts';
+import { GitBranch, Zap, Cpu } from 'lucide-react';
 
-interface DiagramRendererProps {
-  parameters: DiagramParameters;
+interface Props {
+  payload: DiagramVisualizationPayload;
   width?: number;
   height?: number;
+  interactive?: boolean;
 }
 
-export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
-  parameters,
+export const DiagramRenderer: React.FC<Props> = ({
+  payload,
   width = 600,
-  height = 400
+  height = 360,
+  interactive = true
 }) => {
-  const [selectedNode, setSelectedNode] = useState<DiagramVisualNode | null>(null);
-
-  const nodes = parameters.nodes || [];
-  const edges = parameters.edges || [];
+  const nodeMap = new Map(payload.nodes.map((n) => [n.id, n]));
 
   return (
-    <div className="flex flex-col select-none rounded-xl bg-slate-900 border border-slate-800 p-3 shadow-xl">
-      {/* Top Banner */}
-      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 text-xs">
-        <span className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">
-          {parameters.diagramType} Diagram
-        </span>
-        <span className="text-slate-500 font-mono text-[10px]">
-          {nodes.length} Nodes • {edges.length} Connections
-        </span>
+    <div className="flex flex-col gap-3 w-full bg-slate-950/80 border border-slate-800/80 rounded-lg p-3 text-slate-200">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+        <div className="flex items-center gap-2">
+          {payload.diagramCategory === 'circuit' ? (
+            <Zap className="w-4 h-4 text-amber-400" />
+          ) : (
+            <GitBranch className="w-4 h-4 text-cyan-400" />
+          )}
+          <div>
+            <h4 className="text-sm font-semibold tracking-wide text-cyan-300 font-hud">{payload.title}</h4>
+            <p className="text-xs text-slate-400 capitalize">{payload.diagramCategory} Diagram</p>
+          </div>
+        </div>
       </div>
 
-      {/* SVG Canvas Area */}
-      <div className="relative overflow-hidden rounded-lg bg-slate-950 border border-slate-800/50">
-        <svg width={width} height={height} className="block">
+      {/* SVG Canvas */}
+      <div className="relative w-full overflow-hidden flex justify-center items-center">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[360px] select-none">
           <defs>
             <marker
-              id="arrowhead"
-              markerWidth="8"
+              id="diag-arrow"
+              viewBox="0 0 10 10"
+              refX="8"
+              refY="5"
+              markerWidth="6"
               markerHeight="6"
-              refX="7"
-              refY="3"
-              orient="auto"
+              orient="auto-start-reverse"
             >
-              <polygon points="0 0, 8 3, 0 6" fill="#38bdf8" />
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
             </marker>
           </defs>
 
-          {/* Edges / Connections */}
-          {edges.map((edge) => {
-            const s = nodes.find((n) => n.id === edge.sourceId);
-            const t = nodes.find((n) => n.id === edge.targetId);
-            if (!s || !t) return null;
+          {/* Edges */}
+          <g>
+            {payload.edges.map((e) => {
+              const src = nodeMap.get(e.sourceNodeId);
+              const tgt = nodeMap.get(e.targetNodeId);
+              if (!src || !tgt) return null;
 
-            const midX = (s.x + t.x) / 2;
-            const midY = (s.y + t.y) / 2;
+              const x1 = src.x + (src.width || 100) / 2;
+              const y1 = src.y + (src.height || 50) / 2;
+              const x2 = tgt.x + (tgt.width || 100) / 2;
+              const y2 = tgt.y + (tgt.height || 50) / 2;
 
-            return (
-              <g key={edge.id}>
-                <line
-                  x1={s.x}
-                  y1={s.y}
-                  x2={t.x}
-                  y2={t.y}
-                  stroke="#38bdf8"
-                  strokeWidth="2"
-                  strokeDasharray={edge.style === 'dashed' ? '4 4' : undefined}
-                  markerEnd={edge.direction === 'directed' ? 'url(#arrowhead)' : undefined}
-                />
-                {edge.label && (
-                  <g>
-                    <rect
-                      x={midX - 35}
-                      y={midY - 12}
-                      width={70}
-                      height={18}
-                      rx="3"
-                      fill="#0f172a"
-                      stroke="#334155"
-                      strokeWidth="1"
-                    />
+              return (
+                <g key={e.id}>
+                  <line
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke={e.arrowColor || '#38bdf8'}
+                    strokeWidth="2"
+                    strokeDasharray={e.style === 'dashed' ? '4,4' : undefined}
+                    markerEnd={e.directed ? 'url(#diag-arrow)' : undefined}
+                  />
+                  {e.label && (
                     <text
-                      x={midX}
-                      y={midY + 1}
+                      x={(x1 + x2) / 2}
+                      y={(y1 + y2) / 2 - 6}
                       textAnchor="middle"
-                      fill="#93c5fd"
-                      fontSize="9"
-                      fontFamily="monospace"
+                      className="text-[10px] fill-cyan-300 font-mono"
                     >
-                      {edge.label}
+                      {e.label}
                     </text>
-                  </g>
-                )}
-              </g>
-            );
-          })}
+                  )}
+                </g>
+              );
+            })}
+          </g>
 
           {/* Nodes */}
-          {nodes.map((node) => {
-            const isSelected = selectedNode?.id === node.id;
-            const w = node.width || 120;
-            const h = node.height || 50;
-            const lines = (node.label || '').split('\n');
+          <g>
+            {payload.nodes.map((n) => {
+              const w = n.width || 100;
+              const h = n.height || 50;
 
-            return (
-              <g
-                key={node.id}
-                className="cursor-pointer"
-                onClick={() => setSelectedNode(node)}
-              >
-                {/* Node Shape */}
-                {node.subType === 'diamond' ? (
-                  <polygon
-                    points={`${node.x} ${node.y - h / 2}, ${node.x + w / 2} ${node.y}, ${node.x} ${node.y + h / 2}, ${node.x - w / 2} ${node.y}`}
-                    fill="#1e1b4b"
-                    stroke={isSelected ? '#38bdf8' : node.color || '#a855f7'}
-                    strokeWidth={isSelected ? 3 : 2}
-                  />
-                ) : node.subType === 'terminal' ? (
+              return (
+                <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
                   <rect
-                    x={node.x - w / 2}
-                    y={node.y - h / 2}
-                    width={w}
-                    height={h}
-                    rx={h / 2}
-                    fill="#064e3b"
-                    stroke={isSelected ? '#38bdf8' : node.color || '#10b981'}
-                    strokeWidth={isSelected ? 3 : 2}
-                  />
-                ) : (
-                  <rect
-                    x={node.x - w / 2}
-                    y={node.y - h / 2}
                     width={w}
                     height={h}
                     rx="6"
                     fill="#0f172a"
-                    stroke={isSelected ? '#38bdf8' : node.color || '#64748b'}
-                    strokeWidth={isSelected ? 3 : 2}
+                    stroke={n.color || '#0284c7'}
+                    strokeWidth="2"
                   />
-                )}
-
-                {/* Node Text */}
-                {lines.map((line, idx) => (
                   <text
-                    key={idx}
-                    x={node.x}
-                    y={node.y - (lines.length - 1) * 7 + idx * 14 + 4}
+                    x={w / 2}
+                    y={h / 2 - (n.value ? 4 : -4)}
                     textAnchor="middle"
-                    fill="#f8fafc"
-                    fontSize="11"
-                    fontWeight="500"
-                    fontFamily="sans-serif"
+                    className="text-xs font-semibold fill-slate-200 select-none"
                   >
-                    {line}
+                    {n.label}
                   </text>
-                ))}
-              </g>
-            );
-          })}
+                  {n.value && (
+                    <text
+                      x={w / 2}
+                      y={h / 2 + 12}
+                      textAnchor="middle"
+                      className="text-[10px] fill-cyan-400 font-mono select-none"
+                    >
+                      {n.value}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
         </svg>
-
-        {/* Selected Node Details Box */}
-        {selectedNode && (
-          <div className="absolute bottom-2 left-2 flex items-center gap-2 rounded bg-slate-900/95 border border-cyan-500/50 px-3 py-1.5 text-xs text-slate-200 shadow-lg">
-            <span
-              className="w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: selectedNode.color || '#38bdf8' }}
-            />
-            <span className="font-bold text-cyan-300">
-              {selectedNode.label.replace('\n', ' - ')}
-            </span>
-            <span className="text-slate-400 font-mono text-[10px]">
-              Type: {selectedNode.subType}
-            </span>
-            <button
-              onClick={() => setSelectedNode(null)}
-              className="ml-2 text-slate-400 hover:text-slate-200 font-bold"
-            >
-              ×
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

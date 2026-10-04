@@ -4,7 +4,6 @@ import { jarvisData } from '../data/index.ts';
 import { ingestionPipeline } from '../rag/ingestionPipeline.ts';
 import { retrievalService } from '../rag/retrievalService.ts';
 import { groundingService } from '../rag/groundingService.ts';
-import { authenticateRequest } from '../auth/index.ts';
 
 export const knowledgeRouter = Router();
 
@@ -38,8 +37,7 @@ knowledgeRouter.get('/', async (req: Request, res: Response) => {
 // POST /api/knowledge-spaces - Create space
 knowledgeRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const user = await authenticateRequest(req, jarvisData);
-    const { name, title, description, category, tags, classId, workspaceId } = req.body;
+    const { name, title, description, category, tags, classId, workspaceId, ownerId } = req.body;
     const spaceName = name || title;
     if (!spaceName || typeof spaceName !== 'string') {
       res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'name is required.' } });
@@ -53,7 +51,7 @@ knowledgeRouter.post('/', async (req: Request, res: Response) => {
       name: spaceName.trim(),
       description: description || '',
       category: category || 'General',
-      ownerId: user.id,
+      ownerId: ownerId || 'teacher-1',
       classId,
       tags: Array.isArray(tags) ? tags : [],
       suggestedQuestions: []
@@ -61,8 +59,7 @@ knowledgeRouter.post('/', async (req: Request, res: Response) => {
 
     res.status(201).json({ knowledgeSpace: created });
   } catch (err: any) {
-    const statusCode = err.statusCode || (err.code === 'UNAUTHENTICATED' ? 401 : 500);
-    res.status(statusCode).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message || 'Failed to create knowledge space' } });
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message || 'Failed to create knowledge space' } });
   }
 });
 

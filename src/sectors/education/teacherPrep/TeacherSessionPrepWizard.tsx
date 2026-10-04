@@ -11,7 +11,6 @@ import type {
   SessionTeacherNotes
 } from '../../../types/classSession.ts';
 import type { EducationClass } from '../../../types/education.ts';
-import { authClient } from '../../../services/authClient.ts';
 import {
   Sparkles,
   ArrowLeft,
@@ -173,7 +172,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
       // 1. Create Draft Session on Server
       const createRes = await fetch('/api/education/sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           classId: selectedClass.id,
           topic,
@@ -196,7 +195,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
       for (const src of sources) {
         await fetch(`/api/education/sessions/${session.id}/sources`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(src)
         });
       }
@@ -206,7 +205,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
       // 3. Trigger Generation Pipeline
       const genRes = await fetch(`/api/education/sessions/${session.id}/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           desiredOutputs,
           customInstructions: customPrompt
@@ -234,7 +233,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
     try {
       const res = await fetch(`/api/education/sessions/${activeSession.id}/regenerate-section`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sectionName,
           customPrompt: sectionPromptTweak
@@ -259,7 +258,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
     try {
       const res = await fetch(`/api/education/sessions/${activeSession.id}/approve-section`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ section })
       });
       const data = await res.json();
@@ -275,8 +274,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
     if (!activeSession) return;
     try {
       const res = await fetch(`/api/education/sessions/${activeSession.id}/approve-all`, {
-        method: 'POST',
-        headers: { ...authClient.getAuthHeaders() }
+        method: 'POST'
       });
       const data = await res.json();
       setActiveSession(data.session);
@@ -292,7 +290,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
     try {
       const res = await fetch(`/api/education/sessions/${activeSession.id}/schedule`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scheduledAt })
       });
       const data = await res.json();
@@ -310,7 +308,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
     try {
       const res = await fetch(`/api/education/sessions/${activeSession.id}/release-controls`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: updatedVal })
       });
       const data = await res.json();
@@ -331,10 +329,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
     try {
       const res = await fetch(`/api/education/integration/sessions/${activeSession.id}/link-all`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authClient.getAuthHeaders()
-        }
+        headers: { 'x-user-role': 'teacher', 'x-user-id': 'teacher-1' }
       });
       if (res.ok) {
         const data = await res.json();

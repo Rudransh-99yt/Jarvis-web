@@ -3,8 +3,12 @@ import express, { type Request, type Response } from 'express';
 import { smartboardService } from './smartboardService.ts';
 import { authenticateRequest, AuthenticationError } from '../../../auth/index.ts';
 import type { User } from '../../../data/types.ts';
+import { controlPlaneRouter } from './controlPlaneRoutes.ts';
 
 export const smartboardRouter = express.Router();
+
+// Phase D.12: SmartBoard ↔ Teacher Mobile Control Plane
+smartboardRouter.use('/control-plane', controlPlaneRouter);
 
 function getParam(param: string | string[] | undefined): string {
   if (Array.isArray(param)) return param[0] || '';

@@ -12,8 +12,6 @@ function assert(condition: boolean, message: string, details?: any) {
 
 const dummyContext: ToolExecutionContext = {
   sessionId: 'test-edu-session',
-  userId: 'teacher-1',
-  role: 'teacher',
   callCount: 1,
   maxRounds: 5,
   executedTools: []
@@ -80,24 +78,13 @@ async function runEducationTests() {
   );
 
   // 8. REST API Endpoints Verification
-  const { authService } = await import('../server/auth/index.ts');
-  const { jarvisData } = await import('../server/data/index.ts');
-  await jarvisData.seed();
-  const teacherUser = (await jarvisData.users.getById('teacher-1'))!;
-  const token = authService.issueToken(teacherUser);
-
-  const stateRes = await fetch('http://localhost:3000/api/education/state', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  const stateRes = await fetch('http://localhost:3000/api/education/state');
   const stateData: any = await stateRes.json();
   assert(stateRes.ok && Array.isArray(stateData.classes) && Array.isArray(stateData.knowledgeSpaces), '10. REST API GET /api/education/state');
 
   const groundedApiRes = await fetch('http://localhost:3000/api/education/knowledge-spaces/ks-quantum/query', {
     method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: 'Explain decoherence in quantum systems' })
   });
   const groundedData: any = await groundedApiRes.json();

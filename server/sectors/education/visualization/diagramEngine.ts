@@ -1,247 +1,90 @@
-// Structured Diagram Engine Foundation (D.10)
-// Deterministic diagram builder for circuits, flowcharts, and concept maps.
+// Safe topology and diagram structure validator for circuits, flowcharts, and free-body diagrams
 
-import type { DiagramParameters, DiagramVisualNode, DiagramVisualEdge } from '../../../../src/types/visualization.ts';
+import type { DiagramEdgeItem, DiagramNodeItem, DiagramVisualizationPayload } from '../../../../src/types/visualization.ts';
 
 export class DiagramEngine {
-  /**
-   * Builds an electrical circuit diagram (e.g. Battery -> Resistor -> LED).
-   */
-  public static buildCircuit(components?: string[]): DiagramParameters {
-    const defaultComponents = components && components.length > 0
-      ? components
-      : ['Battery (9V)', 'Resistor (220Ω)', 'LED (Forward 2.1V)', 'Ground'];
+  public static validateDiagram(payload: Partial<DiagramVisualizationPayload>): { isValid: boolean; errors: string[]; sanitized?: DiagramVisualizationPayload } {
+    const errors: string[] = [];
 
-    const nodes: DiagramVisualNode[] = [
-      {
-        id: 'node-batt',
-        label: 'DC Battery\n9V',
-        subType: 'component',
-        x: 100,
-        y: 150,
-        width: 120,
-        height: 60,
-        color: '#f59e0b',
-        icon: 'battery'
-      },
-      {
-        id: 'node-resistor',
-        label: 'Resistor\n220 Ω',
-        subType: 'component',
-        x: 280,
-        y: 150,
-        width: 120,
-        height: 60,
-        color: '#38bdf8',
-        icon: 'resistor'
-      },
-      {
-        id: 'node-led',
-        label: 'Red LED\n20 mA',
-        subType: 'component',
-        x: 460,
-        y: 150,
-        width: 120,
-        height: 60,
-        color: '#ef4444',
-        icon: 'led'
-      },
-      {
-        id: 'node-gnd',
-        label: 'GND (0V)',
-        subType: 'terminal',
-        x: 280,
-        y: 280,
-        width: 100,
-        height: 40,
-        color: '#10b981',
-        icon: 'ground'
+    const nodes: DiagramNodeItem[] = [];
+    const nodeIdSet = new Set<string>();
+
+    if (Array.isArray(payload.nodes)) {
+      for (const n of payload.nodes) {
+        if (!n.id || typeof n.id !== 'string') {
+          errors.push('Node ID must be a non-empty string');
+          continue;
+        }
+        if (nodeIdSet.has(n.id)) {
+          errors.push(`Duplicate node ID: ${n.id}`);
+          continue;
+        }
+        nodeIdSet.add(n.id);
+
+        nodes.push({
+          id: n.id,
+          label: (n.label || '').slice(0, 100),
+          type: n.type || 'default',
+          x: Number(n.x) || 0,
+          y: Number(n.y) || 0,
+          width: n.width ? Math.max(20, Math.min(600, Number(n.width))) : 100,
+          height: n.height ? Math.max(20, Math.min(400, Number(n.height))) : 50,
+          color: n.color ? n.color.slice(0, 30) : undefined,
+          value: n.value ? n.value.slice(0, 50) : undefined
+        });
       }
-    ];
+    } else {
+      errors.push('Diagram nodes array is required');
+    }
 
-    const edges: DiagramVisualEdge[] = [
-      {
-        id: 'edge-1',
-        sourceId: 'node-batt',
-        targetId: 'node-resistor',
-        label: 'I = 31.4 mA',
-        direction: 'directed',
-        style: 'solid'
-      },
-      {
-        id: 'edge-2',
-        sourceId: 'node-resistor',
-        targetId: 'node-led',
-        label: 'V_res = 6.9V',
-        direction: 'directed',
-        style: 'solid'
-      },
-      {
-        id: 'edge-3',
-        sourceId: 'node-led',
-        targetId: 'node-gnd',
-        label: 'Return Path',
-        direction: 'directed',
-        style: 'solid'
-      },
-      {
-        id: 'edge-4',
-        sourceId: 'node-gnd',
-        targetId: 'node-batt',
-        label: 'Circuit Loop',
-        direction: 'directed',
-        style: 'dashed'
+    const edges: DiagramEdgeItem[] = [];
+    const edgeIdSet = new Set<string>();
+
+    if (Array.isArray(payload.edges)) {
+      for (const e of payload.edges) {
+        if (!e.id || typeof e.id !== 'string') {
+          errors.push('Edge ID must be a non-empty string');
+          continue;
+        }
+        if (edgeIdSet.has(e.id)) {
+          errors.push(`Duplicate edge ID: ${e.id}`);
+          continue;
+        }
+        edgeIdSet.add(e.id);
+
+        if (!nodeIdSet.has(e.sourceNodeId)) {
+          errors.push(`Edge ${e.id} references non-existent source node '${e.sourceNodeId}'`);
+        }
+        if (!nodeIdSet.has(e.targetNodeId)) {
+          errors.push(`Edge ${e.id} references non-existent target node '${e.targetNodeId}'`);
+        }
+
+        edges.push({
+          id: e.id,
+          sourceNodeId: e.sourceNodeId,
+          targetNodeId: e.targetNodeId,
+          label: e.label ? e.label.slice(0, 100) : undefined,
+          directed: Boolean(e.directed),
+          style: e.style === 'dashed' ? 'dashed' : 'solid',
+          arrowColor: e.arrowColor ? e.arrowColor.slice(0, 30) : undefined
+        });
       }
-    ];
+    }
 
-    return {
-      diagramType: 'circuit',
+    if (errors.length > 0) {
+      return { isValid: false, errors };
+    }
+
+    const sanitized: DiagramVisualizationPayload = {
+      type: 'DIAGRAM',
+      title: (payload.title || 'Diagram').slice(0, 100),
+      diagramCategory: ['circuit', 'flowchart', 'free_body', 'concept_map', 'optics'].includes(payload.diagramCategory as string)
+        ? (payload.diagramCategory as any)
+        : 'flowchart',
       nodes,
       edges
     };
-  }
 
-  /**
-   * Builds an algorithm or pedagogical decision flowchart.
-   */
-  public static buildFlowchart(topic?: string): DiagramParameters {
-    const nodes: DiagramVisualNode[] = [
-      {
-        id: 'n-start',
-        label: 'Start Problem',
-        subType: 'terminal',
-        x: 250,
-        y: 50,
-        width: 130,
-        height: 45,
-        color: '#10b981'
-      },
-      {
-        id: 'n-read',
-        label: 'Read Given Variables\n(v0, angle, h0)',
-        subType: 'box',
-        x: 250,
-        y: 130,
-        width: 160,
-        height: 55,
-        color: '#38bdf8'
-      },
-      {
-        id: 'n-check',
-        label: 'Is Launch Angle\nBetween 0° and 90°?',
-        subType: 'diamond',
-        x: 250,
-        y: 230,
-        width: 170,
-        height: 75,
-        color: '#a855f7'
-      },
-      {
-        id: 'n-calc',
-        label: 'Compute Apex & Range\nEquations',
-        subType: 'box',
-        x: 120,
-        y: 350,
-        width: 160,
-        height: 55,
-        color: '#00f2fe'
-      },
-      {
-        id: 'n-error',
-        label: 'Report Invalid Angle',
-        subType: 'box',
-        x: 380,
-        y: 350,
-        width: 150,
-        height: 50,
-        color: '#f43f5e'
-      },
-      {
-        id: 'n-end',
-        label: 'Display Trajectory',
-        subType: 'terminal',
-        x: 250,
-        y: 440,
-        width: 140,
-        height: 45,
-        color: '#10b981'
-      }
-    ];
-
-    const edges: DiagramVisualEdge[] = [
-      { id: 'e1', sourceId: 'n-start', targetId: 'n-read', direction: 'directed' },
-      { id: 'e2', sourceId: 'n-read', targetId: 'n-check', direction: 'directed' },
-      { id: 'e3', sourceId: 'n-check', targetId: 'n-calc', label: 'Yes', direction: 'directed' },
-      { id: 'e4', sourceId: 'n-check', targetId: 'n-error', label: 'No', direction: 'directed' },
-      { id: 'e5', sourceId: 'n-calc', targetId: 'n-end', direction: 'directed' },
-      { id: 'e6', sourceId: 'n-error', targetId: 'n-end', direction: 'directed', style: 'dashed' }
-    ];
-
-    return {
-      diagramType: 'flowchart',
-      nodes,
-      edges
-    };
-  }
-
-  /**
-   * Builds an academic concept map.
-   */
-  public static buildConceptMap(rootTopic = 'Classical Mechanics'): DiagramParameters {
-    const nodes: DiagramVisualNode[] = [
-      {
-        id: 'cm-root',
-        label: rootTopic,
-        subType: 'box',
-        x: 250,
-        y: 60,
-        width: 180,
-        height: 50,
-        color: '#6366f1'
-      },
-      {
-        id: 'cm-kinematics',
-        label: 'Kinematics\n(Motion Description)',
-        subType: 'box',
-        x: 120,
-        y: 170,
-        width: 150,
-        height: 55,
-        color: '#06b6d4'
-      },
-      {
-        id: 'cm-dynamics',
-        label: 'Dynamics\n(Forces & Causes)',
-        subType: 'box',
-        x: 380,
-        y: 170,
-        width: 150,
-        height: 55,
-        color: '#ec4899'
-      },
-      {
-        id: 'cm-energy',
-        label: 'Energy Conservation\nWork & Power',
-        subType: 'box',
-        x: 250,
-        y: 280,
-        width: 160,
-        height: 55,
-        color: '#eab308'
-      }
-    ];
-
-    const edges: DiagramVisualEdge[] = [
-      { id: 'cme-1', sourceId: 'cm-root', targetId: 'cm-kinematics', label: 'Includes', direction: 'directed' },
-      { id: 'cme-2', sourceId: 'cm-root', targetId: 'cm-dynamics', label: 'Includes', direction: 'directed' },
-      { id: 'cme-3', sourceId: 'cm-kinematics', targetId: 'cm-energy', label: 'Governs', direction: 'directed' },
-      { id: 'cme-4', sourceId: 'cm-dynamics', targetId: 'cm-energy', label: 'Produces Work', direction: 'directed' }
-    ];
-
-    return {
-      diagramType: 'concept_map',
-      nodes,
-      edges
-    };
+    return { isValid: true, errors: [], sanitized };
   }
 }

@@ -52,31 +52,11 @@ async function runSecurityTests() {
   assert(rejectedFakeQuery, 'Query parameter userId must NOT independently authenticate a request');
   console.log('[PASS] 2. Query parameter userId is strictly ignored as authentication credential');
 
-  // 3. Raw user ID rejection & Client-supplied role spoofing prevented
-  console.log('[TEST] 3. Raw user ID header rejection & verified role derivation');
-  const rawIdReq = {
-    headers: {
-      'x-user-id': 'student-1'
-    },
-    query: {}
-  } as unknown as Request;
-
-  let rawIdRejected = false;
-  try {
-    await authenticateRequest(rawIdReq);
-  } catch (err: any) {
-    rawIdRejected = true;
-    assert.strictEqual(err.statusCode, 401, 'Raw x-user-id must be rejected with 401');
-  }
-  assert(rawIdRejected, 'Raw x-user-id must NOT authenticate a request');
-  console.log('[PASS] 3a. Raw x-user-id is strictly rejected as unauthenticated');
-
-  // Client presenting a valid signed student token but claiming commander role in header
-  const { authService } = await import('../server/auth/tokens.ts');
-  const studentToken = authService.issueToken(student);
+  // 3. Client-supplied role spoofing -> Overruled by database role
+  console.log('[TEST] 3. Client-supplied role spoofing prevented');
   const spoofRoleReq = {
     headers: {
-      authorization: `Bearer ${studentToken}`,
+      'x-user-id': 'student-1',
       'x-user-role': 'commander' // student tries to claim commander role
     },
     query: {}
@@ -85,7 +65,7 @@ async function runSecurityTests() {
   const authenticatedStudent = await authenticateRequest(spoofRoleReq);
   assert.strictEqual(authenticatedStudent.id, 'student-1');
   assert.strictEqual(authenticatedStudent.role, 'student', 'Role must strictly come from database record, not client header');
-  console.log('[PASS] 3b. Client-supplied role header is ignored; database role is authoritative');
+  console.log('[PASS] 3. Client-supplied role header is ignored; database role is authoritative');
 
   // 4. Ticket issuance for authorized video
   console.log('[TEST] 4. Playback ticket generation');

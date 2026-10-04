@@ -3,9 +3,6 @@ import type { EducationClass, CourseUnit, CourseLesson, GroundedQueryResponse } 
 import type { VideoRecord } from '../../../types/video.ts';
 import { VideoPlayer } from '../../../components/video/VideoPlayer.tsx';
 import { AcademicContextActions } from '../components/AcademicContextActions.tsx';
-import type { VisualizationDocument } from '../../../types/visualization.ts';
-import { VisualizationHost } from '../visualization/VisualizationHost.tsx';
-import { authClient } from '../../../services/authClient.ts';
 import {
   PlayCircle,
   CheckCircle2,
@@ -54,8 +51,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
   const [seekSeconds, setSeekSeconds] = useState<number | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [revealedAnswers, setRevealedAnswers] = useState<Record<string, boolean>>({});
-  const [activeTab, setActiveTab] = useState<'content' | 'visualizations' | 'takeaways' | 'quiz' | 'tutor'>('content');
-  const [visualizations, setVisualizations] = useState<VisualizationDocument[]>([]);
+  const [activeTab, setActiveTab] = useState<'content' | 'takeaways' | 'quiz' | 'tutor'>('content');
 
   // Grounded AI Study Tutor State
   const [studyQuery, setStudyQuery] = useState('');
@@ -84,33 +80,6 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
     }
   }, [lesson.videoId]);
 
-  // Phase D.10: Fetch visualizations attached to lesson or course
-  useEffect(() => {
-    fetch(`/api/education/visualizations?lessonId=${lesson.id}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data && data.visualizations && data.visualizations.length > 0) {
-          setVisualizations(data.visualizations);
-        } else {
-          // Fallback to fetch by course code
-          fetch('/api/education/visualizations')
-            .then((r) => (r.ok ? r.json() : null))
-            .then((allData) => {
-              if (allData && allData.visualizations) {
-                const matched = allData.visualizations.filter(
-                  (v: any) =>
-                    v.semanticContext?.courseCode === course.code ||
-                    v.provenance?.courseCode === course.code
-                );
-                setVisualizations(matched.length > 0 ? matched : allData.visualizations.slice(0, 2));
-              }
-            })
-            .catch(() => {});
-        }
-      })
-      .catch(() => {});
-  }, [lesson.id, course.code]);
-
   const handleAskTutor = async (qText?: string) => {
     const queryToAsk = qText || studyQuery;
     if (!queryToAsk.trim()) return;
@@ -124,11 +93,8 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
       } else {
         const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/query`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            ...authClient.getAuthHeaders()
-          },
-          body: JSON.stringify({ query: queryToAsk })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: queryToAsk, userId: 'student-1', userRole: 'student' })
         });
         const data = await res.json();
         setStudyHistory((prev) => [...prev, { query: queryToAsk, answer: data.answer, citations: data.citations }]);
@@ -330,21 +296,6 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
           <span>Lecture Notes</span>
         </button>
 
-        {/* Phase D.10: Interactive Models Tab */}
-        {visualizations.length > 0 && (
-          <button
-            onClick={() => setActiveTab('visualizations')}
-            className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'visualizations'
-                ? 'bg-slate-800 text-white font-bold border border-slate-700'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 text-purple-400" />
-            <span>Interactive Models ({visualizations.length})</span>
-          </button>
-        )}
-
         {lesson.keyTakeaways && lesson.keyTakeaways.length > 0 && (
           <button
             onClick={() => setActiveTab('takeaways')}
@@ -399,25 +350,6 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
           <div className="prose prose-invert max-w-none text-xs sm:text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-line">
             {lesson.notes || lesson.description}
           </div>
-        </div>
-      )}
-
-      {/* Phase D.10: Interactive Visualizations Panel */}
-      {activeTab === 'visualizations' && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 px-1 text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
-            <Layers className="w-4 h-4 text-purple-400" />
-            <span>Interactive Concept Visualizations</span>
-          </div>
-          {visualizations.map((vis) => (
-            <VisualizationHost
-              key={vis.id}
-              document={vis}
-              width={750}
-              height={380}
-              isReadOnly={true}
-            />
-          ))}
         </div>
       )}
 
