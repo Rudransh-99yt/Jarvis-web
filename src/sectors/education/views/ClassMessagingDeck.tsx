@@ -17,6 +17,7 @@ import {
 import { FileUploadModal } from '../../../components/files/FileUploadModal.tsx';
 import { FileAttachmentBadge } from '../../../components/files/FileAttachmentBadge.tsx';
 import { FileViewerModal } from '../../../components/files/FileViewerModal.tsx';
+import { authClient } from '../../../services/authClient.ts';
 
 interface MessageItem {
   id: string;
@@ -42,8 +43,9 @@ export const ClassMessagingDeck: React.FC<ClassMessagingDeckProps> = ({
   currentRole,
   workspaceId = 'ws-stark-core'
 }) => {
-  const currentUserId = currentRole === 'teacher' ? 'teacher-1' : 'student-1';
-  const currentUserName = currentRole === 'teacher' ? 'Dr. Sarah' : 'Alex Chen';
+  const currentUser = authClient.getCurrentUser();
+  const currentUserId = currentUser?.id || (currentRole === 'teacher' ? 'teacher-1' : 'student-1');
+  const currentUserName = currentUser?.displayName || (currentRole === 'teacher' ? 'Dr. Sarah' : 'Alex Chen');
 
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [inputText, setInputText] = useState('');
@@ -73,8 +75,7 @@ export const ClassMessagingDeck: React.FC<ClassMessagingDeckProps> = ({
         `/api/messages?classId=${currentClass.id}&workspaceId=${workspaceId}`,
         {
           headers: {
-            'x-user-id': currentUserId,
-            'x-user-role': currentRole
+            ...authClient.getAuthHeaders()
           }
         }
       );
@@ -186,8 +187,7 @@ export const ClassMessagingDeck: React.FC<ClassMessagingDeckProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUserId,
-          'x-user-role': currentRole
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({
           classId: currentClass.id,

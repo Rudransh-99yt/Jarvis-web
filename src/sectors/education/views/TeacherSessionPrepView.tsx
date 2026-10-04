@@ -3,6 +3,7 @@ import type { ClassSession } from '../../../types/classSession.ts';
 import type { EducationClass } from '../../../types/education.ts';
 import { TeacherSessionsListView } from '../teacherPrep/TeacherSessionsListView.tsx';
 import { TeacherSessionPrepWizard } from '../teacherPrep/TeacherSessionPrepWizard.tsx';
+import { authClient } from '../../../services/authClient.ts';
 
 interface TeacherSessionPrepViewProps {
   classes: EducationClass[];
@@ -26,7 +27,11 @@ export const TeacherSessionPrepView: React.FC<TeacherSessionPrepViewProps> = ({
   const fetchSessions = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/education/sessions');
+      const res = await fetch('/api/education/sessions', {
+        headers: {
+          ...authClient.getAuthHeaders()
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setSessions(data.sessions || []);
@@ -57,7 +62,12 @@ export const TeacherSessionPrepView: React.FC<TeacherSessionPrepViewProps> = ({
   const handleDeleteSession = async (id: string) => {
     setSessions((prev) => prev.filter((s) => s.id !== id));
     try {
-      await fetch(`/api/education/sessions/${id}`, { method: 'DELETE' });
+      await fetch(`/api/education/sessions/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...authClient.getAuthHeaders()
+        }
+      });
     } catch (err) {
       console.error('Failed to delete session:', err);
     }

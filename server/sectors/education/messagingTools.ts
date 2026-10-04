@@ -7,18 +7,15 @@ import type { User } from '../../data/types.ts';
 
 // Helper to resolve user from context
 async function resolveUserFromContext(context: ToolExecutionContext): Promise<User> {
-  const userId = context.userId || 'teacher-1';
+  const userId = context.userId;
+  if (!userId) {
+    throw new Error('Tool execution error: Unauthenticated tool context (missing userId).');
+  }
   const existing = await jarvisData.users.getById(userId);
-  if (existing) return existing;
-
-  const role = (context.role === 'student' ? 'student' : context.role === 'teacher' ? 'teacher' : 'commander') as any;
-  return {
-    id: userId,
-    displayName: userId === 'teacher-1' ? 'Dr. Sarah' : 'Alex Chen',
-    email: `${userId}@stark.local`,
-    role,
-    createdAt: new Date().toISOString()
-  };
+  if (!existing) {
+    throw new Error(`Tool execution error: User '${userId}' is not a registered user.`);
+  }
+  return existing;
 }
 
 // 1. Tool: messaging.thread.list

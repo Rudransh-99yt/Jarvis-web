@@ -5,6 +5,7 @@ import type {
   PrincipalCommandProposal,
   InstitutionalAuditEvent
 } from '../../../types/institutional.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   ShieldAlert,
   Building2,
@@ -58,8 +59,7 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
   const fetchSchoolData = () => {
     fetch('/api/education/institutional/school', {
       headers: {
-        'x-user-id': 'principal-1',
-        'x-user-role': 'principal'
+        ...authClient.getAuthHeaders()
       }
     })
       .then((res) => (res.ok ? res.json() : null))
@@ -83,8 +83,7 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'principal-1',
-          'x-user-role': 'principal'
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({
           commandPrompt: commandInput,
@@ -114,8 +113,7 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'principal-1',
-          'x-user-role': 'principal'
+          ...authClient.getAuthHeaders()
         }
       });
 

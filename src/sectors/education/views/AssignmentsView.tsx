@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Assignment, StudentSubmission, EducationRole, EducationClass } from '../../../types/education.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   Calendar,
   CheckCircle2,
@@ -96,9 +97,13 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
   const [gradeScore, setGradeScore] = useState<number>(95);
   const [gradeFeedback, setGradeFeedback] = useState<string>('Excellent analytical work and clear step-by-step derivation.');
 
+  const currentUser = authClient.getCurrentUser();
+  const currentStudentId = currentUser?.id || 'student-1';
+  const currentStudentName = currentUser?.displayName || 'Alex Chen';
+
   const selectedAsg = assignments.find((a) => a.id === selectedAsgId) || null;
   const userSubmission = selectedAsg
-    ? submissions.find((s) => s.assignmentId === selectedAsg.id && s.studentId === 'student-1')
+    ? submissions.find((s) => s.assignmentId === selectedAsg.id && s.studentId === currentStudentId)
     : null;
   const asgSubmissions = selectedAsg
     ? submissions.filter((s) => s.assignmentId === selectedAsg.id)
@@ -130,8 +135,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
 
     onSubmitWork({
       assignmentId: selectedAsg.id,
-      studentId: 'student-1',
-      studentName: 'Alex Chen',
+      studentId: currentStudentId,
+      studentName: currentStudentName,
       content: studentContent.trim(),
       attachments: attachedFileName ? [{ name: attachedFileName, size: '1.4 MB' }] : undefined
     });
@@ -179,7 +184,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
   // Filtered & Sorted Assignments
   const filteredAssignments = assignments
     .filter((asg) => {
-      const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === 'student-1');
+      const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === currentStudentId);
       const matchesSearch =
         asg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         asg.className.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -208,8 +213,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
       } else if (sortField === 'title') {
         comparison = a.title.localeCompare(b.title);
       } else if (sortField === 'status') {
-        const subA = submissions.find((s) => s.assignmentId === a.id && s.studentId === 'student-1');
-        const subB = submissions.find((s) => s.assignmentId === b.id && s.studentId === 'student-1');
+        const subA = submissions.find((s) => s.assignmentId === a.id && s.studentId === currentStudentId);
+        const subB = submissions.find((s) => s.assignmentId === b.id && s.studentId === currentStudentId);
         const statusWeight = (s?: StudentSubmission) => (!s ? 0 : s.status === 'submitted' ? 1 : 2);
         comparison = statusWeight(subA) - statusWeight(subB);
       }
@@ -548,7 +553,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
             ) : (
               <div className="divide-y divide-slate-800/80">
                 {filteredAssignments.map((asg) => {
-                  const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === 'student-1');
+                  const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === currentStudentId);
                   const linkedLesson = getLinkedLessonName(asg);
 
                   return (

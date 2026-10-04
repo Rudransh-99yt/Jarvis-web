@@ -4,6 +4,7 @@ import type { ClassSession } from '../../../types/classSession.ts';
 import type { SmartBoardDevice, BoardDocument, SmartBoardSurfaceTab } from '../../../types/smartboard.ts';
 import { SmartBoardCanvas } from './SmartBoardCanvas.tsx';
 import type { Quiz, QuizQuestion, QuestionAggregate } from '../../../types/quiz.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   Tv,
   Presentation,
@@ -104,9 +105,9 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     let isMounted = true;
 
     Promise.all([
-      fetch(`/api/education/smartboard/devices/${boardId}`).then((r) => (r.ok ? r.json() : null)),
-      fetch(`/api/education/sessions/${sessionId}`).then((r) => (r.ok ? r.json() : null)),
-      fetch(`/api/education/smartboard/sessions/${sessionId}/document`).then((r) => (r.ok ? r.json() : null))
+      fetch(`/api/education/smartboard/devices/${boardId}`, { headers: { ...authClient.getAuthHeaders() } }).then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/education/sessions/${sessionId}`, { headers: { ...authClient.getAuthHeaders() } }).then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/education/smartboard/sessions/${sessionId}/document`, { headers: { ...authClient.getAuthHeaders() } }).then((r) => (r.ok ? r.json() : null))
     ])
       .then(([boardData, sessionData, docData]) => {
         if (!isMounted) return;
@@ -159,7 +160,7 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     try {
       const res = await fetch(`/api/education/smartboard/documents/${updatedDoc.id}/autosave`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({
           pages: updatedDoc.pages,
           activePageIndex: updatedDoc.activePageIndex,
@@ -186,7 +187,7 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     try {
       const res = await fetch(`/api/education/smartboard/documents/${boardDocument.id}/release`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({ isReleased: targetState })
       });
       if (res.ok) {
@@ -204,7 +205,7 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     try {
       await fetch(`/api/education/smartboard/devices/${boardId}/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({ sessionId })
       });
       showNotice('Class session completed. Board Document archived into Board History.');
@@ -227,7 +228,7 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({
           messages: [{ role: 'user', content: p }],
           context: {

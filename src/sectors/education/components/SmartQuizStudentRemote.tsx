@@ -1,6 +1,7 @@
 // Milestone 13: Student Software Remote for Smart Quiz
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Quiz, QuizQuestion, QuizResponse, QuestionAggregate, StudentQuizState } from '../../../types/quiz.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   HelpCircle,
   Clock,
@@ -40,8 +41,7 @@ export const SmartQuizStudentRemote: React.FC<SmartQuizStudentRemoteProps> = ({
     try {
       const res = await fetch(`/api/classroom/quizzes/${quiz.id}/active-question?workspaceId=ws-stark-core`, {
         headers: {
-          'x-user-id': userId,
-          'x-user-role': 'student'
+          ...authClient.getAuthHeaders()
         }
       });
       if (res.ok) {
@@ -61,7 +61,7 @@ export const SmartQuizStudentRemote: React.FC<SmartQuizStudentRemoteProps> = ({
     } catch (err) {
       console.warn('Failed to load student quiz state:', err);
     }
-  }, [quiz.id, userId]);
+  }, [quiz.id]);
 
   useEffect(() => {
     fetchStudentState();
@@ -104,8 +104,7 @@ export const SmartQuizStudentRemote: React.FC<SmartQuizStudentRemoteProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': userId,
-          'x-user-role': 'student'
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({
           questionId: activeQuestion.id,

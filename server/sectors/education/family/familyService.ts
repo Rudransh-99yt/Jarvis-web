@@ -86,7 +86,7 @@ export class FamilyService {
 
     for (const m of userMemberships) {
       const studentUser = await jarvisData.users.getById(m.studentId);
-      const studentClasses = educationStore.getClasses().filter((c) => c.studentIds.includes(m.studentId));
+      const studentClasses = educationStore.getClasses().filter((c) => Array.isArray(c.studentIds) && c.studentIds.includes(m.studentId));
 
       children.push({
         studentId: m.studentId,
@@ -124,7 +124,7 @@ export class FamilyService {
     const child = children.find((c) => c.studentId === studentId)!;
 
     const allClasses = educationStore.getClasses();
-    const studentClasses = allClasses.filter((c) => c.studentIds.includes(studentId));
+    const studentClasses = allClasses.filter((c) => Array.isArray(c.studentIds) && c.studentIds.includes(studentId));
     const allSessions = classSessionStore.listSessionsSync();
     const allAssignments = educationStore.getAssignments();
     const allSubmissions = educationStore.getSubmissions();

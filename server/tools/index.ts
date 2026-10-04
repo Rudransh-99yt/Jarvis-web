@@ -110,6 +110,12 @@ for (const tool of smartboardTools) {
   toolRegistry.register(tool);
 }
 
+// 10. Register AI Visualization Engine Tools (Phase D.10)
+import { visualizationTools } from '../sectors/education/visualization/visualizationTools.ts';
+for (const tool of visualizationTools) {
+  toolRegistry.register(tool);
+}
+
 console.log(`[ToolRegistry] Initialized with ${toolRegistry.list().length} registered tools across sectors: ${toolRegistry.list().map(t => t.name).join(', ')}`);
 
 export * from './types.ts';

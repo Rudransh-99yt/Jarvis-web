@@ -5,40 +5,30 @@ import { communityPolicy } from './communityPolicy.ts';
 import { communityEventBus } from './communityEventBus.ts';
 import { authenticateRequest } from '../../../auth/index.ts';
 import { jarvisData } from '../../../data/index.ts';
-import type { User, UserRole } from '../../../data/types.ts';
+import type { User } from '../../../data/types.ts';
 
 export const communityRouter = Router();
 
-/**
- * Helper to resolve user from request with development fallback
- */
-async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'student';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'student' ? 'student-1' : 'teacher-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-
-    const validRole: UserRole = (['admin', 'commander', 'teacher', 'student', 'guest'].includes(roleHeader)
-      ? roleHeader
-      : 'student') as UserRole;
-
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: validRole,
-      department: 'Physics',
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString()
-    };
-  }
+function handleCommunityError(err: any, res: Response, fallbackCode = 'COMMUNITY_ERROR') {
+  if (res.headersSent) return;
+  const statusCode = err.statusCode || (err.code === 'UNAUTHENTICATED' ? 401 : err.code === 'FORBIDDEN' || err.code === 'UNAUTHORIZED' ? 403 : 500);
+  res.status(statusCode).json({
+    error: {
+      code: err.code || (statusCode === 401 ? 'UNAUTHENTICATED' : statusCode === 403 ? 'FORBIDDEN' : fallbackCode),
+      message: err.message || 'Community operation failed.'
+    }
+  });
 }
 
 // 1. GET /api/education/community/events - Server-Sent Events (SSE) Real-Time Stream
 communityRouter.get('/events', async (req: Request, res: Response) => {
+  try {
+    await authenticateRequest(req, jarvisData);
+  } catch (err: any) {
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Authentication required for community stream.' } });
+    return;
+  }
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -66,7 +56,7 @@ communityRouter.get('/events', async (req: Request, res: Response) => {
 // 2. GET /api/education/community/channels - List channels
 communityRouter.get('/channels', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const { classId, studyGroupId } = req.query;
 
     const allChannels = await communityStore.listChannels({
@@ -86,14 +76,14 @@ communityRouter.get('/channels', async (req: Request, res: Response) => {
 
     res.json({ channels: authorizedChannels });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 3. POST /api/education/community/channels - Create Channel
 communityRouter.post('/channels', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const { name, topic, type, classId, isPrivate } = req.body;
 
     if (!name) {
@@ -105,7 +95,7 @@ communityRouter.post('/channels', async (req: Request, res: Response) => {
     if (type === 'ANNOUNCEMENTS') {
       const annCheck = await communityPolicy.canCreateAnnouncement(user);
       if (!annCheck.allowed) {
-        res.status(403).json({ error: { code: 'UNAUTHORIZED', message: annCheck.reason } });
+        res.status(403).json({ error: { code: 'FORBIDDEN', message: annCheck.reason } });
         return;
       }
     }
@@ -122,14 +112,14 @@ communityRouter.post('/channels', async (req: Request, res: Response) => {
 
     res.status(201).json({ channel });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 4. GET /api/education/community/channels/:id/messages - List messages in channel
 communityRouter.get('/channels/:id/messages', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const channelId = req.params.id as string;
     const { limit } = req.query;
 
@@ -141,7 +131,7 @@ communityRouter.get('/channels/:id/messages', async (req: Request, res: Response
 
     const access = await communityPolicy.canAccessChannel(user, channel);
     if (!access.allowed) {
-      res.status(access.statusCode || 403).json({ error: { code: 'UNAUTHORIZED', message: access.reason } });
+      res.status(access.statusCode || 403).json({ error: { code: 'FORBIDDEN', message: access.reason } });
       return;
     }
 
@@ -151,14 +141,14 @@ communityRouter.get('/channels/:id/messages', async (req: Request, res: Response
 
     res.json({ channel, messages });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 5. POST /api/education/community/channels/:id/messages - Send message
 communityRouter.post('/channels/:id/messages', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const channelId = req.params.id as string;
     const { content, attachments, mentions } = req.body;
 
@@ -175,7 +165,7 @@ communityRouter.post('/channels/:id/messages', async (req: Request, res: Respons
 
     const postCheck = await communityPolicy.canPostToChannel(user, channel);
     if (!postCheck.allowed) {
-      res.status(postCheck.statusCode || 403).json({ error: { code: 'UNAUTHORIZED', message: postCheck.reason } });
+      res.status(postCheck.statusCode || 403).json({ error: { code: 'FORBIDDEN', message: postCheck.reason } });
       return;
     }
 
@@ -198,14 +188,14 @@ communityRouter.post('/channels/:id/messages', async (req: Request, res: Respons
 
     res.status(201).json({ message });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 6. PATCH /api/education/community/messages/:id - Edit message
 communityRouter.patch('/messages/:id', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const messageId = req.params.id as string;
     const { content } = req.body;
 
@@ -222,7 +212,7 @@ communityRouter.patch('/messages/:id', async (req: Request, res: Response) => {
 
     const modCheck = await communityPolicy.canModifyMessage(user, msg, 'edit');
     if (!modCheck.allowed) {
-      res.status(modCheck.statusCode || 403).json({ error: { code: 'UNAUTHORIZED', message: modCheck.reason } });
+      res.status(modCheck.statusCode || 403).json({ error: { code: 'FORBIDDEN', message: modCheck.reason } });
       return;
     }
 
@@ -231,14 +221,14 @@ communityRouter.patch('/messages/:id', async (req: Request, res: Response) => {
 
     res.json({ message: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 7. DELETE /api/education/community/messages/:id - Delete message
 communityRouter.delete('/messages/:id', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const messageId = req.params.id as string;
 
     const msg = await communityStore.getMessage(messageId);
@@ -249,7 +239,7 @@ communityRouter.delete('/messages/:id', async (req: Request, res: Response) => {
 
     const modCheck = await communityPolicy.canModifyMessage(user, msg, 'delete');
     if (!modCheck.allowed) {
-      res.status(modCheck.statusCode || 403).json({ error: { code: 'UNAUTHORIZED', message: modCheck.reason } });
+      res.status(modCheck.statusCode || 403).json({ error: { code: 'FORBIDDEN', message: modCheck.reason } });
       return;
     }
 
@@ -258,20 +248,20 @@ communityRouter.delete('/messages/:id', async (req: Request, res: Response) => {
 
     res.json({ success: true, messageId });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 8. POST /api/education/community/channels/:id/messages/:messageId/pin - Toggle pin
 communityRouter.post('/channels/:id/messages/:messageId/pin', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const channelId = req.params.id as string;
     const messageId = req.params.messageId as string;
 
     const pinCheck = await communityPolicy.canPinMessage(user);
     if (!pinCheck.allowed) {
-      res.status(pinCheck.statusCode || 403).json({ error: { code: 'UNAUTHORIZED', message: pinCheck.reason } });
+      res.status(pinCheck.statusCode || 403).json({ error: { code: 'FORBIDDEN', message: pinCheck.reason } });
       return;
     }
 
@@ -283,14 +273,14 @@ communityRouter.post('/channels/:id/messages/:messageId/pin', async (req: Reques
 
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 9. POST /api/education/community/messages/:id/reactions - Toggle reaction
 communityRouter.post('/messages/:id/reactions', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const messageId = req.params.id as string;
     const { emoji } = req.body;
 
@@ -310,14 +300,14 @@ communityRouter.post('/messages/:id/reactions', async (req: Request, res: Respon
 
     res.json({ reactions });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 10. GET /api/education/community/threads/:threadId/messages - Thread replies
 communityRouter.get('/threads/:threadId/messages', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const threadId = req.params.threadId as string;
 
     const thread = await communityStore.getThread(threadId);
@@ -330,7 +320,7 @@ communityRouter.get('/threads/:threadId/messages', async (req: Request, res: Res
     if (channel) {
       const access = await communityPolicy.canAccessChannel(user, channel);
       if (!access.allowed) {
-        res.status(access.statusCode || 403).json({ error: { code: 'UNAUTHORIZED', message: access.reason } });
+        res.status(access.statusCode || 403).json({ error: { code: 'FORBIDDEN', message: access.reason } });
         return;
       }
     }
@@ -340,14 +330,14 @@ communityRouter.get('/threads/:threadId/messages', async (req: Request, res: Res
 
     res.json({ thread, rootMessage, replies });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 11. POST /api/education/community/messages/:rootMessageId/thread - Reply in thread
 communityRouter.post('/messages/:rootMessageId/thread', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const rootMessageId = req.params.rootMessageId as string;
     const { content, attachments } = req.body;
 
@@ -370,7 +360,7 @@ communityRouter.post('/messages/:rootMessageId/thread', async (req: Request, res
 
     const postCheck = await communityPolicy.canPostToChannel(user, channel);
     if (!postCheck.allowed) {
-      res.status(postCheck.statusCode || 403).json({ error: { code: 'UNAUTHORIZED', message: postCheck.reason } });
+      res.status(postCheck.statusCode || 403).json({ error: { code: 'FORBIDDEN', message: postCheck.reason } });
       return;
     }
 
@@ -395,25 +385,26 @@ communityRouter.post('/messages/:rootMessageId/thread', async (req: Request, res
 
     res.status(201).json({ thread, reply: replyMsg });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 12. GET /api/education/community/study-groups - List study groups
 communityRouter.get('/study-groups', async (req: Request, res: Response) => {
   try {
+    await authenticateRequest(req, jarvisData);
     const { classId } = req.query;
     const list = await communityStore.listStudyGroups('inst-stark-academy', classId as string);
     res.json({ studyGroups: list });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 13. POST /api/education/community/study-groups - Create study group
 communityRouter.post('/study-groups', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const { name, description, classId, courseCode, subject, scheduledMeetingAt, sharedResources } = req.body;
 
     if (!name || !classId) {
@@ -439,38 +430,39 @@ communityRouter.post('/study-groups', async (req: Request, res: Response) => {
 
     res.status(201).json({ studyGroup: group });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 14. POST /api/education/community/study-groups/:id/join - Join study group
 communityRouter.post('/study-groups/:id/join', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const groupId = req.params.id as string;
 
     const group = await communityStore.joinStudyGroup(groupId, user.id);
     res.json({ studyGroup: group });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 15. GET /api/education/community/announcements - List announcements
 communityRouter.get('/announcements', async (req: Request, res: Response) => {
   try {
+    await authenticateRequest(req, jarvisData);
     const { classId } = req.query;
     const list = await communityStore.listAnnouncements('inst-stark-academy', classId as string);
     res.json({ announcements: list });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 16. POST /api/education/community/announcements - Create announcement (staff only)
 communityRouter.post('/announcements', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const { title, body, priority, classId, channelId, attachments, scheduledAt } = req.body;
 
     if (!title || !body) {
@@ -480,7 +472,7 @@ communityRouter.post('/announcements', async (req: Request, res: Response) => {
 
     const annCheck = await communityPolicy.canCreateAnnouncement(user);
     if (!annCheck.allowed) {
-      res.status(403).json({ error: { code: 'UNAUTHORIZED', message: annCheck.reason } });
+      res.status(403).json({ error: { code: 'FORBIDDEN', message: annCheck.reason } });
       return;
     }
 
@@ -502,26 +494,27 @@ communityRouter.post('/announcements', async (req: Request, res: Response) => {
 
     res.status(201).json({ announcement });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 17. POST /api/education/community/announcements/:id/acknowledge - Acknowledge announcement
 communityRouter.post('/announcements/:id/acknowledge', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await authenticateRequest(req, jarvisData);
     const annId = req.params.id as string;
 
     const ann = await communityStore.acknowledgeAnnouncement(annId, user.id);
     res.json({ announcement: ann });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });
 
 // 18. GET /api/education/community/search - Search messages, channels, study groups
 communityRouter.get('/search', async (req: Request, res: Response) => {
   try {
+    await authenticateRequest(req, jarvisData);
     const { q, classId } = req.query;
     const results = await communityStore.searchCommunity(
       (q as string) || '',
@@ -530,6 +523,6 @@ communityRouter.get('/search', async (req: Request, res: Response) => {
     );
     res.json(results);
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(err, res);
   }
 });

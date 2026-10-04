@@ -1,34 +1,25 @@
-// Centralized Authentication Layer (Milestone 12 & 14.2 Hardening)
-import type { Request } from 'express';
+// Centralized Authentication Layer (Phase P0-1 Hardening)
+import type { Request, Response, NextFunction } from 'express';
 import type { User } from '../data/types.ts';
 import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
+import { authService, AuthenticationError } from './tokens.ts';
 
 export * from './classroomPolicy.ts';
 export * from './tickets.ts';
-
-export class AuthenticationError extends Error {
-  public statusCode: number;
-  public code: string;
-
-  constructor(message: string, statusCode = 401, code = 'UNAUTHENTICATED') {
-    super(message);
-    this.name = 'AuthenticationError';
-    this.statusCode = statusCode;
-    this.code = code;
-  }
-}
+export * from './tokens.ts';
 
 /**
- * Extracts identity tokens / user identifiers from request headers.
- * 
- * SECURITY HARDENING (Milestone 14.2):
- * - Arbitrary query parameters (such as ?userId=...) MUST NOT be treated as proof of authentication.
- * - Authenticated requests MUST use 'Authorization: Bearer <token/userId>' or verified session header.
- * - Ephemeral media streaming uses cryptographically signed playback tickets (?ticket=...).
+ * Extracts signed authorization credentials from request headers.
+ *
+ * SECURITY HARDENING (Phase P0-1):
+ * - Raw user identifiers (e.g. 'student-1', 'teacher-1', 'principal-1') are NEVER valid credentials.
+ * - 'x-user-id' is REMOVED as an authentication mechanism.
+ * - Credentials MUST be signed tokens supplied via 'Authorization: Bearer <signed_token>'
+ *   or 'x-auth-token: <signed_token>'.
  */
 export function extractAuthToken(req: Request): string | null {
-  // 1. Authorization header: "Bearer <token/userId>"
+  // 1. Authorization header: "Bearer <token>"
   const authHeader = req.headers['authorization'];
   if (typeof authHeader === 'string' && authHeader.trim().length > 0) {
     const parts = authHeader.trim().split(' ');
@@ -38,13 +29,7 @@ export function extractAuthToken(req: Request): string | null {
     return authHeader.trim();
   }
 
-  // 2. Custom header: x-user-id
-  const xUserId = req.headers['x-user-id'];
-  if (typeof xUserId === 'string' && xUserId.trim().length > 0) {
-    return xUserId.trim();
-  }
-
-  // 3. Custom token header: x-auth-token
+  // 2. Custom token header: x-auth-token (must be a valid token string)
   const xAuthToken = req.headers['x-auth-token'];
   if (typeof xAuthToken === 'string' && xAuthToken.trim().length > 0) {
     return xAuthToken.trim();
@@ -54,14 +39,14 @@ export function extractAuthToken(req: Request): string | null {
 }
 
 /**
- * Authenticates the incoming request against the trusted database.
- * 
- * HARDENING RULES:
- * 1. Deny by default: If no credentials provided, rejects immediately with 401.
- * 2. Never default to 'teacher-1' or any arbitrary identity.
- * 3. Never trust client-supplied 'x-user-role' or body role; the role is ALWAYS taken from the database record.
- * 4. Never synthesize unknown users on the fly.
- * 5. If user is not found in database, rejects immediately with 401.
+ * Authenticates the incoming request against server-signed credentials and the trusted database.
+ *
+ * HARDENING RULES (Phase P0-1):
+ * 1. Deny by default: If no credentials provided, rejects immediately with 401 UNAUTHENTICATED.
+ * 2. Cryptographic verification: Validates token HMAC signature and expiration.
+ * 3. Identity verification: Resolves user from trusted database using token subject (`sub`).
+ * 4. Never trust client-supplied 'x-user-role', 'x-user-id', or body fields; the role is ALWAYS server-authoritative.
+ * 5. Attaches trusted principal to `req.auth`.
  */
 export async function authenticateRequest(
   req: Request,
@@ -73,24 +58,33 @@ export async function authenticateRequest(
     throw new AuthenticationError('Authentication required: Missing credentials.', 401, 'UNAUTHENTICATED');
   }
 
-  // Verify that the user actually exists in the persistent user repository
-  const user = await repo.users.getById(token);
-  if (!user) {
-    throw new AuthenticationError(
-      `Authentication failed: Identity '${token}' is not a recognized or registered user.`,
-      401,
-      'INVALID_CREDENTIALS'
-    );
-  }
+  // Authenticate token cryptographically and verify against user database
+  const user = await authService.authenticateToken(token);
 
-  // Strict: role MUST come from the trusted database record, never client headers
-  return {
-    id: user.id,
-    displayName: user.displayName,
-    email: user.email,
-    role: user.role,
-    department: user.department,
-    avatarUrl: user.avatarUrl,
-    createdAt: user.createdAt
+  // Attach verified principal to request object
+  (req as any).auth = user;
+
+  return user;
+}
+
+/**
+ * Express middleware to strictly require verified authentication.
+ */
+export function requireAuth(repo: IJarvisDataRepository = jarvisData) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await authenticateRequest(req, repo);
+      (req as any).auth = user;
+      next();
+    } catch (err: any) {
+      const statusCode = err.statusCode || 401;
+      const code = err.code || 'UNAUTHENTICATED';
+      res.status(statusCode).json({
+        error: {
+          code,
+          message: err.message || 'Authentication required.'
+        }
+      });
+    }
   };
 }

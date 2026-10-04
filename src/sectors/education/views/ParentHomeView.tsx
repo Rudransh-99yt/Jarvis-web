@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ChildSummary, FamilyHomeIntelligence } from '../../../types/family.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   Heart,
   Clock,
@@ -28,7 +29,8 @@ export const ParentHomeView: React.FC<ParentHomeViewProps> = ({
   onNavigateTab,
   onNavigateToContext
 }) => {
-  const [activeParentId, setActiveParentId] = useState<string>('parent-1');
+  const loggedInUser = authClient.getCurrentUser();
+  const [activeParentId, setActiveParentId] = useState<string>(loggedInUser?.id || 'parent-1');
   const [children, setChildren] = useState<ChildSummary[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>('student-1');
   const [intelligence, setIntelligence] = useState<FamilyHomeIntelligence | null>(null);
@@ -40,24 +42,30 @@ export const ParentHomeView: React.FC<ParentHomeViewProps> = ({
     let isMounted = true;
     setIsLoading(true);
 
-    fetch('/api/education/family/children', {
-      headers: {
-        'x-user-id': activeParentId,
-        'x-user-role': 'parent'
-      }
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!isMounted) return;
-        if (data?.children && data.children.length > 0) {
-          setChildren(data.children);
-          setSelectedStudentId(data.children[0].studentId);
+    const loadParentSession = async () => {
+      await authClient.initDevSession(activeParentId);
+      if (!isMounted) return;
+
+      fetch('/api/education/family/children', {
+        headers: {
+          ...authClient.getAuthHeaders()
         }
       })
-      .catch((err) => console.warn('Could not load parent children:', err))
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!isMounted) return;
+          if (data?.children && data.children.length > 0) {
+            setChildren(data.children);
+            setSelectedStudentId(data.children[0].studentId);
+          }
+        })
+        .catch((err) => console.warn('Could not load parent children:', err))
+        .finally(() => {
+          if (isMounted) setIsLoading(false);
+        });
+    };
+
+    loadParentSession();
 
     return () => {
       isMounted = false;
@@ -71,8 +79,7 @@ export const ParentHomeView: React.FC<ParentHomeViewProps> = ({
 
     fetch(`/api/education/family/child/${selectedStudentId}/intelligence`, {
       headers: {
-        'x-user-id': activeParentId,
-        'x-user-role': 'parent'
+        ...authClient.getAuthHeaders()
       }
     })
       .then((res) => (res.ok ? res.json() : null))

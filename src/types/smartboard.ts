@@ -1,5 +1,6 @@
 // Domain Models for D.8: SmartBoard OS Foundation & Structured Board Documents
 import type { AcademicContext } from './academicContext.ts';
+import type { VisualizationDocument } from './visualization.ts';
 
 export type SmartBoardDeviceStatus =
   | 'OFFLINE'
@@ -54,7 +55,8 @@ export type BoardElementType =
   | 'shape'
   | 'arrow'
   | 'image'
-  | 'annotation';
+  | 'annotation'
+  | 'visualization';
 
 export interface BoardStrokePoint {
   x: number;
@@ -245,6 +247,9 @@ export interface BoardElement {
   label?: string;
   semanticTag?: BoardSemanticTag;
   latexFormula?: string;
+  // Phase D.10: Visualization Engine specific
+  visualizationId?: string;
+  visualization?: VisualizationDocument;
   zIndex: number;
   createdAt: string;
   updatedAt: string;
@@ -263,6 +268,7 @@ export interface BoardPage {
   title: string;
   background: BoardPageBackground;
   elements: BoardElement[];
+  visualizations?: VisualizationDocument[];
   semanticCandidates?: SemanticCandidate[];
   spatialRelationships?: SpatialRelationship[];
   slideReferenceIndex?: number;

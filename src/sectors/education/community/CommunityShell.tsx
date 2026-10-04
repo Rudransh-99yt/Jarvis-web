@@ -9,6 +9,7 @@ import type {
   CommunityAttachment,
   CommunityReaction
 } from '../../../types/community.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   Hash,
   Volume2,
@@ -100,10 +101,11 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const sseRef = useRef<EventSource | null>(null);
 
+  const loggedInUser = authClient.getCurrentUser();
   const currentUser = {
-    id: currentRole === 'student' ? 'student-1' : currentRole === 'teacher' ? 'teacher-1' : 'principal-1',
-    displayName: currentRole === 'student' ? 'Alex Mercer' : currentRole === 'teacher' ? 'Dr. Helen Cho' : 'Dean Stark',
-    role: currentRole
+    id: loggedInUser?.id || (currentRole === 'student' ? 'student-1' : currentRole === 'teacher' ? 'teacher-1' : 'principal-1'),
+    displayName: loggedInUser?.displayName || (currentRole === 'student' ? 'Alex Mercer' : currentRole === 'teacher' ? 'Dr. Helen Cho' : 'Dean Stark'),
+    role: loggedInUser?.role || currentRole
   };
 
   const activeChannel = channels.find((c) => c.id === activeChannelId) || channels[0];
@@ -113,13 +115,13 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
     try {
       const [chanRes, annRes, sgRes] = await Promise.all([
         fetch('/api/education/community/channels', {
-          headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+          headers: { ...authClient.getAuthHeaders() }
         }),
         fetch('/api/education/community/announcements', {
-          headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+          headers: { ...authClient.getAuthHeaders() }
         }),
         fetch('/api/education/community/study-groups', {
-          headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+          headers: { ...authClient.getAuthHeaders() }
         })
       ]);
 
@@ -153,7 +155,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
     setIsLoadingMessages(true);
     try {
       const res = await fetch(`/api/education/community/channels/${channelId}/messages`, {
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -242,8 +244,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({
           content,
@@ -269,7 +270,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
     setRightDrawerMode('thread');
     try {
       const res = await fetch(`/api/education/community/threads/thread-${msg.id}/messages`, {
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -293,8 +294,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({ content })
       });
@@ -323,8 +323,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({ emoji })
       });
@@ -347,8 +346,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders()
         }
       });
       if (res.ok) {
@@ -366,8 +364,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
       await fetch(`/api/education/community/messages/${messageId}`, {
         method: 'DELETE',
         headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders()
         }
       });
     } catch (err) {
@@ -385,8 +382,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({
           name: newGroupName.trim(),
@@ -416,8 +412,7 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({
           title: newAnnTitle.trim(),

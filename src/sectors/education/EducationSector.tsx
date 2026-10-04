@@ -10,6 +10,7 @@ import type {
 } from '../../types/education.ts';
 import { EducationSidebar, EducationSidebarSection } from './components/EducationSidebar.tsx';
 import { EducationBreadcrumbs, BreadcrumbItem } from './components/EducationBreadcrumbs.tsx';
+import { authClient } from '../../services/authClient.ts';
 
 // Progressive Views
 import { StudentHomeView } from './views/StudentHomeView.tsx';
@@ -217,8 +218,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch('/api/education/focus/active', {
         headers: {
-          'x-user-id': currentRole === 'student' ? 'student-1' : 'teacher-1',
-          'x-user-role': currentRole
+          ...authClient.getAuthHeaders()
         }
       });
       if (res.ok) {
@@ -294,7 +294,11 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const fetchEducationState = async () => {
     setIsSyncing(true);
     try {
-      const res = await fetch('/api/education/state');
+      const res = await fetch('/api/education/state', {
+        headers: {
+          ...authClient.getAuthHeaders()
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.institution) setInstitution(data.institution);
@@ -312,7 +316,17 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   };
 
   useEffect(() => {
-    fetchEducationState();
+    let isMounted = true;
+    const syncSessionAndState = async () => {
+      await authClient.initDevSession(currentRole);
+      if (isMounted) {
+        fetchEducationState();
+      }
+    };
+    syncSessionAndState();
+    return () => {
+      isMounted = false;
+    };
   }, [currentRole]);
 
   // Update default view when role switches
@@ -392,7 +406,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       await fetch(`/api/education/classes/${activeCourse.id}/units/${activeUnit.id}/lessons/${activeLesson.id}/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({ isCompleted })
       });
 
@@ -435,8 +449,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch('/api/education/assignments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, teacherId: 'teacher-1' })
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+        body: JSON.stringify(data)
       });
       if (res.ok) {
         const payload = await res.json();
@@ -459,7 +473,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch('/api/education/submissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify(data)
       });
       if (res.ok) {
@@ -482,7 +496,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch(`/api/education/submissions/${submissionId}/grade`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({ grade, feedback })
       });
       if (res.ok) {
@@ -506,7 +520,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch(`/api/education/classes/${curriculumModal.courseId}/units`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify(data)
       });
       if (res.ok) {
@@ -540,7 +554,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch(`/api/education/classes/${curriculumModal.courseId}/units/${curriculumModal.unitId}/lessons`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({ ...data, unitId: curriculumModal.unitId })
       });
       if (res.ok) {
@@ -572,7 +586,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch('/api/education/knowledge-spaces', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({ name: title, description, category })
       });
       if (res.ok) {
@@ -590,7 +604,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/sources`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({ name: title, content: fullText, type: type === 'web' ? 'url' : 'text' })
       });
       if (res.ok) {
@@ -608,7 +622,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const handleDeleteSource = async (spaceId: string, sourceId: string) => {
     try {
       const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/sources/${sourceId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         setKnowledgeSpaces((prev) =>
@@ -624,7 +639,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const handleReindexSource = async (spaceId: string, sourceId: string) => {
     try {
       const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/sources/${sourceId}/reindex`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         showNotification(`Vector embeddings re-indexed successfully.`);
@@ -637,8 +653,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const handleQueryGrounded = async (spaceId: string, query: string): Promise<GroundedQueryResponse> => {
     const res = await fetch(`/api/education/knowledge-spaces/${spaceId}/query`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, userId: 'student-1', userRole: currentRole })
+      headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+      body: JSON.stringify({ query })
     });
     if (!res.ok) throw new Error('Query failed');
     return res.json();
@@ -1491,8 +1507,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'x-user-id': currentRole === 'student' ? 'student-1' : 'teacher-1',
-                  'x-user-role': currentRole
+                  ...authClient.getAuthHeaders()
                 },
                 body: JSON.stringify({ reason })
               });

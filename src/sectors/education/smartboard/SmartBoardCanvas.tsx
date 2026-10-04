@@ -10,6 +10,7 @@ import type {
   BoardAIContext,
   BoundingBox
 } from '../../../types/smartboard.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   Pen,
   Highlighter,
@@ -54,6 +55,9 @@ import {
   type Point,
   type MarqueeRect
 } from './canvasInteractionEngine.ts';
+import type { VisualizationDocument } from '../../../types/visualization.ts';
+import { AIVisualizationModal } from '../visualization/AIVisualizationModal.tsx';
+import { VisualizationHost } from '../visualization/VisualizationHost.tsx';
 
 interface SmartBoardCanvasProps {
   document: BoardDocument;
@@ -148,6 +152,8 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   const [showVisionOverlays, setShowVisionOverlays] = useState<boolean>(true);
   const [aiContextModal, setAiContextModal] = useState<BoardAIContext | null>(null);
   const [visionNotice, setVisionNotice] = useState<string | null>(null);
+  const [showVisualizerModal, setShowVisualizerModal] = useState<boolean>(false);
+  const [activeInteractiveVis, setActiveInteractiveVis] = useState<VisualizationDocument | null>(null);
 
   // Drag interaction state ref (for high-fps pointer movements)
   const dragStateRef = useRef<DragState>({ mode: 'idle' });
@@ -338,6 +344,49 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               (elem.y || 50) - (elem.fontSize || 20) - 4
             );
           }
+        } else if (elem.type === 'visualization') {
+          const x = elem.x ?? 100;
+          const y = elem.y ?? 100;
+          const w = elem.widthPx ?? 500;
+          const h = elem.heightPx ?? 350;
+          const vis = elem.visualization;
+
+          // Main Container Background Box
+          ctx.fillStyle = '#090d16';
+          ctx.strokeStyle = '#00f2fe';
+          ctx.lineWidth = 1.5;
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeRect(x, y, w, h);
+
+          // Top Header Bar
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(x, y, w, 32);
+          ctx.strokeStyle = '#1e293b';
+          ctx.strokeRect(x, y, w, 32);
+
+          // Type Badge
+          ctx.fillStyle = '#00f2fe';
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText(`[${vis?.type || 'VISUALIZATION'}]`, x + 10, y + 20);
+
+          // Title
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = 'bold 12px sans-serif';
+          const titleText = (vis?.title || elem.label || 'Interactive Visualization').slice(0, 35);
+          ctx.fillText(titleText, x + 85, y + 20);
+
+          // Inner preview panel
+          ctx.fillStyle = '#030712';
+          ctx.fillRect(x + 12, y + 42, w - 24, h - 54);
+          ctx.strokeStyle = '#1e293b';
+          ctx.strokeRect(x + 12, y + 42, w - 24, h - 54);
+
+          // Center watermark label
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = '11px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('⚡ Click to Open Interactive Visualization', x + w / 2, y + h / 2);
+          ctx.textAlign = 'start';
         }
         ctx.restore();
       });
@@ -1459,6 +1508,48 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     redrawCanvas([]);
   };
 
+  // Phase D.10: Insert structured visualization onto canvas
+  const handleInsertVisualization = (visDoc: VisualizationDocument) => {
+    const newElement: BoardElement = {
+      id: `elem-${visDoc.id}`,
+      type: 'visualization',
+      semanticType: visDoc.type as any,
+      visualizationId: visDoc.id,
+      visualization: visDoc,
+      x: 120,
+      y: 120,
+      widthPx: 500,
+      heightPx: 350,
+      label: visDoc.title,
+      zIndex: currentPage.elements.length + 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const updatedElements = [...currentPage.elements, newElement];
+    const updatedPage: BoardPage = {
+      ...currentPage,
+      elements: updatedElements,
+      visualizations: [...(currentPage.visualizations || []), visDoc],
+      updatedAt: new Date().toISOString()
+    };
+
+    const updatedPages = [...doc.pages];
+    updatedPages[activePageIndex] = updatedPage;
+
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      version: doc.version + 1
+    };
+
+    setDoc(updatedDoc);
+    pushHistory(updatedPages);
+    scheduleAutosave(updatedDoc);
+    setSelectedElementIds([newElement.id]);
+    redrawCanvas(updatedElements);
+  };
+
   // D.9 Vision Board: Trigger recognition on selected elements
   const handleRecognizeSelection = async (type: 'equation' | 'diagram' | 'text') => {
     const selectedElements = currentPage.elements.filter((e) => selectedElementIds.includes(e.id));
@@ -1476,7 +1567,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     try {
       const res = await fetch('/api/education/smartboard/vision/recognize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({
           elements: targetElements,
           type,
@@ -1550,7 +1641,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     try {
       const res = await fetch('/api/education/smartboard/vision/context', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
         body: JSON.stringify({
           page: currentPage,
           selectedElementIds,
@@ -1700,6 +1791,16 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             <span className="hidden md:inline">Vision HUD</span>
           </button>
 
+          {/* AI Visualizer Button (Phase D.10) */}
+          <button
+            onClick={() => setShowVisualizerModal(true)}
+            className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-500/20 to-cyan-500/20 hover:from-purple-500/30 hover:to-cyan-500/30 border border-purple-500/40 text-purple-300 text-[11px] font-mono flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+            title="Open AI Visualization Engine (Graphs, Physics, Chemistry, Diagrams)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">AI Visualizer</span>
+          </button>
+
           {/* AI Context Inspector Button */}
           <button
             onClick={handleInspectAIContext}
@@ -1817,6 +1918,24 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               <span className="hidden sm:inline">Transcribe</span>
             </button>
 
+            {/* Phase D.10: Interact with Visualization button */}
+            {selectedElementIds.length === 1 &&
+              currentPage.elements.find((e) => e.id === selectedElementIds[0])?.type === 'visualization' && (
+                <button
+                  onClick={() => {
+                    const el = currentPage.elements.find((e) => e.id === selectedElementIds[0]);
+                    if (el?.visualization) {
+                      setActiveInteractiveVis(el.visualization);
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                  title="Interact with Visualization"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Interact</span>
+                </button>
+              )}
+
             {/* Deselect Button */}
             <button
               onClick={() => {
@@ -1865,6 +1984,14 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
                     Variables: <span className="text-emerald-300">{activeCandidate.equation.variables.join(', ')}</span>
                   </div>
                 )}
+                {/* Phase D.10: Plot as Interactive Graph Button */}
+                <button
+                  onClick={() => setShowVisualizerModal(true)}
+                  className="w-full mt-2 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Plot as Interactive Graph</span>
+                </button>
               </div>
             )}
 
@@ -2255,6 +2382,57 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
                 Close Context
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Phase D.10: AI Visualization Creation Modal */}
+      {showVisualizerModal && (
+        <AIVisualizationModal
+          isOpen={showVisualizerModal}
+          onClose={() => setShowVisualizerModal(false)}
+          onInsert={handleInsertVisualization}
+          equationCandidate={activeCandidate?.equation}
+          courseCode={doc.courseCode}
+          topic={doc.title}
+          classSessionId={doc.classSessionId}
+          isTeacher={!isReadOnly}
+        />
+      )}
+
+      {/* 6. Phase D.10: Interactive Visualization Explorer Modal */}
+      {activeInteractiveVis && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl">
+          <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-950 border border-cyan-500/40 p-4 shadow-2xl">
+            <button
+              onClick={() => setActiveInteractiveVis(null)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-bold cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <VisualizationHost
+              document={activeInteractiveVis}
+              width={750}
+              height={420}
+              isReadOnly={isReadOnly}
+              onParametersChange={(newParams) => {
+                const updatedVis = { ...activeInteractiveVis, parameters: newParams };
+                setActiveInteractiveVis(updatedVis);
+                const updatedElements = currentPage.elements.map((el) => {
+                  if (el.visualizationId === activeInteractiveVis.id) {
+                    return { ...el, visualization: updatedVis };
+                  }
+                  return el;
+                });
+                const updatedPage = { ...currentPage, elements: updatedElements };
+                const updatedPages = [...doc.pages];
+                updatedPages[activePageIndex] = updatedPage;
+                const updatedDoc = { ...doc, pages: updatedPages, version: doc.version + 1 };
+                setDoc(updatedDoc);
+                scheduleAutosave(updatedDoc);
+                redrawCanvas(updatedElements);
+              }}
+            />
           </div>
         </div>
       )}

@@ -6,16 +6,15 @@ import type { User } from '../../../data/types.ts';
 import { jarvisData } from '../../../data/index.ts';
 
 async function resolveUserFromContext(context: ToolExecutionContext): Promise<User> {
-  const userId = context.userId || (context.role === 'student' ? 'student-1' : 'teacher-1');
+  const userId = context.userId;
+  if (!userId) {
+    throw new Error('Tool execution error: Unauthenticated tool context (missing userId).');
+  }
   const user = await jarvisData.users.getById(userId);
-  if (user) return user;
-  return {
-    id: userId,
-    displayName: context.role === 'student' ? 'Alex Chen' : 'Dr. Sarah',
-    email: 'user@starkacademy.edu',
-    role: (context.role as any) || 'teacher',
-    createdAt: new Date().toISOString()
-  };
+  if (!user) {
+    throw new Error(`Tool execution error: User '${userId}' is not a registered user.`);
+  }
+  return user;
 }
 
 // 1. Tool: smartboard.device.list
