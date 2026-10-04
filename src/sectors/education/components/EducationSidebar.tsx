@@ -30,7 +30,8 @@ import {
   Trophy,
   AlertTriangle,
   FileSpreadsheet,
-  Heart
+  Heart,
+  Tv
 } from 'lucide-react';
 
 export type EducationSidebarSection =
@@ -48,6 +49,8 @@ export type EducationSidebarSection =
   | 'knowledge'
   | 'videos'
   | 'classroom'
+  | 'smartboard_os'
+  | 'board_history'
   | 'principal_overview'
   | 'teacher_prep'
   | 'teacher_review'
@@ -322,10 +325,12 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         {/* KNOWLEDGE & MEDIA Section */}
         <div className="space-y-1">
           <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
-            Knowledge
+            Knowledge & Smart Surfaces
           </div>
 
           {renderNavButton('notes', 'Notes & Formulas', Bookmark)}
+          {renderNavButton('board_history', 'Board History', FileCheck2)}
+          {renderNavButton('smartboard_os', 'SmartBoard OS', Tv)}
           {renderNavButton('knowledge', 'Knowledge Spaces', Brain)}
           {renderNavButton('videos', 'Video Library', Video)}
           {renderNavButton('classroom', 'Smart Classroom', Radio)}

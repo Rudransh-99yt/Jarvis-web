@@ -16,6 +16,7 @@ export * from '../../src/types/classroom.ts';
 export * from '../../src/types/quiz.ts';
 export * from '../../src/types/video.ts';
 export * from '../../src/types/academicContext.ts';
+export * from '../../src/types/smartboard.ts';
 
 // 1. User
 export type UserRole = 'admin' | 'commander' | 'principal' | 'teacher' | 'parent' | 'student' | 'guest';
@@ -189,4 +190,6 @@ export interface DatabaseSchema {
   academicEvents?: import('../../src/types/academicContext.ts').AcademicEvent[];
   academicNotifications?: import('../../src/types/academicContext.ts').AcademicNotification[];
   quizResults?: import('../../src/types/academicContext.ts').QuizResult[];
+  smartboardDevices?: import('../../src/types/smartboard.ts').SmartBoardDevice[];
+  boardDocuments?: import('../../src/types/smartboard.ts').BoardDocument[];
 }

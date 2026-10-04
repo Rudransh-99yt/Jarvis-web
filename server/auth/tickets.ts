@@ -28,6 +28,17 @@ export interface SSETicketPayload {
   expiresAt: number; // Unix epoch ms
 }
 
+export interface SmartBoardTicketPayload {
+  type: 'smartboard_auth';
+  ticketId: string;
+  boardId: string;
+  teacherId: string;
+  institutionId: string;
+  classroomId: string;
+  classSessionId: string;
+  expiresAt: number; // Unix epoch ms
+}
+
 export class TicketAuthenticationError extends Error {
   public statusCode: number;
   public code: string;
@@ -218,6 +229,85 @@ export class TicketService {
     const user = await this.repo.users.getById(payload.userId);
     if (!user) {
       throw new TicketAuthenticationError(`User '${payload.userId}' associated with ticket not found.`, 401, 'USER_NOT_FOUND');
+    }
+
+    return { user, payload };
+  }
+
+  /**
+   * 5. Issues a short-lived scoped SmartBoard hardware authentication ticket.
+   */
+  createBoardTicket(params: {
+    boardId: string;
+    teacherId: string;
+    institutionId: string;
+    classroomId: string;
+    classSessionId: string;
+    ttlSeconds?: number;
+  }): { ticket: string; expiresAt: string; ttlSeconds: number } {
+    const ttl = params.ttlSeconds || 300; // Default 5 minutes TTL
+    const exp = Date.now() + ttl * 1000;
+
+    const payload: SmartBoardTicketPayload = {
+      type: 'smartboard_auth',
+      ticketId: `sbt-${crypto.randomUUID()}`,
+      boardId: params.boardId,
+      teacherId: params.teacherId,
+      institutionId: params.institutionId,
+      classroomId: params.classroomId,
+      classSessionId: params.classSessionId,
+      expiresAt: exp
+    };
+
+    const ticket = signPayload(payload);
+    return {
+      ticket,
+      expiresAt: new Date(exp).toISOString(),
+      ttlSeconds: ttl
+    };
+  }
+
+  /**
+   * 6. Validates SmartBoard authentication ticket against expected board and session.
+   */
+  async verifyBoardTicket(
+    ticketString: string,
+    expectedBoardId?: string,
+    expectedSessionId?: string
+  ): Promise<{ user: User; payload: SmartBoardTicketPayload }> {
+    const payload = verifySignature<SmartBoardTicketPayload>(ticketString);
+
+    if (payload.type !== 'smartboard_auth') {
+      throw new TicketAuthenticationError('Invalid ticket category: Expected smartboard_auth.', 403, 'TICKET_TYPE_MISMATCH');
+    }
+
+    if (Date.now() > payload.expiresAt) {
+      throw new TicketAuthenticationError('SmartBoard authentication ticket has expired.', 401, 'TICKET_EXPIRED');
+    }
+
+    if (expectedBoardId && payload.boardId !== expectedBoardId) {
+      throw new TicketAuthenticationError(
+        `Ticket scope mismatch: Ticket bound to board '${payload.boardId}', requested '${expectedBoardId}'.`,
+        403,
+        'TICKET_BOARD_MISMATCH'
+      );
+    }
+
+    if (expectedSessionId && payload.classSessionId !== expectedSessionId) {
+      throw new TicketAuthenticationError(
+        `Ticket scope mismatch: Ticket bound to session '${payload.classSessionId}', requested '${expectedSessionId}'.`,
+        403,
+        'TICKET_SESSION_MISMATCH'
+      );
+    }
+
+    const user = await this.repo.users.getById(payload.teacherId);
+    if (!user) {
+      throw new TicketAuthenticationError(`Teacher '${payload.teacherId}' associated with board ticket not found.`, 401, 'USER_NOT_FOUND');
+    }
+
+    if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander') {
+      throw new TicketAuthenticationError('Unauthorized: Only teachers may pair or control SmartBoard devices.', 403, 'FORBIDDEN_ROLE');
     }
 
     return { user, payload };

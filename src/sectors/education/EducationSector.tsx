@@ -57,6 +57,8 @@ import { StudentPersonalNotesView } from './views/StudentPersonalNotesView.tsx';
 import { EngagementLeaderboardView } from './views/EngagementLeaderboardView.tsx';
 import { EngagementActivityView } from './views/EngagementActivityView.tsx';
 import { LessonPracticeView } from './views/LessonPracticeView.tsx';
+import { SmartBoardWorkspace } from './smartboard/SmartBoardWorkspace.tsx';
+import { BoardHistoryView } from './smartboard/BoardHistoryView.tsx';
 
 import { Menu, Home, Layers, Flame, FileCheck2, Building2 } from 'lucide-react';
 
@@ -87,6 +89,8 @@ export type DeepEducationView =
   | 'principal_audit'
   | 'parent_home'
   | 'classroom'
+  | 'smartboard_os'
+  | 'board_history'
   | 'videos'
   | 'classes'
   | 'assignments'
@@ -119,6 +123,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const [activeUnitId, setActiveUnitId] = useState<string>('unit-phys-2');
   const [activeLessonId, setActiveLessonId] = useState<string>('les-phys-202');
   const [selectedSpaceId, setSelectedSpaceId] = useState<string>('ks-quantum');
+  const [activeBoardId, setActiveBoardId] = useState<string>('board-phys-01');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Phase D: Shared Academic Context
@@ -658,6 +663,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (currentView === 'knowledge') return 'knowledge';
     if (currentView === 'videos') return 'videos';
     if (currentView === 'classroom') return 'classroom';
+    if (currentView === 'smartboard_os') return 'smartboard_os';
+    if (currentView === 'board_history') return 'board_history';
     if (['principal_home', 'principal_grade', 'principal_teachers', 'principal_audit'].includes(currentView)) return 'principal_overview';
     return 'home';
   };
@@ -729,8 +736,11 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       case 'classroom':
         setCurrentView('classroom');
         break;
-      case 'principal_overview':
-        setCurrentView('principal_home');
+      case 'smartboard_os':
+        setCurrentView('smartboard_os');
+        break;
+      case 'board_history':
+        setCurrentView('board_history');
         break;
     }
   };
@@ -901,6 +911,22 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       items.push({
         id: 'practice',
         label: 'Practice Checkpoint',
+        type: 'section'
+      });
+    }
+
+    if (currentView === 'smartboard_os') {
+      items.push({
+        id: 'smartboard',
+        label: 'SmartBoard Live Surface',
+        type: 'section'
+      });
+    }
+
+    if (currentView === 'board_history') {
+      items.push({
+        id: 'board_history',
+        label: 'Board History & Notes',
         type: 'section'
       });
     }
@@ -1266,6 +1292,25 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           )}
 
           {/* Preserved Core Workspaces */}
+          {currentView === 'smartboard_os' && (
+            <SmartBoardWorkspace
+              boardId={activeBoardId}
+              sessionId={academicContext.classSessionId || 'session-phys-101'}
+              currentRole={currentRole}
+              onBack={() => setCurrentView(currentRole === 'teacher' ? 'teacher_home' : 'student_home')}
+              onCompleteClass={() => setCurrentView('board_history')}
+            />
+          )}
+
+          {currentView === 'board_history' && (
+            <BoardHistoryView
+              classes={classes}
+              currentRole={currentRole}
+              selectedClassId={activeCourseId}
+              onBack={() => setCurrentView(currentRole === 'teacher' ? 'teacher_home' : 'student_home')}
+            />
+          )}
+
           {currentView === 'classroom' && (
             <SmartClassroomView classes={classes} currentRole={currentRole} />
           )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ClassSession } from '../../../types/classSession.ts';
 import type { EducationClass } from '../../../types/education.ts';
+import { SendToSmartBoardModal } from '../smartboard/SendToSmartBoardModal.tsx';
 import {
   Sparkles,
   PlusCircle,
@@ -17,7 +18,8 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldCheck,
-  Radio
+  Radio,
+  Tv
 } from 'lucide-react';
 
 interface TeacherSessionsListViewProps {
@@ -39,6 +41,7 @@ export const TeacherSessionsListView: React.FC<TeacherSessionsListViewProps> = (
 }) => {
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
+  const [dispatchSession, setDispatchSession] = useState<ClassSession | null>(null);
 
   const filteredSessions = sessions.filter((s) => {
     const matchClass = selectedClassFilter === 'all' || s.classId === selectedClassFilter;
@@ -260,14 +263,25 @@ export const TeacherSessionsListView: React.FC<TeacherSessionsListViewProps> = (
                   </button>
 
                   {['APPROVED', 'SCHEDULED', 'LIVE'].includes(session.status) && (
-                    <button
-                      onClick={() => onLaunchSmartboard(session.id)}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold transition-all cursor-pointer"
-                      title="Launch directly into Smart Classroom"
-                    >
-                      <PlayCircle className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>SmartBoard</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setDispatchSession(session)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono font-bold transition-all cursor-pointer"
+                        title="Send session to physical classroom SmartBoard"
+                      >
+                        <Tv className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Send to Board</span>
+                      </button>
+
+                      <button
+                        onClick={() => onLaunchSmartboard(session.id)}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold transition-all cursor-pointer"
+                        title="Launch directly into Smart Classroom"
+                      >
+                        <PlayCircle className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>SmartBoard</span>
+                      </button>
+                    </>
                   )}
 
                   <button
@@ -282,6 +296,19 @@ export const TeacherSessionsListView: React.FC<TeacherSessionsListViewProps> = (
             </div>
           ))}
         </div>
+      )}
+
+      {/* Send To SmartBoard Modal */}
+      {dispatchSession && (
+        <SendToSmartBoardModal
+          session={dispatchSession}
+          isOpen={true}
+          onClose={() => setDispatchSession(null)}
+          onOpenSmartBoardLive={(boardId, sessionId) => {
+            setDispatchSession(null);
+            onLaunchSmartboard(sessionId);
+          }}
+        />
       )}
     </div>
   );

@@ -9,8 +9,12 @@ import { engagementRouter } from './engagement/engagementRoutes.ts';
 import { teacherRouter } from './teacher/teacherRoutes.ts';
 import { familyRouter } from './family/familyRoutes.ts';
 import { institutionalRouter } from './institutional/institutionalRoutes.ts';
+import { smartboardRouter } from './smartboard/smartboardRoutes.ts';
 
 export const educationRouter = Router();
+
+// Phase D.8: SmartBoard OS & Physical Classroom Surface Routes
+educationRouter.use('/smartboard', smartboardRouter);
 
 // Phase D.7: Family & Parent Intelligence Routes
 educationRouter.use('/family', familyRouter);

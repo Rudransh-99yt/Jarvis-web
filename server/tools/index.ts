@@ -104,6 +104,12 @@ for (const tool of videoTools) {
   toolRegistry.register(tool);
 }
 
+// 9. Register SmartBoard OS Tools (D.8)
+import { smartboardTools } from '../sectors/education/smartboard/smartboardTools.ts';
+for (const tool of smartboardTools) {
+  toolRegistry.register(tool);
+}
+
 console.log(`[ToolRegistry] Initialized with ${toolRegistry.list().length} registered tools across sectors: ${toolRegistry.list().map(t => t.name).join(', ')}`);
 
 export * from './types.ts';
