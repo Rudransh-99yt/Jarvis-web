@@ -26,6 +26,7 @@ interface StudentHomeViewProps {
   onNavigateTab: (
     tab:
       | 'my_learning'
+      | 'classes'
       | 'classroom'
       | 'videos'
       | 'assignments'
@@ -33,6 +34,8 @@ interface StudentHomeViewProps {
       | 'calendar'
       | 'focus'
       | 'workspace'
+      | 'notes'
+      | 'study_groups'
   ) => void;
 }
 
@@ -131,7 +134,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           </div>
           <button
             onClick={() => onNavigateTab('assignments')}
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 py-1.5 px-2 rounded-lg hover:bg-cyan-500/10 min-h-[36px] transition-colors cursor-pointer"
           >
             All Assignments <ArrowRight className="w-3 h-3" />
           </button>
@@ -155,7 +158,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
 
               <button
                 onClick={() => onNavigateTab('assignments')}
-                className="px-4 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono tracking-wider transition-all shrink-0 self-start sm:self-center cursor-pointer"
+                className="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono tracking-wider transition-all shrink-0 self-start sm:self-center cursor-pointer"
               >
                 Submit Work
               </button>
@@ -183,7 +186,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           </div>
           <button
             onClick={() => onNavigateTab('my_learning')}
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 py-1.5 px-2 rounded-lg hover:bg-cyan-500/10 min-h-[36px] transition-colors cursor-pointer"
           >
             Full Curriculum Map <ArrowRight className="w-3 h-3" />
           </button>
@@ -265,7 +268,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           </button>
 
           <button
-            onClick={() => onNavigateTab('workspace')}
+            onClick={() => onNavigateTab('notes')}
             className="p-4 rounded-xl border border-cyan-500/15 bg-black/30 hover:border-cyan-400/40 hover:bg-cyan-500/10 text-left transition-all group cursor-pointer"
           >
             <Brain className="w-4 h-4 text-cyan-400 mb-2 group-hover:scale-105 transition-transform" />

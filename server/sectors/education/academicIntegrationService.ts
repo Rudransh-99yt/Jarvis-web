@@ -323,6 +323,21 @@ class AcademicIntegrationService extends EventEmitter {
   // --- LEARNING LINKS MANAGEMENT ---
 
   createLink(linkInput: Omit<LearningLink, 'id' | 'createdAt'>): LearningLink {
+    // Duplicate prevention: if identical relation already links these exact two objects, return existing link
+    const existing = this.inMemoryLinks.find(
+      (l) =>
+        l.sourceType === linkInput.sourceType &&
+        l.sourceId === linkInput.sourceId &&
+        l.targetType === linkInput.targetType &&
+        l.targetId === linkInput.targetId &&
+        l.relation === linkInput.relation
+    );
+    if (existing) {
+      if (linkInput.title && !existing.title) existing.title = linkInput.title;
+      if (linkInput.context) existing.context = { ...existing.context, ...linkInput.context };
+      return existing;
+    }
+
     const id = `link-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
     const newLink: LearningLink = {
       ...linkInput,
@@ -367,13 +382,35 @@ class AcademicIntegrationService extends EventEmitter {
     });
   }
 
-  deleteLink(linkId: string): boolean {
+  deleteLink(linkId: string, user?: { id: string; role?: string }): boolean {
     const idx = this.inMemoryLinks.findIndex((l) => l.id === linkId);
-    if (idx !== -1) {
-      this.inMemoryLinks.splice(idx, 1);
-      return true;
+    if (idx === -1) {
+      return false;
     }
-    return false;
+    const link = this.inMemoryLinks[idx];
+    if (user && user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander') {
+      if (link.createdBy && link.createdBy !== user.id) {
+        return false;
+      }
+    }
+    this.inMemoryLinks.splice(idx, 1);
+    try {
+      const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
+      if (state && Array.isArray(state.learningLinks)) {
+        state.learningLinks = state.learningLinks.filter((l: any) => l.id !== linkId);
+      }
+    } catch {
+      // Memory store updated
+    }
+    return true;
+  }
+
+  pruneStaleLinks(entityType: LearningObjectType, entityId: string): number {
+    const initialCount = this.inMemoryLinks.length;
+    this.inMemoryLinks = this.inMemoryLinks.filter(
+      (l) => !(l.sourceType === entityType && l.sourceId === entityId) && !(l.targetType === entityType && l.targetId === entityId)
+    );
+    return initialCount - this.inMemoryLinks.length;
   }
 
   // --- DOMAIN EVENTS ---
@@ -965,19 +1002,34 @@ class AcademicIntegrationService extends EventEmitter {
         ? classSessionStore.getSessionSync(mergedContext.classSessionId)
         : ((classSessionStore as any).sessions?.get?.(mergedContext.classSessionId) ?? null);
       if (sess) {
-        relevantSession = {
-          id: sess.id,
-          topic: sess.topic,
-          status: sess.status,
-          lessonPlanTitle: sess.lessonPlan?.title,
-          learningObjectives: sess.lessonPlan?.learningObjectives
-        };
+        const isTeacherOrAdmin = user.role === 'teacher' || user.role === 'admin' || user.role === 'commander';
+        // For students, only expose sessions if they are approved, scheduled, or live
+        const statusUpper = sess.status ? String(sess.status).toUpperCase() : '';
+        const isSessionVisible = isTeacherOrAdmin || ['APPROVED', 'SCHEDULED', 'LIVE'].includes(statusUpper);
+        if (isSessionVisible) {
+          relevantSession = {
+            id: sess.id,
+            topic: sess.topic,
+            status: sess.status,
+            lessonPlanTitle: sess.lessonPlan?.title,
+            learningObjectives: sess.lessonPlan?.learningObjectives
+            // answerKey and teacherNotes are NEVER included in AI context
+          };
+        }
       }
     }
 
     // Authorized Knowledge Spaces for this user & course
-    const allowedKnowledgeSpaces = ['ks-quantum'];
-    if (classId === 'class-cs-501') allowedKnowledgeSpaces.push('ks-cs');
+    let allowedKnowledgeSpaces = ['ks-quantum'];
+    if (classId === 'class-cs-501') allowedKnowledgeSpaces = ['ks-cs'];
+
+    // Security check: verify student enrollment in target class before granting space access
+    if (user.role === 'student') {
+      const targetClass = educationStore.getClass(classId);
+      if (targetClass && targetClass.studentIds && !targetClass.studentIds.includes(user.id)) {
+        allowedKnowledgeSpaces = [];
+      }
+    }
 
     return {
       user,

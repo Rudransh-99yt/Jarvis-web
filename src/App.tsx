@@ -151,8 +151,16 @@ const INITIAL_DIRECTIVES: StarkDirective[] = [
 ];
 
 export function App() {
-  // Sector Navigation State
-  const [currentSector, setCurrentSector] = useState<SectorId>('command');
+  // Sector Navigation State - Default to Education OS
+  const [currentSector, setCurrentSector] = useState<SectorId>(() => {
+    try {
+      const saved = localStorage.getItem('jarvis_active_sector');
+      if (saved === 'command' || saved === 'education' || saved === 'research') {
+        return saved as SectorId;
+      }
+    } catch {}
+    return 'education';
+  });
   const [educationRole, setEducationRole] = useState<EducationRole>('student');
   const [isMuted, setIsMuted] = useState(false);
   const [apiProviderName, setApiProviderName] = useState('Google Gemini (gemini-3.8-flash)');
@@ -531,7 +539,12 @@ export function App() {
   return (
     <AppShell
       currentSector={currentSector}
-      onSelectSector={(s) => setCurrentSector(s)}
+      onSelectSector={(s) => {
+        setCurrentSector(s);
+        try {
+          localStorage.setItem('jarvis_active_sector', s);
+        } catch {}
+      }}
       isMuted={isMuted}
       onToggleMute={() => setIsMuted(!isMuted)}
       apiProviderName={apiProviderName}

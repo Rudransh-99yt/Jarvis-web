@@ -62,6 +62,14 @@ academicIntegrationRouter.post('/links', async (req: Request, res: Response) => 
     return;
   }
 
+  // Security check: only teacher/admin can create official curriculum, homework, or session links
+  if (user.role === 'student') {
+    if (['curriculum', 'homework'].includes(relation) || sourceType === 'classSession' || targetType === 'classSession') {
+      res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Students cannot create official curriculum or teacher session links.' } });
+      return;
+    }
+  }
+
   const link = academicIntegrationService.createLink({
     workspaceId: workspaceId || 'ws-stark-core',
     sourceType,
@@ -79,9 +87,14 @@ academicIntegrationRouter.post('/links', async (req: Request, res: Response) => 
 });
 
 // 4. DELETE /api/education/integration/links/:id - Delete learning link
-academicIntegrationRouter.delete('/links/:id', (req: Request, res: Response) => {
-  const success = academicIntegrationService.deleteLink(req.params.id as string);
-  res.json({ success });
+academicIntegrationRouter.delete('/links/:id', async (req: Request, res: Response) => {
+  const user = await resolveUser(req);
+  const success = academicIntegrationService.deleteLink(req.params.id as string, { id: user.id, role: user.role });
+  if (!success) {
+    res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Unauthorized or link not found' } });
+    return;
+  }
+  res.json({ success: true });
 });
 
 // 5. GET /api/education/integration/events - List domain events
@@ -105,6 +118,15 @@ academicIntegrationRouter.post('/events', async (req: Request, res: Response) =>
   if (!type || !entityType || !entityId) {
     res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'type, entityType, and entityId are required.' } });
     return;
+  }
+
+  // Security check: students cannot emit teacher/admin operational events
+  if (user.role === 'student') {
+    const studentAllowedEvents = ['quiz.completed', 'focus.completed', 'assignment.submitted', 'study_group.joined'];
+    if (!studentAllowedEvents.includes(type)) {
+      res.status(403).json({ error: { code: 'FORBIDDEN', message: `Students cannot publish event '${type}'.` } });
+      return;
+    }
   }
 
   const event = academicIntegrationService.publishEvent({

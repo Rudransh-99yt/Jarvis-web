@@ -40,9 +40,35 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<string>('2026-10-18');
   const [viewFilter, setViewFilter] = useState<'all' | 'classes' | 'deadlines'>('all');
+  const [dynamicEvents, setDynamicEvents] = useState<CalendarEvent[]>([]);
 
-  // Derive schedule events from classes and assignments
-  const events: CalendarEvent[] = [
+  // Fetch real-time integrated academic calendar events
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch('/api/education/integration/calendar?workspaceId=ws-stark-core')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data || !Array.isArray(data.items)) return;
+        const mapped: CalendarEvent[] = data.items.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          type: item.type === 'class_session' ? 'class' : item.type === 'assignment_due' ? 'assignment_due' : 'study_block',
+          time: item.time || '10:00 AM',
+          date: item.date || '2026-10-18',
+          courseCode: item.courseCode || 'PHYS-301',
+          location: item.location || 'Quantum Hall · SmartBoard Ready',
+          courseId: item.courseId || item.classId
+        }));
+        setDynamicEvents(mapped);
+      })
+      .catch((err) => console.warn('Could not load dynamic calendar feed:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Derive schedule events from classes, assignments and dynamic feed
+  const baseEvents: CalendarEvent[] = [
     {
       id: 'evt-phys-1',
       title: 'PHYS-301: Advanced Quantum Lecture (Live)',
@@ -101,6 +127,10 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
       location: 'Personal Study Workspace'
     }
   ];
+
+  // Combine static fallbacks and dynamic live feed without duplicates
+  const eventIds = new Set(dynamicEvents.map((e) => e.id));
+  const events = [...dynamicEvents, ...baseEvents.filter((b) => !eventIds.has(b.id))];
 
   const filteredEvents = events.filter((e) => {
     if (viewFilter === 'classes') return e.type === 'class';

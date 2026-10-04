@@ -203,8 +203,23 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - Unified calendar feed merging scheduled ClassSessions, assignment deadlines, and peer study groups.
 - **Bounded AI Context Builder**:
   - Constructs bounded prompt contexts scoped to active academic locus and verified textbook sources, preventing hallucinations and context overflow.
+- **Phase D.1 Integration Hardening & Security Boundaries**:
+  - Implemented duplicate-link prevention in `createLink` to guarantee idempotent relational link creation.
+  - Enforced server-authoritative permissions on `deleteLink` and REST endpoints: students cannot delete teacher links or manufacture official curriculum/session links.
+  - Restricted student domain event publication (students can only emit completion/submission events, preventing unauthorized approval spoofing).
+  - Enforced student draft isolation in `buildAiContext`: unapproved session drafts, teacher notes, and answer keys are strictly withheld from student contexts.
+  - Connected live dynamic feed to `EducationCalendarView` and enhanced bidirectional context propagation to `CommunityShell`.
+- **Phase D.2 Education OS Structural UX Audit & Application Shell Redesign**:
+  - **Standalone Application Shell**: Redesigned `AppShell.tsx` in Education mode to eliminate all multi-sector platform noise (hidden command/research tabs, hidden platform OS telemetry badges, hidden uplink indicators, and hidden persistent "Active Core" platform footer). Education takes full ownership of the viewport.
+  - **Unified Scroll Ownership**: Eliminated nested double-scrollbars by configuring `main-scroll-container` as overflow-hidden when in Education mode, delegating single-scroll ownership to `EducationSector`'s primary workspace area (`#education-workspace-scroll`) with a pinned desktop sidebar.
+  - **Intent-Driven 4-Tier Navigation Model**:
+    1. *Primary*: Home (role-tailored dashboard), My Learning (curriculum paths & lessons), Classes & Cohorts, Assignments & Grading, and Academic Calendar (plus Teacher Session Prep).
+    2. *Productivity*: Focus Workspace (Focus Lock & academic target timer) and My Workspace (academic notes & block database).
+    3. *Community*: Community discussions & channels and dedicated Peer Study Groups.
+    4. *Knowledge & Media*: Study Notes & Formulas (`StudentPersonalNotesView`), Grounded Knowledge Spaces (RAG), Video Library & Q&A, and live Smart Classroom.
+  - **Anti-Slop & Zero-Pill Compliance**: Removed static pill badges and bordered capsules across session lists, class cards, and mobile headers in favor of clean unboxed typography with typographic separators (`·`).
 - **Comprehensive Test Suite (`tests/education_academic_integration.test.ts`)**:
-  - 57/57 assertions passing across Context Resolution, Learning Links, Teacher Workflow Anchor, Event Bus & Notifications, Quiz Results, Unified Calendar Feed, Focus Session Tracking, and Bounded AI Context.
+  - 63/63 assertions passing across Context Resolution, Learning Links, Teacher Workflow Anchor, Event Bus & Notifications, Quiz Results, Unified Calendar Feed, Focus Session Tracking, Bounded AI Context, and Security/Hardening Boundaries.
 
 ---
 
@@ -244,6 +259,18 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - `video.search` and `video.ask` integration in `ToolRegistry` and REST APIs.
   - Timestamped concept discovery and transcript-grounded RAG with clickable timestamp seek in UI.
   - Defense in depth: prompt injection neutralization, cross-course access verification before retrieval, insufficient evidence refusal, and deterministic fallback when Gemini is offline.
+
+- **Phase D.2: Education OS Structural UX Audit & Architecture Redesign (Completed)**:
+  - Transformed Education into its own dedicated application shell with minimal global chrome and quiet system identity.
+  - Reorganized information architecture into 4 user-intent clusters: Primary (Home, My Learning, Classes, Assignments, Calendar), Productivity (Focus, My Workspace), Community (Community, Study Groups), and Knowledge (Notes, Knowledge Spaces, Video Library, Smart Classroom).
+  - Single scroll owner per surface: resolved double/nested scrollbars across viewport sizes.
+  - Created dedicated `StudentPersonalNotesView` with full search, tag filtering, and course association.
+
+- **Phase D.3: Education OS Product Polish & Visual QA (Completed)**:
+  - Replaced high-saturation neon/glowing cyan badges with calm surfaces, subtle borders, and intentional typographic hierarchy.
+  - Streamlined `StudentHomeView`, `TeacherHomeView`, and `PrincipalExecutiveView` around role-specific primary actions.
+  - Compacted course progression and assignments ledgers with dedicated detail workspaces.
+  - Verified layout containment and accessibility across 1440x900, 1280x800, 1024x768, 768x1024, 430x932, and 390x844 viewports.
 
 ---
 

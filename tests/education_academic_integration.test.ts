@@ -387,6 +387,79 @@ async function runAcademicIntegrationTestSuite() {
   assert(studentAiContext.allowedKnowledgeSpaces.includes('ks-quantum'), '8.5 Bounded AI context limits to authorized knowledge spaces');
   assert(studentAiContext.activeTask === 'guided_problem_solving', '8.6 Active task parameter preserved');
 
+  // -------------------------------------------------------------
+  // TEST SECTION 9: HARDENING & SECURITY BOUNDARIES
+  // -------------------------------------------------------------
+  console.log('\n--- SECTION 9: Hardening & Security Boundaries ---');
+
+  // Test 9.1: Duplicate Link Prevention
+  const dupLink1 = academicIntegrationService.createLink({
+    workspaceId: 'ws-stark-core',
+    sourceType: 'lesson',
+    sourceId: 'les-phys-101',
+    targetType: 'assignment',
+    targetId: 'asg-101',
+    relation: 'homework',
+    title: 'Wave Function Homework',
+    createdBy: teacherUser.id
+  });
+  const dupLink2 = academicIntegrationService.createLink({
+    workspaceId: 'ws-stark-core',
+    sourceType: 'lesson',
+    sourceId: 'les-phys-101',
+    targetType: 'assignment',
+    targetId: 'asg-101',
+    relation: 'homework',
+    title: 'Wave Function Homework Duplicate',
+    createdBy: teacherUser.id
+  });
+  assert(dupLink1.id === dupLink2.id, '9.1 Duplicate link prevention returns existing link without duplicates');
+
+  // Test 9.2: Unauthorized link deletion blocked for students on links created by others
+  const unauthorizedDelete = academicIntegrationService.deleteLink(dupLink1.id, { id: studentUser.id, role: 'student' });
+  assert(unauthorizedDelete === false, '9.2 Student blocked from deleting teacher-created link');
+
+  // Test 9.3: Authorized creator link deletion
+  const studentPersonalLink = academicIntegrationService.createLink({
+    workspaceId: 'ws-stark-core',
+    sourceType: 'workspacePage',
+    sourceId: 'wp-student-personal-notes',
+    targetType: 'lesson',
+    targetId: 'les-phys-101',
+    relation: 'notes',
+    title: 'My Personal Derivation Notes',
+    createdBy: studentUser.id
+  });
+  const authorizedDelete = academicIntegrationService.deleteLink(studentPersonalLink.id, { id: studentUser.id, role: 'student' });
+  assert(authorizedDelete === true, '9.3 Student permitted to delete their own created link');
+
+  // Test 9.4: Stale link pruning
+  const stalePrunedCount = academicIntegrationService.pruneStaleLinks('assignment', 'asg-101');
+  assert(stalePrunedCount >= 1, '9.4 Prune stale links removes dead entity links', { pruned: stalePrunedCount });
+
+  // Test 9.5: Student Bounded AI Context omits unapproved/draft sessions
+  const draftSession: ClassSession = {
+    ...testSession,
+    id: `session-draft-${Date.now()}`,
+    status: 'READY_FOR_REVIEW' // Draft not approved yet
+  };
+  await classSessionStore.createSession(draftSession);
+
+  const studentDraftAiContext = academicIntegrationService.buildAiContext(
+    { id: studentUser.id, role: 'student', displayName: studentUser.displayName },
+    { classSessionId: draftSession.id, lessonId: 'les-phys-101' },
+    'study_tutoring'
+  );
+  assert(studentDraftAiContext.relevantSession === undefined, '9.5 Student AI context hides unapproved draft sessions');
+
+  // Teacher AI context can see their draft session
+  const teacherDraftAiContext = academicIntegrationService.buildAiContext(
+    { id: teacherUser.id, role: 'teacher', displayName: teacherUser.displayName },
+    { classSessionId: draftSession.id, lessonId: 'les-phys-101' },
+    'lesson_prep'
+  );
+  assert(teacherDraftAiContext.relevantSession !== undefined, '9.6 Teacher AI context can access their draft session for prep');
+
   console.log('\n================================================================');
   console.log(`=== AUDIT COMPLETE: ${passed}/${total} ASSERTIONS PASSED ===`);
   console.log('================================================================\n');

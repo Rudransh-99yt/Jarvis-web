@@ -24,7 +24,9 @@ import {
   LogOut,
   Settings,
   ShieldCheck,
-  Timer
+  Timer,
+  Users,
+  Bookmark
 } from 'lucide-react';
 
 export type EducationSidebarSection =
@@ -36,6 +38,8 @@ export type EducationSidebarSection =
   | 'focus'
   | 'workspace'
   | 'community'
+  | 'study_groups'
+  | 'notes'
   | 'knowledge'
   | 'videos'
   | 'classroom'
@@ -103,26 +107,22 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
       <button
         key={id}
         onClick={() => handleNavClick(id)}
-        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-all text-left group cursor-pointer ${
+        className={`w-full flex items-center justify-between px-3 py-2.5 min-h-[40px] rounded-xl text-xs font-mono transition-all text-left group cursor-pointer ${
           isActive
-            ? 'bg-cyan-500/15 text-white font-bold border border-cyan-400/40 shadow-[0_0_12px_rgba(6,182,212,0.15)]'
-            : 'text-cyan-300/70 hover:text-white hover:bg-cyan-500/10'
+            ? 'bg-slate-800/90 text-white font-semibold border border-cyan-500/40 shadow-sm'
+            : 'text-slate-400 hover:text-white hover:bg-slate-900/60 border border-transparent'
         }`}
       >
         <div className="flex items-center gap-2.5 truncate min-w-0">
           <Icon
             className={`w-4 h-4 shrink-0 transition-colors ${
-              isActive ? 'text-cyan-300' : 'text-cyan-400/60 group-hover:text-cyan-300'
+              isActive ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'
             } ${isPulse ? 'animate-pulse text-emerald-400' : ''}`}
           />
           <span className="truncate">{label}</span>
         </div>
         {badge !== undefined && (
-          <span
-            className={`text-[10px] font-mono px-1.5 py-0.2 rounded shrink-0 ${
-              isActive ? 'bg-cyan-950 text-cyan-200 border border-cyan-500/40' : 'text-cyan-400/50'
-            }`}
-          >
+          <span className="text-[10px] font-mono text-slate-500 shrink-0">
             {badge}
           </span>
         )}
@@ -131,19 +131,19 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#080d16]/95 border-r border-cyan-500/20 text-cyan-100 select-none">
+    <div className="flex flex-col h-full bg-slate-950 border-r border-slate-800 text-slate-200 select-none">
       {/* 1. Top-Left Profile & Identity Switcher */}
-      <div className="p-3.5 border-b border-cyan-500/15 space-y-2.5">
+      <div className="p-3.5 border-b border-slate-800 space-y-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="h-6 w-6 rounded bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center shrink-0">
+            <div className="h-7 w-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">
               <Building2 className="w-3.5 h-3.5 text-cyan-400" />
             </div>
             <div className="min-w-0">
               <div className="text-[11px] font-mono font-bold text-white truncate">
                 {institution?.name || 'Stark Academy'}
               </div>
-              <div className="text-[9px] font-mono text-cyan-400/50 truncate">
+              <div className="text-[9px] font-mono text-slate-400 truncate">
                 {institution?.currentAcademicYear || '2026–2027'} · Education OS
               </div>
             </div>
@@ -154,13 +154,13 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               onClick={onRefresh}
               disabled={isSyncing}
               title="Sync Academic State"
-              className="p-1 rounded hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-200 transition-colors"
+              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-1 rounded hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-200"
+              className="lg:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -171,23 +171,23 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         <div className="relative">
           <button
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="w-full flex items-center justify-between p-2 rounded-xl border border-cyan-500/25 bg-black/60 hover:border-cyan-400/50 hover:bg-cyan-950/30 transition-all text-left cursor-pointer"
+            className="w-full flex items-center justify-between p-2.5 min-h-[44px] rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900 transition-all text-left cursor-pointer"
           >
             <div className="flex items-center gap-2 min-w-0">
-              <div className="h-7 w-7 rounded-full bg-cyan-900/80 border border-cyan-400/40 flex items-center justify-center font-bold text-cyan-200 text-xs shrink-0">
+              <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-cyan-300 text-xs shrink-0">
                 {currentRoleObj.name[0]}
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-mono font-bold text-white truncate">
                   {currentRoleObj.name}
                 </div>
-                <div className="text-[10px] font-mono text-cyan-400/70 flex items-center gap-1 truncate">
+                <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5 truncate">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   <span>{currentRoleObj.label}</span>
                 </div>
               </div>
             </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-cyan-400/60 shrink-0 ml-1 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-500 shrink-0 ml-1 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {profileDropdownOpen && (
@@ -261,10 +261,10 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           {currentRole === 'teacher' && (
             <>
               {renderNavButton('home', 'Teaching Hub', Home)}
-              {renderNavButton('teacher_prep', 'AI Session Prep', Sparkles, 'AI')}
+              {renderNavButton('teacher_prep', 'Session Prep', Sparkles)}
               {renderNavButton('classes', 'Managed Classes', BookOpen, classes.length)}
               {renderNavButton('assignments', 'Assignments & Grading', FileCheck2, '2 pending')}
-              {renderNavButton('calendar', 'Class Schedule', Calendar)}
+              {renderNavButton('calendar', 'Schedule', Calendar)}
             </>
           )}
 
@@ -274,31 +274,41 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               {renderNavButton('teacher_prep', 'Lesson Prep Hub', Sparkles)}
               {renderNavButton('classes', 'All School Classes', BookOpen, classes.length)}
               {renderNavButton('assignments', 'Assessment Health', FileCheck2)}
-              {renderNavButton('calendar', 'Institution Calendar', Calendar)}
+              {renderNavButton('calendar', 'Calendar', Calendar)}
             </>
           )}
         </div>
 
-        {/* Productivity & Community Section */}
+        {/* Productivity Section */}
         <div className="space-y-1">
           <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5">
-            Productivity & Network
+            Productivity
           </div>
 
-          {renderNavButton('focus', 'Focus OS / Pomodoro', Timer, 'Lock')}
-          {renderNavButton('workspace', 'My Workspace', FileText, 'Notion')}
-          {renderNavButton('community', 'Academic Community', MessageSquare, 'Live')}
+          {renderNavButton('focus', 'Focus', Timer)}
+          {renderNavButton('workspace', 'My Workspace', FileText)}
         </div>
 
-        {/* Research & Media Tools */}
+        {/* Community Section */}
         <div className="space-y-1">
           <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5">
-            Knowledge & Facilities
+            Community
           </div>
 
-          {renderNavButton('knowledge', 'Knowledge Spaces (RAG)', Brain)}
+          {renderNavButton('community', 'Community', MessageSquare)}
+          {renderNavButton('study_groups', 'Study Groups', Users)}
+        </div>
+
+        {/* Knowledge & Learning Tools */}
+        <div className="space-y-1">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-400/50 px-3 mb-1.5">
+            Knowledge & Media
+          </div>
+
+          {renderNavButton('notes', 'Notes & Formulas', Bookmark)}
+          {renderNavButton('knowledge', 'Knowledge Spaces', Brain)}
           {renderNavButton('videos', 'Video Library', Video)}
-          {renderNavButton('classroom', 'Smart Classroom', Radio, 'Live', true)}
+          {renderNavButton('classroom', 'Smart Classroom', Radio)}
         </div>
 
         {/* Course Directory Quick Access */}
@@ -315,17 +325,17 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
                 <button
                   key={cls.id}
                   onClick={() => handleCourseClick(cls.id)}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-mono transition-all text-left group cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-mono transition-all text-left group cursor-pointer ${
                     isSelectedCourse
-                      ? 'bg-cyan-500/20 text-cyan-200 font-bold border border-cyan-400/30'
-                      : 'text-cyan-300/70 hover:text-white hover:bg-white/5'
+                      ? 'bg-slate-800 text-white font-bold border border-slate-700'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-900/60 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 truncate min-w-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/60 group-hover:bg-cyan-300 shrink-0" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/80 group-hover:bg-cyan-300 shrink-0" />
                     <span className="truncate">{cls.code}</span>
                   </div>
-                  <span className="text-[10px] text-cyan-400/50 font-mono shrink-0">
+                  <span className="text-[10px] text-slate-500 font-mono shrink-0">
                     {cls.units?.length || 0} units
                   </span>
                 </button>
@@ -340,7 +350,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
   return (
     <>
       {/* Desktop Persistent Sidebar (Fixed width 260px) */}
-      <aside className="hidden lg:block w-64 shrink-0 h-[calc(100vh-4rem)] sticky top-16 z-20">
+      <aside className="hidden lg:block w-64 shrink-0 h-full z-20">
         {sidebarContent}
       </aside>
 

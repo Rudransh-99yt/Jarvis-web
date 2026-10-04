@@ -72,11 +72,12 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
       <div className="p-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-blue-950/40 via-cyan-950/30 to-black/70 backdrop-blur-md space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-cyan-300 px-2.5 py-1 rounded bg-cyan-950/80 border border-cyan-500/30">
-                {course.code}
-              </span>
-              <span className="text-xs font-mono text-cyan-400/60">{course.term} • {course.room}</span>
+            <div className="flex items-center gap-2 text-xs font-mono">
+              <span className="font-bold text-cyan-300">{course.code}</span>
+              <span aria-hidden="true" className="text-cyan-500/40">·</span>
+              <span className="text-cyan-400/80">{course.term}</span>
+              <span aria-hidden="true" className="text-cyan-500/40">·</span>
+              <span className="text-cyan-400/60">{course.room}</span>
             </div>
             <h1 className="text-2xl font-bold text-white tracking-tight mt-1.5">{course.name}</h1>
             <p className="text-xs sm:text-sm text-cyan-100/70 max-w-2xl mt-1">{course.description}</p>

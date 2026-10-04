@@ -19,6 +19,8 @@ data/storage/objects/*
 # Logs and runtime databases
 *.log
 data/jarvis-db.json.tmp.*
+tests/.tmp-db/
+tests/.tmp-storage/
 
 # OS / Editor files
 .DS_Store

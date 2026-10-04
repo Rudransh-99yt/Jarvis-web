@@ -50,33 +50,38 @@ export const TeacherSessionsListView: React.FC<TeacherSessionsListViewProps> = (
     switch (status) {
       case 'LIVE':
         return (
-          <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
-            <Radio className="w-3 h-3" />
-            LIVE CLASSROOM
+          <span className="flex items-center gap-1.5 text-xs font-mono font-bold text-rose-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-ping" />
+            <Radio className="w-3.5 h-3.5" />
+            <span>LIVE SESSION</span>
           </span>
         );
       case 'SCHEDULED':
         return (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
-            SCHEDULED
+          <span className="flex items-center gap-1.5 text-xs font-mono text-cyan-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+            <span>Scheduled</span>
           </span>
         );
       case 'APPROVED':
         return (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-            APPROVED & READY
+          <span className="flex items-center gap-1.5 text-xs font-mono text-emerald-400 font-medium">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span>Approved & Ready</span>
           </span>
         );
       case 'READY_FOR_REVIEW':
         return (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
-            NEEDS REVIEW
+          <span className="flex items-center gap-1.5 text-xs font-mono text-amber-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+            <span>Needs Review</span>
           </span>
         );
       default:
         return (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-300 border border-slate-500/30">
-            {status}
+          <span className="flex items-center gap-1.5 text-xs font-mono text-slate-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+            <span>{status}</span>
           </span>
         );
     }

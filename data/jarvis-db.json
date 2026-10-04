@@ -203,7 +203,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-04T04:40:28.361Z"
+      "updatedAt": "2026-10-04T09:18:01.461Z"
     },
     {
       "id": "ks-calculus",
@@ -225,7 +225,7 @@
         "What is the relation between Green Theorem and the Divergence Theorem?"
       ],
       "createdAt": "2026-09-12T11:00:00.000Z",
-      "updatedAt": "2026-10-04T04:40:28.720Z"
+      "updatedAt": "2026-10-04T09:18:01.847Z"
     }
   ],
   "knowledgeSources": [
@@ -293,7 +293,7 @@
       "updatedAt": "2026-09-20T16:00:00.000Z"
     },
     {
-      "id": "src-mutc1l4g-f99h",
+      "id": "src-mutlyirb-pwz5",
       "workspaceId": "ws-stark-core",
       "knowledgeSpaceId": "ks-calculus",
       "name": "Green Theorem Formulation.md",
@@ -309,8 +309,8 @@
       "summary": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
       "fullText": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D.",
       "tokenCount": 22,
-      "createdAt": "2026-10-04T04:40:28.720Z",
-      "updatedAt": "2026-10-04T04:40:28.721Z",
+      "createdAt": "2026-10-04T09:18:01.847Z",
+      "updatedAt": "2026-10-04T09:18:01.848Z",
       "chunkCount": 1
     }
   ],
@@ -369,11 +369,11 @@
       "page": 1,
       "section": "General",
       "contentHash": "d559f5f8f7448066528f3b65619eb7c419a0d44b1a5ca2c2a6d0bd8a75c48484",
-      "createdAt": "2026-10-04T04:40:28.363Z"
+      "createdAt": "2026-10-04T09:18:01.464Z"
     },
     {
-      "id": "chunk-src-mutc1l4g-f99h-0",
-      "sourceId": "src-mutc1l4g-f99h",
+      "id": "chunk-src-mutlyirb-pwz5-0",
+      "sourceId": "src-mutlyirb-pwz5",
       "knowledgeSpaceId": "ks-calculus",
       "workspaceId": "ws-stark-core",
       "sourceTitle": "Green Theorem Formulation.md",
@@ -383,7 +383,7 @@
       "page": 1,
       "section": "General Content",
       "contentHash": "80a3a8d6306ed1c2ef4f927b5cf59e2b7f561fa26f1d5130c56533e583f7fed7",
-      "createdAt": "2026-10-04T04:40:28.720Z",
+      "createdAt": "2026-10-04T09:18:01.847Z",
       "embedding": [
         0,
         0.112517,
@@ -763,7 +763,7 @@
       "gradedCount": 0
     },
     {
-      "id": "asg-1791088802182-claq",
+      "id": "asg-1791105455466-p62u",
       "classId": "class-phys-301",
       "className": "PHYS-301: Advanced Quantum & Electrodynamics",
       "title": "Quantum Entanglement & Bell Inequalities Lab",
@@ -863,9 +863,9 @@
         "ks-quantum",
         "ks-calculus"
       ],
-      "id": "proj-1791088853992-4c8y",
-      "createdAt": "2026-10-04T04:40:53.992Z",
-      "updatedAt": "2026-10-04T04:40:53.992Z"
+      "id": "proj-1791105506896-ui68",
+      "createdAt": "2026-10-04T09:18:26.896Z",
+      "updatedAt": "2026-10-04T09:18:26.897Z"
     },
     {
       "title": "Vibranium Lattice Resonance Project",
@@ -875,9 +875,9 @@
       "ownerId": "user-tony",
       "knowledgeSpaceIds": [],
       "status": "active",
-      "id": "proj-1791088854333-nwvm",
-      "createdAt": "2026-10-04T04:40:54.333Z",
-      "updatedAt": "2026-10-04T04:40:54.333Z"
+      "id": "proj-1791105507258-qcjb",
+      "createdAt": "2026-10-04T09:18:27.258Z",
+      "updatedAt": "2026-10-04T09:18:27.258Z"
     }
   ],
   "researchQuestions": [
@@ -913,19 +913,19 @@
       "updatedAt": "2026-10-02T15:30:00.000Z"
     },
     {
-      "projectId": "proj-1791088853992-4c8y",
+      "projectId": "proj-1791105506896-ui68",
       "workspaceId": "ws-stark-core",
       "title": "Magnetic Boundary Line Integral Equivalence",
       "question": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
       "priority": "critical",
       "status": "answered",
       "notes": "Checking against classical Stokes formulation in ks-calculus.",
-      "id": "q-1791088853993-kn8b",
+      "id": "q-1791105506897-fq8m",
       "linkedEvidenceIds": [
-        "ev-1791088853994-tjje"
+        "ev-1791105506897-0358"
       ],
-      "createdAt": "2026-10-04T04:40:53.993Z",
-      "updatedAt": "2026-10-04T04:40:53.993Z",
+      "createdAt": "2026-10-04T09:18:26.897Z",
+      "updatedAt": "2026-10-04T09:18:26.897Z",
       "answer": "Stokes theorem confirms surface integral of curl F equals closed line integral around boundary."
     }
   ],
@@ -989,9 +989,9 @@
       "createdAt": "2026-09-24T12:00:00.000Z"
     },
     {
-      "projectId": "proj-1791088853992-4c8y",
+      "projectId": "proj-1791105506896-ui68",
       "workspaceId": "ws-stark-core",
-      "questionId": "q-1791088853993-kn8b",
+      "questionId": "q-1791105506897-fq8m",
       "knowledgeSourceId": "src-calc-1",
       "knowledgeSpaceId": "ks-calculus",
       "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
@@ -1013,8 +1013,8 @@
         "Stokes Theorem",
         "Plasma Boundary"
       ],
-      "id": "ev-1791088853994-tjje",
-      "createdAt": "2026-10-04T04:40:53.994Z"
+      "id": "ev-1791105506897-0358",
+      "createdAt": "2026-10-04T09:18:26.897Z"
     }
   ],
   "researchNotes": [
@@ -1040,24 +1040,24 @@
       "updatedAt": "2026-09-24T14:30:00.000Z"
     },
     {
-      "projectId": "proj-1791088853992-4c8y",
+      "projectId": "proj-1791105506896-ui68",
       "workspaceId": "ws-stark-core",
       "authorId": "user-tony",
       "title": "Plasma Boundary Mathematical Synthesis",
       "content": "Boundary curve integration establishes exact conservation of magnetic flux.",
       "linkedQuestionIds": [
-        "q-1791088853993-kn8b"
+        "q-1791105506897-fq8m"
       ],
       "linkedEvidenceIds": [
-        "ev-1791088853994-tjje"
+        "ev-1791105506897-0358"
       ],
       "tags": [
         "Plasma",
         "Derivations"
       ],
-      "id": "note-1791088853994-0fqp",
-      "createdAt": "2026-10-04T04:40:53.994Z",
-      "updatedAt": "2026-10-04T04:40:53.994Z"
+      "id": "note-1791105506898-brf3",
+      "createdAt": "2026-10-04T09:18:26.898Z",
+      "updatedAt": "2026-10-04T09:18:26.898Z"
     }
   ],
   "researchReports": [
@@ -1096,7 +1096,7 @@
       "generatedAt": "2026-10-02T16:00:00.000Z"
     },
     {
-      "projectId": "proj-1791088853992-4c8y",
+      "projectId": "proj-1791105506896-ui68",
       "workspaceId": "ws-stark-core",
       "title": "Formal Technical Synthesis: Toroidal Plasma Confinement",
       "researchQuestion": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
@@ -1106,11 +1106,11 @@
         "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
       ],
       "evidenceReferences": [
-        "ev-1791088853994-tjje"
+        "ev-1791105506897-0358"
       ],
       "sourceCitations": [
         {
-          "sourceId": "src-mutc1l4g-f99h",
+          "sourceId": "src-mutlyirb-pwz5",
           "sourceTitle": "Green Theorem Formulation.md",
           "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
         },
@@ -1124,11 +1124,11 @@
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791088854332-7vpa",
-      "generatedAt": "2026-10-04T04:40:54.332Z"
+      "id": "rep-1791105507258-8fgu",
+      "generatedAt": "2026-10-04T09:18:27.258Z"
     },
     {
-      "projectId": "proj-1791088853992-4c8y",
+      "projectId": "proj-1791105506896-ui68",
       "workspaceId": "ws-stark-core",
       "title": "Automated Brief on Harmonic Zero-Point Energy",
       "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
@@ -1138,11 +1138,11 @@
         "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
       ],
       "evidenceReferences": [
-        "ev-1791088853994-tjje"
+        "ev-1791105506897-0358"
       ],
       "sourceCitations": [
         {
-          "sourceId": "src-mutc1l4g-f99h",
+          "sourceId": "src-mutlyirb-pwz5",
           "sourceTitle": "Green Theorem Formulation.md",
           "excerpt": "Green Theorem connects line integrals around simple closed curves C to double integrals over plane region D."
         },
@@ -1156,8 +1156,8 @@
         "Grounded solely on currently ingested and indexed Knowledge Space records.",
         "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
       ],
-      "id": "rep-1791088854335-mxgh",
-      "generatedAt": "2026-10-04T04:40:54.335Z"
+      "id": "rep-1791105507260-626g",
+      "generatedAt": "2026-10-04T09:18:27.260Z"
     }
   ],
   "files": [

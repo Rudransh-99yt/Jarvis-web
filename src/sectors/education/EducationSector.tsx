@@ -44,6 +44,7 @@ import { ClassesView } from './views/ClassesView.tsx';
 import { AssignmentsView } from './views/AssignmentsView.tsx';
 import { KnowledgeWorkspaceView } from './views/KnowledgeWorkspaceView.tsx';
 import { StudyAssistantView } from './views/StudyAssistantView.tsx';
+import { StudentPersonalNotesView } from './views/StudentPersonalNotesView.tsx';
 
 import { Menu, Home, Layers, Flame, FileCheck2, Building2 } from 'lucide-react';
 
@@ -71,6 +72,8 @@ export type DeepEducationView =
   | 'focus'
   | 'workspace'
   | 'community'
+  | 'study_groups'
+  | 'notes'
   | 'knowledge'
   | 'study';
 
@@ -135,6 +138,39 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     setTimeout(() => setNotification(null), 4000);
   };
 
+  // Scroll to top whenever the active view or primary entity target changes
+  useEffect(() => {
+    const scrollContainer = document.getElementById('education-workspace-scroll');
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0;
+      scrollContainer.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [currentView, activeCourseId, activeUnitId, activeLessonId]);
+
+  // Browser Back/Forward PopState Navigation Support
+  useEffect(() => {
+    // Initial replaceState to anchor initial view in history
+    if (!window.history.state || !window.history.state.eduView) {
+      window.history.replaceState(
+        { eduView: currentView, activeCourseId, activeUnitId, activeLessonId },
+        '',
+        window.location.pathname
+      );
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state && e.state.eduView) {
+        setCurrentView(e.state.eduView);
+        if (e.state.activeCourseId) setActiveCourseId(e.state.activeCourseId);
+        if (e.state.activeUnitId) setActiveUnitId(e.state.activeUnitId);
+        if (e.state.activeLessonId) setActiveLessonId(e.state.activeLessonId);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Focus Session State & Navigation Guard
   const [activeFocusSession, setActiveFocusSession] = useState<FocusSession | null>(null);
   const [blockedNavState, setBlockedNavState] = useState<{
@@ -179,6 +215,18 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
         });
         return;
       }
+    }
+    if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+      window.history.pushState(
+        {
+          eduView: targetView,
+          activeCourseId: targetCourseId || activeCourseId,
+          activeUnitId,
+          activeLessonId
+        },
+        '',
+        window.location.pathname
+      );
     }
     setCurrentView(targetView);
   };
@@ -246,6 +294,16 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       }
     }
   }, [currentRole]);
+
+  // Global scroll architecture: reset primary vertical scroll on view or entity navigation
+  useEffect(() => {
+    const scrollContainer = document.getElementById('main-scroll-container') || document.querySelector('[data-scroll-owner="true"]');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [currentView, activeCourseId, activeUnitId, activeLessonId]);
 
   // Active items lookup
   const activeCourse = classes.find((c) => c.id === activeCourseId) || classes[0];
@@ -555,6 +613,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (currentView === 'focus') return 'focus';
     if (currentView === 'workspace') return 'workspace';
     if (currentView === 'community') return 'community';
+    if (currentView === 'study_groups') return 'study_groups';
+    if (currentView === 'notes') return 'notes';
     if (currentView === 'knowledge') return 'knowledge';
     if (currentView === 'videos') return 'videos';
     if (currentView === 'teacher_session_prep') return 'teacher_prep';
@@ -591,6 +651,12 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
         break;
       case 'community':
         setCurrentView('community');
+        break;
+      case 'study_groups':
+        setCurrentView('study_groups');
+        break;
+      case 'notes':
+        setCurrentView('notes');
         break;
       case 'knowledge':
         setCurrentView('knowledge');
@@ -637,6 +703,16 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
     if (currentView === 'community') {
       items.push({ id: 'community', label: 'Class Community', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'study_groups') {
+      items.push({ id: 'study_groups', label: 'Peer Study Groups', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'notes') {
+      items.push({ id: 'notes', label: 'Study Notes & Formulas', type: 'section' });
       return items;
     }
 
@@ -700,7 +776,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <div className="flex min-h-[calc(100vh-5rem)]">
+    <div className="flex-1 min-h-0 flex flex-row overflow-hidden h-full">
       {/* 1. Dedicated Education Left Sidebar */}
       <EducationSidebar
         currentRole={currentRole}
@@ -718,14 +794,15 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       />
 
       {/* 2. Main Education Application Workspace */}
-      <main className="flex-1 flex flex-col min-w-0 px-4 sm:px-8 py-6 pb-20 lg:pb-12">
+      <main id="education-workspace-scroll" className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto px-4 sm:px-8 py-6 pb-20 lg:pb-12 overscroll-contain">
         {/* Mobile Header Bar */}
         <div className="lg:hidden flex items-center justify-between pb-4 mb-4 border-b border-cyan-500/15">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 rounded-lg border border-cyan-500/30 bg-black/60 text-cyan-300 hover:text-white"
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-cyan-500/30 bg-black/60 text-cyan-300 hover:text-white"
               title="Open Navigation"
+              aria-label="Open Navigation Drawer"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -734,7 +811,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             </span>
           </div>
 
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 text-cyan-300">
+          <span className="text-[11px] font-mono text-cyan-400/80 uppercase font-semibold">
             {currentRole}
           </span>
         </div>
@@ -879,7 +956,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             <EducationCommunityView
               classes={classes}
               currentRole={currentRole}
-              initialClassId={activeCourseId}
+              initialClassId={academicContext.classId || activeCourseId}
+              onNavigateTab={(t, meta) => handleNavigateWithContext(t as DeepEducationView, meta)}
               onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
             />
           )}
@@ -998,7 +1076,28 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             <EducationCommunityView
               classes={classes}
               currentRole={currentRole}
-              onNavigateTab={(t) => setCurrentView(t as any)}
+              initialClassId={academicContext.classId || activeCourseId}
+              onNavigateTab={(t, meta) => handleNavigateWithContext(t as DeepEducationView, meta)}
+              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+            />
+          )}
+
+          {currentView === 'study_groups' && (
+            <EducationCommunityView
+              classes={classes}
+              currentRole={currentRole}
+              initialClassId={academicContext.classId || activeCourseId}
+              onNavigateTab={(t, meta) => handleNavigateWithContext(t as DeepEducationView, meta)}
+              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+            />
+          )}
+
+          {currentView === 'notes' && (
+            <StudentPersonalNotesView
+              classes={classes}
+              knowledgeSpaces={knowledgeSpaces}
+              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+              onQueryGrounded={handleQueryGrounded}
             />
           )}
 
@@ -1038,7 +1137,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
                 : 'principal_home'
             )
           }
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-h-[44px] min-w-[48px] gap-0.5 text-[10px] font-mono cursor-pointer ${
             ['student_home', 'teacher_home', 'principal_home'].includes(currentView)
               ? 'text-cyan-300 font-bold'
               : 'text-cyan-400/60'
@@ -1050,7 +1149,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
         <button
           onClick={() => setCurrentView('student_my_learning')}
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-h-[44px] min-w-[48px] gap-0.5 text-[10px] font-mono cursor-pointer ${
             currentView === 'student_my_learning' ? 'text-cyan-300 font-bold' : 'text-cyan-400/60'
           }`}
         >
@@ -1060,7 +1159,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
         <button
           onClick={() => setCurrentView('focus')}
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-h-[44px] min-w-[48px] gap-0.5 text-[10px] font-mono cursor-pointer ${
             currentView === 'focus' ? 'text-cyan-300 font-bold' : 'text-cyan-400/60'
           }`}
         >
@@ -1070,7 +1169,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
         <button
           onClick={() => setCurrentView('assignments')}
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-mono cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-h-[44px] min-w-[48px] gap-0.5 text-[10px] font-mono cursor-pointer ${
             currentView === 'assignments' ? 'text-cyan-300 font-bold' : 'text-cyan-400/60'
           }`}
         >
@@ -1080,7 +1179,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="flex flex-col items-center gap-0.5 text-[10px] font-mono text-cyan-400/60 cursor-pointer"
+          className="flex flex-col items-center justify-center min-h-[44px] min-w-[48px] gap-0.5 text-[10px] font-mono text-cyan-400/60 cursor-pointer"
         >
           <Menu className="w-4 h-4" />
           <span>More</span>

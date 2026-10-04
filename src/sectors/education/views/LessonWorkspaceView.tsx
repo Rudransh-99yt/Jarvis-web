@@ -45,6 +45,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
   const [seekSeconds, setSeekSeconds] = useState<number | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [revealedAnswers, setRevealedAnswers] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<'content' | 'takeaways' | 'quiz' | 'tutor'>('content');
 
   // Grounded AI Study Tutor State
   const [studyQuery, setStudyQuery] = useState('');
@@ -218,22 +219,78 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
         </div>
       )}
 
-      {/* 3. Section 1: Lecture Notes & Deep Concepts */}
-      <div className="p-6 rounded-2xl border border-cyan-500/20 bg-black/40 backdrop-blur-md space-y-4">
-        <div className="flex items-center gap-2 border-b border-cyan-500/10 pb-3">
-          <BookOpen className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
-            Lecture Notes & Theoretical Derivation
-          </h2>
-        </div>
+      {/* 3. Segmented Workspace Mode Selector */}
+      <div className="flex items-center gap-1.5 p-1 rounded-xl border border-cyan-500/20 bg-black/60 font-mono text-xs overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('content')}
+          className={`px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'content'
+              ? 'bg-cyan-500/20 text-cyan-200 font-bold border border-cyan-400/40'
+              : 'text-cyan-400/60 hover:text-white'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Lecture Notes</span>
+        </button>
 
-        <div className="prose prose-invert max-w-none text-xs sm:text-sm text-cyan-100/85 leading-relaxed font-sans whitespace-pre-line">
-          {lesson.notes || lesson.description}
-        </div>
+        {lesson.keyTakeaways && lesson.keyTakeaways.length > 0 && (
+          <button
+            onClick={() => setActiveTab('takeaways')}
+            className={`px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'takeaways'
+                ? 'bg-cyan-500/20 text-cyan-200 font-bold border border-cyan-400/40'
+                : 'text-cyan-400/60 hover:text-white'
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Key Takeaways ({lesson.keyTakeaways.length})</span>
+          </button>
+        )}
+
+        {lesson.practiceQuestions && lesson.practiceQuestions.length > 0 && (
+          <button
+            onClick={() => setActiveTab('quiz')}
+            className={`px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'quiz'
+                ? 'bg-cyan-500/20 text-cyan-200 font-bold border border-cyan-400/40'
+                : 'text-cyan-400/60 hover:text-white'
+            }`}
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Self-Check ({lesson.practiceQuestions.length})</span>
+          </button>
+        )}
+
+        <button
+          onClick={() => setActiveTab('tutor')}
+          className={`px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'tutor'
+              ? 'bg-cyan-500/20 text-cyan-200 font-bold border border-cyan-400/40'
+              : 'text-cyan-400/60 hover:text-white'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+          <span>AI Study Tutor</span>
+        </button>
       </div>
 
-      {/* 4. Section 2: Core Key Takeaways */}
-      {lesson.keyTakeaways && lesson.keyTakeaways.length > 0 && (
+      {/* 4. Tab Panels */}
+      {activeTab === 'content' && (
+        <div className="p-6 rounded-2xl border border-cyan-500/20 bg-black/40 backdrop-blur-md space-y-4">
+          <div className="flex items-center gap-2 border-b border-cyan-500/10 pb-3">
+            <BookOpen className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
+              Lecture Notes & Theoretical Derivation
+            </h2>
+          </div>
+
+          <div className="prose prose-invert max-w-none text-xs sm:text-sm text-cyan-100/85 leading-relaxed font-sans whitespace-pre-line">
+            {lesson.notes || lesson.description}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'takeaways' && lesson.keyTakeaways && (
         <div className="p-6 rounded-2xl border border-cyan-500/20 bg-black/40 backdrop-blur-md space-y-4">
           <div className="flex items-center gap-2 border-b border-cyan-500/10 pb-3">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -258,8 +315,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
         </div>
       )}
 
-      {/* 5. Section 3: Interactive Practice & Self-Check Questions */}
-      {lesson.practiceQuestions && lesson.practiceQuestions.length > 0 && (
+      {activeTab === 'quiz' && lesson.practiceQuestions && (
         <div className="p-6 rounded-2xl border border-cyan-500/20 bg-black/40 backdrop-blur-md space-y-5">
           <div className="flex items-center justify-between border-b border-cyan-500/10 pb-3">
             <div className="flex items-center gap-2">
@@ -347,63 +403,64 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
         </div>
       )}
 
-      {/* 6. Section 4: Grounded AI Tutor */}
-      <div className="p-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-blue-950/20 to-black/70 backdrop-blur-md space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-        <div className="flex items-center justify-between border-b border-cyan-500/15 pb-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
-              Grounded AI Study Tutor
-            </h2>
+      {activeTab === 'tutor' && (
+        <div className="p-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-blue-950/20 to-black/70 backdrop-blur-md space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+          <div className="flex items-center justify-between border-b border-cyan-500/15 pb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <h2 className="text-sm font-bold font-mono tracking-wider text-cyan-300 uppercase">
+                Grounded AI Study Tutor
+              </h2>
+            </div>
+            <span className="text-xs font-mono text-cyan-400/60">Grounded in verified syllabus</span>
           </div>
-          <span className="text-xs font-mono text-cyan-400/60">Grounded in verified syllabus</span>
-        </div>
 
-        {/* Query Input */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={studyQuery}
-            onChange={(e) => setStudyQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
-            placeholder="Ask a question about this lesson (e.g., 'How do we derive zero-point energy?')..."
-            className="flex-1 bg-black/60 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-xs font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none focus:border-cyan-400/60"
-          />
-          <button
-            onClick={() => handleAskTutor()}
-            disabled={isAnswering || !studyQuery.trim()}
-            className="px-4 py-2.5 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 disabled:opacity-50 text-cyan-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
-          >
-            {isAnswering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            <span>Ask Tutor</span>
-          </button>
-        </div>
-
-        {/* History Stream */}
-        {studyHistory.length > 0 && (
-          <div className="space-y-3 pt-2">
-            {studyHistory.map((item, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-xl border border-cyan-500/15 bg-black/50 space-y-2 text-xs font-mono"
-              >
-                <div className="text-cyan-300 font-bold">Q: {item.query}</div>
-                <div className="text-cyan-100/90 leading-relaxed font-sans">{item.answer}</div>
-                {item.citations && item.citations.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1 border-t border-cyan-500/10 text-[10px] text-cyan-400/60">
-                    <span>Verified Citations:</span>
-                    {item.citations.map((c: any, cIdx: number) => (
-                      <span key={cIdx} className="text-cyan-300">
-                        [{c.title || c.sourceId || 'Lecture Notes'}]
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+          {/* Query Input */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={studyQuery}
+              onChange={(e) => setStudyQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
+              placeholder="Ask a question about this lesson (e.g., 'How do we derive zero-point energy?')..."
+              className="flex-1 bg-black/60 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-xs font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none focus:border-cyan-400/60"
+            />
+            <button
+              onClick={() => handleAskTutor()}
+              disabled={isAnswering || !studyQuery.trim()}
+              className="px-4 py-2.5 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 disabled:opacity-50 text-cyan-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+            >
+              {isAnswering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span>Ask Tutor</span>
+            </button>
           </div>
-        )}
-      </div>
+
+          {/* History Stream */}
+          {studyHistory.length > 0 && (
+            <div className="space-y-3 pt-2">
+              {studyHistory.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-xl border border-cyan-500/15 bg-black/50 space-y-2 text-xs font-mono"
+                >
+                  <div className="text-cyan-300 font-bold">Q: {item.query}</div>
+                  <div className="text-cyan-100/90 leading-relaxed font-sans">{item.answer}</div>
+                  {item.citations && item.citations.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-1 border-t border-cyan-500/10 text-[10px] text-cyan-400/60">
+                      <span>Verified Citations:</span>
+                      {item.citations.map((c: any, cIdx: number) => (
+                        <span key={cIdx} className="text-cyan-300">
+                          [{c.title || c.sourceId || 'Lecture Notes'}]
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 7. Lesson Footer Progression Control */}
       <div className="flex items-center justify-between p-4 rounded-xl border border-cyan-500/20 bg-black/40">
