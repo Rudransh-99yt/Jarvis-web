@@ -88,7 +88,7 @@ export class ClassSessionPolicy {
       };
     }
 
-    const isOwner = session.teacherId === user.id || session.teacher?.id === user.id;
+    const isOwner = session.teacherId === user.id || (session as any).teacher?.id === user.id;
     const isSystemAdmin = user.role === 'commander' || user.role === 'admin';
 
     if (!isOwner && !isSystemAdmin) {
