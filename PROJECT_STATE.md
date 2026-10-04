@@ -182,6 +182,30 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 - **Comprehensive Automated Test Suite (`tests/milestone15_video_qa.test.ts`)**:
   - 25/25 test assertions passing across timestamp discovery, single & multi-video Q&A, structured citations, prompt injection defense, cross-course authorization enforcement, insufficient evidence refusals, and deterministic offline fallback.
 
+### Phase D — Education OS Integration Foundation (COMPLETED)
+- **Architectural Shift**: Transitioned Jarvis Education from siloed feature modules (Workspace, Community, Focus, Assignments, Calendar, Classes, RAG, Smart Classroom) into **one cohesive academic operating system** under the central tenet: *"One Academic Context → Many Connected Experiences"*.
+- **Shared Academic Context Model (`AcademicContext`)**:
+  - Dynamic resolution via `academicIntegrationService.resolveContext(type, id)` supporting ClassSession, Lesson, Assignment, WorkspacePage, and fallback hierarchies.
+  - Carries context through deep navigation, focus locks, and tutoring sessions.
+- **Canonical Learning Object Link Model (`LearningLink`)**:
+  - Bidirectional, multi-entity relationships (`curriculum`, `notes`, `discussion`, `homework`, `assessment`, `material`) connecting all learning primitives without pairwise hardcoded bridges.
+- **Teacher Workflow Anchor (`linkAllForClassSession`)**:
+  - Operational anchor that turns an approved ClassSession into a fully provisioned academic package:
+    1. Lesson curriculum mapping.
+    2. Notion-style Workspace Page with blackboard plan, worked examples, and objectives.
+    3. Homework Assignment linked into the assignment ledger and calendar feed.
+    4. Formative interactive Quiz for in-class checks.
+    5. Course Community channel discussion link.
+    6. Synchronized calendar schedule.
+- **Cross-Experience Workflows & Progressive Disclosure**:
+  - `AcademicContextActions.tsx`: Contextual action strip rendering breadcrumbs (`PHYS-301 > Unit 2 > Lesson 202`) with 1-click jumps to Study, Focus (25m), Notes, Discuss, Assignment, and Sources.
+  - Focus session mode integrated with academic targets, preventing unauthorized drift into unrelated views.
+  - Unified calendar feed merging scheduled ClassSessions, assignment deadlines, and peer study groups.
+- **Bounded AI Context Builder**:
+  - Constructs bounded prompt contexts scoped to active academic locus and verified textbook sources, preventing hallucinations and context overflow.
+- **Comprehensive Test Suite (`tests/education_academic_integration.test.ts`)**:
+  - 57/57 assertions passing across Context Resolution, Learning Links, Teacher Workflow Anchor, Event Bus & Notifications, Quiz Results, Unified Calendar Feed, Focus Session Tracking, and Bounded AI Context.
+
 ---
 
 ## 4. Pre-M16 Checkpoint & Baseline Verification

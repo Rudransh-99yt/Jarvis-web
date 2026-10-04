@@ -45,6 +45,7 @@ interface TeacherSessionPrepWizardProps {
   onBackToList: () => void;
   onSessionSaved?: (session: ClassSession) => void;
   onLaunchSmartboard?: (sessionId: string) => void;
+  onNavigateToContext?: (view: string, context?: any) => void;
 }
 
 export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> = ({
@@ -52,7 +53,8 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
   existingSession,
   onBackToList,
   onSessionSaved,
-  onLaunchSmartboard
+  onLaunchSmartboard,
+  onNavigateToContext
 }) => {
   // Wizard Steps: 1: Context -> 2: Sources -> 3: Config -> 4: Review
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(
@@ -314,6 +316,32 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
       if (onSessionSaved) onSessionSaved(data.session);
     } catch (err) {
       console.error('Release toggle failed:', err);
+    }
+  };
+
+  // Phase D: Connect across Education OS (Link All Objects)
+  const [isLinkingAll, setIsLinkingAll] = useState(false);
+  const [linkSuccessMessage, setLinkSuccessMessage] = useState<string | null>(null);
+
+  const handleLinkAll = async () => {
+    if (!activeSession) return;
+    setIsLinkingAll(true);
+    try {
+      const res = await fetch(`/api/education/integration/sessions/${activeSession.id}/link-all`, {
+        method: 'POST',
+        headers: { 'x-user-role': 'teacher', 'x-user-id': 'teacher-1' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveSession(data.session);
+        if (onSessionSaved) onSessionSaved(data.session);
+        setLinkSuccessMessage('✓ All Academic Objects Connected: Workspace Page, Quiz, Assignment & Community Discussion linked!');
+        setTimeout(() => setLinkSuccessMessage(null), 6000);
+      }
+    } catch (err) {
+      console.error('Link all failed:', err);
+    } finally {
+      setIsLinkingAll(false);
     }
   };
 
@@ -758,6 +786,115 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
                   <PlayCircle className="w-3.5 h-3.5 text-cyan-300" />
                   <span>Launch on SmartBoard</span>
                 </button>
+              )}
+
+              <button
+                onClick={handleLinkAll}
+                disabled={isLinkingAll}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-400/50 hover:bg-indigo-500/30 text-indigo-300 text-xs font-mono font-bold transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{isLinkingAll ? 'Connecting OS...' : 'Connect to Education OS'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Success Message Banner */}
+          {linkSuccessMessage && (
+            <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center justify-between animate-fade-in">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{linkSuccessMessage}</span>
+              </div>
+              <button onClick={() => setLinkSuccessMessage(null)} className="text-emerald-400/70 hover:text-white">✕</button>
+            </div>
+          )}
+
+          {/* Phase D: Connected Learning Objects Navigation Strip */}
+          <div className="p-3.5 rounded-xl bg-black/40 border border-cyan-500/25 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            <div className="flex items-center gap-2 text-cyan-300">
+              <span className="font-bold text-cyan-400 uppercase tracking-wider text-[11px]">Connected Hub:</span>
+              <span className="text-cyan-100/70 text-[11px]">Jump to linked learning surfaces</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {onNavigateToContext && (
+                <>
+                  <button
+                    onClick={() =>
+                      onNavigateToContext('workspace', {
+                        classId: activeSession.classId,
+                        courseCode: activeSession.courseCode,
+                        classSessionId: activeSession.id
+                      })
+                    }
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-black/40 border border-cyan-500/30 hover:border-cyan-400 text-cyan-200 text-[11px] cursor-pointer"
+                  >
+                    <FileText className="w-3 h-3 text-cyan-400" />
+                    <span>Workspace Notes</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      onNavigateToContext('classroom', {
+                        classId: activeSession.classId,
+                        classSessionId: activeSession.id
+                      })
+                    }
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-blue-950/40 border border-blue-500/30 hover:border-blue-400 text-blue-300 text-[11px] cursor-pointer"
+                  >
+                    <HelpCircle className="w-3 h-3 text-blue-400" />
+                    <span>Interactive Quiz</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      onNavigateToContext('assignments', {
+                        classId: activeSession.classId,
+                        classSessionId: activeSession.id
+                      })
+                    }
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 text-emerald-300 text-[11px] cursor-pointer"
+                  >
+                    <FileCheck2 className="w-3 h-3 text-emerald-400" />
+                    <span>Assignment</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      onNavigateToContext('community', {
+                        classId: activeSession.classId,
+                        classSessionId: activeSession.id
+                      })
+                    }
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-indigo-950/40 border border-indigo-500/30 hover:border-indigo-400 text-indigo-300 text-[11px] cursor-pointer"
+                  >
+                    <Globe className="w-3 h-3 text-indigo-400" />
+                    <span>Community Discussion</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      onNavigateToContext('focus', {
+                        classId: activeSession.classId,
+                        classSessionId: activeSession.id,
+                        topic: activeSession.topic
+                      })
+                    }
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-amber-950/40 border border-amber-500/30 hover:border-amber-400 text-amber-300 text-[11px] cursor-pointer"
+                  >
+                    <Clock className="w-3 h-3 text-amber-400" />
+                    <span>Focus Prep</span>
+                  </button>
+
+                  <button
+                    onClick={() => onNavigateToContext('calendar')}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-black/40 border border-cyan-500/30 hover:border-cyan-400 text-cyan-200 text-[11px] cursor-pointer"
+                  >
+                    <Calendar className="w-3 h-3 text-cyan-400" />
+                    <span>Calendar</span>
+                  </button>
+                </>
               )}
             </div>
           </div>

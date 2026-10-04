@@ -1,5 +1,5 @@
 // Research & Labs Sector REST API Routes
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { jarvisData } from '../../data/index.ts';
 import { researchAssistant } from './researchAssistant.ts';
 import type { ResearchAssistantMode, ResearchProjectStatus } from '../../../src/types/research.ts';

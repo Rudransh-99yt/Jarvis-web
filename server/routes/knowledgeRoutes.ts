@@ -1,5 +1,5 @@
 // Knowledge Spaces & Grounded RAG REST API Routes
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { jarvisData } from '../data/index.ts';
 import { ingestionPipeline } from '../rag/ingestionPipeline.ts';
 import { retrievalService } from '../rag/retrievalService.ts';

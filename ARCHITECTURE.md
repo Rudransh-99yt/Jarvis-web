@@ -152,6 +152,40 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 - **Tenant-Safe Deduplication & Cascading RAG Cleanup (`ragBridge.ts`)**: Same-content deduplication within workspace boundaries; direct ingestion into Knowledge Spaces; cascading purge of all derived vector chunks upon file deletion.
 - **Cloud-Ready Strategy**: Provider configuration allows `STORAGE_PROVIDER=local` default, ready for future S3/GCS drivers without rewriting higher-level sectors. Note: Cloud storage is **not yet enabled**.
 
+### 1.8 Education OS Integration Layer — Phase D (`server/sectors/education/academicIntegrationService.ts`)
+- **Core Principle**: "One Academic Context → Many Connected Experiences". Eliminates siloed feature walls; replaces them with unified lenses over common academic objects without bloating individual views.
+- **Canonical Academic Entities**:
+  - `User`, `Institution`, `Workspace`
+  - `Class/Cohort`, `Course`, `Subject`, `Unit/Chapter`, `Lesson`
+  - `ClassSession` (Operational anchor for teacher orchestration)
+  - `Assignment`, `StudentSubmission`
+  - `Quiz`, `QuizResult`
+  - `KnowledgeSpace`, `KnowledgeSource`, `Chunk`
+  - `WorkspacePage` (Block editor note/blueprint)
+  - `CommunityChannel`, `CommunityThread`, `CommunityStudyGroup`
+  - `FocusSession` (Pomodoro & strict Study Lock tracking)
+  - `CalendarFeedItem`, `AcademicEvent`, `AcademicNotification`
+- **Shared Academic Context (`AcademicContext`)**:
+  - Encapsulates `{ institutionId, workspaceId, classId, courseId, courseCode, subjectName, unitId, unitTitle, lessonId, lessonTitle, classSessionId, assignmentId, workspacePageId, knowledgeSpaceIds }`.
+  - Resolved dynamically from any subsystem object via `academicIntegrationService.resolveContext(type, id)`.
+- **Learning Object Link Model (`LearningLink`)**:
+  - Unified relational link representation (`id`, `workspaceId`, `sourceType`, `sourceId`, `targetType`, `targetId`, `relation`, `title`, `context`, `metadata`, `createdBy`, `createdAt`).
+  - Supports bidirectional queries across all learning objects.
+- **Teacher Workflow Anchor (`linkAllForClassSession`)**:
+  - Teacher approves a prepared `ClassSession` and triggers single-action integration that automatically creates/links:
+    1. Curriculum Lesson mapping
+    2. Notion-style Workspace Page with structured lesson plan, blackboard layout, and objectives
+    3. Homework Assignment in assignments ledger and academic calendar
+    4. Formative interactive Quiz for check-for-understanding
+    5. Course Community channel discussion link
+    6. Scheduled class session in the unified calendar feed
+- **Unified Academic Calendar Feed**:
+  - Dynamically synthesizes scheduled ClassSessions, assignment due deadlines, quiz schedules, and peer study groups into a chronological timeline.
+- **Cross-Experience Workflows & Progressive Disclosure**:
+  - `AcademicContextActions.tsx`: Contextual action strip rendering breadcrumbs (`PHYS-301 > Unit 2 > Lesson 202`) with 1-click "Open in Context" jumps (Study, Focus 25m, Notes, Discuss, Assignment, Sources).
+- **Bounded AI Context Builder**:
+  - Packages active academic locus, verified textbook sources, and lesson plan outlines into high-signal, hallucination-resistant prompt contexts.
+
 ---
 
 ## 2. Security & Boundary Guarantees
@@ -160,3 +194,4 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
 3. **Storage Isolation**: Raw filesystem paths are never exposed to clients; downloads and uploads are mediated exclusively through authorized API endpoints.
 4. **Refusal Guard against Hallucinations**: Answers with insufficient evidence trigger explicit refusal responses with 0 manufactured citations.
 5. **Graceful Tool Sandboxing**: Unhandled exceptions inside tool execution do not crash the server and are cleanly formatted as tool errors.
+6. **Academic Role Boundaries**: Strict server-authoritative role checks; students cannot orchestrate or approve teacher class sessions; Focus Lock policies enforce tamper-resistant study boundaries during exams.

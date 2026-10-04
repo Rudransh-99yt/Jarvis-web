@@ -15,6 +15,7 @@ export * from '../../src/types/storage.ts';
 export * from '../../src/types/classroom.ts';
 export * from '../../src/types/quiz.ts';
 export * from '../../src/types/video.ts';
+export * from '../../src/types/academicContext.ts';
 
 // 1. User
 export type UserRole = 'admin' | 'commander' | 'teacher' | 'student' | 'guest';
@@ -184,4 +185,8 @@ export interface DatabaseSchema {
   quizResponses?: import('../../src/types/quiz.ts').QuizResponse[];
   quizParticipantStates?: import('../../src/types/quiz.ts').QuizParticipantState[];
   videos?: import('../../src/types/video.ts').VideoRecord[];
+  learningLinks?: import('../../src/types/academicContext.ts').LearningLink[];
+  academicEvents?: import('../../src/types/academicContext.ts').AcademicEvent[];
+  academicNotifications?: import('../../src/types/academicContext.ts').AcademicNotification[];
+  quizResults?: import('../../src/types/academicContext.ts').QuizResult[];
 }

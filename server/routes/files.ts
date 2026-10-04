@@ -1,5 +1,5 @@
 // Unified File & Storage REST API Routes (Milestone 10 & 14.2 Hardening)
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { jarvisData } from '../data/index.ts';
 import { fileService } from '../storage/fileService.ts';
 import { ragStorageBridge } from '../storage/ragBridge.ts';

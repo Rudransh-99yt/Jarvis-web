@@ -89,6 +89,22 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const [selectedSpaceId, setSelectedSpaceId] = useState<string>('ks-quantum');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
+  // Phase D: Shared Academic Context
+  const [academicContext, setAcademicContext] = useState<import('../../types/academicContext.ts').AcademicContext>({
+    institutionId: 'inst-stark-academy',
+    workspaceId: 'ws-stark-core',
+    classId: 'class-phys-301',
+    courseId: 'class-phys-301',
+    courseCode: 'PHYS-301',
+    courseName: 'Advanced Quantum & Classical Electrodynamics',
+    subjectName: 'Physics',
+    unitId: 'unit-phys-2',
+    unitTitle: 'Quantum Harmonic Oscillators & Ladder Operators',
+    lessonId: 'les-phys-202',
+    lessonTitle: 'Creation & Annihilation Operator Dynamics',
+    classSessionId: 'session-phys-101'
+  });
+
   // Data State
   const [institution, setInstitution] = useState<AcademicInstitution | undefined>();
   const [classes, setClasses] = useState<EducationClass[]>([]);
@@ -165,6 +181,28 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       }
     }
     setCurrentView(targetView);
+  };
+
+  const handleNavigateWithContext = (
+    targetView: DeepEducationView,
+    contextPatch?: Partial<import('../../types/academicContext.ts').AcademicContext>
+  ) => {
+    if (contextPatch) {
+      setAcademicContext((prev) => ({ ...prev, ...contextPatch }));
+      if (contextPatch.courseId || contextPatch.classId) {
+        setActiveCourseId(contextPatch.courseId || contextPatch.classId!);
+      }
+      if (contextPatch.unitId) {
+        setActiveUnitId(contextPatch.unitId);
+      }
+      if (contextPatch.lessonId) {
+        setActiveLessonId(contextPatch.lessonId);
+      }
+      if (contextPatch.knowledgeSpaceIds && contextPatch.knowledgeSpaceIds[0]) {
+        setSelectedSpaceId(contextPatch.knowledgeSpaceIds[0]);
+      }
+    }
+    handleSafeNavigate(targetView, contextPatch?.courseId || contextPatch?.classId);
   };
 
   // Hydrate state from server REST API on mount
@@ -787,6 +825,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onNavigateLesson={(uId, lId) => handleOpenLesson(activeCourse.id, uId, lId)}
               onBackToChapter={() => setCurrentView('chapter_detail')}
               onQueryGrounded={handleQueryGrounded}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
 
@@ -797,6 +836,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               assignments={assignments}
               onSelectCourse={(id) => handleSelectCourse(id)}
               onNavigateTab={(t) => setCurrentView(t as any)}
+              onNavigateWithContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
 
@@ -897,6 +937,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onLaunchSmartboard={(sessionId) => {
                 setCurrentView('classroom');
               }}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
 
@@ -931,6 +972,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               submissions={submissions}
               classes={classes}
               currentRole={currentRole}
+              onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
               onCreateAssignment={handleCreateAssignment}
               onSubmitWork={handleSubmitWork}
               onGradeSubmission={handleGradeSubmission}

@@ -693,6 +693,27 @@ export const CommunityShell: React.FC<CommunityShellProps> = ({
 
           {/* Action Toolbar */}
           <div className="flex items-center gap-2 shrink-0">
+            {activeChannel?.classId && onNavigateTab && (
+              <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono">
+                <button
+                  onClick={() => onNavigateTab('lesson_workspace')}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:text-white text-[10px] cursor-pointer"
+                  title="Open active course lesson"
+                >
+                  <BookOpen className="w-3 h-3 text-cyan-400" />
+                  <span>Lesson</span>
+                </button>
+                <button
+                  onClick={() => onNavigateTab('assignments')}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 hover:text-white text-[10px] cursor-pointer"
+                  title="View course assignments"
+                >
+                  <FileText className="w-3 h-3 text-emerald-400" />
+                  <span>Assignments</span>
+                </button>
+              </div>
+            )}
+
             {/* Search Input */}
             <div className="relative hidden sm:block">
               <input

@@ -1,5 +1,5 @@
 // REST API Routes for Pro Focus / Pomodoro + Focus Lock Engine
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { focusStore } from './focusStore.ts';
 import { FocusPolicyEngine } from './focusPolicy.ts';
 import { authenticateRequest } from '../../../auth/index.ts';

@@ -1,5 +1,5 @@
 // REST API Routes for AI Teacher Preparation & Classroom Session System
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { classSessionStore } from './classSessionStore.ts';
 import { classSessionPolicy } from './classSessionPolicy.ts';
 import { classSessionGenerator } from './classSessionGenerator.ts';

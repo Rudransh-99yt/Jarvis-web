@@ -17,6 +17,7 @@ interface EducationCalendarViewProps {
   assignments: Assignment[];
   onSelectCourse: (courseId: string) => void;
   onNavigateTab: (tab: 'classroom' | 'assignments' | 'focus') => void;
+  onNavigateWithContext?: (view: string, context?: any) => void;
 }
 
 interface CalendarEvent {
@@ -34,7 +35,8 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
   classes,
   assignments,
   onSelectCourse,
-  onNavigateTab
+  onNavigateTab,
+  onNavigateWithContext
 }) => {
   const [selectedDate, setSelectedDate] = useState<string>('2026-10-18');
   const [viewFilter, setViewFilter] = useState<'all' | 'classes' | 'deadlines'>('all');
@@ -246,20 +248,65 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
 
                 <h3 className="text-sm font-semibold text-white">{evt.title}</h3>
 
-                <div className="flex items-center justify-between text-xs font-mono text-cyan-400/60 pt-1 border-t border-cyan-500/10">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-cyan-400/60 pt-2 border-t border-cyan-500/10">
                   <span className="flex items-center gap-1">
                     {evt.location && <MapPin className="w-3.5 h-3.5 text-cyan-400/50" />}
                     {evt.location || 'Online / Jarvis LMS'}
                   </span>
 
-                  {evt.courseId && (
-                    <button
-                      onClick={() => onSelectCourse(evt.courseId!)}
-                      className="text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer"
-                    >
-                      View Syllabus →
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {isClass && onNavigateWithContext && (
+                      <button
+                        onClick={() =>
+                          onNavigateWithContext('lesson_workspace', {
+                            classId: evt.courseId || 'class-phys-301',
+                            courseId: evt.courseId || 'class-phys-301',
+                            unitId: 'unit-phys-1',
+                            lessonId: 'les-phys-101'
+                          })
+                        }
+                        className="px-2 py-0.5 rounded bg-blue-950/40 border border-blue-500/30 text-blue-300 hover:text-white transition-colors cursor-pointer"
+                      >
+                        Open Lesson
+                      </button>
+                    )}
+
+                    {isDue && onNavigateWithContext && (
+                      <button
+                        onClick={() =>
+                          onNavigateWithContext('assignments', {
+                            classId: evt.courseId || 'class-phys-301'
+                          })
+                        }
+                        className="px-2 py-0.5 rounded bg-amber-950/40 border border-amber-500/30 text-amber-300 hover:text-white transition-colors cursor-pointer"
+                      >
+                        Open Assignment
+                      </button>
+                    )}
+
+                    {onNavigateWithContext && (
+                      <button
+                        onClick={() =>
+                          onNavigateWithContext('focus', {
+                            classId: evt.courseId || 'class-phys-301',
+                            topic: evt.title
+                          })
+                        }
+                        className="px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 hover:text-white transition-colors cursor-pointer"
+                      >
+                        Focus
+                      </button>
+                    )}
+
+                    {evt.courseId && (
+                      <button
+                        onClick={() => onSelectCourse(evt.courseId!)}
+                        className="text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer"
+                      >
+                        Syllabus →
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );

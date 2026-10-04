@@ -263,6 +263,13 @@ export interface ClassSession {
   studentMaterials?: SessionStudentMaterials;
   releaseControls: SessionReleaseControls;
   classroomSessionId?: string; // Set when launched in live classroom
+  linkedWorkspacePageId?: string;
+  linkedQuizId?: string;
+  linkedAssignmentId?: string;
+  linkedCommunityChannelId?: string;
+  linkedCommunityThreadId?: string;
+  linkedFocusTargetId?: string;
+  academicContext?: import('./academicContext.ts').AcademicContext;
   generationLog?: {
     startedAt: string;
     completedAt?: string;

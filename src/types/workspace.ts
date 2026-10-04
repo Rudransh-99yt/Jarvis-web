@@ -50,15 +50,20 @@ export interface PageBlock {
 export type WorkspacePageType = 'doc' | 'notes' | 'study_sheet' | 'formula' | 'database';
 
 export interface AcademicAssociation {
+  classId?: string;
   courseId?: string;
   courseCode?: string;
   unitId?: string;
   unitTitle?: string;
   lessonId?: string;
   lessonTitle?: string;
+  classSessionId?: string;
   videoId?: string;
   assignmentId?: string;
+  quizId?: string;
   knowledgeSpaceId?: string;
+  communityChannelId?: string;
+  academicContext?: import('./academicContext.ts').AcademicContext;
 }
 
 export interface WorkspacePage {

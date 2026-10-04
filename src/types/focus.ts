@@ -40,9 +40,11 @@ export interface FocusTarget {
   courseCode?: string;
   chapterId?: string;
   lessonId?: string;
+  classSessionId?: string;
   workspacePageId?: string;
   assignmentId?: string;
   context?: string;
+  academicContext?: import('./academicContext.ts').AcademicContext;
 }
 
 export interface FocusPolicy {
@@ -122,6 +124,15 @@ export interface FocusSession {
   scratchpadNotes: string;
   tasks: FocusTask[];
   suppressedNotificationsCount: number;
+  academicContext?: import('./academicContext.ts').AcademicContext;
+  completedActivity?: {
+    durationMinutes: number;
+    lessonId?: string;
+    assignmentId?: string;
+    classSessionId?: string;
+    concepts?: string[];
+    completedAt: string;
+  };
   createdAt: string;
   completedAt?: string;
 }

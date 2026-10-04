@@ -7,6 +7,7 @@ interface AssignmentsViewProps {
   submissions: StudentSubmission[];
   classes: EducationClass[];
   currentRole: EducationRole;
+  onNavigateToContext?: (view: string, context?: any) => void;
   onCreateAssignment: (data: {
     classId: string;
     title: string;
@@ -34,6 +35,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
   submissions,
   classes,
   currentRole,
+  onNavigateToContext,
   onCreateAssignment,
   onSubmitWork,
   onGradeSubmission,
@@ -214,6 +216,69 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                   <div className="text-[11px] text-cyan-400/50 font-mono">{selectedAsg.maxScore} Total Points</div>
                 </div>
               </div>
+
+              {/* Connected Academic Context Actions Strip */}
+              {onNavigateToContext && (
+                <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-cyan-950/20 border border-cyan-500/20 text-xs font-mono">
+                  <div className="flex items-center gap-1.5 text-cyan-300 text-[11px]">
+                    <span className="font-bold text-cyan-400">Context:</span>
+                    <span>{selectedAsg.className}</span>
+                    <span>·</span>
+                    <span className="text-cyan-100/70">Unit 1 & Lesson 101</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() =>
+                        onNavigateToContext('lesson_workspace', {
+                          classId: selectedAsg.classId,
+                          courseId: selectedAsg.classId,
+                          unitId: 'unit-phys-1',
+                          lessonId: 'les-phys-101',
+                          assignmentId: selectedAsg.id
+                        })
+                      }
+                      className="px-2.5 py-1 rounded bg-black/40 border border-cyan-500/30 hover:border-cyan-400 text-cyan-200 text-[11px] cursor-pointer"
+                    >
+                      Open Lesson
+                    </button>
+                    <button
+                      onClick={() =>
+                        onNavigateToContext('focus', {
+                          classId: selectedAsg.classId,
+                          assignmentId: selectedAsg.id,
+                          topic: selectedAsg.title
+                        })
+                      }
+                      className="px-2.5 py-1 rounded bg-amber-950/40 border border-amber-500/30 hover:border-amber-400 text-amber-300 text-[11px] cursor-pointer"
+                    >
+                      Focus (45m)
+                    </button>
+                    <button
+                      onClick={() =>
+                        onNavigateToContext('community', {
+                          classId: selectedAsg.classId,
+                          assignmentId: selectedAsg.id
+                        })
+                      }
+                      className="px-2.5 py-1 rounded bg-indigo-950/40 border border-indigo-500/30 hover:border-indigo-400 text-indigo-300 text-[11px] cursor-pointer"
+                    >
+                      Discuss
+                    </button>
+                    <button
+                      onClick={() =>
+                        onNavigateToContext('workspace', {
+                          classId: selectedAsg.classId,
+                          assignmentId: selectedAsg.id
+                        })
+                      }
+                      className="px-2.5 py-1 rounded bg-black/40 border border-cyan-500/30 hover:border-cyan-400 text-cyan-200 text-[11px] cursor-pointer"
+                    >
+                      Workspace
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Instructions Section */}
               <div className="space-y-2">

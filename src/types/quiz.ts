@@ -27,6 +27,11 @@ export interface Quiz {
   teacherId: string;
   title: string;
   description?: string;
+  classSessionId?: string;
+  lessonId?: string;
+  unitId?: string;
+  courseId?: string;
+  academicContext?: import('./academicContext.ts').AcademicContext;
   status: QuizStatus;
   currentQuestionIndex: number; // -1 if not started, 0..totalQuestions - 1
   totalQuestions: number;

@@ -8,12 +8,14 @@ interface TeacherSessionPrepViewProps {
   classes: EducationClass[];
   onNavigateTab: (tab: string) => void;
   onLaunchSmartboard?: (sessionId: string) => void;
+  onNavigateToContext?: (view: string, context?: any) => void;
 }
 
 export const TeacherSessionPrepView: React.FC<TeacherSessionPrepViewProps> = ({
   classes,
   onNavigateTab,
-  onLaunchSmartboard
+  onLaunchSmartboard,
+  onNavigateToContext
 }) => {
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [mode, setMode] = useState<'list' | 'wizard'>('list');
@@ -91,6 +93,7 @@ export const TeacherSessionPrepView: React.FC<TeacherSessionPrepViewProps> = ({
             onNavigateTab('classroom');
           }
         }}
+        onNavigateToContext={onNavigateToContext}
       />
     );
   }

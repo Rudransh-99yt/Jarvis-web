@@ -1,5 +1,5 @@
 // REST & Realtime SSE API Routes for Discord-Style Academic Community Subsystem
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { communityStore } from './communityStore.ts';
 import { communityPolicy } from './communityPolicy.ts';
 import { communityEventBus } from './communityEventBus.ts';

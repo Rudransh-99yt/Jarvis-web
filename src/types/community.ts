@@ -69,6 +69,11 @@ export interface CommunityThread {
   classId?: string;
   schoolId: string;
   title?: string;
+  courseId?: string;
+  unitId?: string;
+  lessonId?: string;
+  classSessionId?: string;
+  academicContext?: import('./academicContext.ts').AcademicContext;
   participantUserIds: string[];
   messageCount: number;
   lastReplyAt: string;
@@ -82,6 +87,11 @@ export interface CommunityChannel {
   schoolId: string;
   classId?: string;
   studyGroupId?: string;
+  courseId?: string;
+  unitId?: string;
+  lessonId?: string;
+  classSessionId?: string;
+  academicContext?: import('./academicContext.ts').AcademicContext;
   name: string;
   topic: string;
   type: CommunityChannelType;

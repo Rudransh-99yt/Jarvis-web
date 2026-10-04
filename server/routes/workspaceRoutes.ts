@@ -1,5 +1,5 @@
 // Workspaces REST API Routes
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { jarvisData } from '../data/index.ts';
 
 export const workspaceRouter = Router();

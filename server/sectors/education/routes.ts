@@ -1,11 +1,15 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { educationStore } from './educationStore.ts';
 import { videoRouter } from './videoRoutes.ts';
 import { classSessionRouter } from './classSessions/classSessionRoutes.ts';
 import { communityRouter } from './community/communityRoutes.ts';
 import { focusRouter } from './focus/focusRoutes.ts';
+import { academicIntegrationRouter } from './academicRoutes.ts';
 
 export const educationRouter = Router();
+
+// Phase D: Education OS Shared Academic Integration & Context Routes
+educationRouter.use('/integration', academicIntegrationRouter);
 
 // Pro Focus / Pomodoro + Focus Lock Routes
 educationRouter.use('/focus', focusRouter);

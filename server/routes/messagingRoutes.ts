@@ -1,5 +1,5 @@
 // Milestone 11 & 14.2: Real-Time Class Messaging & Notifications REST API
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { jarvisData } from '../data/index.ts';
 import { messagingService } from '../sectors/education/messagingService.ts';
 import { messageEventBus } from '../sectors/education/messageEventBus.ts';

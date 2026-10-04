@@ -521,6 +521,11 @@ export class ClassSessionStore {
     });
   }
 
+  getSessionSync(id: string): ClassSession | null {
+    const session = this.sessions.get(id);
+    return session ? JSON.parse(JSON.stringify(session)) : null;
+  }
+
   async getSession(id: string): Promise<ClassSession | null> {
     const session = this.sessions.get(id);
     return session ? JSON.parse(JSON.stringify(session)) : null;

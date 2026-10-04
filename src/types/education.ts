@@ -1,8 +1,10 @@
 // Domain Models for Jarvis Education Sector
 
 import type { SourceReference } from './platform.ts';
+import type { AcademicContext } from './academicContext.ts';
 
 export type EducationRole = 'student' | 'teacher' | 'principal';
+export * from './academicContext.ts';
 export * from './workspace.ts';
 export * from './classSession.ts';
 export * from './community.ts';
@@ -126,6 +128,12 @@ export interface Assignment {
   maxScore: number;
   category: 'Worksheet' | 'Lab Report' | 'Exam' | 'Project';
   teacherId: string;
+  courseId?: string;
+  unitId?: string;
+  lessonId?: string;
+  classSessionId?: string;
+  knowledgeSpaceId?: string;
+  academicContext?: AcademicContext;
   attachments?: Array<{
     id: string;
     name: string;

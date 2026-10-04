@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { EducationClass, CourseUnit, CourseLesson, GroundedQueryResponse } from '../../../types/education.ts';
 import type { VideoRecord } from '../../../types/video.ts';
 import { VideoPlayer } from '../../../components/video/VideoPlayer.tsx';
+import { AcademicContextActions } from '../components/AcademicContextActions.tsx';
 import {
   PlayCircle,
   CheckCircle2,
@@ -27,6 +28,7 @@ interface LessonWorkspaceViewProps {
   onNavigateLesson: (unitId: string, lessonId: string) => void;
   onBackToChapter: () => void;
   onQueryGrounded?: (spaceId: string, query: string) => Promise<GroundedQueryResponse>;
+  onNavigateToContext?: (view: string, context?: any) => void;
 }
 
 export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
@@ -36,7 +38,8 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
   onToggleComplete,
   onNavigateLesson,
   onBackToChapter,
-  onQueryGrounded
+  onQueryGrounded,
+  onNavigateToContext
 }) => {
   const [videoData, setVideoData] = useState<VideoRecord | null>(null);
   const [seekSeconds, setSeekSeconds] = useState<number | null>(null);
@@ -106,7 +109,29 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Connected Academic Context Actions Strip */}
+      {onNavigateToContext && (
+        <AcademicContextActions
+          context={{
+            institutionId: 'inst-stark-academy',
+            classId: course.id,
+            courseId: course.id,
+            courseCode: course.code,
+            courseName: course.name,
+            unitId: unit.id,
+            unitTitle: unit.title,
+            chapterId: unit.id,
+            chapterTitle: unit.title,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            knowledgeSpaceIds: lesson.knowledgeSpaceId ? [lesson.knowledgeSpaceId] : ['ks-quantum']
+          }}
+          currentView="lesson_workspace"
+          onNavigate={(view, ctx) => onNavigateToContext(view, ctx)}
+        />
+      )}
+
       {/* 1. Header & Navigation Control Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-cyan-500/20 bg-black/50 backdrop-blur-md">
         <div className="flex items-center gap-3 min-w-0">
