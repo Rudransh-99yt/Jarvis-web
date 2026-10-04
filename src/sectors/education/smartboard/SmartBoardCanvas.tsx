@@ -23,18 +23,11 @@ import {
   Undo,
   Redo,
   Trash2,
-  Tag,
   Plus,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
   Sparkles,
-  Grid,
-  FileText,
-  Save,
-  Layers,
-  HelpCircle,
-  Maximize2,
   MousePointer,
   Cpu,
   Check,
@@ -42,8 +35,25 @@ import {
   Eye,
   EyeOff,
   Brain,
-  Share2
+  Copy,
+  Move,
+  Lasso,
+  Scissors
 } from 'lucide-react';
+import {
+  getElementBoundingBox,
+  getCombinedBoundingBox,
+  doesLassoSelectElement,
+  doesMarqueeSelectElement,
+  doesEraserIntersectElement,
+  moveElements,
+  scaleElements,
+  duplicateElements,
+  deleteElements,
+  cleanSemanticCandidatesAfterDeletion,
+  type Point,
+  type MarqueeRect
+} from './canvasInteractionEngine.ts';
 
 interface SmartBoardCanvasProps {
   document: BoardDocument;
@@ -51,7 +61,7 @@ interface SmartBoardCanvasProps {
   isReadOnly?: boolean;
 }
 
-type ActiveTool =
+export type ActiveTool =
   | 'select'
   | 'pen'
   | 'highlighter'
@@ -62,6 +72,9 @@ type ActiveTool =
   | 'shape_triangle'
   | 'shape_line'
   | 'shape_arrow';
+
+export type SelectionSubMode = 'lasso' | 'marquee';
+export type EraserSubMode = 'stroke' | 'object';
 
 const COLOR_PALETTE = [
   '#00f2fe', // Cyan
@@ -76,65 +89,15 @@ const COLOR_PALETTE = [
 
 const STROKE_WIDTHS = [2, 4, 8, 14];
 
-// Helper to compute bounding box for any element on the client
-function getElementBox(elem: BoardElement): BoundingBox {
-  if (elem.type === 'stroke' && elem.points && elem.points.length > 0) {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const p of elem.points) {
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y > maxY) maxY = p.y;
-    }
-    const pad = (elem.width || 4) / 2;
-    return {
-      minX: Math.max(0, minX - pad),
-      minY: Math.max(0, minY - pad),
-      maxX: maxX + pad,
-      maxY: maxY + pad,
-      width: Math.max(1, maxX - minX + pad * 2),
-      height: Math.max(1, maxY - minY + pad * 2)
-    };
-  }
-
-  if (elem.type === 'shape') {
-    const x = elem.x ?? 0;
-    const y = elem.y ?? 0;
-    const w = elem.widthPx ?? (elem.endX !== undefined ? Math.abs(elem.endX - x) : 60);
-    const h = elem.heightPx ?? (elem.endY !== undefined ? Math.abs(elem.endY - y) : 60);
-    const minX = Math.min(x, elem.endX ?? x);
-    const minY = Math.min(y, elem.endY ?? y);
-    return {
-      minX,
-      minY,
-      maxX: minX + w,
-      maxY: minY + h,
-      width: Math.max(1, w),
-      height: Math.max(1, h)
-    };
-  }
-
-  if (elem.type === 'text') {
-    const x = elem.x ?? 0;
-    const y = elem.y ?? 0;
-    const len = elem.text?.length || 10;
-    const fs = elem.fontSize || 20;
-    const w = len * (fs * 0.6);
-    const h = fs * 1.2;
-    return {
-      minX: x,
-      minY: Math.max(0, y - h),
-      maxX: x + w,
-      maxY: y,
-      width: w,
-      height: h
-    };
-  }
-
-  const x = elem.x ?? 0;
-  const y = elem.y ?? 0;
-  return { minX: x, minY: y, maxX: x + 80, maxY: y + 40, width: 80, height: 40 };
-}
+type DragState =
+  | { mode: 'idle' }
+  | { mode: 'drawing'; points: Point[] }
+  | { mode: 'shape'; start: Point; current: Point }
+  | { mode: 'lasso'; points: Point[] }
+  | { mode: 'marquee'; start: Point; current: Point }
+  | { mode: 'moving'; start: Point; current: Point; hasMoved: boolean; initialElements: BoardElement[] }
+  | { mode: 'resizing'; handle: 'nw' | 'ne' | 'se' | 'sw'; anchor: Point; initialBox: BoundingBox; initialElements: BoardElement[] }
+  | { mode: 'erasing'; lastPoint: Point; currentPoint: Point; erasedIds: Set<string> };
 
 export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   document: initialDoc,
@@ -172,11 +135,13 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   });
 
   const [activeTool, setActiveTool] = useState<ActiveTool>('pen');
+  const [selectionSubMode, setSelectionSubMode] = useState<SelectionSubMode>('lasso');
+  const [eraserSubMode, setEraserSubMode] = useState<EraserSubMode>('stroke');
   const [selectedColor, setSelectedColor] = useState<string>('#00f2fe');
   const [strokeWidth, setStrokeWidth] = useState<number>(4);
   const [activeSemanticTag, setActiveSemanticTag] = useState<BoardSemanticTag>('general_note');
 
-  // D.9 Vision Board State
+  // Selection & Transformation State
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [activeCandidate, setActiveCandidate] = useState<SemanticCandidate | null>(null);
   const [isRecognizing, setIsRecognizing] = useState<boolean>(false);
@@ -184,20 +149,21 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   const [aiContextModal, setAiContextModal] = useState<BoardAIContext | null>(null);
   const [visionNotice, setVisionNotice] = useState<string | null>(null);
 
+  // Drag interaction state ref (for high-fps pointer movements)
+  const dragStateRef = useRef<DragState>({ mode: 'idle' });
+
   // History stack for undo/redo
-  const [history, setHistory] = useState<BoardPage[][]>(() => [JSON.parse(JSON.stringify(sanitizeDoc(initialDoc).pages))]);
+  const [history, setHistory] = useState<BoardPage[][]>(() => [
+    JSON.parse(JSON.stringify(sanitizeDoc(initialDoc).pages))
+  ]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
 
   // Autosave status state
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
-  const [lastSavedTime, setLastSavedTime] = useState<string>('Just now');
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Drawing state
+  // Canvas element ref
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const isDrawingRef = useRef<boolean>(false);
-  const currentPointsRef = useRef<BoardStrokePoint[]>([]);
-  const startPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Text input inline state
   const [textInputPos, setTextInputPos] = useState<{ x: number; y: number } | null>(null);
@@ -220,7 +186,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   const pushHistory = (newPages: BoardPage[]) => {
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(JSON.parse(JSON.stringify(newPages)));
-    if (newHistory.length > 25) newHistory.shift();
+    if (newHistory.length > 30) newHistory.shift();
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
   };
@@ -241,9 +207,6 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
           try {
             await onAutosave(updatedDoc);
             setSaveStatus('saved');
-            setLastSavedTime(
-              new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-            );
           } catch {
             setSaveStatus('dirty');
           }
@@ -255,176 +218,260 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     [isReadOnly, onAutosave]
   );
 
-  // Render canvas elements
-  const redrawCanvas = useCallback((targetPage?: BoardPage) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  // Main canvas redraw routine
+  const redrawCanvas = useCallback(
+    (overrideElements?: BoardElement[], transientDrag?: DragState) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    const pageToDraw = targetPage || currentPage;
+      const pageToDraw = currentPage;
+      const elementsToDraw = overrideElements || pageToDraw.elements || [];
+      const currentDrag = transientDrag || dragStateRef.current;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 1. Clear Canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!pageToDraw || !pageToDraw.elements) return;
+      // 2. Render Elements in zIndex order
+      const sorted = [...elementsToDraw].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 
-    // 1. Render elements in zIndex order
-    const sorted = [...pageToDraw.elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
-
-    sorted.forEach((elem) => {
-      ctx.save();
-      if (elem.type === 'stroke' && elem.points && elem.points.length > 0) {
-        ctx.beginPath();
-        ctx.strokeStyle = elem.color || '#00f2fe';
-        ctx.lineWidth = elem.width || 3;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        if (elem.tool === 'highlighter') {
-          ctx.globalAlpha = 0.35;
-          ctx.lineWidth = (elem.width || 4) * 3;
-        } else {
-          ctx.globalAlpha = elem.opacity ?? 1;
-        }
-
-        const pts = elem.points;
-        if (pts.length === 1) {
-          ctx.arc(pts[0].x, pts[0].y, (elem.width || 3) / 2, 0, Math.PI * 2);
-          ctx.fillStyle = elem.color || '#00f2fe';
-          ctx.fill();
-        } else {
-          ctx.moveTo(pts[0].x, pts[0].y);
-          for (let i = 1; i < pts.length; i++) {
-            ctx.lineTo(pts[i].x, pts[i].y);
+      sorted.forEach((elem) => {
+        ctx.save();
+        if (elem.type === 'stroke' && elem.points && elem.points.length > 0) {
+          ctx.beginPath();
+          ctx.strokeStyle = elem.color || '#00f2fe';
+          ctx.lineWidth = elem.width || 3;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          if (elem.tool === 'highlighter') {
+            ctx.globalAlpha = 0.35;
+            ctx.lineWidth = (elem.width || 4) * 3;
+          } else {
+            ctx.globalAlpha = elem.opacity ?? 1;
           }
-          ctx.stroke();
-        }
-      } else if (elem.type === 'shape') {
-        ctx.strokeStyle = elem.strokeColor || '#00f2fe';
-        ctx.lineWidth = elem.width || 3;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        if (elem.fillColor) {
-          ctx.fillStyle = elem.fillColor;
-        }
 
-        const x = elem.x ?? 0;
-        const y = elem.y ?? 0;
-        const w = elem.widthPx ?? 100;
-        const h = elem.heightPx ?? 100;
-
-        if (elem.shapeType === 'rectangle') {
-          if (elem.fillColor) ctx.fillRect(x, y, w, h);
-          ctx.strokeRect(x, y, w, h);
-        } else if (elem.shapeType === 'circle') {
-          ctx.beginPath();
-          ctx.arc(x + w / 2, y + h / 2, Math.max(1, Math.abs(w / 2)), 0, Math.PI * 2);
-          if (elem.fillColor) ctx.fill();
-          ctx.stroke();
-        } else if (elem.shapeType === 'triangle') {
-          ctx.beginPath();
-          ctx.moveTo(x + w / 2, y);
-          ctx.lineTo(x + w, y + h);
-          ctx.lineTo(x, y + h);
-          ctx.closePath();
-          if (elem.fillColor) ctx.fill();
-          ctx.stroke();
-        } else if (elem.shapeType === 'line' || elem.shapeType === 'arrow') {
-          const endX = elem.endX ?? x + w;
-          const endY = elem.endY ?? y + h;
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(endX, endY);
-          ctx.stroke();
-
-          if (elem.shapeType === 'arrow') {
-            const angle = Math.atan2(endY - y, endX - x);
-            const headLen = 14;
-            ctx.beginPath();
-            ctx.moveTo(endX, endY);
-            ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI / 6), endY - headLen * Math.sin(angle - Math.PI / 6));
-            ctx.moveTo(endX, endY);
-            ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI / 6), endY - headLen * Math.sin(angle + Math.PI / 6));
+          const pts = elem.points;
+          if (pts.length === 1) {
+            ctx.arc(pts[0].x, pts[0].y, (elem.width || 3) / 2, 0, Math.PI * 2);
+            ctx.fillStyle = elem.color || '#00f2fe';
+            ctx.fill();
+          } else {
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+              ctx.lineTo(pts[i].x, pts[i].y);
+            }
             ctx.stroke();
           }
+        } else if (elem.type === 'shape') {
+          ctx.strokeStyle = elem.strokeColor || '#00f2fe';
+          ctx.lineWidth = elem.width || 3;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          if (elem.fillColor) {
+            ctx.fillStyle = elem.fillColor;
+          }
+
+          const x = elem.x ?? 0;
+          const y = elem.y ?? 0;
+          const w = elem.widthPx ?? 100;
+          const h = elem.heightPx ?? 100;
+
+          if (elem.shapeType === 'rectangle') {
+            if (elem.fillColor) ctx.fillRect(x, y, w, h);
+            ctx.strokeRect(x, y, w, h);
+          } else if (elem.shapeType === 'circle') {
+            ctx.beginPath();
+            ctx.arc(x + w / 2, y + h / 2, Math.max(1, Math.abs(w / 2)), 0, Math.PI * 2);
+            if (elem.fillColor) ctx.fill();
+            ctx.stroke();
+          } else if (elem.shapeType === 'triangle') {
+            ctx.beginPath();
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.lineTo(x, y + h);
+            ctx.closePath();
+            if (elem.fillColor) ctx.fill();
+            ctx.stroke();
+          } else if (elem.shapeType === 'line' || elem.shapeType === 'arrow') {
+            const endX = elem.endX ?? x + w;
+            const endY = elem.endY ?? y + h;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            if (elem.shapeType === 'arrow') {
+              const angle = Math.atan2(endY - y, endX - x);
+              const headLen = 14;
+              ctx.beginPath();
+              ctx.moveTo(endX, endY);
+              ctx.lineTo(
+                endX - headLen * Math.cos(angle - Math.PI / 6),
+                endY - headLen * Math.sin(angle - Math.PI / 6)
+              );
+              ctx.moveTo(endX, endY);
+              ctx.lineTo(
+                endX - headLen * Math.cos(angle + Math.PI / 6),
+                endY - headLen * Math.sin(angle + Math.PI / 6)
+              );
+              ctx.stroke();
+            }
+          }
+
+          if (elem.label) {
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px var(--font-mono, monospace)';
+            ctx.fillText(elem.label, x + 5, y + h + 16);
+          }
+        } else if (elem.type === 'text' && elem.text) {
+          ctx.fillStyle = elem.color || '#38bdf8';
+          ctx.font = `${elem.fontSize || 20}px var(--font-mono, monospace)`;
+          ctx.fillText(elem.text, elem.x || 50, elem.y || 50);
+
+          if (elem.semanticTag && elem.semanticTag !== 'general_note') {
+            ctx.fillStyle = '#64748b';
+            ctx.font = '10px var(--font-mono, monospace)';
+            ctx.fillText(
+              `[${elem.semanticTag.toUpperCase()}]`,
+              elem.x || 50,
+              (elem.y || 50) - (elem.fontSize || 20) - 4
+            );
+          }
         }
-
-        if (elem.label) {
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '12px var(--font-mono, monospace)';
-          ctx.fillText(elem.label, x + 5, y + h + 16);
-        }
-      } else if (elem.type === 'text' && elem.text) {
-        ctx.fillStyle = elem.color || '#38bdf8';
-        ctx.font = `${elem.fontSize || 20}px var(--font-mono, monospace)`;
-        ctx.fillText(elem.text, elem.x || 50, elem.y || 50);
-
-        if (elem.semanticTag && elem.semanticTag !== 'general_note') {
-          ctx.fillStyle = '#64748b';
-          ctx.font = '10px var(--font-mono, monospace)';
-          ctx.fillText(`[${elem.semanticTag.toUpperCase()}]`, (elem.x || 50), (elem.y || 50) - (elem.fontSize || 20) - 4);
-        }
-      }
-      ctx.restore();
-    });
-
-    // 2. Render Selection Bounding Box Overlays
-    if (selectedElementIds.length > 0) {
-      selectedElementIds.forEach((id) => {
-        const target = pageToDraw.elements.find((e) => e.id === id);
-        if (target) {
-          const b = getElementBox(target);
-          ctx.save();
-          ctx.strokeStyle = '#00f2fe';
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([4, 4]);
-          ctx.strokeRect(b.minX - 4, b.minY - 4, b.width + 8, b.height + 8);
-
-          // Corner tick marks
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#00f2fe';
-          const tick = 4;
-          ctx.fillRect(b.minX - 4 - tick, b.minY - 4 - tick, tick * 2, tick * 2);
-          ctx.fillRect(b.maxX + 4 - tick, b.minY - 4 - tick, tick * 2, tick * 2);
-          ctx.fillRect(b.minX - 4 - tick, b.maxY + 4 - tick, tick * 2, tick * 2);
-          ctx.fillRect(b.maxX + 4 - tick, b.maxY + 4 - tick, tick * 2, tick * 2);
-          ctx.restore();
-        }
-      });
-    }
-
-    // 3. Render Accepted Vision Semantic Overlays (if enabled)
-    if (showVisionOverlays && pageToDraw.semanticCandidates && pageToDraw.semanticCandidates.length > 0) {
-      pageToDraw.semanticCandidates.forEach((cand) => {
-        const b = cand.boundingBox;
-        ctx.save();
-        ctx.strokeStyle = cand.semanticType === 'EQUATION' ? '#a855f7' : cand.semanticType === 'DIAGRAM' ? '#38bdf8' : '#10b981';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([3, 3]);
-        ctx.strokeRect(b.minX - 6, b.minY - 6, b.width + 12, b.height + 12);
-
-        // Header Pill
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#0f172a';
-        const labelText = cand.equation
-          ? `EQ: ${cand.equation.expression} (${Math.round(cand.confidence * 100)}%)`
-          : cand.diagram
-          ? `DIAGRAM: ${cand.diagram.diagramType.toUpperCase()}`
-          : `TEXT: ${(cand.recognizedText || '').slice(0, 15)}`;
-
-        ctx.font = '10px var(--font-mono, monospace)';
-        const textWidth = ctx.measureText(labelText).width;
-        ctx.fillRect(b.minX - 6, Math.max(0, b.minY - 22), textWidth + 12, 16);
-        ctx.strokeStyle = cand.semanticType === 'EQUATION' ? '#a855f7' : '#38bdf8';
-        ctx.strokeRect(b.minX - 6, Math.max(0, b.minY - 22), textWidth + 12, 16);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillText(labelText, b.minX, Math.max(12, b.minY - 10));
         ctx.restore();
       });
-    }
-  }, [currentPage, selectedElementIds, showVisionOverlays]);
 
-  // Adjust canvas size & redraw on mount/resize with rAF
+      // 3. Render Combined Selection Box and Handles (if objects selected)
+      if (selectedElementIds.length > 0) {
+        const selBox = getCombinedBoundingBox(elementsToDraw, selectedElementIds);
+        if (selBox) {
+          ctx.save();
+          // Individual subtle outlines for selected items
+          if (selectedElementIds.length > 1) {
+            ctx.strokeStyle = 'rgba(0, 242, 254, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            selectedElementIds.forEach((id) => {
+              const el = elementsToDraw.find((e) => e.id === id);
+              if (el) {
+                const b = getElementBoundingBox(el);
+                ctx.strokeRect(b.minX - 2, b.minY - 2, b.width + 4, b.height + 4);
+              }
+            });
+          }
+
+          // Main Group Bounding Box
+          ctx.strokeStyle = '#00f2fe';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 5]);
+          ctx.strokeRect(selBox.minX - 8, selBox.minY - 8, selBox.width + 16, selBox.height + 16);
+
+          // Corner Resize / Transform Handles (12x12 squares)
+          ctx.setLineDash([]);
+          const handles: Array<{ x: number; y: number; handle: 'nw' | 'ne' | 'se' | 'sw' }> = [
+            { x: selBox.minX - 8, y: selBox.minY - 8, handle: 'nw' },
+            { x: selBox.maxX + 8, y: selBox.minY - 8, handle: 'ne' },
+            { x: selBox.maxX + 8, y: selBox.maxY + 8, handle: 'se' },
+            { x: selBox.minX - 8, y: selBox.maxY + 8, handle: 'sw' }
+          ];
+
+          handles.forEach((h) => {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(h.x - 6, h.y - 6, 12, 12);
+            ctx.strokeStyle = '#00f2fe';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(h.x - 6, h.y - 6, 12, 12);
+          });
+
+          ctx.restore();
+        }
+      }
+
+      // 4. Render Transient Drag Overlays (Lasso, Marquee, Eraser Indicator)
+      if (currentDrag.mode === 'lasso' && currentDrag.points.length > 1) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = '#00f2fe';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.fillStyle = 'rgba(0, 242, 254, 0.08)';
+
+        ctx.moveTo(currentDrag.points[0].x, currentDrag.points[0].y);
+        for (let i = 1; i < currentDrag.points.length; i++) {
+          ctx.lineTo(currentDrag.points[i].x, currentDrag.points[i].y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      } else if (currentDrag.mode === 'marquee') {
+        const mx = Math.min(currentDrag.start.x, currentDrag.current.x);
+        const my = Math.min(currentDrag.start.y, currentDrag.current.y);
+        const mw = Math.abs(currentDrag.current.x - currentDrag.start.x);
+        const mh = Math.abs(currentDrag.current.y - currentDrag.start.y);
+
+        ctx.save();
+        ctx.strokeStyle = '#00f2fe';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 5]);
+        ctx.fillStyle = 'rgba(0, 242, 254, 0.08)';
+        ctx.fillRect(mx, my, mw, mh);
+        ctx.strokeRect(mx, my, mw, mh);
+        ctx.restore();
+      } else if (currentDrag.mode === 'erasing') {
+        // Eraser head cursor preview
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([2, 2]);
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
+        ctx.arc(currentDrag.currentPoint.x, currentDrag.currentPoint.y, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 5. Render Accepted Vision Semantic Overlays (if enabled)
+      if (showVisionOverlays && pageToDraw.semanticCandidates && pageToDraw.semanticCandidates.length > 0) {
+        pageToDraw.semanticCandidates.forEach((cand) => {
+          const b = cand.boundingBox;
+          ctx.save();
+          ctx.strokeStyle =
+            cand.semanticType === 'EQUATION'
+              ? '#a855f7'
+              : cand.semanticType === 'DIAGRAM'
+              ? '#38bdf8'
+              : '#10b981';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.strokeRect(b.minX - 6, b.minY - 6, b.width + 12, b.height + 12);
+
+          // Header Pill
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#0f172a';
+          const labelText = cand.equation
+            ? `EQ: ${cand.equation.expression} (${Math.round(cand.confidence * 100)}%)`
+            : cand.diagram
+            ? `DIAGRAM: ${cand.diagram.diagramType.toUpperCase()}`
+            : `TEXT: ${(cand.recognizedText || '').slice(0, 15)}`;
+
+          ctx.font = '10px var(--font-mono, monospace)';
+          const textWidth = ctx.measureText(labelText).width;
+          ctx.fillRect(b.minX - 6, Math.max(0, b.minY - 22), textWidth + 12, 16);
+          ctx.strokeStyle = cand.semanticType === 'EQUATION' ? '#a855f7' : '#38bdf8';
+          ctx.strokeRect(b.minX - 6, Math.max(0, b.minY - 22), textWidth + 12, 16);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillText(labelText, b.minX, Math.max(12, b.minY - 10));
+          ctx.restore();
+        });
+      }
+    },
+    [currentPage, selectedElementIds, showVisionOverlays]
+  );
+
+  // Adjust canvas size on mount/resize with rAF
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -467,7 +514,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   }, [currentPage, selectedElementIds, showVisionOverlays, redrawCanvas]);
 
   // Pointer position helper
-  const getCanvasPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  const getCanvasPos = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
@@ -477,6 +524,28 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     };
   };
 
+  // Check if pointer hit a selection handle
+  const hitTestSelectionHandle = (
+    pos: Point,
+    selBox: BoundingBox
+  ): 'nw' | 'ne' | 'se' | 'sw' | null => {
+    const handleThreshold = 14;
+    const handles = [
+      { id: 'nw' as const, x: selBox.minX - 8, y: selBox.minY - 8 },
+      { id: 'ne' as const, x: selBox.maxX + 8, y: selBox.minY - 8 },
+      { id: 'se' as const, x: selBox.maxX + 8, y: selBox.maxY + 8 },
+      { id: 'sw' as const, x: selBox.minX - 8, y: selBox.maxY + 8 }
+    ];
+
+    for (const h of handles) {
+      if (Math.hypot(pos.x - h.x, pos.y - h.y) <= handleThreshold) {
+        return h.id;
+      }
+    }
+    return null;
+  };
+
+  // POINTER DOWN
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (isReadOnly) return;
     const pos = getCanvasPos(e);
@@ -487,86 +556,267 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       // Ignore
     }
 
-    // 1. Select Tool Handling
+    // 1. SELECT TOOL HANDLING
     if (activeTool === 'select') {
+      const selBox = getCombinedBoundingBox(currentPage.elements, selectedElementIds);
+
+      // A. Check if clicked a resize handle
+      if (selBox && selectedElementIds.length > 0) {
+        const handle = hitTestSelectionHandle(pos, selBox);
+        if (handle) {
+          // Anchor is opposite corner
+          let anchor: Point = { x: selBox.minX, y: selBox.minY };
+          if (handle === 'nw') anchor = { x: selBox.maxX, y: selBox.maxY };
+          else if (handle === 'ne') anchor = { x: selBox.minX, y: selBox.maxY };
+          else if (handle === 'se') anchor = { x: selBox.minX, y: selBox.minY };
+          else if (handle === 'sw') anchor = { x: selBox.maxX, y: selBox.minY };
+
+          dragStateRef.current = {
+            mode: 'resizing',
+            handle,
+            anchor,
+            initialBox: selBox,
+            initialElements: JSON.parse(JSON.stringify(currentPage.elements))
+          };
+          return;
+        }
+      }
+
+      // B. Check if clicked inside selected elements group or on a selected element
       const hitElement = currentPage.elements.slice().reverse().find((elem) => {
-        const b = getElementBox(elem);
-        return pos.x >= b.minX - 10 && pos.x <= b.maxX + 10 && pos.y >= b.minY - 10 && pos.y <= b.maxY + 10;
+        const b = getElementBoundingBox(elem);
+        return (
+          pos.x >= b.minX - 8 &&
+          pos.x <= b.maxX + 8 &&
+          pos.y >= b.minY - 8 &&
+          pos.y <= b.maxY + 8
+        );
       });
 
+      if (hitElement && selectedElementIds.includes(hitElement.id)) {
+        // Prepare to move the selected group
+        dragStateRef.current = {
+          mode: 'moving',
+          start: pos,
+          current: pos,
+          hasMoved: false,
+          initialElements: JSON.parse(JSON.stringify(currentPage.elements))
+        };
+        return;
+      }
+
+      // C. Clicked an unselected element
       if (hitElement) {
-        setSelectedElementIds((prev) =>
-          prev.includes(hitElement.id) ? prev.filter((id) => id !== hitElement.id) : [...prev, hitElement.id]
-        );
-      } else {
-        // Clicked background -> clear selection
+        if (e.shiftKey) {
+          // Multi-selection toggle
+          setSelectedElementIds((prev) => [...prev, hitElement.id]);
+        } else {
+          // Single selection
+          setSelectedElementIds([hitElement.id]);
+        }
+        dragStateRef.current = {
+          mode: 'moving',
+          start: pos,
+          current: pos,
+          hasMoved: false,
+          initialElements: JSON.parse(JSON.stringify(currentPage.elements))
+        };
+        return;
+      }
+
+      // D. Clicked on empty canvas -> start Lasso or Marquee region selection
+      if (!e.shiftKey) {
         setSelectedElementIds([]);
         setActiveCandidate(null);
+      }
+
+      if (selectionSubMode === 'lasso') {
+        dragStateRef.current = {
+          mode: 'lasso',
+          points: [pos]
+        };
+      } else {
+        dragStateRef.current = {
+          mode: 'marquee',
+          start: pos,
+          current: pos
+        };
       }
       return;
     }
 
+    // 2. TEXT TOOL
     if (activeTool === 'text') {
       setTextInputPos(pos);
       setTextInputValue('');
       return;
     }
 
+    // 3. ERASER TOOL (Continuous multi-stroke eraser initialization)
     if (activeTool === 'eraser') {
-      // Point / radius eraser
-      const filtered = currentPage.elements.filter((elem) => {
-        if (elem.type === 'stroke' && elem.points) {
-          return !elem.points.some((p) => Math.hypot(p.x - pos.x, p.y - pos.y) < 28);
-        }
-        if (elem.x !== undefined && elem.y !== undefined) {
-          return Math.hypot(elem.x - pos.x, elem.y - pos.y) >= 36;
-        }
-        return true;
+      const erasedIds = new Set<string>();
+
+      // Immediate hit test on down
+      const remainingElements = currentPage.elements.filter((elem) => {
+        const hit = doesEraserIntersectElement(elem, pos, pos, 24, eraserSubMode);
+        if (hit) erasedIds.add(elem.id);
+        return !hit;
       });
 
-      if (filtered.length !== currentPage.elements.length) {
+      dragStateRef.current = {
+        mode: 'erasing',
+        lastPoint: pos,
+        currentPoint: pos,
+        erasedIds
+      };
+
+      if (erasedIds.size > 0) {
         const updatedPage: BoardPage = {
           ...currentPage,
-          elements: filtered,
+          elements: remainingElements,
           updatedAt: new Date().toISOString()
         };
         const updatedPages = [...doc.pages];
         updatedPages[activePageIndex] = updatedPage;
+        setDoc((prev) => ({ ...prev, pages: updatedPages }));
+      }
 
-        const updatedDoc: BoardDocument = {
-          ...doc,
-          pages: updatedPages,
-          version: doc.version + 1,
-          timestamps: {
-            ...doc.timestamps,
-            updatedAt: new Date().toISOString()
-          }
-        };
+      redrawCanvas(remainingElements, dragStateRef.current);
+      return;
+    }
 
-        setDoc(updatedDoc);
-        pushHistory(updatedPages);
-        scheduleAutosave(updatedDoc);
-        redrawCanvas(updatedPage);
+    // 4. PEN / HIGHLIGHTER TOOL
+    if (activeTool === 'pen' || activeTool === 'highlighter') {
+      dragStateRef.current = {
+        mode: 'drawing',
+        points: [pos]
+      };
+      return;
+    }
+
+    // 5. SHAPE TOOL
+    if (activeTool.startsWith('shape_')) {
+      dragStateRef.current = {
+        mode: 'shape',
+        start: pos,
+        current: pos
+      };
+    }
+  };
+
+  // POINTER MOVE
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (isReadOnly) return;
+    const current = dragStateRef.current;
+    if (current.mode === 'idle') return;
+
+    const pos = getCanvasPos(e);
+
+    // 1. Moving selected objects
+    if (current.mode === 'moving') {
+      const dx = pos.x - current.start.x;
+      const dy = pos.y - current.start.y;
+      const hasMoved = current.hasMoved || Math.hypot(dx, dy) > 3;
+
+      dragStateRef.current = {
+        ...current,
+        current: pos,
+        hasMoved
+      };
+
+      if (hasMoved) {
+        const movedElements = moveElements(current.initialElements, selectedElementIds, dx, dy);
+        redrawCanvas(movedElements);
       }
       return;
     }
 
-    isDrawingRef.current = true;
-    startPosRef.current = pos;
-    currentPointsRef.current = [pos];
-  };
+    // 2. Resizing / Transforming selected objects
+    if (current.mode === 'resizing') {
+      const { anchor, initialBox, initialElements } = current;
+      const origW = Math.max(10, initialBox.width);
+      const origH = Math.max(10, initialBox.height);
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawingRef.current || isReadOnly) return;
-    const pos = getCanvasPos(e);
-    currentPointsRef.current.push(pos);
+      let scaleX = 1;
+      let scaleY = 1;
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+      if (current.handle === 'se') {
+        scaleX = (pos.x - anchor.x) / origW;
+        scaleY = (pos.y - anchor.y) / origH;
+      } else if (current.handle === 'nw') {
+        scaleX = (anchor.x - pos.x) / origW;
+        scaleY = (anchor.y - pos.y) / origH;
+      } else if (current.handle === 'ne') {
+        scaleX = (pos.x - anchor.x) / origW;
+        scaleY = (anchor.y - pos.y) / origH;
+      } else if (current.handle === 'sw') {
+        scaleX = (anchor.x - pos.x) / origW;
+        scaleY = (pos.y - anchor.y) / origH;
+      }
 
-    if (activeTool === 'pen' || activeTool === 'highlighter') {
+      const scaledElements = scaleElements(initialElements, selectedElementIds, anchor, scaleX, scaleY);
+      redrawCanvas(scaledElements);
+      return;
+    }
+
+    // 3. Freeform Lasso Selection Drag
+    if (current.mode === 'lasso') {
+      current.points.push(pos);
+      redrawCanvas(undefined, current);
+      return;
+    }
+
+    // 4. Marquee Selection Drag
+    if (current.mode === 'marquee') {
+      current.current = pos;
+      redrawCanvas(undefined, current);
+      return;
+    }
+
+    // 5. Continuous Multi-Stroke Eraser
+    if (current.mode === 'erasing') {
+      const p1 = current.lastPoint;
+      const p2 = pos;
+
+      let newlyErased = false;
+      const remainingElements = currentPage.elements.filter((elem) => {
+        if (current.erasedIds.has(elem.id)) return false;
+        const hit = doesEraserIntersectElement(elem, p1, p2, 24, eraserSubMode);
+        if (hit) {
+          current.erasedIds.add(elem.id);
+          newlyErased = true;
+          return false;
+        }
+        return true;
+      });
+
+      current.lastPoint = pos;
+      current.currentPoint = pos;
+
+      if (newlyErased) {
+        const updatedPage: BoardPage = {
+          ...currentPage,
+          elements: remainingElements,
+          updatedAt: new Date().toISOString()
+        };
+        const updatedPages = [...doc.pages];
+        updatedPages[activePageIndex] = updatedPage;
+        setDoc((prev) => ({ ...prev, pages: updatedPages }));
+      }
+
+      redrawCanvas(remainingElements, current);
+      return;
+    }
+
+    // 6. Pen / Highlighter Smooth Drawing
+    if (current.mode === 'drawing') {
+      current.points.push(pos);
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
       ctx.save();
       ctx.beginPath();
       ctx.strokeStyle = selectedColor;
@@ -575,22 +825,33 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       ctx.lineJoin = 'round';
       if (activeTool === 'highlighter') ctx.globalAlpha = 0.35;
 
-      const pts = currentPointsRef.current;
+      const pts = current.points;
       if (pts.length > 1) {
         ctx.moveTo(pts[pts.length - 2].x, pts[pts.length - 2].y);
         ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
         ctx.stroke();
       }
       ctx.restore();
-    } else if (activeTool.startsWith('shape_') && startPosRef.current) {
+      return;
+    }
+
+    // 7. Shape Drawing Preview
+    if (current.mode === 'shape') {
+      current.current = pos;
       redrawCanvas();
-      const start = startPosRef.current;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
       ctx.save();
       ctx.strokeStyle = selectedColor;
       ctx.lineWidth = strokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
+      const start = current.start;
       const w = pos.x - start.x;
       const h = pos.y - start.y;
 
@@ -634,9 +895,12 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     }
   };
 
+  // POINTER UP / END
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawingRef.current || isReadOnly) return;
-    isDrawingRef.current = false;
+    if (isReadOnly) return;
+    const current = dragStateRef.current;
+    if (current.mode === 'idle') return;
+
     const pos = getCanvasPos(e);
 
     try {
@@ -645,41 +909,249 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       // Ignore
     }
 
-    const newElementId = `elem-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    let newElement: BoardElement | null = null;
+    // 1. Commit Moved Objects
+    if (current.mode === 'moving') {
+      if (current.hasMoved) {
+        const dx = pos.x - current.start.x;
+        const dy = pos.y - current.start.y;
+        const finalElements = moveElements(current.initialElements, selectedElementIds, dx, dy);
 
-    if (activeTool === 'pen' || activeTool === 'highlighter') {
-      newElement = {
-        id: newElementId,
-        type: 'stroke',
-        tool: activeTool,
-        points: [...currentPointsRef.current],
-        color: selectedColor,
-        width: strokeWidth,
-        opacity: activeTool === 'highlighter' ? 0.35 : 1,
-        semanticTag: activeSemanticTag,
-        zIndex: (currentPage.elements?.length || 0) + 1,
-        createdAt: new Date().toISOString(),
+        // Also translate associated semantic candidates bounding boxes
+        const updatedCandidates = (currentPage.semanticCandidates || []).map((cand) => {
+          if (cand.relatedElementIds.some((id) => selectedElementIds.includes(id))) {
+            return {
+              ...cand,
+              boundingBox: {
+                ...cand.boundingBox,
+                minX: cand.boundingBox.minX + dx,
+                maxX: cand.boundingBox.maxX + dx,
+                minY: cand.boundingBox.minY + dy,
+                maxY: cand.boundingBox.maxY + dy
+              }
+            };
+          }
+          return cand;
+        });
+
+        const updatedPage: BoardPage = {
+          ...currentPage,
+          elements: finalElements,
+          semanticCandidates: updatedCandidates,
+          updatedAt: new Date().toISOString()
+        };
+        const updatedPages = [...doc.pages];
+        updatedPages[activePageIndex] = updatedPage;
+
+        const updatedDoc: BoardDocument = {
+          ...doc,
+          pages: updatedPages,
+          version: doc.version + 1,
+          timestamps: {
+            ...doc.timestamps,
+            updatedAt: new Date().toISOString()
+          }
+        };
+
+        setDoc(updatedDoc);
+        pushHistory(updatedPages);
+        scheduleAutosave(updatedDoc);
+      }
+      dragStateRef.current = { mode: 'idle' };
+      redrawCanvas();
+      return;
+    }
+
+    // 2. Commit Resized / Scaled Objects
+    if (current.mode === 'resizing') {
+      const { anchor, initialBox, initialElements } = current;
+      const origW = Math.max(10, initialBox.width);
+      const origH = Math.max(10, initialBox.height);
+
+      let scaleX = 1;
+      let scaleY = 1;
+
+      if (current.handle === 'se') {
+        scaleX = (pos.x - anchor.x) / origW;
+        scaleY = (pos.y - anchor.y) / origH;
+      } else if (current.handle === 'nw') {
+        scaleX = (anchor.x - pos.x) / origW;
+        scaleY = (anchor.y - pos.y) / origH;
+      } else if (current.handle === 'ne') {
+        scaleX = (pos.x - anchor.x) / origW;
+        scaleY = (anchor.y - pos.y) / origH;
+      } else if (current.handle === 'sw') {
+        scaleX = (anchor.x - pos.x) / origW;
+        scaleY = (pos.y - anchor.y) / origH;
+      }
+
+      const finalElements = scaleElements(initialElements, selectedElementIds, anchor, scaleX, scaleY);
+      const updatedPage: BoardPage = {
+        ...currentPage,
+        elements: finalElements,
         updatedAt: new Date().toISOString()
       };
-    } else if (activeTool.startsWith('shape_') && startPosRef.current) {
-      const start = startPosRef.current;
+      const updatedPages = [...doc.pages];
+      updatedPages[activePageIndex] = updatedPage;
+
+      const updatedDoc: BoardDocument = {
+        ...doc,
+        pages: updatedPages,
+        version: doc.version + 1,
+        timestamps: {
+          ...doc.timestamps,
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      setDoc(updatedDoc);
+      pushHistory(updatedPages);
+      scheduleAutosave(updatedDoc);
+      dragStateRef.current = { mode: 'idle' };
+      redrawCanvas();
+      return;
+    }
+
+    // 3. Complete Lasso Selection
+    if (current.mode === 'lasso') {
+      const polygon = current.points;
+      if (polygon.length >= 3) {
+        const newlySelected = currentPage.elements
+          .filter((elem) => doesLassoSelectElement(elem, polygon))
+          .map((elem) => elem.id);
+
+        setSelectedElementIds(newlySelected);
+      }
+      dragStateRef.current = { mode: 'idle' };
+      redrawCanvas();
+      return;
+    }
+
+    // 4. Complete Marquee Selection
+    if (current.mode === 'marquee') {
+      const rect: MarqueeRect = {
+        minX: Math.min(current.start.x, pos.x),
+        minY: Math.min(current.start.y, pos.y),
+        maxX: Math.max(current.start.x, pos.x),
+        maxY: Math.max(current.start.y, pos.y)
+      };
+
+      if (rect.maxX - rect.minX > 5 && rect.maxY - rect.minY > 5) {
+        const newlySelected = currentPage.elements
+          .filter((elem) => doesMarqueeSelectElement(elem, rect))
+          .map((elem) => elem.id);
+
+        setSelectedElementIds(newlySelected);
+      }
+      dragStateRef.current = { mode: 'idle' };
+      redrawCanvas();
+      return;
+    }
+
+    // 5. Complete Continuous Eraser
+    if (current.mode === 'erasing') {
+      if (current.erasedIds.size > 0) {
+        const deletedArray = Array.from(current.erasedIds);
+        const cleanedCandidates = cleanSemanticCandidatesAfterDeletion(
+          currentPage.semanticCandidates,
+          deletedArray
+        );
+
+        const updatedPage: BoardPage = {
+          ...currentPage,
+          semanticCandidates: cleanedCandidates,
+          updatedAt: new Date().toISOString()
+        };
+        const updatedPages = [...doc.pages];
+        updatedPages[activePageIndex] = updatedPage;
+
+        const updatedDoc: BoardDocument = {
+          ...doc,
+          pages: updatedPages,
+          version: doc.version + 1,
+          timestamps: {
+            ...doc.timestamps,
+            updatedAt: new Date().toISOString()
+          }
+        };
+
+        setDoc(updatedDoc);
+        pushHistory(updatedPages);
+        scheduleAutosave(updatedDoc);
+        setSelectedElementIds((prev) => prev.filter((id) => !current.erasedIds.has(id)));
+      }
+      dragStateRef.current = { mode: 'idle' };
+      redrawCanvas();
+      return;
+    }
+
+    // 6. Complete Pen / Highlighter Stroke
+    if (current.mode === 'drawing') {
+      const pts = current.points;
+      if (pts.length > 0) {
+        const newElementId = `elem-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        const newStroke: BoardElement = {
+          id: newElementId,
+          type: 'stroke',
+          tool: activeTool === 'highlighter' ? 'highlighter' : 'pen',
+          points: [...pts],
+          color: selectedColor,
+          width: strokeWidth,
+          opacity: activeTool === 'highlighter' ? 0.35 : 1,
+          semanticTag: activeSemanticTag,
+          zIndex: (currentPage.elements?.length || 0) + 1,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        const updatedElements = [...(currentPage.elements || []), newStroke];
+        const updatedPage: BoardPage = {
+          ...currentPage,
+          elements: updatedElements,
+          updatedAt: new Date().toISOString()
+        };
+        const updatedPages = [...doc.pages];
+        updatedPages[activePageIndex] = updatedPage;
+
+        const updatedDoc: BoardDocument = {
+          ...doc,
+          pages: updatedPages,
+          version: doc.version + 1,
+          timestamps: {
+            ...doc.timestamps,
+            updatedAt: new Date().toISOString()
+          }
+        };
+
+        setDoc(updatedDoc);
+        pushHistory(updatedPages);
+        scheduleAutosave(updatedDoc);
+      }
+      dragStateRef.current = { mode: 'idle' };
+      redrawCanvas();
+      return;
+    }
+
+    // 7. Complete Geometric Shape
+    if (current.mode === 'shape') {
+      const start = current.start;
       const w = pos.x - start.x;
       const h = pos.y - start.y;
+
       let shapeType: 'rectangle' | 'circle' | 'triangle' | 'line' | 'arrow' = 'rectangle';
       if (activeTool === 'shape_circle') shapeType = 'circle';
       else if (activeTool === 'shape_triangle') shapeType = 'triangle';
       else if (activeTool === 'shape_line') shapeType = 'line';
       else if (activeTool === 'shape_arrow') shapeType = 'arrow';
 
-      newElement = {
+      const newElementId = `shape-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+      const newShape: BoardElement = {
         id: newElementId,
         type: 'shape',
         shapeType,
         x: Math.min(start.x, pos.x),
         y: Math.min(start.y, pos.y),
-        widthPx: Math.abs(w),
-        heightPx: Math.abs(h),
+        widthPx: Math.max(10, Math.abs(w)),
+        heightPx: Math.max(10, Math.abs(h)),
         endX: pos.x,
         endY: pos.y,
         strokeColor: selectedColor,
@@ -690,10 +1162,8 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-    }
 
-    if (newElement) {
-      const updatedElements = [...(currentPage.elements || []), newElement];
+      const updatedElements = [...(currentPage.elements || []), newShape];
       const updatedPage: BoardPage = {
         ...currentPage,
         elements: updatedElements,
@@ -715,12 +1185,117 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       setDoc(updatedDoc);
       pushHistory(updatedPages);
       scheduleAutosave(updatedDoc);
-      redrawCanvas(updatedPage);
+      dragStateRef.current = { mode: 'idle' };
+      redrawCanvas();
     }
-
-    currentPointsRef.current = [];
-    startPosRef.current = null;
   };
+
+  // DUPLICATE SELECTED OBJECTS
+  const handleDuplicateSelected = () => {
+    if (selectedElementIds.length === 0 || isReadOnly) return;
+
+    const { newElements, duplicatedIds } = duplicateElements(currentPage.elements, selectedElementIds);
+    const updatedPage: BoardPage = {
+      ...currentPage,
+      elements: newElements,
+      updatedAt: new Date().toISOString()
+    };
+    const updatedPages = [...doc.pages];
+    updatedPages[activePageIndex] = updatedPage;
+
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      version: doc.version + 1,
+      timestamps: {
+        ...doc.timestamps,
+        updatedAt: new Date().toISOString()
+      }
+    };
+
+    setDoc(updatedDoc);
+    setSelectedElementIds(duplicatedIds);
+    pushHistory(updatedPages);
+    scheduleAutosave(updatedDoc);
+    setVisionNotice(`Duplicated ${duplicatedIds.length} object${duplicatedIds.length > 1 ? 's' : ''}`);
+    setTimeout(() => setVisionNotice(null), 2500);
+  };
+
+  // DELETE SELECTED OBJECTS
+  const handleDeleteSelected = () => {
+    if (selectedElementIds.length === 0 || isReadOnly) return;
+
+    const remainingElements = deleteElements(currentPage.elements, selectedElementIds);
+    const cleanedCandidates = cleanSemanticCandidatesAfterDeletion(
+      currentPage.semanticCandidates,
+      selectedElementIds
+    );
+
+    const updatedPage: BoardPage = {
+      ...currentPage,
+      elements: remainingElements,
+      semanticCandidates: cleanedCandidates,
+      updatedAt: new Date().toISOString()
+    };
+    const updatedPages = [...doc.pages];
+    updatedPages[activePageIndex] = updatedPage;
+
+    const updatedDoc: BoardDocument = {
+      ...doc,
+      pages: updatedPages,
+      version: doc.version + 1,
+      timestamps: {
+        ...doc.timestamps,
+        updatedAt: new Date().toISOString()
+      }
+    };
+
+    setDoc(updatedDoc);
+    setSelectedElementIds([]);
+    setActiveCandidate(null);
+    pushHistory(updatedPages);
+    scheduleAutosave(updatedDoc);
+    setVisionNotice('Deleted selected objects');
+    setTimeout(() => setVisionNotice(null), 2000);
+  };
+
+  // Keyboard Shortcuts (Delete, Undo, Redo, Duplicate, Escape)
+  useEffect(() => {
+    if (isReadOnly) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept when user is typing in text input
+      if (textInputPos) return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedElementIds.length > 0) {
+          e.preventDefault();
+          handleDeleteSelected();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        if (selectedElementIds.length > 0) {
+          e.preventDefault();
+          handleDuplicateSelected();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      } else if (e.key === 'Escape') {
+        setSelectedElementIds([]);
+        setActiveCandidate(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElementIds, textInputPos, isReadOnly, historyIndex, history]);
 
   // Submit inline text input
   const handleAddText = () => {
@@ -769,7 +1344,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     scheduleAutosave(updatedDoc);
     setTextInputPos(null);
     setTextInputValue('');
-    redrawCanvas(updatedPage);
+    redrawCanvas(updatedElements);
   };
 
   // Undo / Redo
@@ -785,7 +1360,8 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       };
       setDoc(updatedDoc);
       scheduleAutosave(updatedDoc);
-      redrawCanvas(targetPages[activePageIndex]);
+      setSelectedElementIds([]);
+      redrawCanvas(targetPages[activePageIndex]?.elements);
     }
   };
 
@@ -801,7 +1377,8 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       };
       setDoc(updatedDoc);
       scheduleAutosave(updatedDoc);
-      redrawCanvas(targetPages[activePageIndex]);
+      setSelectedElementIds([]);
+      redrawCanvas(targetPages[activePageIndex]?.elements);
     }
   };
 
@@ -830,6 +1407,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
 
     setActivePageIndex(newIndex);
     setDoc(updatedDoc);
+    setSelectedElementIds([]);
     pushHistory(updatedPages);
     scheduleAutosave(updatedDoc);
   };
@@ -878,7 +1456,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     setActiveCandidate(null);
     pushHistory(updatedPages);
     scheduleAutosave(updatedDoc);
-    redrawCanvas(updatedPage);
+    redrawCanvas([]);
   };
 
   // D.9 Vision Board: Trigger recognition on selected elements
@@ -913,7 +1491,14 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
       const data = await res.json();
       if (data.candidate) {
         setActiveCandidate(data.candidate);
-        setVisionNotice(`Recognized candidate: ${data.candidate.equation?.expression || data.candidate.diagram?.diagramType || data.candidate.recognizedText || 'Complete'}`);
+        setVisionNotice(
+          `Recognized candidate: ${
+            data.candidate.equation?.expression ||
+            data.candidate.diagram?.diagramType ||
+            data.candidate.recognizedText ||
+            'Complete'
+          }`
+        );
       }
     } catch (err) {
       console.warn('Vision recognition error:', err);
@@ -928,7 +1513,10 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
   const handleAcceptCandidate = () => {
     if (!activeCandidate) return;
 
-    const updatedCandidates = [...(currentPage.semanticCandidates || []), { ...activeCandidate, acceptedByTeacher: true }];
+    const updatedCandidates = [
+      ...(currentPage.semanticCandidates || []),
+      { ...activeCandidate, acceptedByTeacher: true }
+    ];
     const updatedPage: BoardPage = {
       ...currentPage,
       semanticCandidates: updatedCandidates,
@@ -952,7 +1540,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
     scheduleAutosave(updatedDoc);
     setActiveCandidate(null);
     setSelectedElementIds([]);
-    redrawCanvas(updatedPage);
+    redrawCanvas(updatedPage.elements);
     setVisionNotice('Semantic candidate saved to board metadata.');
     setTimeout(() => setVisionNotice(null), 3000);
   };
@@ -1062,7 +1650,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               <button
                 onClick={() => handleBackgroundChange('dark_grid')}
                 className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer ${
-                  currentPage.background === 'dark_grid' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                  currentPage.background === 'dark_grid'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold'
+                    : 'text-slate-400 hover:text-white'
                 }`}
                 title="Dark Grid"
               >
@@ -1071,7 +1661,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               <button
                 onClick={() => handleBackgroundChange('lined')}
                 className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer ${
-                  currentPage.background === 'lined' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                  currentPage.background === 'lined'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold'
+                    : 'text-slate-400 hover:text-white'
                 }`}
                 title="Ruled Lines"
               >
@@ -1080,7 +1672,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               <button
                 onClick={() => handleBackgroundChange('dark')}
                 className={`px-2 py-0.5 rounded text-[11px] font-mono cursor-pointer ${
-                  currentPage.background === 'dark' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                  currentPage.background === 'dark'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold'
+                    : 'text-slate-400 hover:text-white'
                 }`}
                 title="Pure Dark"
               >
@@ -1153,47 +1747,84 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
           onPointerLeave={handlePointerUp}
           style={{ touchAction: 'none' }}
           className={`w-full h-full block select-none ${
-            isReadOnly ? 'cursor-default' : activeTool === 'select' ? 'cursor-default' : 'cursor-crosshair'
+            isReadOnly
+              ? 'cursor-default'
+              : activeTool === 'select'
+              ? 'cursor-default'
+              : activeTool === 'eraser'
+              ? 'cursor-cell'
+              : 'cursor-crosshair'
           }`}
         />
 
-        {/* Floating Vision AI Action Toolbar for Selected Elements */}
+        {/* Floating Contextual Toolbar for Selected Elements */}
         {selectedElementIds.length > 0 && !isReadOnly && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-2xl bg-slate-950/95 border border-cyan-500/50 shadow-2xl backdrop-blur-xl">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-950/95 border border-cyan-500/50 shadow-2xl backdrop-blur-xl max-w-[95vw]">
             <span className="text-[11px] font-mono font-bold text-cyan-300 pl-2">
-              {selectedElementIds.length} Selected:
+              {selectedElementIds.length} Selected
             </span>
+
+            <div className="h-4 w-px bg-slate-800" />
+
+            {/* Duplicate Button */}
+            <button
+              onClick={handleDuplicateSelected}
+              className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Duplicate (Ctrl+D)"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>Duplicate</span>
+            </button>
+
+            {/* Delete Button */}
+            <button
+              onClick={handleDeleteSelected}
+              className="px-2.5 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Delete (Backspace/Delete)"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+
+            <div className="h-4 w-px bg-slate-800" />
+
+            {/* D.9 AI Vision Actions */}
             <button
               onClick={() => handleRecognizeSelection('equation')}
               disabled={isRecognizing}
               className="px-2.5 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+              title="Recognize Equation Formula"
             >
               <Cpu className="w-3.5 h-3.5" />
-              <span>Recognize Equation</span>
+              <span className="hidden sm:inline">Equation</span>
             </button>
             <button
               onClick={() => handleRecognizeSelection('diagram')}
               disabled={isRecognizing}
               className="px-2.5 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+              title="Recognize Diagram Topology"
             >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Recognize Diagram</span>
+              <Scissors className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Diagram</span>
             </button>
             <button
               onClick={() => handleRecognizeSelection('text')}
               disabled={isRecognizing}
               className="px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+              title="Transcribe Handwriting Text"
             >
               <Type className="w-3.5 h-3.5" />
-              <span>Transcribe Text</span>
+              <span className="hidden sm:inline">Transcribe</span>
             </button>
+
+            {/* Deselect Button */}
             <button
               onClick={() => {
                 setSelectedElementIds([]);
                 setActiveCandidate(null);
               }}
               className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
-              title="Deselect"
+              title="Deselect (Escape)"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1244,7 +1875,8 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
                   <span className="text-cyan-300 font-bold uppercase">{activeCandidate.diagram.diagramType}</span>
                 </div>
                 <div className="text-[11px] text-slate-400">
-                  Nodes: <span className="text-white font-bold">{activeCandidate.diagram.nodes.length}</span> · Edges: <span className="text-white font-bold">{activeCandidate.diagram.edges.length}</span>
+                  Nodes: <span className="text-white font-bold">{activeCandidate.diagram.nodes.length}</span> · Edges:{' '}
+                  <span className="text-white font-bold">{activeCandidate.diagram.edges.length}</span>
                 </div>
               </div>
             )}
@@ -1317,17 +1949,48 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-slate-950/95 border border-cyan-500/40 shadow-2xl backdrop-blur-xl max-w-[95vw]">
           {/* Main Drawing & Pointer Tools */}
           <div className="flex items-center gap-1 border-r border-slate-800 pr-2">
-            <button
-              onClick={() => setActiveTool('select')}
-              className={`p-2 rounded-xl transition-all cursor-pointer ${
-                activeTool === 'select'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-              title="Select & Inspect Objects"
-            >
-              <MousePointer className="w-5 h-5" />
-            </button>
+            {/* Select Tool with Submode Toggle */}
+            <div className="flex items-center bg-slate-900/80 rounded-xl p-0.5 border border-slate-800">
+              <button
+                onClick={() => setActiveTool('select')}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeTool === 'select'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-lg'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Select & Move Objects"
+              >
+                <MousePointer className="w-4 h-4" />
+              </button>
+
+              {activeTool === 'select' && (
+                <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-slate-700">
+                  <button
+                    onClick={() => setSelectionSubMode('lasso')}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono cursor-pointer ${
+                      selectionSubMode === 'lasso'
+                        ? 'bg-cyan-500 text-black font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Lasso Selection (Freeform)"
+                  >
+                    Lasso
+                  </button>
+                  <button
+                    onClick={() => setSelectionSubMode('marquee')}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono cursor-pointer ${
+                      selectionSubMode === 'marquee'
+                        ? 'bg-cyan-500 text-black font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Marquee Selection (Box)"
+                  >
+                    Box
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => setActiveTool('pen')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
@@ -1350,17 +2013,49 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             >
               <Highlighter className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => setActiveTool('eraser')}
-              className={`p-2 rounded-xl transition-all cursor-pointer ${
-                activeTool === 'eraser'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-              title="Eraser"
-            >
-              <Eraser className="w-5 h-5" />
-            </button>
+
+            {/* Eraser Tool with Submode Toggle */}
+            <div className="flex items-center bg-slate-900/80 rounded-xl p-0.5 border border-slate-800">
+              <button
+                onClick={() => setActiveTool('eraser')}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeTool === 'eraser'
+                    ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40 shadow-lg'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Continuous Multi-Stroke Eraser"
+              >
+                <Eraser className="w-4 h-4" />
+              </button>
+
+              {activeTool === 'eraser' && (
+                <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-slate-700">
+                  <button
+                    onClick={() => setEraserSubMode('stroke')}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono cursor-pointer ${
+                      eraserSubMode === 'stroke'
+                        ? 'bg-rose-500 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Continuous Stroke Eraser"
+                  >
+                    Stroke
+                  </button>
+                  <button
+                    onClick={() => setEraserSubMode('object')}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono cursor-pointer ${
+                      eraserSubMode === 'object'
+                        ? 'bg-rose-500 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Whole Object Eraser"
+                  >
+                    Object
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => setActiveTool('text')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
@@ -1379,7 +2074,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             <button
               onClick={() => setActiveTool('shape_rect')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
-                activeTool === 'shape_rect' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                activeTool === 'shape_rect'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'text-slate-400 hover:text-white'
               }`}
               title="Rectangle"
             >
@@ -1388,7 +2085,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             <button
               onClick={() => setActiveTool('shape_circle')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
-                activeTool === 'shape_circle' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                activeTool === 'shape_circle'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'text-slate-400 hover:text-white'
               }`}
               title="Circle"
             >
@@ -1397,7 +2096,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             <button
               onClick={() => setActiveTool('shape_triangle')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
-                activeTool === 'shape_triangle' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                activeTool === 'shape_triangle'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'text-slate-400 hover:text-white'
               }`}
               title="Triangle"
             >
@@ -1406,7 +2107,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             <button
               onClick={() => setActiveTool('shape_line')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
-                activeTool === 'shape_line' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                activeTool === 'shape_line'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'text-slate-400 hover:text-white'
               }`}
               title="Straight Line"
             >
@@ -1415,7 +2118,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             <button
               onClick={() => setActiveTool('shape_arrow')}
               className={`p-2 rounded-xl transition-all cursor-pointer ${
-                activeTool === 'shape_arrow' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                activeTool === 'shape_arrow'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'text-slate-400 hover:text-white'
               }`}
               title="Vector Arrow"
             >
@@ -1444,7 +2149,9 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
                 key={w}
                 onClick={() => setStrokeWidth(w)}
                 className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center font-mono text-xs cursor-pointer ${
-                  strokeWidth === w ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40' : 'text-slate-500 hover:text-white'
+                  strokeWidth === w
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-500 hover:text-white'
                 }`}
               >
                 {w}
@@ -1458,7 +2165,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               onClick={handleUndo}
               disabled={historyIndex <= 0}
               className="p-2 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-              title="Undo"
+              title="Undo (Ctrl+Z)"
             >
               <Undo className="w-4 h-4" />
             </button>
@@ -1466,7 +2173,7 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
               onClick={handleRedo}
               disabled={historyIndex >= history.length - 1}
               className="p-2 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-              title="Redo"
+              title="Redo (Ctrl+Y)"
             >
               <Redo className="w-4 h-4" />
             </button>
@@ -1512,7 +2219,8 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
                   <ul className="list-disc pl-4 text-slate-300">
                     {aiContextModal.recognizedEquations.map((eq) => (
                       <li key={eq.id}>
-                        {eq.expression} (LaTeX: <code className="text-cyan-300">{eq.latex}</code>) [Confidence: {Math.round(eq.confidence * 100)}%]
+                        {eq.expression} (LaTeX: <code className="text-cyan-300">{eq.latex}</code>) [Confidence:{' '}
+                        {Math.round(eq.confidence * 100)}%]
                       </li>
                     ))}
                   </ul>
@@ -1521,11 +2229,17 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
 
               {aiContextModal.spatialRelations.length > 0 && (
                 <div className="pt-2">
-                  <span className="text-amber-400 font-bold">Spatial Graph ({aiContextModal.spatialRelations.length} relations):</span>
+                  <span className="text-amber-400 font-bold">
+                    Spatial Graph ({aiContextModal.spatialRelations.length} relations):
+                  </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
                     {aiContextModal.spatialRelations.slice(0, 8).map((rel, idx) => (
-                      <div key={idx} className="p-1.5 rounded bg-black/60 border border-slate-800 text-[10px] text-slate-300">
-                        <span className="text-cyan-400 font-bold">{rel.relation}</span> ({rel.sourceId.slice(0, 8)} → {rel.targetId.slice(0, 8)})
+                      <div
+                        key={idx}
+                        className="p-1.5 rounded bg-black/60 border border-slate-800 text-[10px] text-slate-300"
+                      >
+                        <span className="text-cyan-400 font-bold">{rel.relation}</span> ({rel.sourceId.slice(0, 8)} →{' '}
+                        {rel.targetId.slice(0, 8)})
                       </div>
                     ))}
                   </div>

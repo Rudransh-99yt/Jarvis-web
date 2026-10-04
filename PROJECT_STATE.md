@@ -353,6 +353,27 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - **Role-Based Sanitization & Board History**:
     * Strict stripping of private teacher notes and answer keys from physical board payloads; student board history access strictly restricted to teacher-released documents.
 
+- **Phase D.8.5: SmartBoard Interaction Hardening (Completed)**:
+  - **Professional Selection System**:
+    * Tap/click single object selection and Shift+click multi-selection.
+    * Freeform closed Lasso selection: point-in-polygon ray-casting algorithm capturing strokes, shapes, and formulas enclosed by freeform loop.
+    * Rectangular Marquee selection: drag-to-select box boundary.
+    * Real-time combined selection bounding box with 4 corner resize handles (NW, NE, SE, SW) and individual element outlines.
+  - **Multi-Object Manipulation & Transformation**:
+    * Group movement: dragging selection moves all selected elements together preserving relative geometry, stroke coordinates, and semantic bounding boxes.
+    * Proportional scaling: corner handle drag scales stroke point sequences relative to opposite corner anchor without destroying handwriting fidelity.
+    * Duplicate & Delete: contextual actions with fresh unique IDs (zero ID collisions) and semantic candidate reference cleanup.
+    * Keyboard shortcuts: Delete/Backspace, Ctrl+D (duplicate), Ctrl+Z (undo), Ctrl+Y (redo), Escape (deselect).
+  - **Continuous Multi-Stroke Eraser**:
+    * Continuous pointer movement (down → move → up) evaluating line segment intersections dynamically across all elements without lifting the pen.
+    * Submodes: continuous stroke eraser and whole-object eraser.
+    * Live visual eraser radius cursor.
+  - **Full Undo/Redo & Gesture Safety**:
+    * Monotonic undo/redo covering drawing, continuous erasing, group movement, resizing, duplication, deletion, and background changes.
+    * `touchAction: 'none'` preventing browser scrolling or accidental gesture confusion.
+  - **End-to-End Test Suite (`tests/education_d8_5_interaction.test.ts`)**:
+    * 100% passing across selection, lasso containment, marquee, group movement, transformation scaling, multi-stroke eraser, ID collision prevention, and semantic metadata hygiene.
+
 - **Phase D.9: Vision Board Foundation (Completed)**:
   - **Semantic Object Model & Handwriting Grouping**:
     * Extensible semantic categories (`HANDWRITING`, `TEXT`, `EQUATION`, `SHAPE`, `DIAGRAM`, `GRAPH`, `IMAGE`, `ARROW`, `ANNOTATION`) with bounding boxes, confidence metrics, and non-destructive binding preserving original handwriting strokes.
