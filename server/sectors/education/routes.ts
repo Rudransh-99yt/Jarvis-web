@@ -3,8 +3,12 @@ import { educationStore } from './educationStore.ts';
 import { videoRouter } from './videoRoutes.ts';
 import { classSessionRouter } from './classSessions/classSessionRoutes.ts';
 import { communityRouter } from './community/communityRoutes.ts';
+import { focusRouter } from './focus/focusRoutes.ts';
 
 export const educationRouter = Router();
+
+// Pro Focus / Pomodoro + Focus Lock Routes
+educationRouter.use('/focus', focusRouter);
 
 // Discord-Style Academic Community Routes
 educationRouter.use('/community', communityRouter);

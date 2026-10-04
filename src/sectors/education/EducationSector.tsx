@@ -19,7 +19,11 @@ import { ChapterDetailView } from './views/ChapterDetailView.tsx';
 import { LessonWorkspaceView } from './views/LessonWorkspaceView.tsx';
 
 // Productivity & Community Views
-import { StudentFocusWorkspaceView } from './views/StudentFocusWorkspaceView.tsx';
+import { FocusWorkspaceView } from './focus/FocusWorkspaceView.tsx';
+import { FocusLockBlockedModal } from './focus/FocusLockBlockedModal.tsx';
+import { FocusIndicatorStrip } from './focus/FocusIndicatorStrip.tsx';
+import { FocusPolicyEngine } from './focus/focusPolicy.ts';
+import type { FocusSession } from '../../types/focus.ts';
 import { MyWorkspaceView } from './workspace/MyWorkspaceView.tsx';
 import { EducationCommunityView } from './views/EducationCommunityView.tsx';
 import { EducationCalendarView } from './views/EducationCalendarView.tsx';
@@ -115,6 +119,54 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     setTimeout(() => setNotification(null), 4000);
   };
 
+  // Focus Session State & Navigation Guard
+  const [activeFocusSession, setActiveFocusSession] = useState<FocusSession | null>(null);
+  const [blockedNavState, setBlockedNavState] = useState<{
+    isOpen: boolean;
+    blockedRoute: string;
+    reason?: string;
+  } | null>(null);
+
+  const fetchActiveFocusSession = async () => {
+    try {
+      const res = await fetch('/api/education/focus/active', {
+        headers: {
+          'x-user-id': currentRole === 'student' ? 'student-1' : 'teacher-1',
+          'x-user-role': currentRole
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveFocusSession(data.session);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch active focus session:', err);
+    }
+  };
+
+  const handleSafeNavigate = (targetView: DeepEducationView, targetCourseId?: string) => {
+    if (
+      activeFocusSession &&
+      (activeFocusSession.mode === 'STUDY_LOCK' || activeFocusSession.mode === 'EXAM_LOCK') &&
+      activeFocusSession.status === 'ACTIVE'
+    ) {
+      const evalResult = FocusPolicyEngine.evaluateNavigation(
+        activeFocusSession,
+        targetView,
+        targetCourseId || activeCourseId
+      );
+      if (!evalResult.allowed) {
+        setBlockedNavState({
+          isOpen: true,
+          blockedRoute: targetView,
+          reason: evalResult.reason
+        });
+        return;
+      }
+    }
+    setCurrentView(targetView);
+  };
+
   // Hydrate state from server REST API on mount
   const fetchEducationState = async () => {
     setIsSyncing(true);
@@ -128,6 +180,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
         if (data.submissions) setSubmissions(data.submissions);
         if (data.knowledgeSpaces) setKnowledgeSpaces(data.knowledgeSpaces);
       }
+      await fetchActiveFocusSession();
     } catch (err) {
       console.warn('Failed to fetch education state from API:', err);
     } finally {
@@ -137,7 +190,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
   useEffect(() => {
     fetchEducationState();
-  }, []);
+  }, [currentRole]);
 
   // Update default view when role switches
   useEffect(() => {
@@ -648,13 +701,13 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           </span>
         </div>
 
-        {/* Interactive Breadcrumb Trail for Hierarchical Views */}
-        {breadcrumbs.length > 0 && (
-          <div className="mb-6 max-w-4xl mx-auto w-full">
+        {/* Interactive Breadcrumb Trail & Persistent Focus Indicator */}
+        <div className="mb-6 max-w-4xl mx-auto w-full flex flex-wrap items-center justify-between gap-3">
+          {breadcrumbs.length > 0 ? (
             <EducationBreadcrumbs
               items={breadcrumbs}
               onHomeClick={() =>
-                setCurrentView(
+                handleSafeNavigate(
                   currentRole === 'student'
                     ? 'student_home'
                     : currentRole === 'teacher'
@@ -663,8 +716,13 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
                 )
               }
             />
-          </div>
-        )}
+          ) : <div />}
+
+          <FocusIndicatorStrip
+            activeSession={activeFocusSession}
+            onOpenFocusWorkspace={() => setCurrentView('focus')}
+          />
+        </div>
 
         {/* Notification Toast */}
         {notification && (
@@ -743,12 +801,13 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           )}
 
           {currentView === 'focus' && (
-            <StudentFocusWorkspaceView
+            <FocusWorkspaceView
               classes={classes}
-              initialSubjectId={activeCourseId}
-              initialTopicTitle={activeLesson?.title}
-              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+              currentRole={currentRole}
+              initialSession={activeFocusSession}
+              onNavigateTab={(t, meta) => handleSafeNavigate(t as any, meta?.courseId)}
               onOpenLesson={(cId, uId, lId) => handleOpenLesson(cId, uId, lId)}
+              onSessionStateChange={(s) => setActiveFocusSession(s)}
             />
           )}
 
@@ -985,6 +1044,38 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           <span>More</span>
         </button>
       </nav>
+
+      {/* 6. Focus Lock Navigation Interceptor Modal */}
+      <FocusLockBlockedModal
+        isOpen={Boolean(blockedNavState?.isOpen)}
+        blockedRoute={blockedNavState?.blockedRoute || ''}
+        reason={blockedNavState?.reason}
+        activeSession={activeFocusSession}
+        onReturnToFocus={() => {
+          setBlockedNavState(null);
+          setCurrentView('focus');
+        }}
+        onEmergencyExit={async (reason) => {
+          if (activeFocusSession) {
+            try {
+              await fetch(`/api/education/focus/sessions/${activeFocusSession.id}/cancel`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-user-id': currentRole === 'student' ? 'student-1' : 'teacher-1',
+                  'x-user-role': currentRole
+                },
+                body: JSON.stringify({ reason })
+              });
+              setActiveFocusSession(null);
+              setBlockedNavState(null);
+              showNotification('Focus Lock unlocked.');
+            } catch (err) {
+              console.warn('Unlock error:', err);
+            }
+          }
+        }}
+      />
     </div>
   );
 };

@@ -6,6 +6,7 @@ export type EducationRole = 'student' | 'teacher' | 'principal';
 export * from './workspace.ts';
 export * from './classSession.ts';
 export * from './community.ts';
+export * from './focus.ts';
 
 // --- Hierarchical Institution & Academic Hierarchy Types ---
 
