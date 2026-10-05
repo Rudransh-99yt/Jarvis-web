@@ -3,7 +3,14 @@ import type { User } from '../data/types.ts';
 import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
 export class AuthenticationError extends Error {
-  constructor(message: string, public statusCode = 401, public code = 'UNAUTHENTICATED') { super(message); this.name = 'AuthenticationError'; }
+  public statusCode: number;
+  public code: string;
+  constructor(message: string, statusCode = 401, code = 'UNAUTHENTICATED') {
+    super(message);
+    this.name = 'AuthenticationError';
+    this.statusCode = statusCode;
+    this.code = code;
+  }
 }
 
 export interface AuthTokenPayload { sub: string; iat: number; exp: number; jti: string; }
@@ -33,7 +40,10 @@ export function verifyAuthToken(value: string, signingSecret = secret()): AuthTo
 }
 
 export class AuthService {
-  constructor(private readonly repo: IJarvisDataRepository = jarvisData) {}
+  private readonly repo: IJarvisDataRepository;
+  constructor(repo: IJarvisDataRepository = jarvisData) {
+    this.repo = repo;
+  }
   issueToken(user: User, expiresInMs = 24 * 60 * 60 * 1000): string { const now = Date.now(); return signAuthPayload({ sub: user.id, iat: now, exp: now + expiresInMs, jti: crypto.randomUUID() }); }
   async authenticateToken(token: string): Promise<User> { const payload = verifyAuthToken(token); const user = await this.repo.users.getById(payload.sub); if (!user) throw new AuthenticationError('Unknown credential subject.', 401, 'INVALID_CREDENTIALS'); return user; }
 }

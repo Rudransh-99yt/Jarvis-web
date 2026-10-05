@@ -56,6 +56,61 @@
       "role": "parent",
       "department": "Family & Guardian Council",
       "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "student-foreign",
+      "displayName": "Foreign Student",
+      "email": "foreign@other-inst.edu",
+      "role": "student",
+      "avatarUrl": "",
+      "department": "Science",
+      "createdAt": "2026-10-05T07:32:36.876Z"
+    },
+    {
+      "id": "teacher-foreign",
+      "displayName": "Foreign Teacher",
+      "email": "foreign-teacher@other-inst.edu",
+      "role": "teacher",
+      "avatarUrl": "",
+      "department": "Physics",
+      "createdAt": "2026-10-05T07:32:36.876Z"
+    }
+  ],
+  "institutions": [
+    {
+      "id": "inst-stark-academy",
+      "name": "Stark Academy",
+      "createdAt": "2026-09-01T08:00:00.000Z"
+    }
+  ],
+  "institutionMemberships": [
+    {
+      "id": "instmem-teacher-1",
+      "institutionId": "inst-stark-academy",
+      "userId": "teacher-1",
+      "role": "teacher",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "instmem-student-1",
+      "institutionId": "inst-stark-academy",
+      "userId": "student-1",
+      "role": "student",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "instmem-student-2",
+      "institutionId": "inst-stark-academy",
+      "userId": "student-2",
+      "role": "student",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "instmem-principal-1",
+      "institutionId": "inst-stark-academy",
+      "userId": "principal-1",
+      "role": "principal",
+      "joinedAt": "2026-09-01T08:00:00.000Z"
     }
   ],
   "workspaces": [
@@ -272,6 +327,56 @@
       "sector": "command",
       "createdAt": "2026-10-05T03:26:13.966Z",
       "updatedAt": "2026-10-05T03:26:13.967Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791185085672-u9wv7",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-1",
+      "title": "Hello",
+      "sector": "command",
+      "createdAt": "2026-10-05T07:24:45.672Z",
+      "updatedAt": "2026-10-05T07:24:47.265Z",
+      "messageCount": 0
+    },
+    {
+      "id": "test-session-boundary-1",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-1",
+      "title": "Session test",
+      "sector": "command",
+      "createdAt": "2026-10-05T07:24:47.272Z",
+      "updatedAt": "2026-10-05T07:32:55.748Z",
+      "messageCount": 0
+    },
+    {
+      "id": "test-session-boundary-2",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-1",
+      "title": "Hello from forged identity",
+      "sector": "command",
+      "createdAt": "2026-10-05T07:24:49.035Z",
+      "updatedAt": "2026-10-05T07:33:00.392Z",
+      "messageCount": 0
+    },
+    {
+      "id": "test-session-boundary-3",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-1",
+      "title": "Hello from forged role",
+      "sector": "command",
+      "createdAt": "2026-10-05T07:25:15.391Z",
+      "updatedAt": "2026-10-05T07:33:04.524Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791185566789-qr28o",
+      "workspaceId": "ws-stark-core",
+      "userId": "student-1",
+      "title": "Hello",
+      "sector": "command",
+      "createdAt": "2026-10-05T07:32:46.789Z",
+      "updatedAt": "2026-10-05T07:32:48.802Z",
       "messageCount": 0
     }
   ],
@@ -513,6 +618,111 @@
       "content": "[Auxiliary Core] Directive acknowledged: \"Hello Jarvis\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
       "timestamp": "2026-10-05T03:26:13.967Z",
       "conversationId": "session-1791170773966-80f08"
+    },
+    {
+      "id": "msg-1791185085672-oq9rz",
+      "role": "user",
+      "content": "Hello",
+      "timestamp": "2026-10-05T07:24:45.672Z",
+      "conversationId": "session-1791185085672-u9wv7"
+    },
+    {
+      "id": "msg-1791185087265-e7fme",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive acknowledged: \"Hello\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
+      "timestamp": "2026-10-05T07:24:47.265Z",
+      "conversationId": "session-1791185085672-u9wv7"
+    },
+    {
+      "id": "msg-1791185087272-kwx7k",
+      "role": "user",
+      "content": "Session test",
+      "timestamp": "2026-10-05T07:24:47.272Z",
+      "conversationId": "test-session-boundary-1"
+    },
+    {
+      "id": "msg-1791185089022-fc1t5",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive acknowledged: \"Session test\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
+      "timestamp": "2026-10-05T07:24:49.022Z",
+      "conversationId": "test-session-boundary-1"
+    },
+    {
+      "id": "msg-1791185089035-wdnao",
+      "role": "user",
+      "content": "Hello from forged identity",
+      "timestamp": "2026-10-05T07:24:49.035Z",
+      "conversationId": "test-session-boundary-2"
+    },
+    {
+      "id": "msg-1791185115381-ds2ww",
+      "role": "assistant",
+      "content": "Greetings. Biometric sweeps and cryptographic handshakes remain entirely vigilant on my end, though I admire the candour. \n\nCore subsystems are nominal, Arc Reactor output is steady, and telemetry links are synchronized. \n\nHow may I assist you today, sir—or whoever you might currently be claiming to be?",
+      "timestamp": "2026-10-05T07:25:15.381Z",
+      "conversationId": "test-session-boundary-2"
+    },
+    {
+      "id": "msg-1791185115391-bvjgg",
+      "role": "user",
+      "content": "Hello from forged role",
+      "timestamp": "2026-10-05T07:25:15.391Z",
+      "conversationId": "test-session-boundary-3"
+    },
+    {
+      "id": "msg-1791185566790-tif97",
+      "role": "user",
+      "content": "Hello",
+      "timestamp": "2026-10-05T07:32:46.790Z",
+      "conversationId": "session-1791185566789-qr28o"
+    },
+    {
+      "id": "msg-1791185568802-dj9o3",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive acknowledged: \"Hello\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
+      "timestamp": "2026-10-05T07:32:48.802Z",
+      "conversationId": "session-1791185566789-qr28o"
+    },
+    {
+      "id": "msg-1791185568809-xm0q0",
+      "role": "user",
+      "content": "Session test",
+      "timestamp": "2026-10-05T07:32:48.809Z",
+      "conversationId": "test-session-boundary-1"
+    },
+    {
+      "id": "msg-1791185575748-u7u5g",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 8s, and internal diagnostic buses remain nominal, sir.",
+      "timestamp": "2026-10-05T07:32:55.748Z",
+      "conversationId": "test-session-boundary-1"
+    },
+    {
+      "id": "msg-1791185575756-3gu4g",
+      "role": "user",
+      "content": "Hello from forged identity",
+      "timestamp": "2026-10-05T07:32:55.756Z",
+      "conversationId": "test-session-boundary-2"
+    },
+    {
+      "id": "msg-1791185580392-tmqyg",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive acknowledged: \"Hello from forged identity\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
+      "timestamp": "2026-10-05T07:33:00.392Z",
+      "conversationId": "test-session-boundary-2"
+    },
+    {
+      "id": "msg-1791185580402-zw4t0",
+      "role": "user",
+      "content": "Hello from forged role",
+      "timestamp": "2026-10-05T07:33:00.402Z",
+      "conversationId": "test-session-boundary-3"
+    },
+    {
+      "id": "msg-1791185584524-vd7k8",
+      "role": "assistant",
+      "content": "Good day, sir. Systems are online and standing by. How may I be of assistance?",
+      "timestamp": "2026-10-05T07:33:04.524Z",
+      "conversationId": "test-session-boundary-3"
     }
   ],
   "knowledgeSpaces": [
@@ -1049,7 +1259,8 @@
           "size": "520 KB",
           "uploadedAt": "2026-09-18"
         }
-      ]
+      ],
+      "institutionId": "inst-stark-academy"
     },
     {
       "id": "class-math-240",
@@ -1092,7 +1303,8 @@
           "size": "410 KB",
           "uploadedAt": "2026-09-26"
         }
-      ]
+      ],
+      "institutionId": "inst-stark-academy"
     },
     {
       "id": "class-cs-420",
@@ -1390,6 +1602,28 @@
       "executionTimeMs": 1,
       "id": "audit-1791170773794-fqjj",
       "timestamp": "2026-10-05T03:26:13.794Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "test-session-boundary-2",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791185113384-3225",
+      "timestamp": "2026-10-05T07:25:13.384Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "test-session-boundary-1",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791185573936-ajtk",
+      "timestamp": "2026-10-05T07:32:53.936Z"
     }
   ],
   "researchProjects": [
@@ -1897,15 +2131,13 @@
       "title": "Quantum Electrodynamics & Wavefunction Collapse",
       "status": "scheduled",
       "boardState": {
-        "state": "waiting",
-        "currentTopic": "Quantum Mechanics Review & Unit 4 Preview",
-        "activeSlideIndex": 0,
-        "message": "Classroom session scheduled. Awaiting instructor live initiation.",
-        "updatedAt": "2026-10-02T10:00:00.000Z"
+        "state": "lesson",
+        "currentTopic": "Bra-ket Dirac Notation",
+        "updatedAt": "2026-10-05T07:32:37.062Z"
       },
       "activeStudentCount": 0,
       "createdAt": "2026-10-02T10:00:00.000Z",
-      "updatedAt": "2026-10-02T10:00:00.000Z"
+      "updatedAt": "2026-10-05T07:32:37.063Z"
     }
   ],
   "classroomParticipants": [],

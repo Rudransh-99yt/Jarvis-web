@@ -1,37 +1,47 @@
 // REST API Routes for Phase D.14: Student Live Classroom Surface
-
 import { Router, type Request, type Response } from 'express';
 import { liveClassroomService } from './liveClassroomService.ts';
-import { classroomEventBus } from '../classroomEventBus.ts';
-import { jarvisData } from '../../../data/index.ts';
-import type { User } from '../../../data/types.ts';
+import { jarvisData, INITIAL_DATABASE_SCHEMA } from '../../../data/index.ts';
+import { requirePrincipal, type AuthenticatedPrincipal } from '../../../auth/principal.ts';
+import { authorizationPolicy } from '../../../auth/authorizationPolicy.ts';
+import type { InstitutionMembership } from '../../../data/types.ts';
 
 export const liveClassroomRouter = Router();
 
-function getAuthUser(req: Request): User {
-  const userId = (req.headers['x-jarvis-user-id'] as string) || (req.headers['x-user-id'] as string) || (req.query.userId as string) || 'student-1';
-  const role = (req.headers['x-jarvis-user-role'] as string) || (req.headers['x-user-role'] as string) || (req.query.role as string) || (userId.startsWith('teacher') ? 'teacher' : 'student');
+liveClassroomRouter.use(requirePrincipal);
 
-  return {
-    id: userId,
-    displayName: role === 'student' ? 'Alex Chen' : 'Dr. Helen Cho',
-    email: `${userId}@starkacademy.edu`,
-    role: role as any,
-    institutionId: 'inst-stark-academy',
-    workspaceId: 'ws-stark-core',
-    createdAt: new Date().toISOString()
-  };
+function getMemberships(): InstitutionMembership[] {
+  return (jarvisData as any).store?.state?.institutionMemberships || (INITIAL_DATABASE_SCHEMA.institutionMemberships || []);
 }
 
 // 1. GET /api/education/live-classroom/:classId - Retrieve authoritative Live Classroom state
 liveClassroomRouter.get('/:classId', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
-    const classId = req.params.classId as string;
-    const sessionId = req.query.sessionId as string | undefined;
-    const workspaceId = (req.query.workspaceId as string) || user.workspaceId;
+    const actor = res.locals.principal as AuthenticatedPrincipal;
+    const currentUser = await jarvisData.users.getById(actor.userId);
+    if (!currentUser) {
+      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
+      return;
+    }
 
-    const state = await liveClassroomService.getLiveClassroomState(user, classId, { sessionId, workspaceId });
+    const classId = req.params.classId as string;
+    const cls = await jarvisData.education.getClassById(classId);
+    if (!cls) {
+      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
+      return;
+    }
+
+    const memberships = getMemberships();
+    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
+    if (!decision.allowed) {
+      res.status(403).json({ ok: false, error: decision.reason });
+      return;
+    }
+
+    const sessionId = req.query.sessionId as string | undefined;
+    const workspaceId = (req.query.workspaceId as string) || currentUser.workspaceId || 'ws-stark-core';
+
+    const state = await liveClassroomService.getLiveClassroomState(currentUser, classId, { sessionId, workspaceId });
     res.json({ ok: true, state });
   } catch (err: any) {
     const is403 = err?.message?.includes('403') || err?.message?.includes('Forbidden');
@@ -42,11 +52,30 @@ liveClassroomRouter.get('/:classId', async (req: Request, res: Response) => {
 // 2. POST /api/education/live-classroom/:classId/notes - Save private student notes
 liveClassroomRouter.post('/:classId/notes', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const actor = res.locals.principal as AuthenticatedPrincipal;
+    const currentUser = await jarvisData.users.getById(actor.userId);
+    if (!currentUser) {
+      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
+      return;
+    }
+
     const classId = req.params.classId as string;
+    const cls = await jarvisData.education.getClassById(classId);
+    if (!cls) {
+      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
+      return;
+    }
+
+    const memberships = getMemberships();
+    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
+    if (!decision.allowed) {
+      res.status(403).json({ ok: false, error: decision.reason });
+      return;
+    }
+
     const { sessionId, lessonId, boardDocumentId, pageId, pageIndex, content } = req.body;
 
-    const result = await liveClassroomService.saveStudentNotes(user, classId, {
+    const result = await liveClassroomService.saveStudentNotes(currentUser, classId, {
       sessionId,
       lessonId,
       boardDocumentId,
@@ -65,8 +94,27 @@ liveClassroomRouter.post('/:classId/notes', async (req: Request, res: Response) 
 // 3. POST /api/education/live-classroom/:classId/ask - Ask Jarvis bounded in-class questions
 liveClassroomRouter.post('/:classId/ask', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const actor = res.locals.principal as AuthenticatedPrincipal;
+    const currentUser = await jarvisData.users.getById(actor.userId);
+    if (!currentUser) {
+      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
+      return;
+    }
+
     const classId = req.params.classId as string;
+    const cls = await jarvisData.education.getClassById(classId);
+    if (!cls) {
+      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
+      return;
+    }
+
+    const memberships = getMemberships();
+    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
+    if (!decision.allowed) {
+      res.status(403).json({ ok: false, error: decision.reason });
+      return;
+    }
+
     const { query, sessionId, boardDocumentId, pageIndex, lessonId } = req.body;
 
     if (!query || typeof query !== 'string') {
@@ -74,7 +122,7 @@ liveClassroomRouter.post('/:classId/ask', async (req: Request, res: Response) =>
       return;
     }
 
-    const response = await liveClassroomService.askJarvisInLiveClass(user, query, {
+    const response = await liveClassroomService.askJarvisInLiveClass(currentUser, query, {
       classId,
       sessionId,
       boardDocumentId,
@@ -92,16 +140,30 @@ liveClassroomRouter.post('/:classId/ask', async (req: Request, res: Response) =>
 // 4. POST /api/education/live-classroom/:classId/quiz/submit - Student submits in-class formative quiz answer
 liveClassroomRouter.post('/:classId/quiz/submit', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
-    const classId = req.params.classId as string;
-    const { quizId, questionId, selectedOptionIndex } = req.body;
-
-    if (user.role !== 'student') {
-      res.status(400).json({ ok: false, error: 'Only student participants can submit quiz responses.' });
+    const actor = res.locals.principal as AuthenticatedPrincipal;
+    const currentUser = await jarvisData.users.getById(actor.userId);
+    if (!currentUser) {
+      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
       return;
     }
 
-    // Return deterministic submission result
+    const classId = req.params.classId as string;
+    const cls = await jarvisData.education.getClassById(classId);
+    if (!cls) {
+      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
+      return;
+    }
+
+    const memberships = getMemberships();
+    const decision = authorizationPolicy.canWriteSubmission(actor, cls, memberships);
+    if (!decision.allowed) {
+      res.status(403).json({ ok: false, error: decision.reason });
+      return;
+    }
+
+    const { quizId, questionId, selectedOptionIndex } = req.body;
+
+    // Return deterministic submission result bound to the verified principal ID
     const isCorrect = selectedOptionIndex === 1; // [a, a†] = 1 is correct
     const pointsAwarded = isCorrect ? 10 : 0;
 
@@ -109,7 +171,7 @@ liveClassroomRouter.post('/:classId/quiz/submit', async (req: Request, res: Resp
       ok: true,
       quizId,
       questionId,
-      studentId: user.id,
+      studentId: currentUser.id,
       selectedOptionIndex,
       isCorrect,
       pointsAwarded,
