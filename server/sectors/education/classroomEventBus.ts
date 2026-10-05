@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 12: Real-Time EventBus for Smart Classroom Sessions, Presence & Smart Board
 import { EventEmitter } from 'node:events';
 import type {

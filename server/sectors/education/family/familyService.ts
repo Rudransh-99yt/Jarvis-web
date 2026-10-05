@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.7: FAMILY & PARENT SERVICE
 // Authoritative, privacy-preserving family relationship engine and child intelligence aggregator.
 

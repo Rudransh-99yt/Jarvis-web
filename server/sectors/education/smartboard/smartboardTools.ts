@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Sandboxed Tool Declarations and Handlers for SmartBoard OS (D.8)
 import { Type } from '@google/genai';
 import { smartboardService } from './smartboardService.ts';

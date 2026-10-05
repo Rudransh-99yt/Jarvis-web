@@ -5,7 +5,6 @@ import { providerManager } from '../providers/providerManager.ts';
 import { toolRegistry, toolExecutor, serverProtocolStore } from '../tools/index.ts';
 import type { ToolCall, ToolExecutionContext, ToolResult } from '../tools/types.ts';
 import { jarvisData } from '../data/index.ts';
-import { requirePrincipal } from '../auth/principal.ts';
 
 const MAX_TOOL_ROUNDS = 5;
 
@@ -19,9 +18,13 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
   }
   const requestedWorkspaceId = context?.workspaceId;
   const workspace = requestedWorkspaceId
-    ? (permittedWorkspaces.find((candidate) => candidate.id === requestedWorkspaceId) || (await jarvisData.workspaces.getById(requestedWorkspaceId)))
-    : (permittedWorkspaces[0] || (await jarvisData.workspaces.getById('ws-stark-core')));
-  const workspaceId = workspace?.id || 'ws-stark-core';
+    ? permittedWorkspaces.find((candidate) => candidate.id === requestedWorkspaceId)
+    : permittedWorkspaces[0];
+  if (!workspace) {
+    res.status(403).json({ error: { code: 'FORBIDDEN', message: 'User has no assigned workspaces or requested workspace denied.' } });
+    return;
+  }
+  const workspaceId = workspace.id;
   // 1. Request Validation
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     res.status(400).json({
@@ -339,23 +342,6 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
   }
 }
 
-export async function optionalChatPrincipal(req: Request, res: Response, next: import('express').NextFunction): Promise<void> {
-  try {
-    const user = await import('../auth/index.ts').then(m => m.authenticateRequest(req));
-    res.locals.principal = { userId: user.id, role: user.role, institutionId: user.institutionId, workspaceId: user.workspaceId, provenance: 'signed-hmac' };
-    next();
-  } catch (error: any) {
-    try {
-      const defaultUser = await jarvisData.users.getById('user-tony') || (await jarvisData.users.list())[0];
-      if (defaultUser) {
-        res.locals.principal = { userId: defaultUser.id, role: defaultUser.role, institutionId: defaultUser.institutionId, workspaceId: defaultUser.workspaceId, provenance: 'signed-hmac' };
-        next();
-        return;
-      }
-    } catch {}
-    const authError = error as any;
-    res.status(authError.statusCode || 401).json({ error: { code: authError.code || 'UNAUTHENTICATED', message: authError.message } });
-  }
-}
 
-export const authenticatedChatRoute = [optionalChatPrincipal, handleChatRoute];
+import { requirePrincipal, type AuthenticatedPrincipal } from '../auth/principal.ts';
+export const authenticatedChatRoute = [requirePrincipal, handleChatRoute];

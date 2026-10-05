@@ -10,6 +10,8 @@ import type { AuthenticatedPrincipal } from '../auth/principal.ts';
 
 export const knowledgeRouter = Router();
 
+knowledgeRouter.use(requirePrincipal);
+
 // GET /api/knowledge-spaces - List spaces
 knowledgeRouter.get('/', async (req: Request, res: Response) => {
   try {

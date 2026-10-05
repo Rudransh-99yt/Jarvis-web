@@ -1,3 +1,5 @@
+import { jarvisData } from '../../../data/index.ts';
+import { requirePrincipal } from '../../../auth/principal.ts';
 // REST routes for D.11 Real-Time Teaching Copilot
 
 import { Router, type Request, type Response } from 'express';
@@ -6,24 +8,16 @@ import type { User } from '../../../data/types.ts';
 
 export const copilotRouter = Router();
 
-function getAuthUser(req: Request): User {
-  const userId = (req.headers['x-jarvis-user-id'] as string) || (req.query.userId as string) || 'teacher-1';
-  const role = (req.headers['x-jarvis-user-role'] as string) || (req.query.role as string) || (userId.startsWith('student') ? 'student' : 'teacher');
-
-  return {
-    id: userId,
-    displayName: role === 'student' ? 'Cadet Student' : 'Instructor',
-    email: `${userId}@starkacademy.edu`,
-    role: role as any,
-    institutionId: 'inst-stark-academy',
-    createdAt: new Date().toISOString()
-  };
+async function getAuthUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // POST /api/education/copilot/command - Execute or propose an action
 copilotRouter.post('/command', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { command, context, options } = req.body;
     if (!command || typeof command !== 'string') {
       res.status(400).json({ ok: false, error: 'command string is required' });
@@ -42,7 +36,7 @@ copilotRouter.post('/command', async (req: Request, res: Response) => {
 // POST /api/education/copilot/proposals/:id/review - Approve or reject proposal
 copilotRouter.post('/proposals/:id/review', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { decision, rejectionReason } = req.body;
     if (!decision || !['APPROVE', 'REJECT'].includes(decision)) {
       res.status(400).json({ ok: false, error: 'decision must be APPROVE or REJECT' });

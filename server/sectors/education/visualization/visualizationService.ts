@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Server-authoritative service for AI Visualizations with strict RBAC, validation, and lifecycle controls
 
 import type { User } from '../../../data/types.ts';

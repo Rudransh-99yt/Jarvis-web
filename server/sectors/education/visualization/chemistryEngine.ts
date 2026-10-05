@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Safe molecular topology and 2D chemical structure validator
 
 import type { MoleculeAtom, MoleculeBond, MoleculeVisualizationPayload } from '../../../../src/types/visualization.ts';

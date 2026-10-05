@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.15: CLASSROOM INTELLIGENCE SERVICE
 // Deterministic evidence aggregator, misconception engine, bounded AI interpreter, and carry-forward teaching bridge.
 

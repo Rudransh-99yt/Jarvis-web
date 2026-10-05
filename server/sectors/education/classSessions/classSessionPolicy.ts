@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Authorization & Security Boundary Policy for ClassSession Operations
 import type { User, WorkspaceMembership } from '../../../data/types.ts';
 import type { IJarvisDataRepository } from '../../../data/repository.ts';

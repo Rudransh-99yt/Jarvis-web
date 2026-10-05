@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Persistence and Business Logic Store for Pro Focus / Pomodoro + Focus Lock Engine
 import type {
   FocusSession,

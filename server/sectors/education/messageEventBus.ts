@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 11: Real-Time EventBus for Class Messaging & Notifications
 import { EventEmitter } from 'node:events';
 import type { Message } from '../../data/types.ts';

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 11: Deterministic Messaging Tools for Educational Sector
 import { Type } from '@google/genai';
 import type { ToolDefinition, ToolExecutionContext, ToolResult, ValidationResult } from '../../tools/types.ts';
@@ -7,18 +8,10 @@ import type { User } from '../../data/types.ts';
 
 // Helper to resolve user from context
 async function resolveUserFromContext(context: ToolExecutionContext): Promise<User> {
-  const userId = context.userId || 'teacher-1';
-  const existing = await jarvisData.users.getById(userId);
-  if (existing) return existing;
-
-  const role = (context.role === 'student' ? 'student' : context.role === 'teacher' ? 'teacher' : 'commander') as any;
-  return {
-    id: userId,
-    displayName: userId === 'teacher-1' ? 'Dr. Sarah' : 'Alex Chen',
-    email: `${userId}@stark.local`,
-    role,
-    createdAt: new Date().toISOString()
-  };
+  if (!context.userId) throw new Error('Missing authenticated context userId.');
+  const existing = await jarvisData.users.getById(context.userId);
+  if (!existing) throw new Error('Authenticated user not found in registry.');
+  return existing;
 }
 
 // 1. Tool: messaging.thread.list

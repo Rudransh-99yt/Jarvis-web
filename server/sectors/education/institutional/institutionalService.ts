@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.7: PRINCIPAL & INSTITUTIONAL INTELLIGENCE SERVICE
 // Authoritative school oversight, grade drill-down, teacher workload projections, and controlled diagnostic commands with audit trails.
 

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // REST API Routes for AI Teacher Preparation & Classroom Session System
 import { Router, type Request, type Response } from 'express';
 import { classSessionStore } from './classSessionStore.ts';
@@ -13,36 +14,16 @@ import type { User, UserRole } from '../../../data/types.ts';
 /**
  * Helper to resolve user from request with fallback for standard dev identity
  */
-async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    // Development fallback for browser UI without strict auth token
-    const roleHeader = (req.headers['x-user-role'] as string) || 'teacher';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'student' ? 'student-1' : 'teacher-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-    
-    const validRole: UserRole = (['admin', 'commander', 'teacher', 'student', 'guest'].includes(roleHeader)
-      ? roleHeader
-      : 'teacher') as UserRole;
-
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: validRole,
-      department: 'Physics',
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString()
-    };
-  }
+async function resolveUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // 1. GET /api/education/sessions - List sessions
 classSessionRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { classId, status } = req.query;
 
     const list = await classSessionStore.listSessions({
@@ -66,7 +47,7 @@ classSessionRouter.get('/', async (req: Request, res: Response) => {
 // 2. GET /api/education/sessions/smartboard/active - SmartBoard retrieval of today's approved session
 classSessionRouter.get('/smartboard/active', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { classId } = req.query;
 
     // Verify teacher or admin identity
@@ -90,7 +71,7 @@ classSessionRouter.get('/smartboard/active', async (req: Request, res: Response)
 // 3. GET /api/education/sessions/:id - Get session details
 classSessionRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
 
     const session = await classSessionStore.getSession(sessionId);
@@ -115,7 +96,7 @@ classSessionRouter.get('/:id', async (req: Request, res: Response) => {
 // 4. POST /api/education/sessions - Create new session draft
 classSessionRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { classId, topic, unitId, unitTitle, lessonId, lessonTitle, durationMinutes, generationConfig } = req.body;
 
     if (!classId || !topic) {
@@ -171,7 +152,7 @@ classSessionRouter.post('/', async (req: Request, res: Response) => {
 // 5. POST /api/education/sessions/:id/sources - Attach source documents
 classSessionRouter.post('/:id/sources', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
     const { title, type, rawText, fileSize, pageCount, storageFileId } = req.body;
 
@@ -212,7 +193,7 @@ classSessionRouter.post('/:id/sources', async (req: Request, res: Response) => {
 // 6. POST /api/education/sessions/:id/generate - Execute AI generation pipeline
 classSessionRouter.post('/:id/generate', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
     const { desiredOutputs, customInstructions } = req.body;
 
@@ -256,7 +237,7 @@ classSessionRouter.post('/:id/generate', async (req: Request, res: Response) => 
 // 7. POST /api/education/sessions/:id/regenerate-section - Regenerate single section
 classSessionRouter.post('/:id/regenerate-section', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
     const { sectionName, customPrompt } = req.body;
 
@@ -289,7 +270,7 @@ classSessionRouter.post('/:id/regenerate-section', async (req: Request, res: Res
 // 8. PATCH /api/education/sessions/:id/sections/:section - Teacher edits section content
 classSessionRouter.patch('/:id/sections/:section', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
     const section = req.params.section as string;
     const payload = req.body;
@@ -316,7 +297,7 @@ classSessionRouter.patch('/:id/sections/:section', async (req: Request, res: Res
 // 9. POST /api/education/sessions/:id/approve-section - Approve individual section
 classSessionRouter.post('/:id/approve-section', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
     const { section } = req.body;
 
@@ -342,7 +323,7 @@ classSessionRouter.post('/:id/approve-section', async (req: Request, res: Respon
 // 10. POST /api/education/sessions/:id/approve-all - Approve entire session
 classSessionRouter.post('/:id/approve-all', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
 
     const session = await classSessionStore.getSession(sessionId);
@@ -367,7 +348,7 @@ classSessionRouter.post('/:id/approve-all', async (req: Request, res: Response) 
 // 11. POST /api/education/sessions/:id/schedule - Schedule session
 classSessionRouter.post('/:id/schedule', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
     const { scheduledAt } = req.body;
 
@@ -393,7 +374,7 @@ classSessionRouter.post('/:id/schedule', async (req: Request, res: Response) => 
 // 12. POST /api/education/sessions/:id/release-controls - Update student visibility
 classSessionRouter.post('/:id/release-controls', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
     const controls = req.body;
 
@@ -419,7 +400,7 @@ classSessionRouter.post('/:id/release-controls', async (req: Request, res: Respo
 // 13. POST /api/education/sessions/:id/launch-classroom - Launch session live on SmartBoard
 classSessionRouter.post('/:id/launch-classroom', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.id as string;
 
     const session = await classSessionStore.getSession(sessionId);

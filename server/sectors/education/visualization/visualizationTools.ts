@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Sandboxed server tools for D.10 AI Visualization Engine
 import { Type } from '@google/genai';
 import { visualizationService } from './visualizationService.ts';

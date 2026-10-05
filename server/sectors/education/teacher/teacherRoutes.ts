@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.6: TEACHER ROUTES
 // Exposes Action Queue, Student Attention Signals, Post-Class Review, and Class Intelligence.
 
@@ -9,29 +10,16 @@ import type { User } from '../../../data/types.ts';
 
 export const teacherRouter = Router();
 
-async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'teacher';
-    const userIdHeader = (req.headers['x-user-id'] as string) || 'teacher-1';
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-    return {
-      id: userIdHeader,
-      displayName: 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: 'teacher',
-      department: 'Faculty of Physics',
-      createdAt: new Date().toISOString()
-    };
-  }
+async function resolveUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // 1. GET /api/education/teacher/action-queue - Aggregated priority queue
 teacherRouter.get('/action-queue', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const queue = teacherService.getActionQueue(user.id);
     res.json({ queue, count: queue.length });
   } catch (err: any) {
@@ -42,7 +30,7 @@ teacherRouter.get('/action-queue', async (req: Request, res: Response) => {
 // 2. GET /api/education/teacher/attention - Evidence-backed student attention signals
 teacherRouter.get('/attention', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const classId = req.query.classId as string | undefined;
     const signals = teacherService.getAttentionSignals(user.id, classId);
     res.json({ signals, count: signals.length });

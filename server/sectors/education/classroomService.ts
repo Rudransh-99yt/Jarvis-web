@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 12: Smart Classroom Service Orchestrator (Hardened)
 import { jarvisData } from '../../data/index.ts';
 import type { IJarvisDataRepository } from '../../data/repository.ts';

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.6: TEACHER SERVICE
 // Authoritative engine deriving Teacher Action Queue, Evidence-Based Student Attention, Post-Class Review, and Class Intelligence from canonical entities.
 

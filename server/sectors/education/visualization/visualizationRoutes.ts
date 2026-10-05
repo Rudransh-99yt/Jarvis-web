@@ -1,3 +1,5 @@
+import { jarvisData } from '../../../data/index.ts';
+import { requirePrincipal } from '../../../auth/principal.ts';
 // REST routes for D.10 AI Visualization Engine
 
 import { Router, type Request, type Response } from 'express';
@@ -6,25 +8,16 @@ import type { User } from '../../../data/types.ts';
 
 export const visualizationRouter = Router();
 
-function getAuthUser(req: Request): User {
-  const userId = (req.headers['x-jarvis-user-id'] as string) || (req.query.userId as string) || 'teacher-1';
-  const role = (req.headers['x-jarvis-user-role'] as string) || (req.query.role as string) || (userId.startsWith('student') ? 'student' : 'teacher');
-  const institutionId = (req.headers['x-institution-id'] as string) || 'inst-stark-academy';
-
-  return {
-    id: userId,
-    displayName: role === 'student' ? 'Cadet Student' : 'Instructor',
-    email: `${userId}@starkacademy.edu`,
-    role: role as any,
-    institutionId,
-    createdAt: new Date().toISOString()
-  };
+async function getAuthUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // GET /api/education/visualizations
 visualizationRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const docs = await visualizationService.listVisualizations(user, {
       classId: typeof req.query.classId === 'string' ? req.query.classId : undefined,
       courseCode: typeof req.query.courseCode === 'string' ? req.query.courseCode : undefined,
@@ -49,7 +42,7 @@ visualizationRouter.post('/validate', (req: Request, res: Response) => {
 // POST /api/education/visualizations
 visualizationRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const doc = await visualizationService.createVisualization(user, req.body);
     res.status(201).json({ ok: true, visualization: doc });
   } catch (err: any) {
@@ -60,7 +53,7 @@ visualizationRouter.post('/', async (req: Request, res: Response) => {
 // GET /api/education/visualizations/:id
 visualizationRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const doc = await visualizationService.getVisualization(user, String(req.params.id));
     res.json({ ok: true, visualization: doc });
   } catch (err: any) {
@@ -73,7 +66,7 @@ visualizationRouter.get('/:id', async (req: Request, res: Response) => {
 // PATCH /api/education/visualizations/:id
 visualizationRouter.patch('/:id', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const doc = await visualizationService.updateVisualization(user, String(req.params.id), req.body);
     res.json({ ok: true, visualization: doc });
   } catch (err: any) {
@@ -84,7 +77,7 @@ visualizationRouter.patch('/:id', async (req: Request, res: Response) => {
 // DELETE /api/education/visualizations/:id
 visualizationRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const success = await visualizationService.deleteVisualization(user, String(req.params.id));
     res.json({ ok: success, deleted: success });
   } catch (err: any) {
@@ -95,7 +88,7 @@ visualizationRouter.delete('/:id', async (req: Request, res: Response) => {
 // POST /api/education/visualizations/:id/attach
 visualizationRouter.post('/:id/attach', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const result = await visualizationService.attachToSmartBoard(
       user,
       req.body.boardId,

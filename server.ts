@@ -7,6 +7,7 @@ import { providerManager } from './server/providers/providerManager.ts';
 import { toolRegistry, serverProtocolStore } from './server/tools/index.ts';
 import { educationRouter } from './server/sectors/education/routes.ts';
 import { researchRouter } from './server/sectors/research/routes.ts';
+import { authRouter } from './server/auth/authRoutes.ts';
 import { workspaceRouter } from './server/routes/workspaceRoutes.ts';
 import { conversationRouter } from './server/routes/conversationRoutes.ts';
 import { knowledgeRouter } from './server/routes/knowledgeRoutes.ts';
@@ -75,6 +76,7 @@ app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) =>
 });
 
 // Core Platform REST Routes
+app.use('/api/auth', authRouter);
 app.use('/api/workspaces', workspaceRouter);
 app.use('/api/conversations', conversationRouter);
 app.use('/api/knowledge-spaces', knowledgeRouter);

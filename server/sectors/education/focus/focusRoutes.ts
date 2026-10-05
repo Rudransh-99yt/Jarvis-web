@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // REST API Routes for Pro Focus / Pomodoro + Focus Lock Engine
 import { Router, type Request, type Response } from 'express';
 import { focusStore } from './focusStore.ts';
@@ -8,35 +9,16 @@ import type { User, UserRole } from '../../../data/types.ts';
 
 export const focusRouter = Router();
 
-async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'student';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'student' ? 'student-1' : 'teacher-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-
-    const validRole: UserRole = (['admin', 'commander', 'teacher', 'student', 'guest'].includes(roleHeader)
-      ? roleHeader
-      : 'student') as UserRole;
-
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: validRole,
-      department: 'Physics',
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString()
-    };
-  }
+async function resolveUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // 1. GET /api/education/focus/active - Get active session
 focusRouter.get('/active', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const session = await focusStore.getActiveSession(user.id);
     res.json({ session });
   } catch (err: any) {
@@ -47,7 +29,7 @@ focusRouter.get('/active', async (req: Request, res: Response) => {
 // 2. POST /api/education/focus/sessions - Create/draft session
 focusRouter.post('/sessions', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const session = await focusStore.createSession(req.body, user);
     res.status(201).json({ session });
   } catch (err: any) {
@@ -58,7 +40,7 @@ focusRouter.post('/sessions', async (req: Request, res: Response) => {
 // 3. POST /api/education/focus/sessions/:id/start - Start session
 focusRouter.post('/sessions/:id/start', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const session = await focusStore.startSession(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
@@ -69,7 +51,7 @@ focusRouter.post('/sessions/:id/start', async (req: Request, res: Response) => {
 // 4. POST /api/education/focus/sessions/:id/pause - Pause session
 focusRouter.post('/sessions/:id/pause', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const session = await focusStore.pauseSession(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
@@ -80,7 +62,7 @@ focusRouter.post('/sessions/:id/pause', async (req: Request, res: Response) => {
 // 5. POST /api/education/focus/sessions/:id/resume - Resume session
 focusRouter.post('/sessions/:id/resume', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const session = await focusStore.resumeSession(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
@@ -91,7 +73,7 @@ focusRouter.post('/sessions/:id/resume', async (req: Request, res: Response) => 
 // 6. POST /api/education/focus/sessions/:id/break - Start break
 focusRouter.post('/sessions/:id/break', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { breakType } = req.body;
     const session = await focusStore.startBreak(req.params.id as string, breakType || 'short', user.id);
     res.json({ session });
@@ -103,7 +85,7 @@ focusRouter.post('/sessions/:id/break', async (req: Request, res: Response) => {
 // 7. POST /api/education/focus/sessions/:id/skip-break - Skip break
 focusRouter.post('/sessions/:id/skip-break', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const session = await focusStore.skipBreak(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
@@ -114,7 +96,7 @@ focusRouter.post('/sessions/:id/skip-break', async (req: Request, res: Response)
 // 8. POST /api/education/focus/sessions/:id/complete - Complete session
 focusRouter.post('/sessions/:id/complete', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const session = await focusStore.completeSession(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
@@ -125,7 +107,7 @@ focusRouter.post('/sessions/:id/complete', async (req: Request, res: Response) =
 // 9. POST /api/education/focus/sessions/:id/cancel - Emergency exit / Cancel
 focusRouter.post('/sessions/:id/cancel', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { reason } = req.body;
     const session = await focusStore.cancelSession(req.params.id as string, reason || 'User requested exit', user.id);
     res.json({ session });
@@ -137,7 +119,7 @@ focusRouter.post('/sessions/:id/cancel', async (req: Request, res: Response) => 
 // 10. POST /api/education/focus/sessions/:id/notes - Update notes
 focusRouter.post('/sessions/:id/notes', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { notes } = req.body;
     const session = await focusStore.updateNotes(req.params.id as string, notes || '', user.id);
     res.json({ session });
@@ -149,7 +131,7 @@ focusRouter.post('/sessions/:id/notes', async (req: Request, res: Response) => {
 // 11. POST /api/education/focus/sessions/:id/tasks - Update tasks
 focusRouter.post('/sessions/:id/tasks', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { tasks } = req.body;
     const session = await focusStore.updateTasks(req.params.id as string, tasks || [], user.id);
     res.json({ session });
@@ -161,7 +143,7 @@ focusRouter.post('/sessions/:id/tasks', async (req: Request, res: Response) => {
 // 12. POST /api/education/focus/sessions/:id/evaluate-navigation - Navigation guard
 focusRouter.post('/sessions/:id/evaluate-navigation', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { targetRoute, targetCourseId, targetWorkspacePageId } = req.body;
     const session = await focusStore.getActiveSession(user.id);
 
@@ -188,7 +170,7 @@ focusRouter.post('/sessions/:id/evaluate-navigation', async (req: Request, res: 
 // 13. GET /api/education/focus/statistics - Analytics
 focusRouter.get('/statistics', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const stats = await focusStore.getStatistics(user.id);
     res.json({ statistics: stats });
   } catch (err: any) {
@@ -199,7 +181,7 @@ focusRouter.get('/statistics', async (req: Request, res: Response) => {
 // 14. GET /api/education/focus/events - History
 focusRouter.get('/events', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { sessionId } = req.query;
     const events = await focusStore.getEvents(user.id, sessionId as string);
     res.json({ events });

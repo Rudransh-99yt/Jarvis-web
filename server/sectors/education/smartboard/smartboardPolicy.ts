@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Centralized Security & Authorization Policy for SmartBoard OS (D.8)
 import type { User } from '../../../data/types.ts';
 import type { IJarvisDataRepository } from '../../../data/repository.ts';

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../../auth/principal.ts';
 // Core Board Recognition Service for Vision Board Foundation (D.9)
 import type {
   BoardElement,

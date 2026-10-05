@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Server-authoritative SmartBoard ↔ Teacher Mobile Control Plane Service (D.12)
 
 import type { User } from '../../../data/types.ts';

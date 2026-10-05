@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../../auth/principal.ts';
 // Sandboxed Tool Declarations for SmartBoard Board Knowledge Engine (D.13)
 import { Type } from '@google/genai';
 import { boardKnowledgeService } from './boardKnowledgeService.ts';

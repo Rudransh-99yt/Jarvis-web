@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.7: FAMILY ROUTES
 // Strict server-authoritative role verification & child privacy boundaries.
 

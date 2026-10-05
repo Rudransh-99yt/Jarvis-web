@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Server-authoritative Real-Time Teaching Copilot Service (D.11)
 
 import type { User } from '../../../data/types.ts';

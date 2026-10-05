@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 14: Video Library & Media Knowledge Service Orchestrator
 import { jarvisData } from '../../data/index.ts';
 import type { IJarvisDataRepository } from '../../data/repository.ts';

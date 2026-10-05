@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Sandboxed server tools for D.11 Real-Time Teaching Copilot
 import { Type } from '@google/genai';
 import { copilotService } from './copilotService.ts';

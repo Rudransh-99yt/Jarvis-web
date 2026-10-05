@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // REST API Endpoints for Jarvis Education OS Integration Layer (Phase D)
 import { Router, type Request, type Response } from 'express';
 import { academicIntegrationService } from './academicIntegrationService.ts';
@@ -10,22 +11,10 @@ import type { LearningObjectType } from '../../../src/types/academicContext.ts';
 
 export const academicIntegrationRouter = Router();
 
-async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'student';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'teacher' ? 'teacher-1' : 'student-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'teacher' ? 'Dr. Helen Cho' : 'Alex Mercer',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: roleHeader as any,
-      createdAt: new Date().toISOString()
-    };
-  }
+async function resolveUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // 1. GET /api/education/integration/context - Resolve academic context by entity
@@ -54,7 +43,7 @@ academicIntegrationRouter.get('/links', (req: Request, res: Response) => {
 
 // 3. POST /api/education/integration/links - Create learning link
 academicIntegrationRouter.post('/links', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const { workspaceId, sourceType, sourceId, targetType, targetId, relation, title, context, metadata } = req.body;
 
   if (!sourceType || !sourceId || !targetType || !targetId || !relation) {
@@ -88,7 +77,7 @@ academicIntegrationRouter.post('/links', async (req: Request, res: Response) => 
 
 // 4. DELETE /api/education/integration/links/:id - Delete learning link
 academicIntegrationRouter.delete('/links/:id', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const success = academicIntegrationService.deleteLink(req.params.id as string, { id: user.id, role: user.role });
   if (!success) {
     res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Unauthorized or link not found' } });
@@ -112,7 +101,7 @@ academicIntegrationRouter.get('/events', (req: Request, res: Response) => {
 
 // 6. POST /api/education/integration/events - Publish domain event
 academicIntegrationRouter.post('/events', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const { type, workspaceId, context, entityType, entityId, metadata } = req.body;
 
   if (!type || !entityType || !entityId) {
@@ -144,14 +133,14 @@ academicIntegrationRouter.post('/events', async (req: Request, res: Response) =>
 
 // 7. GET /api/education/integration/notifications - User notifications
 academicIntegrationRouter.get('/notifications', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const notifications = academicIntegrationService.getNotifications(user.id);
   res.json({ notifications, count: notifications.length });
 });
 
 // 8. PATCH /api/education/integration/notifications/:id/read - Mark notification read
 academicIntegrationRouter.patch('/notifications/:id/read', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const success = academicIntegrationService.markNotificationRead(req.params.id as string, user.id);
   res.json({ success });
 });
@@ -167,7 +156,7 @@ academicIntegrationRouter.get('/calendar', async (req: Request, res: Response) =
 
 // 10. POST /api/education/integration/sessions/:id/link-all - Teacher workflow to link approved session
 academicIntegrationRouter.post('/sessions/:id/link-all', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const sessionId = req.params.id as string;
 
   // Authorization check: User must be teacher or admin
@@ -193,7 +182,7 @@ academicIntegrationRouter.post('/sessions/:id/link-all', async (req: Request, re
 
 // 11. POST /api/education/integration/quizzes/results - Record structured quiz result
 academicIntegrationRouter.post('/quizzes/results', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const { quizId, quizTitle, classSessionId, lessonId, concepts, score, totalQuestions, percentage } = req.body;
 
   if (!quizId || score === undefined || totalQuestions === undefined) {
@@ -227,7 +216,7 @@ academicIntegrationRouter.get('/quizzes/results', (req: Request, res: Response) 
 
 // 13. POST /api/education/integration/ai-context - Build bounded AI context
 academicIntegrationRouter.post('/ai-context', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const { academicContext, activeTask } = req.body;
 
   const boundedContext = academicIntegrationService.buildAiContext(

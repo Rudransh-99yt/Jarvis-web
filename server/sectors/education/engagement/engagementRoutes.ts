@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.5: SERVER ENGAGEMENT ROUTES
 // Authoritative point recording, leaderboard queries, and activity feeds.
 
@@ -11,27 +12,15 @@ import type { LeaderboardScope } from '../../../../src/types/engagement.ts';
 
 export const engagementRouter = Router();
 
-async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'student';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'teacher' ? 'teacher-1' : 'student-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'teacher' ? 'Dr. Helen Cho' : 'Alex Mercer',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: roleHeader as any,
-      createdAt: new Date().toISOString()
-    };
-  }
+async function resolveUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // 1. POST /api/education/engagement/events - Record a student engagement event
 engagementRouter.post('/events', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const {
     type,
     title,
@@ -103,7 +92,7 @@ engagementRouter.post('/events', async (req: Request, res: Response) => {
 
 // 2. GET /api/education/engagement/leaderboard - Get leaderboard with requested scope
 engagementRouter.get('/leaderboard', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const scope = (req.query.scope as LeaderboardScope) || 'class';
   const classId = (req.query.classId as string) || 'class-phys-301';
 
@@ -125,7 +114,7 @@ engagementRouter.get('/leaderboard', async (req: Request, res: Response) => {
 
 // 3. GET /api/education/engagement/my-activity - Chronological activity history for student
 engagementRouter.get('/my-activity', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const studentId = req.query.studentId && user.role === 'teacher' ? (req.query.studentId as string) : user.id;
 
   const activity = engagementStore.getStudentActivity(studentId);
@@ -138,7 +127,7 @@ engagementRouter.get('/my-activity', async (req: Request, res: Response) => {
 
 // 4. GET /api/education/engagement/stats - Get personal overview and breakdown
 engagementRouter.get('/stats', async (req: Request, res: Response) => {
-  const user = await resolveUser(req);
+  const user = await resolveUser(req, res);
   const classId = (req.query.classId as string) || 'class-phys-301';
   const studentId = req.query.studentId && user.role === 'teacher' ? (req.query.studentId as string) : user.id;
 

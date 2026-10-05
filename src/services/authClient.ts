@@ -127,6 +127,7 @@ class AuthClient {
     capabilities: CLIENT_ROLE_CAPABILITIES.commander
   };
 
+  private currentToken: string | null = null;
   private listeners: Set<() => void> = new Set();
 
   getCurrentUser(): AuthClientUser | null {
@@ -165,63 +166,28 @@ class AuthClient {
   }
 
   async initDevSession(role: string): Promise<void> {
-    const userMap: Record<string, AuthClientUser> = {
-      student: {
-        id: 'student-1',
-        displayName: 'Peter Parker (Spider-Man)',
-        email: 'peter.parker@stark.edu',
-        role: 'student',
-        department: 'Theoretical Physics & Applied Robotics',
-        institutionId: 'inst-stark-academy',
-        capabilities: CLIENT_ROLE_CAPABILITIES.student
-      },
-      teacher: {
-        id: 'teacher-1',
-        displayName: 'Dr. Sarah (Lead Physicist)',
-        email: 'sarah.quantum@stark.edu',
-        role: 'teacher',
-        department: 'Quantum Mechanics & Field Theory',
-        institutionId: 'inst-stark-academy',
-        capabilities: CLIENT_ROLE_CAPABILITIES.teacher
-      },
-      principal: {
-        id: 'principal-1',
-        displayName: 'Dr. Bruce Banner',
-        email: 'banner@stark.edu',
-        role: 'principal',
-        department: 'Academy Administration & Research',
-        institutionId: 'inst-stark-academy',
-        capabilities: CLIENT_ROLE_CAPABILITIES.principal
-      },
-      parent: {
-        id: 'parent-1',
-        displayName: 'May Parker',
-        email: 'may.parker@stark.edu',
-        role: 'parent',
-        department: 'Family Support Advisory',
-        institutionId: 'inst-stark-academy',
-        capabilities: CLIENT_ROLE_CAPABILITIES.parent
-      },
-      commander: {
-        id: 'user-tony',
-        displayName: 'Tony Stark',
-        email: 'tony@starkindustries.com',
-        role: 'commander',
-        department: 'Executive Engineering & Defense',
-        institutionId: 'inst-stark-academy',
-        capabilities: CLIENT_ROLE_CAPABILITIES.commander
+    const userMap: Record<string, string> = {
+      student: 'student-1',
+      teacher: 'teacher-1',
+      principal: 'principal-1',
+      parent: 'parent-1',
+      commander: 'user-tony'
+    };
+    const targetUserId = userMap[role] || `dev-${role}`;
+    try {
+      const res = await fetch('/api/auth/dev-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: targetUserId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.currentToken = data.token;
+        if (data.user) this.setUser(data.user);
       }
-    };
-
-    const targetUser = userMap[role] || {
-      id: `dev-${role}`,
-      displayName: `Dev User (${role})`,
-      role,
-      institutionId: 'inst-stark-academy',
-      capabilities: CLIENT_ROLE_CAPABILITIES[role] || []
-    };
-
-    this.setUser(targetUser);
+    } catch (err) {
+      console.error('[AuthClient] Dev login failed:', err);
+    }
   }
 
   subscribe(listener: () => void): () => void {
@@ -259,15 +225,13 @@ class AuthClient {
     return this.currentUser;
   }
 
-  getAuthHeaders(): Record<string, string> {
-    if (!this.currentUser) return {};
-    return {
-      'x-user-id': this.currentUser.id,
-      'x-user-role': this.currentUser.role
-    };
+    getAuthHeaders(): Record<string, string> {
+    if (this.currentToken) {
+      return { 'Authorization': `Bearer ${this.currentToken}` };
+    }
+    return {};
   }
 }
-
 export const authClient = new AuthClient();
 
 export function can(capability: string): boolean {

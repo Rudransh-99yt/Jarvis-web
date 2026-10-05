@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 import { Type } from '@google/genai';
 import type { ToolDefinition, ToolExecutionContext, ToolResult, ValidationResult } from '../../tools/types.ts';
 import { educationStore } from './educationStore.ts';
@@ -265,7 +266,7 @@ export const studentProgressTool: ToolDefinition<StudentProgressArgs> = {
     };
   },
   async execute(args: StudentProgressArgs, _context: ToolExecutionContext): Promise<ToolResult> {
-    const studentId = args.studentId || 'student-1';
+    const studentId = args.studentId ;
     const allAssignments = educationStore.getAssignments();
     const submissions = educationStore.getSubmissions(studentId);
 

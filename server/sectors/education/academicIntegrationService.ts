@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D: ACADEMIC INTEGRATION SERVICE
 // Establishes unified domain links, lightweight event foundation, bounded AI context, and connected workflows.
 

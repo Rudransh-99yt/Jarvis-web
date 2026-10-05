@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../../auth/principal.ts';
 // Server-authoritative Board Knowledge Engine Service (D.13)
 // Realizes the pipeline: BOARD -> UNDERSTAND -> STRUCTURE -> LINK -> STORE -> SEARCH -> LEARN
 

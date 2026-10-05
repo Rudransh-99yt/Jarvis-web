@@ -1,3 +1,5 @@
+import { authorizationPolicy } from '../../auth/authorizationPolicy.ts';
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 13: Deterministic Smart Quiz REST API Routes
 import express, { type Request, type Response } from 'express';
 import { jarvisData } from '../../data/index.ts';
@@ -83,9 +85,15 @@ quizRouter.get('/', async (req: Request, res: Response) => {
     const status = typeof req.query.status === 'string' ? (req.query.status as any) : undefined;
 
     // Verify workspace membership
-    const wsCheck = await smartQuizService.getPolicy().verifyWorkspaceMembership(currentUser, workspaceId);
-    if (!wsCheck.isMember) {
-      res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Workspace access denied.' } });
+    if (!classId) {
+      res.status(403).json({ error: { code: 'FORBIDDEN', message: 'classId is required to list quizzes.' } });
+      return;
+    }
+    const cls = await jarvisData.education.getClassById(classId);
+    const memberships: any[] = [];
+    const decision = authorizationPolicy.canReadClass(res.locals.principal, cls || undefined, memberships);
+    if (!decision.allowed) {
+      res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Not authorized for this class.' } });
       return;
     }
 

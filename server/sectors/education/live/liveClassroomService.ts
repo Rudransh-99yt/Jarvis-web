@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.14: STUDENT LIVE CLASSROOM SERVICE
 // Unified live classroom state orchestrator, board synchronization bridge, and bounded AI tutor
 
@@ -342,7 +343,7 @@ export class LiveClassroomService {
       classSession: sanitizedSession,
       academicContext,
       teacher: {
-        id: cls.instructorId || 'teacher-1',
+        id: cls.instructorId ,
         name: cls.instructorName || 'Dr. Helen Cho',
         department: 'Physics',
         room: cls.room || 'Quantum Hall 4B'

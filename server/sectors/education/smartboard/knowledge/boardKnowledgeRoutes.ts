@@ -1,3 +1,5 @@
+import { jarvisData } from '../../../../data/index.ts';
+import { requirePrincipal } from '../../../../auth/principal.ts';
 // REST routes for SmartBoard Board Knowledge Engine (D.13)
 
 import { Router, type Request, type Response } from 'express';
@@ -6,24 +8,16 @@ import type { User } from '../../../../data/types.ts';
 
 export const boardKnowledgeRouter = Router();
 
-function getAuthUser(req: Request): User {
-  const userId = (req.headers['x-jarvis-user-id'] as string) || (req.query.userId as string) || 'teacher-1';
-  const role = (req.headers['x-jarvis-user-role'] as string) || (req.query.role as string) || (userId.startsWith('student') ? 'student' : 'teacher');
-
-  return {
-    id: userId,
-    displayName: role === 'student' ? 'Cadet Student' : 'Instructor',
-    email: `${userId}@starkacademy.edu`,
-    role: role as any,
-    institutionId: 'inst-stark-academy',
-    createdAt: new Date().toISOString()
-  };
+async function getAuthUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // POST /api/education/smartboard/knowledge/index - Trigger structured board indexing
 boardKnowledgeRouter.post('/index', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { boardDocId, triggerRagIngest } = req.body;
     if (!boardDocId) {
       res.status(400).json({ ok: false, error: 'boardDocId is required' });
@@ -40,7 +34,7 @@ boardKnowledgeRouter.post('/index', async (req: Request, res: Response) => {
 // POST /api/education/smartboard/knowledge/release - Release/Unrelease board to students
 boardKnowledgeRouter.post('/release', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { boardDocId, isReleased } = req.body;
     if (!boardDocId) {
       res.status(400).json({ ok: false, error: 'boardDocId is required' });
@@ -55,9 +49,9 @@ boardKnowledgeRouter.post('/release', async (req: Request, res: Response) => {
 });
 
 // GET /api/education/smartboard/knowledge/search - Natural language search over historical boards
-boardKnowledgeRouter.get('/search', (req: Request, res: Response) => {
+boardKnowledgeRouter.get('/search', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const q = (req.query.q as string) || '';
     const classId = (req.query.classId as string) || 'class-phys-301';
     const courseCode = req.query.courseCode as string | undefined;
@@ -71,7 +65,7 @@ boardKnowledgeRouter.get('/search', (req: Request, res: Response) => {
 // POST /api/education/smartboard/knowledge/ask - Ask Jarvis about the whiteboard session
 boardKnowledgeRouter.post('/ask', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { query, classSessionId, courseCode, boardDocumentId, pageIndex } = req.body;
     if (!query) {
       res.status(400).json({ ok: false, error: 'query is required' });
@@ -93,7 +87,7 @@ boardKnowledgeRouter.post('/ask', async (req: Request, res: Response) => {
 // POST /api/education/smartboard/knowledge/notes/derive - Generate derived Workspace note
 boardKnowledgeRouter.post('/notes/derive', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { boardDocId, pageIndex, customTitle } = req.body;
     if (!boardDocId) {
       res.status(400).json({ ok: false, error: 'boardDocId is required' });
@@ -113,7 +107,7 @@ boardKnowledgeRouter.post('/notes/derive', async (req: Request, res: Response) =
 // POST /api/education/smartboard/knowledge/homework/derive - Generate derived homework draft
 boardKnowledgeRouter.post('/homework/derive', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { boardDocId, type = 'homework' } = req.body;
     if (!boardDocId) {
       res.status(400).json({ ok: false, error: 'boardDocId is required' });
@@ -130,7 +124,7 @@ boardKnowledgeRouter.post('/homework/derive', async (req: Request, res: Response
 // POST /api/education/smartboard/knowledge/summarize - Generate structured post-class notes
 boardKnowledgeRouter.post('/summarize', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const { boardDocId } = req.body;
     if (!boardDocId) {
       res.status(400).json({ ok: false, error: 'boardDocId is required' });
@@ -147,7 +141,7 @@ boardKnowledgeRouter.post('/summarize', async (req: Request, res: Response) => {
 // POST /api/education/smartboard/knowledge/summaries/:id/approve - Teacher approves summary
 boardKnowledgeRouter.post('/summaries/:id/approve', async (req: Request, res: Response) => {
   try {
-    const user = getAuthUser(req);
+    const user = await getAuthUser(req, res);
     const summary = await boardKnowledgeService.approveSummary(user, String(req.params.id));
     res.json({ ok: true, summary });
   } catch (err: any) {

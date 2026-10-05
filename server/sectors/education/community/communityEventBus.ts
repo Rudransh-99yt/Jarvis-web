@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Real-Time EventBus for Discord-Style Academic Community Subsystem
 import { EventEmitter } from 'node:events';
 import type {

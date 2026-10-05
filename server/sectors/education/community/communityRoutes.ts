@@ -1,3 +1,5 @@
+import { ticketService } from '../../../auth/index.ts';
+import { requirePrincipal } from '../../../auth/principal.ts';
 // REST & Realtime SSE API Routes for Discord-Style Academic Community Subsystem
 import { Router, type Request, type Response } from 'express';
 import { communityStore } from './communityStore.ts';
@@ -12,33 +14,27 @@ export const communityRouter = Router();
 /**
  * Helper to resolve user from request with development fallback
  */
-async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'student';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'student' ? 'student-1' : 'teacher-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-
-    const validRole: UserRole = (['admin', 'commander', 'teacher', 'student', 'guest'].includes(roleHeader)
-      ? roleHeader
-      : 'student') as UserRole;
-
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: validRole,
-      department: 'Physics',
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString()
-    };
-  }
+async function resolveUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 // 1. GET /api/education/community/events - Server-Sent Events (SSE) Real-Time Stream
 communityRouter.get('/events', async (req: Request, res: Response) => {
+  if (!req.query.ticket || typeof req.query.ticket !== 'string') {
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Missing SSE ticket' } });
+    return;
+  }
+  let verified;
+  try {
+    verified = await ticketService.verifySSETicket(req.query.ticket.trim());
+  } catch (err: any) {
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: err.message } });
+    return;
+  }
+  const actor = verified.user;
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -66,7 +62,7 @@ communityRouter.get('/events', async (req: Request, res: Response) => {
 // 2. GET /api/education/community/channels - List channels
 communityRouter.get('/channels', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { classId, studyGroupId } = req.query;
 
     const allChannels = await communityStore.listChannels({
@@ -93,7 +89,7 @@ communityRouter.get('/channels', async (req: Request, res: Response) => {
 // 3. POST /api/education/community/channels - Create Channel
 communityRouter.post('/channels', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { name, topic, type, classId, isPrivate } = req.body;
 
     if (!name) {
@@ -129,7 +125,7 @@ communityRouter.post('/channels', async (req: Request, res: Response) => {
 // 4. GET /api/education/community/channels/:id/messages - List messages in channel
 communityRouter.get('/channels/:id/messages', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const channelId = req.params.id as string;
     const { limit } = req.query;
 
@@ -158,7 +154,7 @@ communityRouter.get('/channels/:id/messages', async (req: Request, res: Response
 // 5. POST /api/education/community/channels/:id/messages - Send message
 communityRouter.post('/channels/:id/messages', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const channelId = req.params.id as string;
     const { content, attachments, mentions } = req.body;
 
@@ -205,7 +201,7 @@ communityRouter.post('/channels/:id/messages', async (req: Request, res: Respons
 // 6. PATCH /api/education/community/messages/:id - Edit message
 communityRouter.patch('/messages/:id', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const messageId = req.params.id as string;
     const { content } = req.body;
 
@@ -238,7 +234,7 @@ communityRouter.patch('/messages/:id', async (req: Request, res: Response) => {
 // 7. DELETE /api/education/community/messages/:id - Delete message
 communityRouter.delete('/messages/:id', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const messageId = req.params.id as string;
 
     const msg = await communityStore.getMessage(messageId);
@@ -265,7 +261,7 @@ communityRouter.delete('/messages/:id', async (req: Request, res: Response) => {
 // 8. POST /api/education/community/channels/:id/messages/:messageId/pin - Toggle pin
 communityRouter.post('/channels/:id/messages/:messageId/pin', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const channelId = req.params.id as string;
     const messageId = req.params.messageId as string;
 
@@ -290,7 +286,7 @@ communityRouter.post('/channels/:id/messages/:messageId/pin', async (req: Reques
 // 9. POST /api/education/community/messages/:id/reactions - Toggle reaction
 communityRouter.post('/messages/:id/reactions', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const messageId = req.params.id as string;
     const { emoji } = req.body;
 
@@ -317,7 +313,7 @@ communityRouter.post('/messages/:id/reactions', async (req: Request, res: Respon
 // 10. GET /api/education/community/threads/:threadId/messages - Thread replies
 communityRouter.get('/threads/:threadId/messages', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const threadId = req.params.threadId as string;
 
     const thread = await communityStore.getThread(threadId);
@@ -347,7 +343,7 @@ communityRouter.get('/threads/:threadId/messages', async (req: Request, res: Res
 // 11. POST /api/education/community/messages/:rootMessageId/thread - Reply in thread
 communityRouter.post('/messages/:rootMessageId/thread', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const rootMessageId = req.params.rootMessageId as string;
     const { content, attachments } = req.body;
 
@@ -413,7 +409,7 @@ communityRouter.get('/study-groups', async (req: Request, res: Response) => {
 // 13. POST /api/education/community/study-groups - Create study group
 communityRouter.post('/study-groups', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { name, description, classId, courseCode, subject, scheduledMeetingAt, sharedResources } = req.body;
 
     if (!name || !classId) {
@@ -446,7 +442,7 @@ communityRouter.post('/study-groups', async (req: Request, res: Response) => {
 // 14. POST /api/education/community/study-groups/:id/join - Join study group
 communityRouter.post('/study-groups/:id/join', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const groupId = req.params.id as string;
 
     const group = await communityStore.joinStudyGroup(groupId, user.id);
@@ -470,7 +466,7 @@ communityRouter.get('/announcements', async (req: Request, res: Response) => {
 // 16. POST /api/education/community/announcements - Create announcement (staff only)
 communityRouter.post('/announcements', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const { title, body, priority, classId, channelId, attachments, scheduledAt } = req.body;
 
     if (!title || !body) {
@@ -509,7 +505,7 @@ communityRouter.post('/announcements', async (req: Request, res: Response) => {
 // 17. POST /api/education/community/announcements/:id/acknowledge - Acknowledge announcement
 communityRouter.post('/announcements/:id/acknowledge', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await resolveUser(req, res);
     const annId = req.params.id as string;
 
     const ann = await communityStore.acknowledgeAnnouncement(annId, user.id);

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 14 & 14.2: REST API Routes for Video Library & Media Knowledge
 import { Router } from 'express';
 import type { Request, Response } from 'express';

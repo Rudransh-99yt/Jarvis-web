@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // AI Teacher Preparation & Grounded Session Generation Engine
 import type {
   ClassSession,

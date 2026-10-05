@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 import { Router, type Request, type Response } from 'express';
 import { educationStore } from './educationStore.ts';
 import { videoRouter } from './videoRoutes.ts';
@@ -16,6 +17,8 @@ import { liveClassroomRouter } from './live/liveClassroomRoutes.ts';
 import { classroomIntelligenceRouter } from './intelligence/classroomIntelligenceRoutes.ts';
 
 export const educationRouter = Router();
+
+educationRouter.use(requirePrincipal);
 
 // Phase D.15: Classroom Intelligence Engine
 educationRouter.use('/intelligence', classroomIntelligenceRouter);

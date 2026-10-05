@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Seeded Workspace Templates, Initial Nested Pages & Database Collections for My Workspace
 import type {
   WorkspacePage,

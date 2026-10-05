@@ -11,17 +11,7 @@ import type { User, InstitutionMembership } from '../../data/types.ts';
 export const classroomRouter = express.Router();
 
 export async function requireClassroomPrincipal(req: Request, res: Response, next: express.NextFunction): Promise<void> {
-  if (req.path.includes('/stream')) {
-    if (req.query.userId && typeof req.query.userId === 'string') {
-      const user = await jarvisData.users.getById(req.query.userId.trim());
-      if (!user) {
-        res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
-        return;
-      }
-      res.locals.principal = { userId: user.id, role: user.role, institutionId: user.institutionId, workspaceId: user.workspaceId, provenance: 'signed-hmac' };
-      next();
-      return;
-    }
+  if (req.path.includes('/stream') || req.path.includes('/events')) {
     if (req.query.ticket && typeof req.query.ticket === 'string') {
       try {
         const verified = await ticketService.verifySSETicket(req.query.ticket.trim());
@@ -33,6 +23,8 @@ export async function requireClassroomPrincipal(req: Request, res: Response, nex
         return;
       }
     }
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Missing or invalid SSE ticket.' } });
+    return;
   }
 
   return requirePrincipal(req, res, next);

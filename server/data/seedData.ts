@@ -497,8 +497,6 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       code: 'CS-420',
       name: 'Autonomous AI & Neural Architecture',
       description: 'Transformer models, multi-agent reinforcement learning, attention mechanisms, and tool orchestration in intelligent operating systems.',
-      schoolId: 'inst-stark-academy',
-      institutionId: 'inst-stark-academy',
       instructorId: 'teacher-1',
       instructorName: 'Dr. Sarah',
       term: 'Fall 2026',

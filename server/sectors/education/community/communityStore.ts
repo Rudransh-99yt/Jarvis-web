@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // In-Memory & Persistent Storage Engine for Discord-Style Academic Community Subsystem
 import type {
   CommunityChannel,

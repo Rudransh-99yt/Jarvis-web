@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Focus Policy Engine for Mode-based Restrictions, Navigation Guard & Security
 import type { FocusMode, FocusPolicy, FocusSession, FocusTarget } from '../../../../src/types/focus.ts';
 

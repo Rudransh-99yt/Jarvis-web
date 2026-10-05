@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Deterministic Projectile Motion & Kinematics Engine for Visualizations
 
 export interface ProjectileCalculationInput {

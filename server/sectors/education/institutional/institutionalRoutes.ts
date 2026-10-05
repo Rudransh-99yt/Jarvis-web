@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.7: PRINCIPAL & INSTITUTIONAL ROUTES
 // Strict server-authoritative institutional oversight & controlled command execution.
 

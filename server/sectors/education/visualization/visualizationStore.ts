@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // In-memory and persistent store for Visualization Documents
 
 import type { VisualizationDocument } from '../../../../src/types/visualization.ts';

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Milestone 11: Teacher ↔ Student Class Messaging Orchestrator
 import { jarvisData } from '../../data/index.ts';
 import { fileAuth } from '../../storage/fileAuth.ts';

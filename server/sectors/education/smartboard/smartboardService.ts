@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Core Service Orchestrator for SmartBoard OS (D.8 / P1-7 Hardening)
 import { smartboardStore } from './smartboardStore.ts';
 import { smartboardPolicy } from './smartboardPolicy.ts';

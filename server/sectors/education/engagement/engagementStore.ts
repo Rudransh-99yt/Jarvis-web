@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // JARVIS EDUCATION OS — PHASE D.5: SERVER ENGAGEMENT STORE
 // Authoritative point calculation, anti-gaming idempotency, and privacy-governed leaderboard aggregation.
 

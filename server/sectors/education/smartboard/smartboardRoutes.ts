@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // SmartBoard REST API Endpoints (D.8)
 import express, { type Request, type Response } from 'express';
 import { smartboardService } from './smartboardService.ts';

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../../auth/principal.ts';
 // Spatial Understanding Engine for SmartBoard Elements (D.9)
 import type {
   BoardElement,

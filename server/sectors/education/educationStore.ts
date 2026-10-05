@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 import type {
   EducationClass,
   Assignment,
@@ -176,7 +177,7 @@ export class EducationStore {
       dueDate: data.dueDate,
       maxScore: data.maxScore || 100,
       category: data.category || 'Worksheet',
-      teacherId: data.teacherId || 'teacher-1',
+      teacherId: data.teacherId || '',
       totalEnrolled: cls?.studentCount || 2,
       submittedCount: 0,
       gradedCount: 0
@@ -502,7 +503,7 @@ export class EducationStore {
       coverImage: data.coverImage,
       parentId: data.parentId !== undefined ? data.parentId : null,
       type: data.type || 'doc',
-      ownerId: data.ownerId || 'student-1',
+      ownerId: data.ownerId || '',
       ownerName: data.ownerName || 'Alex Chen',
       ownerRole: data.ownerRole || 'student',
       visibility: data.visibility || 'personal',

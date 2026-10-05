@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../../auth/principal.ts';
 // Board -> RAG Integration Bridge for Vision Board Foundation (D.9)
 import type { User } from '../../../../data/types.ts';
 import type { BoardDocument, BoardPage, BoardElement, SemanticCandidate, DiagramNode } from '../../../../../src/types/smartboard.ts';

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Safe topology and diagram structure validator for circuits, flowcharts, and free-body diagrams
 
 import type { DiagramEdgeItem, DiagramNodeItem, DiagramVisualizationPayload } from '../../../../src/types/visualization.ts';

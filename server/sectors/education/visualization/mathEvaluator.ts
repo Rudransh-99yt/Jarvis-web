@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../../auth/principal.ts';
 // Safe, deterministic, bounded mathematical expression evaluator for AI Visualizations
 // Zero eval(), Zero Function(), Zero code injection vectors, bounded recursion/execution steps.
 

@@ -1,3 +1,4 @@
+import { requirePrincipal } from '../../auth/principal.ts';
 // Rich Academic Curriculum Data: Units, Chapters, Lessons, Takeaways & Practice Questions
 import type { CourseUnit, AcademicInstitution } from '../../../src/types/education.ts';
 

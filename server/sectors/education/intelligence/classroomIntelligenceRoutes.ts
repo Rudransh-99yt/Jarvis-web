@@ -1,3 +1,5 @@
+import { jarvisData } from '../../../data/index.ts';
+import { requirePrincipal } from '../../../auth/principal.ts';
 // REST API Routes for Phase D.15: Classroom Intelligence Engine
 
 import { Router, type Request, type Response } from 'express';
@@ -8,20 +10,10 @@ import type { User } from '../../../data/types.ts';
 export const classroomIntelligenceRouter = Router();
 
 // Helper to resolve authenticated user from request headers or default
-function resolveUser(req: Request): User {
-  const role = (req.headers['x-user-role'] as any) || 'teacher';
-  const userId = (req.headers['x-user-id'] as string) || (role === 'teacher' ? 'teacher-1' : 'student-1');
-  const institutionId = (req.headers['x-institution-id'] as string) || 'inst-stark-academy';
-
-  return {
-    id: userId,
-    displayName: role === 'teacher' ? 'Dr. Helen Cho' : 'Peter Parker',
-    email: `${userId}@jarvis.academy`,
-    role,
-    institutionId,
-    workspaceId: 'ws-stark-core',
-    createdAt: new Date().toISOString()
-  };
+async function resolveUser(req: Request, res: any) {
+  const user = await jarvisData.users.getById(res.locals.principal!.userId);
+  if (!user) throw new Error('User not found');
+  return user;
 }
 
 /**
@@ -30,7 +22,7 @@ function resolveUser(req: Request): User {
  */
 classroomIntelligenceRouter.get('/sessions/:sessionId', async (req: Request, res: Response) => {
   try {
-    const user = resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.sessionId as string;
     const forceRefreshAi = req.query.refreshAi === 'true';
 
@@ -60,7 +52,7 @@ classroomIntelligenceRouter.get('/sessions/:sessionId', async (req: Request, res
  */
 classroomIntelligenceRouter.get('/classes/:classId', async (req: Request, res: Response) => {
   try {
-    const user = resolveUser(req);
+    const user = await resolveUser(req, res);
     const classId = req.params.classId as string;
 
     const allSessions = classSessionStore.listSessionsSync
@@ -93,9 +85,9 @@ classroomIntelligenceRouter.get('/classes/:classId', async (req: Request, res: R
  * GET /api/education/intelligence/grade/:gradeId
  * Principal/Executive grade level aggregated intelligence.
  */
-classroomIntelligenceRouter.get('/grade/:gradeId', (req: Request, res: Response) => {
+classroomIntelligenceRouter.get('/grade/:gradeId', async (req: Request, res: Response) => {
   try {
-    const user = resolveUser(req);
+    const user = await resolveUser(req, res);
     const gradeId = req.params.gradeId as string;
 
     const gradeIntel = classroomIntelligenceService.getGradeIntelligence(gradeId, user);
@@ -116,9 +108,9 @@ classroomIntelligenceRouter.get('/grade/:gradeId', (req: Request, res: Response)
  * GET /api/education/intelligence/family/:studentId
  * Family portal intelligence view for parents.
  */
-classroomIntelligenceRouter.get('/family/:studentId', (req: Request, res: Response) => {
+classroomIntelligenceRouter.get('/family/:studentId', async (req: Request, res: Response) => {
   try {
-    const user = resolveUser(req);
+    const user = await resolveUser(req, res);
     const studentId = req.params.studentId as string;
 
     const familyIntel = classroomIntelligenceService.getFamilyIntelligence(studentId, user);
@@ -139,9 +131,9 @@ classroomIntelligenceRouter.get('/family/:studentId', (req: Request, res: Respon
  * POST /api/education/intelligence/sessions/:sessionId/carry-forward
  * Carry forward approved signals into the next session.
  */
-classroomIntelligenceRouter.post('/sessions/:sessionId/carry-forward', (req: Request, res: Response) => {
+classroomIntelligenceRouter.post('/sessions/:sessionId/carry-forward', async (req: Request, res: Response) => {
   try {
-    const user = resolveUser(req);
+    const user = await resolveUser(req, res);
     const fromSessionId = req.params.sessionId as string;
     const { toSessionId, approvedSignalIds } = req.body || {};
 
@@ -178,7 +170,7 @@ classroomIntelligenceRouter.post('/sessions/:sessionId/carry-forward', (req: Req
  */
 classroomIntelligenceRouter.post('/sessions/:sessionId/interpret', async (req: Request, res: Response) => {
   try {
-    const user = resolveUser(req);
+    const user = await resolveUser(req, res);
     const sessionId = req.params.sessionId as string;
 
     const intelligence = await classroomIntelligenceService.getIntelligenceForSession(
