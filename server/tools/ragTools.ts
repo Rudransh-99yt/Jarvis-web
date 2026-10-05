@@ -6,6 +6,8 @@ import { retrievalService } from '../rag/retrievalService.ts';
 import { groundingService } from '../rag/groundingService.ts';
 import { jarvisData } from '../data/index.ts';
 import type { KnowledgeSourceType } from '../data/types.ts';
+import { authorizationPolicy } from '../auth/authorizationPolicy.ts';
+import type { AuthenticatedPrincipal } from '../auth/principal.ts';
 
 // 1. Tool: knowledge.source.add
 interface AddSourceArgs {
@@ -83,8 +85,11 @@ export const addSourceTool: ToolDefinition<AddSourceArgs> = {
       }
     };
   },
-  async execute(args: AddSourceArgs, _context: ToolExecutionContext): Promise<ToolResult> {
-    const space = await jarvisData.knowledge.getSpaceById(args.spaceId, args.workspaceId);
+  async execute(args: AddSourceArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    if (!context.userId || !context.role) return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Actor context missing' } };
+    const actor: AuthenticatedPrincipal = { userId: context.userId, role: context.role as any, provenance: 'signed-hmac' };
+
+    const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
     if (!space) {
       return {
         ok: false,
@@ -92,13 +97,18 @@ export const addSourceTool: ToolDefinition<AddSourceArgs> = {
       };
     }
 
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canMutateKnowledge(actor, space, isMember);
+    if (!decision.allowed) return { ok: false, error: { code: 'FORBIDDEN', message: decision.reason } };
+
     const ingestionResult = await ingestionPipeline.ingestSource({
-      workspaceId: args.workspaceId || 'ws-stark-core',
+      workspaceId: space.workspaceId,
       knowledgeSpaceId: args.spaceId,
       name: args.name,
       rawContent: args.content,
       type: args.type,
-      author: args.author
+      author: actor.userId
     });
 
     return {
@@ -166,8 +176,19 @@ export const listSourcesTool: ToolDefinition<ListSourcesArgs> = {
       }
     };
   },
-  async execute(args: ListSourcesArgs, _context: ToolExecutionContext): Promise<ToolResult> {
-    const sources = await jarvisData.knowledge.listSourcesForSpace(args.spaceId, args.workspaceId);
+  async execute(args: ListSourcesArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    if (!context.userId || !context.role) return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Actor context missing' } };
+    const actor: AuthenticatedPrincipal = { userId: context.userId, role: context.role as any, provenance: 'signed-hmac' };
+
+    const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
+    if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canReadKnowledge(actor, space, isMember);
+    if (!decision.allowed) return { ok: false, error: { code: 'FORBIDDEN', message: decision.reason } };
+
+    const sources = await jarvisData.knowledge.listSourcesForSpace(args.spaceId, context.workspaceId);
     return {
       ok: true,
       data: {
@@ -235,7 +256,10 @@ export const ingestSourceTool: ToolDefinition<IngestSourceArgs> = {
       }
     };
   },
-  async execute(args: IngestSourceArgs, _context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(args: IngestSourceArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    if (!context.userId || !context.role) return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Actor context missing' } };
+    const actor: AuthenticatedPrincipal = { userId: context.userId, role: context.role as any, provenance: 'signed-hmac' };
+
     const source = await jarvisData.knowledge.getSourceById(args.sourceId);
     if (!source) {
       return {
@@ -243,6 +267,14 @@ export const ingestSourceTool: ToolDefinition<IngestSourceArgs> = {
         error: { code: 'SOURCE_NOT_FOUND', message: `Knowledge source '${args.sourceId}' not found.` }
       };
     }
+
+    const space = await jarvisData.knowledge.getSpaceById(source.knowledgeSpaceId);
+    if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canMutateKnowledge(actor, space, isMember);
+    if (!decision.allowed) return { ok: false, error: { code: 'FORBIDDEN', message: decision.reason } };
 
     const result = await ingestionPipeline.ingestSource(
       {
@@ -307,7 +339,21 @@ export const deleteSourceTool: ToolDefinition<DeleteSourceArgs> = {
       data: { sourceId: (raw.sourceId as string).trim() }
     };
   },
-  async execute(args: DeleteSourceArgs, _context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(args: DeleteSourceArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    if (!context.userId || !context.role) return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Actor context missing' } };
+    const actor: AuthenticatedPrincipal = { userId: context.userId, role: context.role as any, provenance: 'signed-hmac' };
+
+    const source = await jarvisData.knowledge.getSourceById(args.sourceId);
+    if (!source) return { ok: false, error: { code: 'SOURCE_NOT_FOUND', message: 'Knowledge source not found' } };
+
+    const space = await jarvisData.knowledge.getSpaceById(source.knowledgeSpaceId);
+    if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canMutateKnowledge(actor, space, isMember);
+    if (!decision.allowed) return { ok: false, error: { code: 'FORBIDDEN', message: decision.reason } };
+
     const deleted = await jarvisData.knowledge.deleteSource(args.sourceId);
     return {
       ok: deleted,
@@ -382,10 +428,21 @@ export const retrieveKnowledgeTool: ToolDefinition<RetrieveArgs> = {
       }
     };
   },
-  async execute(args: RetrieveArgs, _context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(args: RetrieveArgs, context: ToolExecutionContext): Promise<ToolResult> {
+    if (!context.userId || !context.role) return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Actor context missing' } };
+    const actor: AuthenticatedPrincipal = { userId: context.userId, role: context.role as any, provenance: 'signed-hmac' };
+
+    const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
+    if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canReadKnowledge(actor, space, isMember);
+    if (!decision.allowed) return { ok: false, error: { code: 'FORBIDDEN', message: decision.reason } };
+
     const chunks = await retrievalService.retrieve(args.spaceId, args.query, {
       topK: args.topK,
-      workspaceId: args.workspaceId
+      workspaceId: space.workspaceId
     });
 
     return {
@@ -476,12 +533,23 @@ export const queryKnowledgeTool: ToolDefinition<QueryKnowledgeArgs> = {
       }
     };
   },
-  async execute(args: QueryKnowledgeArgs, _context: ToolExecutionContext): Promise<ToolResult> {
+  async execute(args: QueryKnowledgeArgs, context: ToolExecutionContext): Promise<ToolResult> {
     try {
+      if (!context.userId || !context.role) return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Actor context missing' } };
+      const actor: AuthenticatedPrincipal = { userId: context.userId, role: context.role as any, provenance: 'signed-hmac' };
+
+      const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
+      if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };
+
+      const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+      const isMember = members.some(m => m.userId === actor.userId);
+      const decision = authorizationPolicy.canReadKnowledge(actor, space, isMember);
+      if (!decision.allowed) return { ok: false, error: { code: 'FORBIDDEN', message: decision.reason } };
+
       const groundedResult = await groundingService.answerQuery(args.spaceId, args.query, {
-        workspaceId: args.workspaceId,
-        userId: args.userId,
-        userRole: args.userRole
+        workspaceId: space.workspaceId,
+        userId: actor.userId,
+        userRole: actor.role
       });
 
       return {

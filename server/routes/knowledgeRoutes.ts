@@ -1,17 +1,33 @@
 // Knowledge Spaces & Grounded RAG REST API Routes
 import { Router, type Request, type Response } from 'express';
 import { jarvisData } from '../data/index.ts';
+import { requirePrincipal } from '../auth/principal.ts';
+import { authorizationPolicy } from '../auth/authorizationPolicy.ts';
 import { ingestionPipeline } from '../rag/ingestionPipeline.ts';
 import { retrievalService } from '../rag/retrievalService.ts';
 import { groundingService } from '../rag/groundingService.ts';
+import type { AuthenticatedPrincipal } from '../auth/principal.ts';
 
 export const knowledgeRouter = Router();
+
+knowledgeRouter.use(requirePrincipal);
 
 // GET /api/knowledge-spaces - List spaces
 knowledgeRouter.get('/', async (req: Request, res: Response) => {
   try {
+    const actor = res.locals.principal as AuthenticatedPrincipal;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
-    const spaces = await jarvisData.knowledge.listSpaces(workspaceId);
+    const permittedWorkspaces = await jarvisData.workspaces.listForUser(actor.userId);
+
+    // Enforce workspace boundaries
+    if (workspaceId && !permittedWorkspaces.some(w => w.id === workspaceId)) {
+       return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Workspace access denied.' } });
+    }
+
+    let spaces = await jarvisData.knowledge.listSpaces(workspaceId);
+
+    // Filter spaces by authorized workspaces
+    spaces = spaces.filter(space => permittedWorkspaces.some(w => w.id === space.workspaceId));
 
     const enriched = await Promise.all(
       spaces.map(async (space) => {
@@ -37,21 +53,35 @@ knowledgeRouter.get('/', async (req: Request, res: Response) => {
 // POST /api/knowledge-spaces - Create space
 knowledgeRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, title, description, category, tags, classId, workspaceId, ownerId } = req.body;
+    const actor = res.locals.principal as AuthenticatedPrincipal;
+    const { name, title, description, category, tags, classId, workspaceId } = req.body;
     const spaceName = name || title;
     if (!spaceName || typeof spaceName !== 'string') {
       res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'name is required.' } });
       return;
     }
 
+    const targetWorkspaceId = workspaceId || 'ws-stark-core';
+    const workspace = await jarvisData.workspaces.getById(targetWorkspaceId);
+    if (!workspace) {
+      return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Workspace not found.' } });
+    }
+    const members = await jarvisData.workspaces.getMembers(targetWorkspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+
+    const decision = authorizationPolicy.canAccessWorkspace(actor, workspace, isMember);
+    if (!decision.allowed) {
+      return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
+    }
+
     const id = `ks-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
     const created = await jarvisData.knowledge.createSpace({
       id,
-      workspaceId: workspaceId || 'ws-stark-core',
+      workspaceId: targetWorkspaceId,
       name: spaceName.trim(),
       description: description || '',
       category: category || 'General',
-      ownerId: ownerId || 'teacher-1',
+      ownerId: actor.userId,
       classId,
       tags: Array.isArray(tags) ? tags : [],
       suggestedQuestions: []
@@ -66,6 +96,7 @@ knowledgeRouter.post('/', async (req: Request, res: Response) => {
 // GET /api/knowledge-spaces/:id - Get space details with sources
 knowledgeRouter.get('/:id', async (req: Request, res: Response) => {
   try {
+    const actor = res.locals.principal as AuthenticatedPrincipal;
     const id = req.params.id as string;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
     const space = await jarvisData.knowledge.getSpaceById(id, workspaceId);
@@ -73,6 +104,13 @@ knowledgeRouter.get('/:id', async (req: Request, res: Response) => {
     if (!space) {
       res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge space not found.' } });
       return;
+    }
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canReadKnowledge(actor, space, isMember);
+    if (!decision.allowed) {
+      return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
     }
 
     const sources = await jarvisData.knowledge.listSourcesForSpace(id, workspaceId);
@@ -91,8 +129,17 @@ knowledgeRouter.get('/:id', async (req: Request, res: Response) => {
 // GET /api/knowledge-spaces/:id/sources - List sources for space
 knowledgeRouter.get('/:id/sources', async (req: Request, res: Response) => {
   try {
+    const actor = res.locals.principal as AuthenticatedPrincipal;
     const spaceId = req.params.id as string;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
+
+    const space = await jarvisData.knowledge.getSpaceById(spaceId, workspaceId);
+    if (!space) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge space not found.' } });
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canReadKnowledge(actor, space, isMember);
+    if (!decision.allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
 
     const sources = await jarvisData.knowledge.listSourcesForSpace(spaceId, workspaceId);
     res.json({
@@ -109,8 +156,9 @@ knowledgeRouter.get('/:id/sources', async (req: Request, res: Response) => {
 // POST /api/knowledge-spaces/:id/sources - Add source & run ingestion pipeline
 knowledgeRouter.post('/:id/sources', async (req: Request, res: Response) => {
   try {
+    const actor = res.locals.principal as AuthenticatedPrincipal;
     const spaceId = req.params.id as string;
-    const { name, title, content, fullText, type, author, workspaceId } = req.body;
+    const { name, title, content, fullText, type, workspaceId } = req.body;
     const sourceName = name || title;
     const textContent = content || fullText;
 
@@ -130,13 +178,18 @@ knowledgeRouter.post('/:id/sources', async (req: Request, res: Response) => {
       return;
     }
 
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canMutateKnowledge(actor, space, isMember);
+    if (!decision.allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
+
     const ingestionResult = await ingestionPipeline.ingestSource({
-      workspaceId: workspaceId || space.workspaceId,
+      workspaceId: space.workspaceId,
       knowledgeSpaceId: spaceId,
       name: sourceName.trim(),
       rawContent: textContent,
       type: type || 'notes',
-      author: author || 'User'
+      author: actor.userId
     });
 
     const createdSource = await jarvisData.knowledge.getSourceById(ingestionResult.sourceId);
@@ -154,6 +207,7 @@ knowledgeRouter.post('/:id/sources', async (req: Request, res: Response) => {
 // POST /api/knowledge-spaces/:id/sources/:sourceId/ingest - Trigger/Re-run ingestion
 knowledgeRouter.post('/:id/sources/:sourceId/ingest', async (req: Request, res: Response) => {
   try {
+    const actor = res.locals.principal as AuthenticatedPrincipal;
     const { id: spaceId, sourceId } = req.params as { id: string; sourceId: string };
     const forceReindex = req.body.forceReindex === true;
 
@@ -162,6 +216,14 @@ knowledgeRouter.post('/:id/sources/:sourceId/ingest', async (req: Request, res: 
       res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge source not found in this space.' } });
       return;
     }
+
+    const space = await jarvisData.knowledge.getSpaceById(spaceId);
+    if (!space) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge space not found.' } });
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canMutateKnowledge(actor, space, isMember);
+    if (!decision.allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
 
     const ingestionResult = await ingestionPipeline.ingestSource(
       {
@@ -189,7 +251,20 @@ knowledgeRouter.post('/:id/sources/:sourceId/ingest', async (req: Request, res: 
 // DELETE /api/knowledge-spaces/:id/sources/:sourceId - Delete source & chunks
 knowledgeRouter.delete('/:id/sources/:sourceId', async (req: Request, res: Response) => {
   try {
-    const { sourceId } = req.params as { id: string; sourceId: string };
+    const actor = res.locals.principal as AuthenticatedPrincipal;
+    const { id: spaceId, sourceId } = req.params as { id: string; sourceId: string };
+
+    const source = await jarvisData.knowledge.getSourceById(sourceId);
+    if (!source || source.knowledgeSpaceId !== spaceId) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge source not found.' } });
+
+    const space = await jarvisData.knowledge.getSpaceById(spaceId);
+    if (!space) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge space not found.' } });
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canMutateKnowledge(actor, space, isMember);
+    if (!decision.allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
+
     const deleted = await jarvisData.knowledge.deleteSource(sourceId);
 
     if (!deleted) {
@@ -210,6 +285,7 @@ knowledgeRouter.delete('/:id/sources/:sourceId', async (req: Request, res: Respo
 // POST /api/knowledge-spaces/:id/retrieve - Hybrid vector + lexical retrieval
 knowledgeRouter.post('/:id/retrieve', async (req: Request, res: Response) => {
   try {
+    const actor = res.locals.principal as AuthenticatedPrincipal;
     const spaceId = req.params.id as string;
     const { query, topK, workspaceId, sourceIds } = req.body;
 
@@ -217,6 +293,14 @@ knowledgeRouter.post('/:id/retrieve', async (req: Request, res: Response) => {
       res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'query parameter is required.' } });
       return;
     }
+
+    const space = await jarvisData.knowledge.getSpaceById(spaceId, workspaceId);
+    if (!space) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge space not found.' } });
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canReadKnowledge(actor, space, isMember);
+    if (!decision.allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
 
     const chunks = await retrievalService.retrieve(spaceId, query.trim(), {
       topK: typeof topK === 'number' ? topK : 5,
@@ -239,19 +323,28 @@ knowledgeRouter.post('/:id/retrieve', async (req: Request, res: Response) => {
 // POST /api/knowledge-spaces/:id/query - Grounded Q&A with synthesis & citations
 knowledgeRouter.post('/:id/query', async (req: Request, res: Response) => {
   try {
+    const actor = res.locals.principal as AuthenticatedPrincipal;
     const spaceId = req.params.id as string;
-    const { query, workspaceId, userId, userRole, topK } = req.body;
+    const { query, workspaceId, topK } = req.body;
 
     if (!query || typeof query !== 'string') {
       res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'query parameter is required.' } });
       return;
     }
 
+    const space = await jarvisData.knowledge.getSpaceById(spaceId, workspaceId);
+    if (!space) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Knowledge space not found.' } });
+
+    const members = await jarvisData.workspaces.getMembers(space.workspaceId);
+    const isMember = members.some(m => m.userId === actor.userId);
+    const decision = authorizationPolicy.canReadKnowledge(actor, space, isMember);
+    if (!decision.allowed) return res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
+
     const groundedResult = await groundingService.answerQuery(spaceId, query.trim(), {
       topK,
-      workspaceId,
-      userId,
-      userRole
+      workspaceId: space.workspaceId,
+      userId: actor.userId,
+      userRole: actor.role
     });
 
     res.json({
