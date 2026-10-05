@@ -153,6 +153,126 @@
       "createdAt": "2026-10-02T09:00:00.000Z",
       "updatedAt": "2026-10-02T09:30:00.000Z",
       "messageCount": 3
+    },
+    {
+      "id": "session-1791170674642-f135r",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "What is the system health?",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:24:34.642Z",
+      "updatedAt": "2026-10-05T03:24:35.008Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170675024-8cmb4",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Activate defense matrix protocol",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:24:35.024Z",
+      "updatedAt": "2026-10-05T03:24:35.026Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170675036-rud4v",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Run a system health check.",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:24:35.036Z",
+      "updatedAt": "2026-10-05T03:24:35.038Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170675211-v99sp",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Hello Jarvis",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:24:35.211Z",
+      "updatedAt": "2026-10-05T03:24:35.212Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170753972-pqogg",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "What is the system health?",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:25:53.972Z",
+      "updatedAt": "2026-10-05T03:25:53.973Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170753988-oyovk",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Activate defense matrix protocol",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:25:53.988Z",
+      "updatedAt": "2026-10-05T03:25:53.989Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170753995-ggo1f",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Run a system health check.",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:25:53.995Z",
+      "updatedAt": "2026-10-05T03:25:53.996Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170754169-nqlse",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Hello Jarvis",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:25:54.169Z",
+      "updatedAt": "2026-10-05T03:25:54.170Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170773771-6twl3",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "What is the system health?",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:26:13.771Z",
+      "updatedAt": "2026-10-05T03:26:13.772Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170773787-dd5mh",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Activate defense matrix protocol",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:26:13.787Z",
+      "updatedAt": "2026-10-05T03:26:13.788Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170773793-71nwh",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Run a system health check.",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:26:13.793Z",
+      "updatedAt": "2026-10-05T03:26:13.794Z",
+      "messageCount": 0
+    },
+    {
+      "id": "session-1791170773966-80f08",
+      "workspaceId": "ws-stark-core",
+      "userId": "user-tony",
+      "title": "Hello Jarvis",
+      "sector": "command",
+      "createdAt": "2026-10-05T03:26:13.966Z",
+      "updatedAt": "2026-10-05T03:26:13.967Z",
+      "messageCount": 0
     }
   ],
   "messages": [
@@ -225,6 +345,174 @@
       "readBy": [
         "teacher-1"
       ]
+    },
+    {
+      "id": "msg-1791170674642-ujy97",
+      "role": "user",
+      "content": "What is the system health?",
+      "timestamp": "2026-10-05T03:24:34.642Z",
+      "conversationId": "session-1791170674642-f135r"
+    },
+    {
+      "id": "msg-1791170675008-kzax2",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 587s, and internal diagnostic buses remain nominal, sir.",
+      "timestamp": "2026-10-05T03:24:35.008Z",
+      "conversationId": "session-1791170674642-f135r"
+    },
+    {
+      "id": "msg-1791170675025-8876o",
+      "role": "user",
+      "content": "Activate defense matrix protocol",
+      "timestamp": "2026-10-05T03:24:35.025Z",
+      "conversationId": "session-1791170675024-8cmb4"
+    },
+    {
+      "id": "msg-1791170675026-ndpcj",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive executed: Protocol [Defense Matrix] has been successfully ENGAGED. Subsystem harmonics updated, sir.",
+      "timestamp": "2026-10-05T03:24:35.026Z",
+      "conversationId": "session-1791170675024-8cmb4"
+    },
+    {
+      "id": "msg-1791170675037-y551s",
+      "role": "user",
+      "content": "Run a system health check.",
+      "timestamp": "2026-10-05T03:24:35.037Z",
+      "conversationId": "session-1791170675036-rud4v"
+    },
+    {
+      "id": "msg-1791170675038-yxk7r",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 587s, and internal diagnostic buses remain nominal, sir.",
+      "timestamp": "2026-10-05T03:24:35.038Z",
+      "conversationId": "session-1791170675036-rud4v"
+    },
+    {
+      "id": "msg-1791170675211-mmkvw",
+      "role": "user",
+      "content": "Hello Jarvis",
+      "timestamp": "2026-10-05T03:24:35.211Z",
+      "conversationId": "session-1791170675211-v99sp"
+    },
+    {
+      "id": "msg-1791170675212-ogg88",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive acknowledged: \"Hello Jarvis\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
+      "timestamp": "2026-10-05T03:24:35.212Z",
+      "conversationId": "session-1791170675211-v99sp"
+    },
+    {
+      "id": "msg-1791170753972-m9s8j",
+      "role": "user",
+      "content": "What is the system health?",
+      "timestamp": "2026-10-05T03:25:53.972Z",
+      "conversationId": "session-1791170753972-pqogg"
+    },
+    {
+      "id": "msg-1791170753973-26emt",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 666s, and internal diagnostic buses remain nominal, sir.",
+      "timestamp": "2026-10-05T03:25:53.973Z",
+      "conversationId": "session-1791170753972-pqogg"
+    },
+    {
+      "id": "msg-1791170753988-6h7tt",
+      "role": "user",
+      "content": "Activate defense matrix protocol",
+      "timestamp": "2026-10-05T03:25:53.988Z",
+      "conversationId": "session-1791170753988-oyovk"
+    },
+    {
+      "id": "msg-1791170753989-q3ml5",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive executed: Protocol [Defense Matrix] has been successfully ENGAGED. Subsystem harmonics updated, sir.",
+      "timestamp": "2026-10-05T03:25:53.989Z",
+      "conversationId": "session-1791170753988-oyovk"
+    },
+    {
+      "id": "msg-1791170753995-sstfq",
+      "role": "user",
+      "content": "Run a system health check.",
+      "timestamp": "2026-10-05T03:25:53.995Z",
+      "conversationId": "session-1791170753995-ggo1f"
+    },
+    {
+      "id": "msg-1791170753996-tuvl6",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 666s, and internal diagnostic buses remain nominal, sir.",
+      "timestamp": "2026-10-05T03:25:53.996Z",
+      "conversationId": "session-1791170753995-ggo1f"
+    },
+    {
+      "id": "msg-1791170754169-2f9pq",
+      "role": "user",
+      "content": "Hello Jarvis",
+      "timestamp": "2026-10-05T03:25:54.169Z",
+      "conversationId": "session-1791170754169-nqlse"
+    },
+    {
+      "id": "msg-1791170754170-9qg05",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive acknowledged: \"Hello Jarvis\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
+      "timestamp": "2026-10-05T03:25:54.170Z",
+      "conversationId": "session-1791170754169-nqlse"
+    },
+    {
+      "id": "msg-1791170773771-nhmae",
+      "role": "user",
+      "content": "What is the system health?",
+      "timestamp": "2026-10-05T03:26:13.771Z",
+      "conversationId": "session-1791170773771-6twl3"
+    },
+    {
+      "id": "msg-1791170773772-p2016",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 686s, and internal diagnostic buses remain nominal, sir.",
+      "timestamp": "2026-10-05T03:26:13.772Z",
+      "conversationId": "session-1791170773771-6twl3"
+    },
+    {
+      "id": "msg-1791170773787-onkhf",
+      "role": "user",
+      "content": "Activate defense matrix protocol",
+      "timestamp": "2026-10-05T03:26:13.787Z",
+      "conversationId": "session-1791170773787-dd5mh"
+    },
+    {
+      "id": "msg-1791170773788-ekr8v",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive executed: Protocol [Defense Matrix] has been successfully ENGAGED. Subsystem harmonics updated, sir.",
+      "timestamp": "2026-10-05T03:26:13.788Z",
+      "conversationId": "session-1791170773787-dd5mh"
+    },
+    {
+      "id": "msg-1791170773793-ptfdc",
+      "role": "user",
+      "content": "Run a system health check.",
+      "timestamp": "2026-10-05T03:26:13.793Z",
+      "conversationId": "session-1791170773793-71nwh"
+    },
+    {
+      "id": "msg-1791170773794-skffy",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 686s, and internal diagnostic buses remain nominal, sir.",
+      "timestamp": "2026-10-05T03:26:13.794Z",
+      "conversationId": "session-1791170773793-71nwh"
+    },
+    {
+      "id": "msg-1791170773966-yp8on",
+      "role": "user",
+      "content": "Hello Jarvis",
+      "timestamp": "2026-10-05T03:26:13.966Z",
+      "conversationId": "session-1791170773966-80f08"
+    },
+    {
+      "id": "msg-1791170773967-n4vot",
+      "role": "assistant",
+      "content": "[Auxiliary Core] Directive acknowledged: \"Hello Jarvis\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
+      "timestamp": "2026-10-05T03:26:13.967Z",
+      "conversationId": "session-1791170773966-80f08"
     }
   ],
   "knowledgeSpaces": [
@@ -248,7 +536,7 @@
         "Explain the quantization of electromagnetic vector potentials."
       ],
       "createdAt": "2026-09-10T10:00:00.000Z",
-      "updatedAt": "2026-10-04T18:36:57.026Z"
+      "updatedAt": "2026-10-05T03:26:14.639Z"
     },
     {
       "id": "ks-calculus",
@@ -689,6 +977,20 @@
         0,
         0
       ]
+    },
+    {
+      "id": "chunk-src-test-chunk-0",
+      "sourceId": "src-test-chunk",
+      "knowledgeSpaceId": "ks-quantum",
+      "workspaceId": "ws-stark-core",
+      "sourceTitle": "Test Doc",
+      "chunkIndex": 0,
+      "text": "Paragraph 1 statement about quantum states.",
+      "tokenCount": 8,
+      "page": 1,
+      "section": "General",
+      "contentHash": "d559f5f8f7448066528f3b65619eb7c419a0d44b1a5ca2c2a6d0bd8a75c48484",
+      "createdAt": "2026-10-05T03:26:14.642Z"
     }
   ],
   "classes": [
@@ -980,7 +1282,116 @@
     }
   ],
   "studyArtifacts": [],
-  "auditEvents": [],
+  "auditEvents": [
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170674642-f135r",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170675008-8zur",
+      "timestamp": "2026-10-05T03:24:35.008Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170675024-8cmb4",
+      "toolName": "set_protocol",
+      "sector": "command",
+      "args": {
+        "protocolId": "defense_matrix",
+        "active": true
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170675026-4aqw",
+      "timestamp": "2026-10-05T03:24:35.026Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170675036-rud4v",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170675038-wnf0",
+      "timestamp": "2026-10-05T03:24:35.038Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170753972-pqogg",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170753973-3ykl",
+      "timestamp": "2026-10-05T03:25:53.973Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170753988-oyovk",
+      "toolName": "set_protocol",
+      "sector": "command",
+      "args": {
+        "protocolId": "defense_matrix",
+        "active": true
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170753989-cdm3",
+      "timestamp": "2026-10-05T03:25:53.989Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170753995-ggo1f",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170753996-izws",
+      "timestamp": "2026-10-05T03:25:53.996Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170773771-6twl3",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170773772-1ryt",
+      "timestamp": "2026-10-05T03:26:13.772Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170773787-dd5mh",
+      "toolName": "set_protocol",
+      "sector": "command",
+      "args": {
+        "protocolId": "defense_matrix",
+        "active": true
+      },
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170773788-6gxn",
+      "timestamp": "2026-10-05T03:26:13.788Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "sessionId": "session-1791170773793-71nwh",
+      "toolName": "get_system_health",
+      "sector": "command",
+      "args": {},
+      "ok": true,
+      "executionTimeMs": 1,
+      "id": "audit-1791170773794-fqjj",
+      "timestamp": "2026-10-05T03:26:13.794Z"
+    }
+  ],
   "researchProjects": [
     {
       "id": "proj-arc-stabilization",
@@ -1010,6 +1421,33 @@
       ],
       "createdAt": "2026-09-25T11:00:00.000Z",
       "updatedAt": "2026-10-01T12:00:00.000Z"
+    },
+    {
+      "workspaceId": "ws-stark-core",
+      "ownerId": "user-tony",
+      "title": "Arc Reactor Plasma Toroidal Boundary Study",
+      "description": "Temporarily paused for sensor recalibration.",
+      "status": "paused",
+      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
+      "knowledgeSpaceIds": [
+        "ks-quantum",
+        "ks-calculus"
+      ],
+      "id": "proj-1791170775784-hd7b",
+      "createdAt": "2026-10-05T03:26:15.784Z",
+      "updatedAt": "2026-10-05T03:26:15.784Z"
+    },
+    {
+      "title": "Vibranium Lattice Resonance Project",
+      "researchQuestion": "What vibrational modes produce constructive acoustic interference in vibranium?",
+      "description": "",
+      "workspaceId": "ws-stark-core",
+      "ownerId": "user-tony",
+      "knowledgeSpaceIds": [],
+      "status": "active",
+      "id": "proj-1791170776139-vr3p",
+      "createdAt": "2026-10-05T03:26:16.139Z",
+      "updatedAt": "2026-10-05T03:26:16.139Z"
     }
   ],
   "researchQuestions": [
@@ -1043,6 +1481,22 @@
       "answer": "Stokes theorem confirms that the surface integral of the curl of the magnetic vector field equals the closed line integral around the bounding perimeter, proving zero uncontrolled plasma boundary leakage.",
       "createdAt": "2026-09-24T10:00:00.000Z",
       "updatedAt": "2026-10-02T15:30:00.000Z"
+    },
+    {
+      "projectId": "proj-1791170775784-hd7b",
+      "workspaceId": "ws-stark-core",
+      "title": "Magnetic Boundary Line Integral Equivalence",
+      "question": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
+      "priority": "critical",
+      "status": "answered",
+      "notes": "Checking against classical Stokes formulation in ks-calculus.",
+      "id": "q-1791170775785-1tl3",
+      "linkedEvidenceIds": [
+        "ev-1791170775786-jaya"
+      ],
+      "createdAt": "2026-10-05T03:26:15.785Z",
+      "updatedAt": "2026-10-05T03:26:15.785Z",
+      "answer": "Stokes theorem confirms surface integral of curl F equals closed line integral around boundary."
     }
   ],
   "evidenceRecords": [
@@ -1103,6 +1557,34 @@
         "Containment"
       ],
       "createdAt": "2026-09-24T12:00:00.000Z"
+    },
+    {
+      "projectId": "proj-1791170775784-hd7b",
+      "workspaceId": "ws-stark-core",
+      "questionId": "q-1791170775785-1tl3",
+      "knowledgeSourceId": "src-calc-1",
+      "knowledgeSpaceId": "ks-calculus",
+      "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+      "chunkId": "chunk-src-calc-1-0",
+      "chunkText": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oint_C F dot dr. In the language of exterior calculus and differential forms, this unifies with the Fundamental Theorem of Calculus and Divergence Theorem into the elegant generalized equation: integral_M d omega = integral_{partial M} omega, where omega is a k-form on an oriented manifold M with boundary partial M.",
+      "citation": {
+        "sourceId": "src-calc-1",
+        "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+        "chunkId": "chunk-src-calc-1-0",
+        "spaceId": "ks-calculus",
+        "page": 1,
+        "section": "Stokes Theorem on Smooth Manifolds",
+        "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around",
+        "score": 0.95
+      },
+      "relevance": 0.95,
+      "userNote": "Definitive analytical proof of surface curl boundary line equivalence.",
+      "tags": [
+        "Stokes Theorem",
+        "Plasma Boundary"
+      ],
+      "id": "ev-1791170775786-jaya",
+      "createdAt": "2026-10-05T03:26:15.786Z"
     }
   ],
   "researchNotes": [
@@ -1126,6 +1608,26 @@
       ],
       "createdAt": "2026-09-24T14:00:00.000Z",
       "updatedAt": "2026-09-24T14:30:00.000Z"
+    },
+    {
+      "projectId": "proj-1791170775784-hd7b",
+      "workspaceId": "ws-stark-core",
+      "authorId": "user-tony",
+      "title": "Plasma Boundary Mathematical Synthesis",
+      "content": "Boundary curve integration establishes exact conservation of magnetic flux.",
+      "linkedQuestionIds": [
+        "q-1791170775785-1tl3"
+      ],
+      "linkedEvidenceIds": [
+        "ev-1791170775786-jaya"
+      ],
+      "tags": [
+        "Plasma",
+        "Derivations"
+      ],
+      "id": "note-1791170775786-9qmm",
+      "createdAt": "2026-10-05T03:26:15.786Z",
+      "updatedAt": "2026-10-05T03:26:15.786Z"
     }
   ],
   "researchReports": [
@@ -1162,6 +1664,82 @@
         "Thermal dissipation under continuous 100% core load requires high-temperature cryogenic cooling validation."
       ],
       "generatedAt": "2026-10-02T16:00:00.000Z"
+    },
+    {
+      "projectId": "proj-1791170775784-hd7b",
+      "workspaceId": "ws-stark-core",
+      "title": "Formal Technical Synthesis: Toroidal Plasma Confinement",
+      "researchQuestion": "How does line integration around boundary curve C relate to total surface curl of magnetic field F?",
+      "executiveSummary": "Grounded investigation for \"How does line integration around boundary curve C relate to total surface curl of magnetic field F?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes**: COURSE: PHYS-301 - Advanced Quantum & Classical Electrodynamics\nLESSON: Coulomb's Law, Electric Fields & Gauss Surface Flux\nINSTRUCTOR: Dr.\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral o...",
+      "findings": [
+        "According to \"PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes\" (General Content): COURSE: PHYS-301 - Advanced Quantum & Classical Electrodynamics\nLESSON: Coulomb's Law, Electric Fields & Gauss Surface Flux\nINSTRUCTOR: Dr. Helen Cho\nCLASSROOM: Physics Lab Hall C-104\nSESSION ID: session-phys-101\nBOAR...",
+        "According to \"PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes\" (General Content): \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0} Shape: circle (Gaussian Sphere Radius r) Formula: E = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q}{r^2}\n\n=== PAGE 2: Cylindrical Symmetry Derivation ===\nBack...",
+        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+      ],
+      "evidenceReferences": [
+        "ev-1791170775786-jaya"
+      ],
+      "sourceCitations": [
+        {
+          "sourceId": "src-muu5xao1-5r92",
+          "sourceTitle": "PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes",
+          "excerpt": "COURSE: PHYS-301 - Advanced Quantum & Classical Electrodynamics\nLESSON: Coulomb's Law, Electric Fields & Gauss Surface Flux\nINSTRUCTOR: Dr. Helen Cho\nCLASSROOM: Physics Lab Hall C-104\nSESSION ID: session-phys-101\nBOAR..."
+        },
+        {
+          "sourceId": "src-muu5xao1-5r92",
+          "sourceTitle": "PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes",
+          "excerpt": "\\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0} Shape: circle (Gaussian Sphere Radius r) Formula: E = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q}{r^2}\n\n=== PAGE 2: Cylindrical Symmetry Derivation ===\nBack..."
+        },
+        {
+          "sourceId": "src-calc-1",
+          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+        }
+      ],
+      "limitations": [
+        "Grounded solely on currently ingested and indexed Knowledge Space records.",
+        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
+      ],
+      "id": "rep-1791170776138-ddkd",
+      "generatedAt": "2026-10-05T03:26:16.138Z"
+    },
+    {
+      "projectId": "proj-1791170775784-hd7b",
+      "workspaceId": "ws-stark-core",
+      "title": "Automated Brief on Harmonic Zero-Point Energy",
+      "researchQuestion": "Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?",
+      "executiveSummary": "Grounded investigation for \"Can Stokes Theorem verify zero-leakage plasma boundaries in toroidal magnetic coils?\" in \"Arc Reactor Plasma Toroidal Boundary Study\":\n\n• **PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes**: COURSE: PHYS-301 - Advanced Quantum & Classical Electrodynamics\nLESSON: Coulomb's Law, Electric Fields & Gauss Surface Flux\nINSTRUCTOR: Dr.\n\n• **Stokes Theorem & Surface Integrals Guide**: Classical Stokes theorem relates the surface integral of the curl of a...",
+      "findings": [
+        "According to \"PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes\" (General Content): COURSE: PHYS-301 - Advanced Quantum & Classical Electrodynamics\nLESSON: Coulomb's Law, Electric Fields & Gauss Surface Flux\nINSTRUCTOR: Dr. Helen Cho\nCLASSROOM: Physics Lab Hall C-104\nSESSION ID: session-phys-101\nBOAR...",
+        "According to \"PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes\" (General Content): \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0} Shape: circle (Gaussian Sphere Radius r) Formula: E = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q}{r^2}\n\n=== PAGE 2: Cylindrical Symmetry Derivation ===\nBack...",
+        "According to \"Stokes Theorem & Surface Integrals Guide\" (Stokes Theorem on Smooth Manifolds): Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+      ],
+      "evidenceReferences": [
+        "ev-1791170775786-jaya"
+      ],
+      "sourceCitations": [
+        {
+          "sourceId": "src-muu5xao1-5r92",
+          "sourceTitle": "PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes",
+          "excerpt": "COURSE: PHYS-301 - Advanced Quantum & Classical Electrodynamics\nLESSON: Coulomb's Law, Electric Fields & Gauss Surface Flux\nINSTRUCTOR: Dr. Helen Cho\nCLASSROOM: Physics Lab Hall C-104\nSESSION ID: session-phys-101\nBOAR..."
+        },
+        {
+          "sourceId": "src-muu5xao1-5r92",
+          "sourceTitle": "PHYS-301 SmartBoard Notes: Electrostatics & Faraday-Gauss Board Notes",
+          "excerpt": "\\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0} Shape: circle (Gaussian Sphere Radius r) Formula: E = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q}{r^2}\n\n=== PAGE 2: Cylindrical Symmetry Derivation ===\nBack..."
+        },
+        {
+          "sourceId": "src-calc-1",
+          "sourceTitle": "Stokes Theorem & Surface Integrals Guide",
+          "excerpt": "Classical Stokes theorem relates the surface integral of the curl of a vector field F over an oriented open surface S to the line integral of F around the boundary curve C = partial S: integral_S (curl F) dot dS = oin..."
+        }
+      ],
+      "limitations": [
+        "Grounded solely on currently ingested and indexed Knowledge Space records.",
+        "Continuous experimental telemetry and real-time sensor streams require dedicated verification cycles."
+      ],
+      "id": "rep-1791170776142-ojhi",
+      "generatedAt": "2026-10-05T03:26:16.142Z"
     }
   ],
   "files": [
