@@ -51,6 +51,22 @@ export class ToolExecutor {
 
     const tool = toolRegistry.get(toolName)!;
 
+    // Model output is never authority.  Destructive capabilities are denied
+    // unless the chat boundary supplied a verified principal with an elevated
+    // role. Individual tools must still authorize their target resource.
+    const destructiveTools = new Set([
+      'knowledge.source.delete', 'storage.file.delete', 'video.delete',
+      'visualization.delete', 'smartboard.knowledge.release'
+    ]);
+    if (destructiveTools.has(toolName)) {
+      if (!context.userId || !context.role) {
+        return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'A verified actor is required for destructive tools.' } };
+      }
+      if (!['teacher', 'principal', 'commander', 'admin'].includes(context.role)) {
+        return { ok: false, error: { code: 'FORBIDDEN', message: 'This actor is not authorized to perform destructive tool actions.' } };
+      }
+    }
+
     // 2. Validation: Arguments validation
     const validation = tool.validate(call.args || {});
     if (!validation.valid) {

@@ -33,9 +33,14 @@ export interface User {
   createdAt: string;
 }
 
+/** Canonical tenant records used exclusively for server-side authorization. */
+export interface Institution { id: string; name: string; createdAt: string; }
+export interface InstitutionMembership { id: string; institutionId: string; userId: string; role: UserRole; joinedAt: string; }
+
 // 2. Workspace
 export interface Workspace {
   id: string;
+  institutionId?: string;
   name: string;
   description?: string;
   ownerId: string;
@@ -163,6 +168,8 @@ export interface ToolAuditEvent {
 export interface DatabaseSchema {
   version: number;
   users: User[];
+  institutions: Institution[];
+  institutionMemberships: InstitutionMembership[];
   workspaces: Workspace[];
   memberships: WorkspaceMembership[];
   conversations: Conversation[];

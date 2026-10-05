@@ -64,10 +64,20 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
     }
   ],
 
+  // Authorization fixtures: explicit tenant membership, never inferred from IDs or roles.
+  institutions: [{ id: 'inst-stark-academy', name: 'Stark Academy', createdAt: '2026-09-01T08:00:00.000Z' }],
+  institutionMemberships: [
+    { id: 'instmem-teacher-1', institutionId: 'inst-stark-academy', userId: 'teacher-1', role: 'teacher', joinedAt: '2026-09-01T08:00:00.000Z' },
+    { id: 'instmem-student-1', institutionId: 'inst-stark-academy', userId: 'student-1', role: 'student', joinedAt: '2026-09-01T08:00:00.000Z' },
+    { id: 'instmem-student-2', institutionId: 'inst-stark-academy', userId: 'student-2', role: 'student', joinedAt: '2026-09-01T08:00:00.000Z' },
+    { id: 'instmem-principal-1', institutionId: 'inst-stark-academy', userId: 'principal-1', role: 'principal', joinedAt: '2026-09-01T08:00:00.000Z' }
+  ],
+
   // 2. Workspaces
   workspaces: [
     {
       id: 'ws-stark-core',
+      institutionId: 'inst-stark-academy',
       name: 'Stark Industries Master Workspace',
       description: 'Primary sovereign intelligent operating environment for tactical operations, academic research, and cybernetics.',
       ownerId: 'user-tony',
@@ -378,6 +388,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
   classes: [
     {
       id: 'class-phys-301',
+      institutionId: 'inst-stark-academy', // Authoritative via ws-stark-core mapped knowledge spaces/conversations
       code: 'PHYS-301',
       name: 'Advanced Quantum & Electrodynamics',
       description: 'Foundations of non-relativistic quantum mechanics, Schrödinger equation, wave mechanics, and electromagnetic field quantization.',
@@ -432,6 +443,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
     },
     {
       id: 'class-math-240',
+      institutionId: 'inst-stark-academy', // Authoritative via ws-stark-core mapped knowledge spaces
       code: 'MATH-240',
       name: 'Multivariable Calculus & Differential Forms',
       description: 'Vector calculus, line and surface integrals, Green theorem, Stokes theorem, and the divergence theorem.',
@@ -471,6 +483,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       ]
     },
     {
+      // TODO(migration): POLICY_REQUIRED - Cannot establish authoritative Class -> Institution mapping
       id: 'class-cs-420',
       code: 'CS-420',
       name: 'Autonomous AI & Neural Architecture',
@@ -504,6 +517,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       ]
     },
     {
+      // TODO(migration): POLICY_REQUIRED - Cannot establish authoritative Class -> Institution mapping
       id: 'class-eng-510',
       code: 'ENG-510',
       name: 'Orbital Dynamics & Hypersonic Propulsion',

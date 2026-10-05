@@ -81,6 +81,7 @@ export interface CourseUnit {
 
 export interface EducationClass {
   id: string;
+  institutionId?: string;
   code: string; // e.g. "PHYS-301"
   name: string; // e.g. "Advanced Quantum Physics"
   description: string;

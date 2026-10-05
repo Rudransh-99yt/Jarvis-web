@@ -43,6 +43,8 @@ export class JsonFileStore {
           this.state = {
             version: parsed.version || 1,
             users: Array.isArray(parsed.users) ? parsed.users : [],
+            institutions: Array.isArray(parsed.institutions) ? parsed.institutions : (INITIAL_DATABASE_SCHEMA.institutions || []),
+            institutionMemberships: Array.isArray(parsed.institutionMemberships) ? parsed.institutionMemberships : (INITIAL_DATABASE_SCHEMA.institutionMemberships || []),
             workspaces: Array.isArray(parsed.workspaces) ? parsed.workspaces : [],
             memberships: Array.isArray(parsed.memberships) ? parsed.memberships : [],
             conversations: Array.isArray(parsed.conversations) ? parsed.conversations : [],

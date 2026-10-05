@@ -5,12 +5,24 @@ import { providerManager } from '../providers/providerManager.ts';
 import { toolRegistry, toolExecutor, serverProtocolStore } from '../tools/index.ts';
 import type { ToolCall, ToolExecutionContext, ToolResult } from '../tools/types.ts';
 import { jarvisData } from '../data/index.ts';
+import { requirePrincipal } from '../auth/principal.ts';
 
 const MAX_TOOL_ROUNDS = 5;
 
 export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Response): Promise<void> {
   const { message, sessionId, conversationId, stream, context } = req.body;
-
+  const actor = res.locals.principal;
+  if (!actor) { res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Authenticated principal required.' } }); return; }
+  const permittedWorkspaces = await jarvisData.workspaces.listForUser(actor.userId);
+  const requestedWorkspaceId = context?.workspaceId;
+  const workspace = requestedWorkspaceId
+    ? permittedWorkspaces.find((candidate) => candidate.id === requestedWorkspaceId)
+    : permittedWorkspaces[0];
+  if (!workspace) {
+    res.status(403).json({ error: { code: 'WORKSPACE_FORBIDDEN', message: 'No authorized workspace is available for this actor.' } });
+    return;
+  }
+  const workspaceId = workspace.id;
   // 1. Request Validation
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     res.status(400).json({
@@ -24,7 +36,13 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
 
   const cleanMessage = message.trim();
   const effectiveSessionId = sessionId || conversationId;
-  const session = sessionStore.getOrCreateSession(effectiveSessionId);
+  let session;
+  try {
+    session = sessionStore.getOrCreateSession(effectiveSessionId, workspaceId, actor.userId);
+  } catch (err: any) {
+    res.status(err?.message === 'CONVERSATION_FORBIDDEN' ? 403 : 500).json({ error: { code: 'CONVERSATION_FORBIDDEN', message: 'Conversation does not belong to this authenticated actor and workspace.' } });
+    return;
+  }
 
   // Append user message to in-memory session history
   sessionStore.addMessage(session.id, 'user', cleanMessage);
@@ -172,7 +190,10 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
           const execContext: ToolExecutionContext = {
             sessionId: session.id,
             timestamp: new Date().toISOString(),
-            serverUptime: Math.floor(process.uptime())
+            serverUptime: Math.floor(process.uptime()),
+            userId: actor.userId,
+            role: actor.role,
+            workspaceId
           };
 
           const toolResult = await toolExecutor.execute(call, execContext);
@@ -181,7 +202,7 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
 
           // Record tool execution to durable audit log
           jarvisData.audit.logToolExecution({
-            workspaceId: context?.workspaceId || 'ws-stark-core',
+            workspaceId,
             sessionId: session.id,
             toolName: call.name,
             sector: context?.sector || 'command',
@@ -318,3 +339,5 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
     }
   }
 }
+
+export const authenticatedChatRoute = [requirePrincipal, handleChatRoute];

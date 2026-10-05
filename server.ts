@@ -2,7 +2,7 @@ import express, { type Request, type Response } from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { HealthResponse } from './src/types/api.ts';
-import { handleChatRoute } from './server/routes/chat.ts';
+import { authenticatedChatRoute } from './server/routes/chat.ts';
 import { providerManager } from './server/providers/providerManager.ts';
 import { toolRegistry, serverProtocolStore } from './server/tools/index.ts';
 import { educationRouter } from './server/sectors/education/routes.ts';
@@ -25,7 +25,7 @@ function getArg(flag: string): string | undefined {
   return undefined;
 }
 
-const app = express();
+export const app = express();
 const PORT = parseInt(getArg('--port') || process.env.PORT || '3000', 10);
 const HOST = getArg('--host') || process.env.HOST || '0.0.0.0';
 const startTime = Date.now();
@@ -115,7 +115,7 @@ app.get('/api/tools', (req: Request, res: Response) => {
 });
 
 // Primary Chat Route (Streaming SSE or Unary JSON with Tool Loop)
-app.post('/api/chat', handleChatRoute);
+app.post('/api/chat', ...authenticatedChatRoute);
 
 // Frontend Vite Integration: Middleware mode in development, static bundle in production
 async function startServer() {
@@ -151,7 +151,11 @@ async function startServer() {
   });
 }
 
-startServer().catch((err) => {
-  console.error('[Web Jarvis] Failed to start server:', err);
-  process.exit(1);
-});
+// Importing the app must not bind a port: deterministic tests use the same
+// configured production router with an ephemeral listener.
+if (process.argv[1]?.endsWith('server.ts') || process.argv[1]?.endsWith('server.js')) {
+  startServer().catch((err) => {
+    console.error('[Web Jarvis] Failed to start server:', err);
+    process.exit(1);
+  });
+}

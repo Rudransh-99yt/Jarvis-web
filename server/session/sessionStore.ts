@@ -9,7 +9,7 @@ export interface ConversationSession {
 }
 
 class SessionStore {
-  getOrCreateSession(sessionId?: string, workspaceId: string = 'ws-stark-core'): ConversationSession {
+  getOrCreateSession(sessionId: string | undefined, workspaceId: string, userId: string): ConversationSession {
     const id = sessionId && sessionId.trim().length > 0
       ? sessionId.trim()
       : `session-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -22,7 +22,7 @@ class SessionStore {
         conv = {
           id,
           workspaceId,
-          userId: 'user-tony',
+          userId,
           title: 'New Conversation',
           sector: 'command',
           createdAt: now,
@@ -32,6 +32,8 @@ class SessionStore {
         (jarvisData as any)['store'].mutate((s: any) => {
           s.conversations.push(conv);
         });
+      } else if (conv.userId !== userId || conv.workspaceId !== workspaceId) {
+        throw new Error('CONVERSATION_FORBIDDEN');
       }
 
       const msgs = (state.messages || [])
@@ -76,17 +78,7 @@ class SessionStore {
       (jarvisData as any)['store'].mutate((state: any) => {
         let conv = state.conversations.find((c: any) => c.id === sessionId);
         if (!conv) {
-          conv = {
-            id: sessionId,
-            workspaceId: 'ws-stark-core',
-            userId: 'user-tony',
-            title: content.slice(0, 35) || 'New Conversation',
-            sector: 'command',
-            createdAt: now,
-            updatedAt: now,
-            messageCount: 0
-          };
-          state.conversations.push(conv);
+          throw new Error('Conversation must be created with a verified owner before messages can be appended.');
         } else {
           conv.updatedAt = now;
           if (conv.title === 'New Conversation' && content.trim()) {

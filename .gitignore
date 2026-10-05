@@ -18,6 +18,7 @@ data/storage/objects/*
 
 # Logs and runtime databases
 *.log
+*.tsbuildinfo
 data/jarvis-db.json.tmp.*
 tests/.tmp-db/
 tests/.tmp-storage/
