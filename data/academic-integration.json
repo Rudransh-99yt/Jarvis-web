@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-04T18:10:00.963Z",
+  "links": [
+    {
+      "id": "link-init-session-lesson",
+      "workspaceId": "ws-stark-core",
+      "sourceType": "classSession",
+      "sourceId": "session-phys-101",
+      "targetType": "lesson",
+      "targetId": "les-phys-101",
+      "relation": "curriculum",
+      "title": "Coulomb's Law, Electric Fields & Gauss Surface Flux",
+      "createdBy": "teacher-1",
+      "createdAt": "2026-10-01T09:00:00.000Z",
+      "context": {
+        "institutionId": "inst-stark-academy",
+        "workspaceId": "ws-stark-core",
+        "classId": "class-phys-301",
+        "className": "Advanced Quantum & Classical Electrodynamics",
+        "courseId": "class-phys-301",
+        "courseCode": "PHYS-301",
+        "subjectName": "Physics",
+        "unitId": "unit-phys-1",
+        "unitTitle": "Foundations of Wave Mechanics & Schrödinger Dynamics",
+        "lessonId": "les-phys-101",
+        "lessonTitle": "Schrödinger Wave Equation & Postulates",
+        "classSessionId": "session-phys-101"
+      }
+    },
+    {
+      "id": "link-init-session-workspace",
+      "workspaceId": "ws-stark-core",
+      "sourceType": "classSession",
+      "sourceId": "session-phys-101",
+      "targetType": "workspacePage",
+      "targetId": "wp-quantum-notes",
+      "relation": "notes",
+      "title": "Quantum Wave Mechanics Lecture Blueprint & Notes",
+      "createdBy": "teacher-1",
+      "createdAt": "2026-10-01T09:05:00.000Z"
+    },
+    {
+      "id": "link-init-session-community",
+      "workspaceId": "ws-stark-core",
+      "sourceType": "classSession",
+      "sourceId": "session-phys-101",
+      "targetType": "communityChannel",
+      "targetId": "chan-phys301-theory",
+      "relation": "discussion",
+      "title": "Physics 301 Electrostatics & Wave Discussion",
+      "createdBy": "teacher-1",
+      "createdAt": "2026-10-01T09:10:00.000Z"
+    },
+    {
+      "id": "link-init-session-assignment",
+      "workspaceId": "ws-stark-core",
+      "sourceType": "classSession",
+      "sourceId": "session-phys-101",
+      "targetType": "assignment",
+      "targetId": "asg-101",
+      "relation": "homework",
+      "title": "Problem Set 1: Wave Function Derivations",
+      "createdBy": "teacher-1",
+      "createdAt": "2026-10-01T09:15:00.000Z"
+    },
+    {
+      "id": "link-init-asgn-lesson",
+      "workspaceId": "ws-stark-core",
+      "sourceType": "assignment",
+      "sourceId": "asg-101",
+      "targetType": "lesson",
+      "targetId": "les-phys-101",
+      "relation": "curriculum",
+      "title": "Schrödinger Wave Equation & Postulates",
+      "createdBy": "teacher-1",
+      "createdAt": "2026-10-01T09:15:00.000Z"
+    },
+    {
+      "id": "link-init-lesson-knowledge",
+      "workspaceId": "ws-stark-core",
+      "sourceType": "lesson",
+      "sourceId": "les-phys-101",
+      "targetType": "knowledgeSpace",
+      "targetId": "ks-quantum",
+      "relation": "material",
+      "title": "Quantum Mechanics Knowledge Space",
+      "createdBy": "teacher-1",
+      "createdAt": "2026-10-01T09:20:00.000Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "evt-init-1",
+      "type": "classSession.scheduled",
+      "actorId": "teacher-1",
+      "workspaceId": "ws-stark-core",
+      "context": {
+        "institutionId": "inst-stark-academy",
+        "workspaceId": "ws-stark-core",
+        "classId": "class-phys-301",
+        "className": "Advanced Quantum & Classical Electrodynamics",
+        "courseId": "class-phys-301",
+        "courseCode": "PHYS-301",
+        "subjectName": "Physics",
+        "unitId": "unit-phys-1",
+        "unitTitle": "Foundations of Wave Mechanics & Schrödinger Dynamics",
+        "lessonId": "les-phys-101",
+        "lessonTitle": "Schrödinger Wave Equation & Postulates",
+        "classSessionId": "session-phys-101"
+      },
+      "entityType": "classSession",
+      "entityId": "session-phys-101",
+      "createdAt": "2026-10-01T10:00:00.000Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "type": "CLASS_SESSION_SCHEDULED",
+      "actorId": "teacher-1",
+      "recipientId": "all",
+      "targetType": "classSession",
+      "targetId": "session-phys-101",
+      "title": "New Class Session Scheduled: PHYS-301",
+      "message": "Dr. Helen Cho scheduled \"Electrostatics & Electric Field Formulations\" for tomorrow.",
+      "context": {
+        "institutionId": "inst-stark-academy",
+        "workspaceId": "ws-stark-core",
+        "classId": "class-phys-301",
+        "className": "Advanced Quantum & Classical Electrodynamics",
+        "courseId": "class-phys-301",
+        "courseCode": "PHYS-301",
+        "subjectName": "Physics",
+        "unitId": "unit-phys-1",
+        "unitTitle": "Foundations of Wave Mechanics & Schrödinger Dynamics",
+        "lessonId": "les-phys-101",
+        "lessonTitle": "Schrödinger Wave Equation & Postulates",
+        "classSessionId": "session-phys-101"
+      },
+      "readState": false,
+      "createdAt": "2026-10-01T10:00:00.000Z"
+    },
+    {
+      "id": "notif-2",
+      "type": "ASSIGNMENT_CREATED",
+      "actorId": "teacher-1",
+      "recipientId": "all",
+      "targetType": "assignment",
+      "targetId": "asg-101",
+      "title": "Assignment Assigned: Problem Set 1",
+      "message": "Wave Function Derivations homework is now available in your academic calendar.",
+      "readState": false,
+      "createdAt": "2026-10-01T10:30:00.000Z"
+    }
+  ],
+  "quizResults": [
+    {
+      "id": "qr-seed-1",
+      "studentId": "student-1",
+      "studentName": "Alex Mercer",
+      "quizId": "quiz-phys-301-1",
+      "quizTitle": "Schrödinger Postulates & Wave Packet Formulations",
+      "classSessionId": "session-phys-101",
+      "lessonId": "les-phys-101",
+      "concepts": [
+        "Hermitian Operators",
+        "Born Rule",
+        "Probability Density"
+      ],
+      "score": 4,
+      "totalQuestions": 5,
+      "percentage": 80,
+      "completed": true,
+      "timestamp": "2026-10-02T14:30:00.000Z"
+    }
+  ]
+}

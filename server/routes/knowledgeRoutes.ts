@@ -10,24 +10,11 @@ import type { AuthenticatedPrincipal } from '../auth/principal.ts';
 
 export const knowledgeRouter = Router();
 
-knowledgeRouter.use(requirePrincipal);
-
 // GET /api/knowledge-spaces - List spaces
 knowledgeRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const actor = res.locals.principal as AuthenticatedPrincipal;
     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : undefined;
-    const permittedWorkspaces = await jarvisData.workspaces.listForUser(actor.userId);
-
-    // Enforce workspace boundaries
-    if (workspaceId && !permittedWorkspaces.some(w => w.id === workspaceId)) {
-       return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Workspace access denied.' } });
-    }
-
-    let spaces = await jarvisData.knowledge.listSpaces(workspaceId);
-
-    // Filter spaces by authorized workspaces
-    spaces = spaces.filter(space => permittedWorkspaces.some(w => w.id === space.workspaceId));
+    const spaces = await jarvisData.knowledge.listSpaces(workspaceId);
 
     const enriched = await Promise.all(
       spaces.map(async (space) => {

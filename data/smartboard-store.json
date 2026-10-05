@@ -1,0 +1,359 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-05T16:27:03.916Z",
+  "devices": [
+    {
+      "id": "board-phys-01",
+      "institutionId": "inst-stark-academy",
+      "classroomId": "class-phys-301",
+      "classroomName": "Physics Lab Hall C-104",
+      "displayName": "SmartBoard 01 — Physics Lab",
+      "modelNumber": "Stark Surface-86X 4K HDR",
+      "status": "AVAILABLE",
+      "capabilities": {
+        "touch": true,
+        "pen": true,
+        "multiTouch": true,
+        "maxResolution": "3840x2160",
+        "audio": true,
+        "camera": true
+      },
+      "pairingState": {
+        "isPaired": false
+      },
+      "lastSeen": "2026-10-05T16:27:03.535Z",
+      "currentSessionId": null,
+      "currentCourseCode": "PHYS-301",
+      "currentTopic": "Electrostatics & Electric Fields",
+      "ipAddress": "10.0.4.12",
+      "firmwareVersion": "v4.2.0-stark-os",
+      "location": "Building A, Room C-104"
+    },
+    {
+      "id": "board-chem-01",
+      "institutionId": "inst-stark-academy",
+      "classroomId": "class-chem-201",
+      "classroomName": "Chemistry Lab B-202",
+      "displayName": "SmartBoard 02 — Chemistry Lab",
+      "modelNumber": "Stark Surface-75X 4K",
+      "status": "AVAILABLE",
+      "capabilities": {
+        "touch": true,
+        "pen": true,
+        "multiTouch": true,
+        "maxResolution": "3840x2160",
+        "audio": true,
+        "camera": false
+      },
+      "pairingState": {
+        "isPaired": false
+      },
+      "lastSeen": "2026-10-05T16:27:03.535Z",
+      "currentSessionId": null,
+      "currentCourseCode": "CHEM-201",
+      "currentTopic": "Organic Reaction Mechanisms",
+      "ipAddress": "10.0.4.15",
+      "firmwareVersion": "v4.2.0-stark-os",
+      "location": "Building B, Room B-202"
+    },
+    {
+      "id": "board-math-01",
+      "institutionId": "inst-stark-academy",
+      "classroomId": "class-math-201",
+      "classroomName": "Mathematics Hall M-101",
+      "displayName": "SmartBoard 03 — Math Hall",
+      "modelNumber": "Stark Surface-86X 4K HDR",
+      "status": "AVAILABLE",
+      "capabilities": {
+        "touch": true,
+        "pen": true,
+        "multiTouch": true,
+        "maxResolution": "3840x2160",
+        "audio": true,
+        "camera": true
+      },
+      "pairingState": {
+        "isPaired": false
+      },
+      "lastSeen": "2026-10-05T16:27:03.535Z",
+      "currentSessionId": null,
+      "currentCourseCode": "MATH-201",
+      "currentTopic": "Differential Equations",
+      "ipAddress": "10.0.4.20",
+      "firmwareVersion": "v4.2.0-stark-os",
+      "location": "Building M, Room M-101"
+    }
+  ],
+  "documents": [
+    {
+      "id": "bdoc-phys-101",
+      "institutionId": "inst-stark-academy",
+      "classroomId": "class-phys-301",
+      "classroomName": "Physics Lab Hall C-104",
+      "classId": "class-phys-301",
+      "courseCode": "PHYS-301",
+      "courseName": "Advanced Quantum & Classical Electrodynamics",
+      "unitId": "unit-em-maxwell",
+      "unitTitle": "Unit 1: Electrostatics & Field Potentials",
+      "lessonId": "les-em-1",
+      "lessonTitle": "Coulomb's Law, Electric Fields & Gauss Surface Flux",
+      "classSessionId": "session-phys-101",
+      "teacherId": "teacher-1",
+      "teacherName": "Dr. Helen Cho",
+      "title": "Electrostatics & Faraday-Gauss Board Notes",
+      "version": 4,
+      "isReleasedToStudents": true,
+      "activePageIndex": 0,
+      "pages": [
+        {
+          "pageId": "page-p1-1",
+          "pageIndex": 0,
+          "title": "Gauss Law & Flux Geometry",
+          "background": "dark_grid",
+          "slideReferenceIndex": 0,
+          "elements": [
+            {
+              "id": "elem-t1",
+              "type": "text",
+              "text": "Gauss’s Law: \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+              "fontSize": 24,
+              "fontFamily": "font-mono",
+              "x": 60,
+              "y": 40,
+              "color": "#38bdf8",
+              "semanticTag": "formula",
+              "latexFormula": "\\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+              "zIndex": 1,
+              "createdAt": "2026-10-02T16:00:00.000Z",
+              "updatedAt": "2026-10-02T16:00:00.000Z"
+            },
+            {
+              "id": "elem-s1",
+              "type": "shape",
+              "shapeType": "circle",
+              "x": 120,
+              "y": 140,
+              "widthPx": 160,
+              "heightPx": 160,
+              "strokeColor": "#00f2fe",
+              "fillColor": "rgba(6, 182, 212, 0.1)",
+              "label": "Gaussian Sphere Radius r",
+              "semanticTag": "diagram_label",
+              "zIndex": 2,
+              "createdAt": "2026-10-02T16:02:00.000Z",
+              "updatedAt": "2026-10-02T16:02:00.000Z"
+            },
+            {
+              "id": "elem-str1",
+              "type": "stroke",
+              "tool": "pen",
+              "color": "#f59e0b",
+              "width": 3,
+              "points": [
+                {
+                  "x": 120,
+                  "y": 140,
+                  "pressure": 0.5
+                },
+                {
+                  "x": 180,
+                  "y": 140,
+                  "pressure": 0.7
+                },
+                {
+                  "x": 200,
+                  "y": 140,
+                  "pressure": 0.6
+                }
+              ],
+              "semanticTag": "derivation_step",
+              "zIndex": 3,
+              "createdAt": "2026-10-02T16:05:00.000Z",
+              "updatedAt": "2026-10-02T16:05:00.000Z"
+            },
+            {
+              "id": "elem-t2",
+              "type": "text",
+              "text": "Key Intuition: Surface area of sphere = 4\\pi r^2 \\implies E(4\\pi r^2) = \\frac{q}{\\varepsilon_0} \\implies E = \\frac{q}{4\\pi\\varepsilon_0 r^2}",
+              "fontSize": 18,
+              "fontFamily": "font-mono",
+              "x": 60,
+              "y": 330,
+              "color": "#a78bfa",
+              "semanticTag": "worked_solution",
+              "latexFormula": "E = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q}{r^2}",
+              "zIndex": 4,
+              "createdAt": "2026-10-02T16:08:00.000Z",
+              "updatedAt": "2026-10-02T16:08:00.000Z"
+            }
+          ],
+          "createdAt": "2026-10-02T16:00:00.000Z",
+          "updatedAt": "2026-10-05T16:27:03.911Z",
+          "processingStatus": "INDEXED",
+          "extractedEquations": [
+            {
+              "expression": "Gauss’s Law: \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+              "confidence": 1,
+              "sourceElementId": "elem-t1"
+            },
+            {
+              "expression": "Key Intuition: Surface area of sphere = 4\\pi r^2 \\implies E(4\\pi r^2) = \\frac{q}{\\varepsilon_0} \\implies E = \\frac{q}{4\\pi\\varepsilon_0 r^2}",
+              "confidence": 1,
+              "sourceElementId": "elem-t2"
+            }
+          ],
+          "extractedText": [
+            {
+              "text": "[Shape: circle] Gaussian Sphere Radius r",
+              "confidence": 1,
+              "sourceElementId": "elem-s1"
+            }
+          ],
+          "pageSummary": "Page 1 (Gauss Law & Flux Geometry): Covers 2 mathematical relations and 0 diagrams. [Shape: circle] Gaussian Sphere Radius r"
+        },
+        {
+          "pageId": "page-p1-2",
+          "pageIndex": 1,
+          "title": "Cylindrical Symmetry Derivation",
+          "background": "dark_grid",
+          "slideReferenceIndex": 1,
+          "elements": [
+            {
+              "id": "elem-p2-t1",
+              "type": "text",
+              "text": "Infinite Line Charge Linear Density \\lambda = \\frac{q}{L}",
+              "fontSize": 20,
+              "fontFamily": "font-mono",
+              "x": 60,
+              "y": 40,
+              "color": "#34d399",
+              "semanticTag": "formula",
+              "latexFormula": "\\lambda = \\frac{q}{L}",
+              "zIndex": 1,
+              "createdAt": "2026-10-02T16:12:00.000Z",
+              "updatedAt": "2026-10-02T16:12:00.000Z"
+            },
+            {
+              "id": "elem-p2-t2",
+              "type": "text",
+              "text": "Result: E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r} (radial outwards)",
+              "fontSize": 22,
+              "fontFamily": "font-mono",
+              "x": 60,
+              "y": 120,
+              "color": "#38bdf8",
+              "semanticTag": "worked_solution",
+              "latexFormula": "E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r}",
+              "zIndex": 2,
+              "createdAt": "2026-10-02T16:18:00.000Z",
+              "updatedAt": "2026-10-02T16:18:00.000Z"
+            }
+          ],
+          "createdAt": "2026-10-02T16:12:00.000Z",
+          "updatedAt": "2026-10-05T16:27:03.911Z",
+          "processingStatus": "INDEXED",
+          "extractedEquations": [
+            {
+              "expression": "Infinite Line Charge Linear Density \\lambda = \\frac{q}{L}",
+              "confidence": 1,
+              "sourceElementId": "elem-p2-t1"
+            },
+            {
+              "expression": "Result: E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r} (radial outwards)",
+              "confidence": 1,
+              "sourceElementId": "elem-p2-t2"
+            }
+          ],
+          "extractedText": [],
+          "pageSummary": "Page 2 (Cylindrical Symmetry Derivation): Covers 2 mathematical relations and 0 diagrams. "
+        }
+      ],
+      "timestamps": {
+        "createdAt": "2026-10-02T16:00:00.000Z",
+        "updatedAt": "2026-10-05T16:27:03.916Z",
+        "lastAutosavedAt": "2026-10-05T16:27:03.916Z",
+        "completedAt": "2026-10-02T16:45:00.000Z"
+      },
+      "ragIndexed": true,
+      "ragSummary": "Ingested 2 board pages into Knowledge Space 'Quantum Mechanics & Electrodynamics' with 2 semantic chunks.",
+      "lifecycle": "RELEASED",
+      "derivedKnowledge": {
+        "summary": "Structured academic board knowledge for PHYS-301: Electrostatics & Faraday-Gauss Board Notes. Comprises 2 interactive whiteboard pages with verified formulas and derivations.",
+        "keyConcepts": [
+          "PHYS-301 Theoretical Principles",
+          "Derivation Sequence & Symmetry Analysis",
+          "Worked Solutions & Physical Applications"
+        ],
+        "importantEquations": [
+          {
+            "expression": "Gauss’s Law: \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+            "latex": "\\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+            "confidence": 1,
+            "sourceElementId": "elem-t1"
+          },
+          {
+            "expression": "Key Intuition: Surface area of sphere = 4\\pi r^2 \\implies E(4\\pi r^2) = \\frac{q}{\\varepsilon_0} \\implies E = \\frac{q}{4\\pi\\varepsilon_0 r^2}",
+            "latex": "E = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q}{r^2}",
+            "confidence": 1,
+            "sourceElementId": "elem-t2"
+          },
+          {
+            "expression": "Infinite Line Charge Linear Density \\lambda = \\frac{q}{L}",
+            "latex": "\\lambda = \\frac{q}{L}",
+            "confidence": 1,
+            "sourceElementId": "elem-p2-t1"
+          },
+          {
+            "expression": "Result: E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r} (radial outwards)",
+            "latex": "E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r}",
+            "confidence": 1,
+            "sourceElementId": "elem-p2-t2"
+          }
+        ],
+        "definitions": [
+          {
+            "term": "Electric Flux",
+            "definition": "The measure of the distribution of the electric field through a given surface area."
+          },
+          {
+            "term": "Gaussian Surface",
+            "definition": "A closed three-dimensional surface in space through which the flux of a vector field is calculated."
+          }
+        ],
+        "misconceptions": [
+          {
+            "misconception": "Electric flux depends on the specific shape of the closed Gaussian surface.",
+            "correction": "Total flux depends strictly on the net enclosed charge Q_enc, regardless of surface shape."
+          }
+        ],
+        "revisionPoints": [
+          "Choose Gaussian surfaces matching the charge distribution symmetry (spherical, cylindrical, planar).",
+          "Ensure E is perpendicular or parallel to normal area vectors dA.",
+          "Verify conductor equipotential boundaries where internal E = 0."
+        ],
+        "practiceQuestions": [
+          {
+            "question": "Derive the electric field intensity at distance r from an infinitely long straight charged wire.",
+            "answer": "E = λ / (2 * π * ε₀ * r)",
+            "difficulty": "medium"
+          },
+          {
+            "question": "What is the net electric flux through a closed cube containing a dipole?",
+            "answer": "Zero, because net enclosed charge is zero.",
+            "difficulty": "easy"
+          }
+        ],
+        "suggestedTags": [
+          "PHYS-301",
+          "WhiteboardNotes",
+          "Derivations",
+          "ClassroomKnowledge"
+        ],
+        "generatedAt": "2026-10-05T16:27:03.911Z",
+        "aiEnriched": false
+      },
+      "knowledgeSourceId": "src-muvgq44o-9zbn",
+      "releasedAt": "2026-10-05T16:27:03.911Z"
+    }
+  ]
+}

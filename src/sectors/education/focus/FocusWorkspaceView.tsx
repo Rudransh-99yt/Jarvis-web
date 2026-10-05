@@ -34,6 +34,7 @@ import {
   X,
   ExternalLink
 } from 'lucide-react';
+import { authClient } from '../../../services/authClient.ts';
 
 interface FocusWorkspaceViewProps {
   classes: EducationClass[];
@@ -83,10 +84,11 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const exitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const loggedInUser = authClient.getCurrentUser();
   const currentUser = {
-    id: currentRole === 'student' ? 'student-1' : 'teacher-1',
-    displayName: currentRole === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-    role: currentRole
+    id: loggedInUser?.id || '',
+    displayName: loggedInUser?.displayName || 'Alex Mercer',
+    role: loggedInUser?.role || currentRole
   };
 
   const selectedCourse = classes.find((c) => c.id === selectedCourseId) || classes[0];

@@ -2,6 +2,8 @@
 // Establishes unified domain links, lightweight event foundation, bounded AI context, and connected workflows.
 
 import { EventEmitter } from 'node:events';
+import fs from 'node:fs';
+import path from 'node:path';
 import type {
   AcademicContext,
   LearningLink,
@@ -31,10 +33,57 @@ class AcademicIntegrationService extends EventEmitter {
   private inMemoryNotifications: AcademicNotification[] = [];
   private inMemoryQuizResults: QuizResult[] = [];
   private initialized = false;
+  private storageFilePath: string;
 
-  constructor() {
+  constructor(customStoragePath?: string) {
     super();
-    this.initDefaultLinks();
+    const defaultDir = path.resolve(process.cwd(), 'data');
+    this.storageFilePath = customStoragePath || process.env.ACADEMIC_INTEGRATION_STORE_FILE || path.join(defaultDir, 'academic-integration.json');
+    if (!this.loadFromDisk()) {
+      this.initDefaultLinks();
+    }
+  }
+
+  private loadFromDisk(): boolean {
+    try {
+      if (fs.existsSync(this.storageFilePath)) {
+        const raw = fs.readFileSync(this.storageFilePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.links)) {
+          this.inMemoryLinks = parsed.links;
+          this.inMemoryEvents = Array.isArray(parsed.events) ? parsed.events : [];
+          this.inMemoryNotifications = Array.isArray(parsed.notifications) ? parsed.notifications : [];
+          this.inMemoryQuizResults = Array.isArray(parsed.quizResults) ? parsed.quizResults : [];
+          this.initialized = true;
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('[AcademicIntegrationService] Failed to load from disk, resetting to defaults:', err);
+    }
+    return false;
+  }
+
+  public persistToDisk(): void {
+    try {
+      const dir = path.dirname(this.storageFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      const data = {
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        links: this.inMemoryLinks,
+        events: this.inMemoryEvents,
+        notifications: this.inMemoryNotifications,
+        quizResults: this.inMemoryQuizResults
+      };
+      const tmpPath = `${this.storageFilePath}.tmp`;
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf8');
+      fs.renameSync(tmpPath, this.storageFilePath);
+    } catch (err) {
+      console.warn('[AcademicIntegrationService] Warning: Could not persist state to disk:', err);
+    }
   }
 
   private initDefaultLinks(): void {
@@ -195,6 +244,16 @@ class AcademicIntegrationService extends EventEmitter {
     ];
 
     this.initialized = true;
+    this.persistToDisk();
+  }
+
+  resetToDefaults(): void {
+    this.inMemoryLinks = [];
+    this.inMemoryEvents = [];
+    this.inMemoryNotifications = [];
+    this.inMemoryQuizResults = [];
+    this.initialized = false;
+    this.initDefaultLinks();
   }
 
   // --- ACADEMIC CONTEXT RESOLVER ---

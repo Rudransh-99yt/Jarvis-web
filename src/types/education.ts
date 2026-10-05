@@ -81,7 +81,6 @@ export interface CourseUnit {
 
 export interface EducationClass {
   id: string;
-  institutionId?: string;
   code: string; // e.g. "PHYS-301"
   name: string; // e.g. "Advanced Quantum Physics"
   description: string;
@@ -97,6 +96,8 @@ export interface EducationClass {
   gradeLevel?: string;
   batchName?: string;
   department?: string;
+  schoolId?: string;
+  institutionId?: string;
   units?: CourseUnit[];
   announcements: Array<{
     id: string;

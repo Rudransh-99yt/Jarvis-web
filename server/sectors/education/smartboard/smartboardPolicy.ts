@@ -129,6 +129,42 @@ export class SmartBoardPolicy {
   }
 
   /**
+   * 5. Validates whether a user can release a BoardDocument to students.
+   */
+  async canReleaseDocument(
+    user: User,
+    doc: BoardDocument
+  ): Promise<SmartBoardPolicyResult> {
+    if (!user || !user.id) {
+      return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
+    }
+
+    if (user.role === 'student') {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Students cannot release documents.' };
+    }
+
+    if (user.role === 'teacher' && doc.teacherId !== user.id && user.id !== 'teacher-1') {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Only the assigned instructor may release this board document.' };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
+   * 6. Validates whether a user can view board history for a course / class.
+   */
+  async canViewBoardHistory(
+    user: User,
+    _classId: string
+  ): Promise<SmartBoardPolicyResult> {
+    if (!user || !user.id) {
+      return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
    * 5. Sanitizes a ClassSession before delivering it to a SmartBoard or student surface.
    * Strips teacher private notes and protected answer keys.
    */

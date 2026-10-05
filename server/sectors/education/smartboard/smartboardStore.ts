@@ -1,4 +1,5 @@
-// Domain Store for SmartBoard Devices & Structured Board Documents (D.8)
+import fs from 'node:fs';
+import path from 'node:path';
 import type {
   SmartBoardDevice,
   BoardDocument,
@@ -245,9 +246,53 @@ export const INITIAL_BOARD_DOCUMENTS: BoardDocument[] = [
 export class SmartBoardStore {
   private devices: Map<string, SmartBoardDevice> = new Map();
   private documents: Map<string, BoardDocument> = new Map();
+  private storageFilePath: string;
 
-  constructor() {
-    this.resetToDefaults();
+  constructor(customStoragePath?: string) {
+    const defaultDir = path.resolve(process.cwd(), 'data');
+    this.storageFilePath = customStoragePath || process.env.SMARTBOARD_STORE_FILE || path.join(defaultDir, 'smartboard-store.json');
+    if (!this.loadFromDisk()) {
+      this.resetToDefaults();
+    }
+  }
+
+  private loadFromDisk(): boolean {
+    try {
+      if (fs.existsSync(this.storageFilePath)) {
+        const raw = fs.readFileSync(this.storageFilePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.devices) && Array.isArray(parsed.documents)) {
+          this.devices.clear();
+          this.documents.clear();
+          parsed.devices.forEach((d: SmartBoardDevice) => this.devices.set(d.id, d));
+          parsed.documents.forEach((doc: BoardDocument) => this.documents.set(doc.id, doc));
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('[SmartBoardStore] Failed to load from disk, resetting to defaults:', err);
+    }
+    return false;
+  }
+
+  public persistToDisk(): void {
+    try {
+      const dir = path.dirname(this.storageFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      const data = {
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        devices: Array.from(this.devices.values()),
+        documents: Array.from(this.documents.values())
+      };
+      const tmpPath = `${this.storageFilePath}.tmp`;
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf8');
+      fs.renameSync(tmpPath, this.storageFilePath);
+    } catch (err) {
+      console.warn('[SmartBoardStore] Warning: Could not persist state to disk:', err);
+    }
   }
 
   resetToDefaults(): void {
@@ -255,6 +300,7 @@ export class SmartBoardStore {
     this.documents.clear();
     INITIAL_SMARTBOARD_DEVICES.forEach((d) => this.devices.set(d.id, JSON.parse(JSON.stringify(d))));
     INITIAL_BOARD_DOCUMENTS.forEach((doc) => this.documents.set(doc.id, JSON.parse(JSON.stringify(doc))));
+    this.persistToDisk();
   }
 
   // --- Device Management ---
@@ -458,10 +504,15 @@ export class SmartBoardStore {
       throw new Error(`BoardDocument '${docId}' not found.`);
     }
 
-    // Optimistic Concurrency Check (if expectedVersion provided)
-    if (updates.expectedVersion !== undefined && updates.expectedVersion < existing.version) {
-      // Stale write protection: merge rather than overwrite
-      console.warn(`[SmartBoardStore] Optimistic concurrency warning: expected ${updates.expectedVersion}, got ${existing.version}. Merging pages.`);
+    // Strict Stale-Write Protection (409 Conflict)
+    if (updates.expectedVersion !== undefined && updates.expectedVersion !== existing.version) {
+      const conflictErr: any = new Error(
+        `Version conflict on BoardDocument '${docId}': Expected version ${updates.expectedVersion}, but current version is ${existing.version}. Stale or mismatched writes are strictly rejected to prevent data loss.`
+      );
+      conflictErr.statusCode = 409;
+      conflictErr.code = 'VERSION_CONFLICT';
+      conflictErr.currentVersion = existing.version;
+      throw conflictErr;
     }
 
     const updated: BoardDocument = {
@@ -476,6 +527,7 @@ export class SmartBoardStore {
     };
 
     this.documents.set(docId, JSON.parse(JSON.stringify(updated)));
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 
@@ -496,6 +548,7 @@ export class SmartBoardStore {
     };
 
     this.documents.set(docId, JSON.parse(JSON.stringify(updated)));
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 

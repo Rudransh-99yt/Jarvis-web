@@ -6,6 +6,7 @@ import { ResearchSector } from './sectors/research/ResearchSector.tsx';
 import { soundEffects } from './services/soundEffects.ts';
 import { speechService } from './services/speechService.ts';
 import { processJarvisCommand } from './services/commandProcessor.ts';
+import { authClient } from './services/authClient.ts';
 import type {
   HudTheme,
   StarkProtocol,
@@ -161,7 +162,13 @@ export function App() {
     } catch {}
     return 'education';
   });
-  const [educationRole, setEducationRole] = useState<EducationRole>('student');
+  const [educationRole, setEducationRole] = useState<EducationRole>(() => {
+    const active = authClient.getRole();
+    if (active === 'student' || active === 'teacher' || active === 'principal' || active === 'parent') {
+      return active;
+    }
+    return 'student';
+  });
   const [isMuted, setIsMuted] = useState(false);
   const [apiProviderName, setApiProviderName] = useState('Google Gemini (gemini-3.8-flash)');
   const [isApiOnline, setIsApiOnline] = useState(true);
@@ -211,6 +218,20 @@ export function App() {
     });
 
     soundEffects.playStartup();
+
+    // Synchronize authenticated role and capabilities with server
+    const unsubAuth = authClient.subscribe(() => {
+      const active = authClient.getRole();
+      if (active === 'student' || active === 'teacher' || active === 'principal' || active === 'parent') {
+        setEducationRole(active);
+      }
+    });
+
+    authClient.refreshMe().then((data) => {
+      if (data?.role && ['student', 'teacher', 'principal', 'parent'].includes(data.role)) {
+        setEducationRole(data.role as EducationRole);
+      }
+    });
 
     // Verify Node.js backend API health and active provider
     fetch('/api/health')
@@ -591,15 +612,10 @@ export function App() {
       {currentSector === 'education' && (
         <EducationSector
           currentRole={educationRole}
-          onToggleRole={(newRole) => {
-            if (newRole) {
-              setEducationRole(newRole);
-            } else {
-              if (educationRole === 'student') setEducationRole('teacher');
-              else if (educationRole === 'teacher') setEducationRole('principal');
-              else if (educationRole === 'principal') setEducationRole('parent');
-              else setEducationRole('student');
-            }
+          onToggleRole={async (newRole) => {
+            const target: EducationRole = newRole || (educationRole === 'student' ? 'teacher' : educationRole === 'teacher' ? 'principal' : educationRole === 'principal' ? 'parent' : 'student');
+            await authClient.initDevSession(target);
+            setEducationRole(target);
           }}
           onSendChatMessage={sendChatMessage}
         />

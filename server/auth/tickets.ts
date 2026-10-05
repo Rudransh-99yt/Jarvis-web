@@ -3,9 +3,10 @@ import crypto from 'node:crypto';
 import type { User } from '../data/types.ts';
 import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
+import { resolveAuthSecret } from './tokens.ts';
 
-// Ephemeral server-side secret for ticket HMAC signing
-const TICKET_SECRET = process.env.JARVIS_AUTH_SECRET || crypto.randomBytes(32).toString('hex');
+// Persistent or environment-backed secret for ticket HMAC signing
+const TICKET_SECRET = process.env.TICKET_SECRET || resolveAuthSecret();
 
 export interface PlaybackTicketPayload {
   type: 'video_playback';

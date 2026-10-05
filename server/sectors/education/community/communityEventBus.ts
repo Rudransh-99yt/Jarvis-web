@@ -19,6 +19,7 @@ export type CommunityEventType =
   | 'community.read.updated';
 
 export interface CommunityRealtimeEvent {
+  id: string;
   type: CommunityEventType;
   schoolId: string;
   classId?: string;
@@ -28,6 +29,8 @@ export interface CommunityRealtimeEvent {
 }
 
 export class CommunityEventBus extends EventEmitter {
+  private eventCounter: number = 0;
+
   constructor() {
     super();
     this.setMaxListeners(200);
@@ -46,7 +49,9 @@ export class CommunityEventBus extends EventEmitter {
     }
   ): void {
     const timestamp = new Date().toISOString();
+    this.eventCounter++;
     const event: CommunityRealtimeEvent = {
+      id: `evt-${Date.now()}-${this.eventCounter}-${Math.random().toString(36).substring(2, 6)}`,
       type,
       schoolId: payload.schoolId,
       classId: payload.classId,

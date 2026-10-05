@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { UserRole } from '../data/types.ts';
+import { jarvisData } from '../data/index.ts';
 import { authenticateRequest, AuthenticationError } from './index.ts';
 
 export interface AuthenticatedPrincipal {

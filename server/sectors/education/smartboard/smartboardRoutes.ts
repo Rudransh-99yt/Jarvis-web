@@ -46,6 +46,22 @@ function handleRouteError(err: any, res: Response) {
     return;
   }
 
+  if (
+    err?.statusCode === 409 ||
+    err?.code === 'VERSION_CONFLICT' ||
+    msg.includes('conflict') ||
+    msg.includes('Version conflict')
+  ) {
+    res.status(409).json({
+      error: {
+        code: 'VERSION_CONFLICT',
+        message: msg,
+        currentVersion: err?.currentVersion
+      }
+    });
+    return;
+  }
+
   if (err?.statusCode === 400 || msg.includes('Invalid') || msg.includes('not found')) {
     res.status(400).json({ error: { code: 'BAD_REQUEST', message: msg } });
     return;

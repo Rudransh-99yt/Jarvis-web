@@ -39,6 +39,8 @@ async function runTeacherOsTests() {
     createdAt: new Date().toISOString()
   };
 
+  classSessionStore.resetToDefaults();
+
   // --- SECTION 1: Teacher Action Queue Derivation ---
   console.log('\n--- SECTION 1: Teacher Action Queue Derivation ---');
   const actionQueue = teacherService.getActionQueue(mockTeacher.id);

@@ -34,6 +34,8 @@ import {
   Tv
 } from 'lucide-react';
 
+import { can } from '../../../services/authClient.ts';
+
 export type EducationSidebarSection =
   | 'home'
   | 'my_learning'
@@ -52,6 +54,9 @@ export type EducationSidebarSection =
   | 'smartboard_os'
   | 'board_history'
   | 'principal_overview'
+  | 'principal_grade'
+  | 'principal_teachers'
+  | 'principal_audit'
   | 'teacher_prep'
   | 'teacher_review'
   | 'teacher_attention'
@@ -211,8 +216,9 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               </div>
 
               <div className="space-y-1">
-                <div className="text-[10px] uppercase font-bold text-cyan-400/60 px-1">
-                  Switch Authorized Context
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-cyan-400/60 px-1">
+                  <span>Switch Persona</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">DEV ONLY</span>
                 </div>
                 {roles.map((r) => {
                   const Icon = r.icon;
@@ -243,9 +249,9 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               <div className="pt-1 border-t border-cyan-500/15 flex items-center justify-between text-[11px] text-cyan-400/70 px-1">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  <span>Authenticated</span>
+                  <span>Server Verified</span>
                 </span>
-                <span className="text-[10px] text-cyan-500">v2.4 Pro</span>
+                <span className="text-[10px] text-cyan-500">RBAC Claims</span>
               </div>
             </div>
           )}
@@ -254,13 +260,16 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
 
       {/* 2. Scrollable Navigation Hierarchy */}
       <div className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar">
-        {/* LEARN Section for Students / TEACH Section for Teachers / INSTITUTION for Principal */}
+        {/* Role-Specific Primary Section */}
         <div className="space-y-1">
           <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
-            {currentRole === 'student' ? 'Learn' : currentRole === 'teacher' ? 'Teach' : 'Institution'}
+            {can('principal.institution.view') ? 'Institution' :
+             can('teacher.classes.manage') ? 'Teach' :
+             can('parent.family_intelligence.view') ? 'Family' : 'Learn'}
           </div>
 
-          {currentRole === 'student' && (
+          {/* Student Hub Workflows */}
+          {can('student.learning.view') && !can('teacher.classes.manage') && !can('principal.institution.view') && !can('parent.family_intelligence.view') && (
             <>
               {renderNavButton('home', 'Home', Home)}
               {renderNavButton('my_learning', 'My Learning', Layers)}
@@ -271,29 +280,34 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
             </>
           )}
 
-          {currentRole === 'teacher' && (
+          {/* Teacher Hub Workflows */}
+          {can('teacher.classes.manage') && (
             <>
               {renderNavButton('home', 'Command Center', Home)}
               {renderNavButton('teacher_review', 'Review Queue', FileSpreadsheet, '2 pending')}
               {renderNavButton('teacher_attention', 'Needs Attention', AlertTriangle, '4 signals')}
               {renderNavButton('teacher_prep', 'Session Prep', Sparkles)}
+              {renderNavButton('teacher_post_class_review', 'Post-Class Review', FileCheck2)}
               {renderNavButton('classes', 'Managed Classes', BookOpen, classes.length)}
               {renderNavButton('assignments', 'Assignments', FileCheck2)}
               {renderNavButton('calendar', 'Schedule', Calendar)}
             </>
           )}
 
-          {currentRole === 'principal' && (
+          {/* Principal Executive Workflows */}
+          {can('principal.institution.view') && (
             <>
               {renderNavButton('principal_overview', 'Executive Overview', ShieldAlert)}
-              {renderNavButton('teacher_prep', 'Lesson Prep Hub', Sparkles)}
+              {renderNavButton('principal_grade', 'Grade Intelligence', Layers)}
+              {renderNavButton('principal_teachers', 'Faculty Intelligence', Users)}
+              {renderNavButton('principal_audit', 'Interventions & Audit', ShieldCheck)}
               {renderNavButton('classes', 'All School Classes', BookOpen, classes.length)}
-              {renderNavButton('assignments', 'Assessment Health', FileCheck2)}
-              {renderNavButton('calendar', 'Calendar', Calendar)}
+              {renderNavButton('calendar', 'Institutional Calendar', Calendar)}
             </>
           )}
 
-          {currentRole === 'parent' && (
+          {/* Parent Family Workflows */}
+          {can('parent.family_intelligence.view') && (
             <>
               {renderNavButton('home', 'Family Portal', Heart)}
               {renderNavButton('calendar', 'School Calendar', Calendar)}
@@ -302,72 +316,83 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           )}
         </div>
 
-        {/* FOCUS & WORKSPACE Section */}
-        <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
-            Focus & Workspace
-          </div>
+        {/* FOCUS & WORKSPACE Section — Strictly Student-Only */}
+        {can('student.focus.manage') && !can('principal.institution.view') && !can('parent.family_intelligence.view') && (
+          <div className="space-y-1">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+              Focus & Workspace
+            </div>
 
-          {renderNavButton('focus', 'Focus Room', Timer)}
-          {renderNavButton('workspace', 'My Workspace', FileText)}
-        </div>
+            {renderNavButton('focus', 'Focus Room', Timer)}
+            {renderNavButton('workspace', 'My Workspace', FileText)}
+          </div>
+        )}
 
         {/* CONNECT Section */}
-        <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
-            Connect
+        {(can('student.community.view') || can('teacher.community.moderate') || can('parent.community.view')) && (
+          <div className="space-y-1">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+              Connect
+            </div>
+
+            {renderNavButton('community', 'Community', MessageSquare)}
+            {can('student.community.participate') && renderNavButton('study_groups', 'Study Groups', Users)}
           </div>
+        )}
 
-          {renderNavButton('community', 'Community', MessageSquare)}
-          {renderNavButton('study_groups', 'Study Groups', Users)}
-        </div>
+        {/* KNOWLEDGE & SMART SURFACES Section — Only for Student & Teacher */}
+        {(can('student.learning.view') || can('teacher.smartboard.control') || can('teacher.curriculum.manage')) &&
+         !can('parent.family_intelligence.view') && !can('principal.institution.view') && (
+          <div className="space-y-1">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+              Knowledge & Smart Surfaces
+            </div>
 
-        {/* KNOWLEDGE & MEDIA Section */}
-        <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
-            Knowledge & Smart Surfaces
+            {can('student.learning.view') && renderNavButton('notes', 'Notes & Formulas', Bookmark)}
+            {can('student.smartboard.view_released') && renderNavButton('board_history', 'Board History', FileCheck2)}
+            {can('teacher.smartboard.control') && renderNavButton('smartboard_os', 'SmartBoard OS', Tv)}
+            {can('teacher.smartboard.control') && renderNavButton('board_history', 'Board Archive', FileCheck2)}
+            {(can('student.learning.view') || can('teacher.curriculum.manage')) && renderNavButton('knowledge', 'Knowledge Spaces', Brain)}
+            {(can('student.videos.view') || can('teacher.videos.manage')) && renderNavButton('videos', 'Video Library', Video)}
+            {(can('student.classroom.participate') || can('teacher.classroom.host')) && renderNavButton('classroom', 'Smart Classroom', Radio)}
           </div>
+        )}
 
-          {renderNavButton('notes', 'Notes & Formulas', Bookmark)}
-          {renderNavButton('board_history', 'Board History', FileCheck2)}
-          {renderNavButton('smartboard_os', 'SmartBoard OS', Tv)}
-          {renderNavButton('knowledge', 'Knowledge Spaces', Brain)}
-          {renderNavButton('videos', 'Video Library', Video)}
-          {renderNavButton('classroom', 'Smart Classroom', Radio)}
-        </div>
+        {/* Course Directory Quick Access — Scoped strictly to Students and Instructors */}
+        {(can('student.learning.view') || can('teacher.classes.manage')) &&
+         !can('parent.family_intelligence.view') && !can('principal.institution.view') && (
+          <div className="space-y-1 pt-1 border-t border-slate-800/80">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 flex items-center justify-between font-semibold">
+              <span>{can('teacher.classes.manage') ? 'Assigned Courses' : 'Enrolled Courses'}</span>
+              <span className="text-[9px] text-slate-500 font-mono">{classes.length}</span>
+            </div>
 
-        {/* Course Directory Quick Access */}
-        <div className="space-y-1 pt-1 border-t border-slate-800/80">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 flex items-center justify-between font-semibold">
-            <span>Enrolled Courses</span>
-            <span className="text-[9px] text-slate-500 font-mono">{classes.length}</span>
+            <div className="space-y-0.5">
+              {classes.map((cls) => {
+                const isSelectedCourse = cls.id === activeCourseId;
+                return (
+                  <button
+                    key={cls.id}
+                    onClick={() => handleCourseClick(cls.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-mono transition-all text-left group cursor-pointer ${
+                      isSelectedCourse
+                        ? 'bg-slate-800 text-white font-bold border border-slate-700'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate min-w-0">
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/80 group-hover:bg-cyan-300 shrink-0" />
+                      <span className="truncate">{cls.code}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono shrink-0">
+                      {cls.units?.length || 0} units
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-
-          <div className="space-y-0.5">
-            {classes.map((cls) => {
-              const isSelectedCourse = cls.id === activeCourseId;
-              return (
-                <button
-                  key={cls.id}
-                  onClick={() => handleCourseClick(cls.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-mono transition-all text-left group cursor-pointer ${
-                    isSelectedCourse
-                      ? 'bg-slate-800 text-white font-bold border border-slate-700'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900/60 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 truncate min-w-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/80 group-hover:bg-cyan-300 shrink-0" />
-                    <span className="truncate">{cls.code}</span>
-                  </div>
-                  <span className="text-[10px] text-slate-500 font-mono shrink-0">
-                    {cls.units?.length || 0} units
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

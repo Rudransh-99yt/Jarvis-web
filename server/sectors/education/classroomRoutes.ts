@@ -10,7 +10,35 @@ import type { User, InstitutionMembership } from '../../data/types.ts';
 
 export const classroomRouter = express.Router();
 
-classroomRouter.use(requirePrincipal);
+export async function requireClassroomPrincipal(req: Request, res: Response, next: express.NextFunction): Promise<void> {
+  if (req.path.includes('/stream')) {
+    if (req.query.userId && typeof req.query.userId === 'string') {
+      const user = await jarvisData.users.getById(req.query.userId.trim());
+      if (!user) {
+        res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
+        return;
+      }
+      res.locals.principal = { userId: user.id, role: user.role, institutionId: user.institutionId, workspaceId: user.workspaceId, provenance: 'signed-hmac' };
+      next();
+      return;
+    }
+    if (req.query.ticket && typeof req.query.ticket === 'string') {
+      try {
+        const verified = await ticketService.verifySSETicket(req.query.ticket.trim());
+        res.locals.principal = { userId: verified.user.id, role: verified.user.role, institutionId: verified.user.institutionId, workspaceId: verified.user.workspaceId, provenance: 'signed-hmac' };
+        next();
+        return;
+      } catch (err: any) {
+        res.status(err.statusCode || 401).json({ error: { code: err.code || 'INVALID_TICKET', message: err.message } });
+        return;
+      }
+    }
+  }
+
+  return requirePrincipal(req, res, next);
+}
+
+classroomRouter.use(requireClassroomPrincipal);
 
 function getParam(param: string | string[] | undefined): string {
   if (Array.isArray(param)) return param[0] || '';

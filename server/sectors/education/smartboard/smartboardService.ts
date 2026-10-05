@@ -1,4 +1,4 @@
-// Core Service Orchestrator for SmartBoard OS (D.8)
+// Core Service Orchestrator for SmartBoard OS (D.8 / P1-7 Hardening)
 import { smartboardStore } from './smartboardStore.ts';
 import { smartboardPolicy } from './smartboardPolicy.ts';
 import { classSessionStore } from '../classSessions/classSessionStore.ts';
@@ -16,40 +16,81 @@ import { jarvisData } from '../../../data/index.ts';
 
 export class SmartBoardService {
   /**
-   * 1. Lists registered SmartBoard devices for an institution and classroom.
+   * 1. Lists registered SmartBoard devices for an authenticated user's institution and classroom.
    */
   async listDevices(user: User, classroomId?: string): Promise<SmartBoardDevice[]> {
-    return smartboardStore.listDevices('inst-stark-academy', classroomId);
+    const userTenant = user.institutionId;
+    const isAdmin = user.role === 'admin' || user.role === 'commander';
+    if (!isAdmin && !userTenant) {
+      return [];
+    }
+    return smartboardStore.listDevices(isAdmin ? undefined : userTenant, classroomId);
   }
 
   /**
-   * 2. Gets a specific SmartBoard device.
+   * 2. Gets a specific SmartBoard device with tenant isolation.
    */
   async getDevice(user: User, boardId: string): Promise<SmartBoardDevice> {
     const dev = smartboardStore.getDevice(boardId);
     if (!dev) {
       throw new Error(`SmartBoard device '${boardId}' not found.`);
     }
+
+    const userTenant = user.institutionId;
+    const isAdmin = user.role === 'admin' || user.role === 'commander';
+    if (!isAdmin && (!userTenant || !dev.institutionId || dev.institutionId !== userTenant)) {
+      const err: any = new Error(`Forbidden: Cross-institution device access denied.`);
+      err.statusCode = 403;
+      throw err;
+    }
+
     return dev;
   }
 
   /**
-   * 3. Generates a temporary 6-digit pair code for a physical board.
+   * 3. Generates a temporary 6-digit pair code for a physical board with authorization check.
    */
-  async generatePairCode(boardId: string): Promise<{ pairCode: string; expiresAt: number; board: SmartBoardDevice }> {
+  async generatePairCode(
+    userOrBoardId: User | string,
+    maybeBoardId?: string
+  ): Promise<{ pairCode: string; expiresAt: number; board: SmartBoardDevice }> {
+    let user: User | undefined;
+    let boardId: string;
+    if (typeof userOrBoardId === 'string') {
+      boardId = userOrBoardId;
+      user = undefined;
+    } else {
+      user = userOrBoardId;
+      boardId = maybeBoardId!;
+    }
+
+    const board = smartboardStore.getDevice(boardId);
+    if (!board) {
+      throw new Error(`SmartBoard device '${boardId}' not found.`);
+    }
+
+    if (user) {
+      const check = await smartboardPolicy.canControlBoard(user, board);
+      if (!check.allowed) {
+        const err: any = new Error(check.reason || 'Unauthorized to generate pairing code.');
+        err.statusCode = check.statusCode || 403;
+        throw err;
+      }
+    }
+
     const { pairCode, expiresAt } = smartboardStore.generatePairCode(boardId);
-    const board = smartboardStore.getDevice(boardId)!;
+    const updatedBoard = smartboardStore.getDevice(boardId)!;
 
     classroomEventBus.publishEvent({
       type: 'classroom.board.state.changed',
-      sessionId: board.currentSessionId || `setup-${boardId}`,
-      classId: board.classroomId,
+      sessionId: updatedBoard.currentSessionId || `setup-${boardId}`,
+      classId: updatedBoard.classroomId,
       workspaceId: 'ws-stark-core',
       data: { boardId, status: 'PAIRING', pairCode, expiresAt },
       timestamp: new Date().toISOString()
     });
 
-    return { pairCode, expiresAt, board };
+    return { pairCode, expiresAt, board: updatedBoard };
   }
 
   /**
@@ -68,7 +109,9 @@ export class SmartBoardService {
 
     const check = await smartboardPolicy.canControlBoard(teacher, board);
     if (!check.allowed) {
-      throw new Error(check.reason || 'Unauthorized to pair with board.');
+      const err: any = new Error(check.reason || 'Unauthorized to pair with board.');
+      err.statusCode = check.statusCode || 403;
+      throw err;
     }
 
     // Verify pairing code
@@ -137,7 +180,9 @@ export class SmartBoardService {
 
     const check = await smartboardPolicy.canSendSessionToBoard(teacher, board, session);
     if (!check.allowed) {
-      throw new Error(check.reason || 'Cannot send session to board.');
+      const err: any = new Error(check.reason || 'Cannot send session to board.');
+      err.statusCode = check.statusCode || 403;
+      throw err;
     }
 
     // Create or retrieve corresponding structured BoardDocument
@@ -208,7 +253,9 @@ export class SmartBoardService {
 
     const check = await smartboardPolicy.canControlBoard(teacher, board);
     if (!check.allowed) {
-      throw new Error(check.reason || 'Unauthorized.');
+      const err: any = new Error(check.reason || 'Unauthorized.');
+      err.statusCode = check.statusCode || 403;
+      throw err;
     }
 
     // Transition board to LIVE
@@ -281,7 +328,7 @@ export class SmartBoardService {
           title: `${session.courseCode}: ${session.topic} (Board Notes)`,
           classroomId: 'class-phys-301',
           classroomName: 'Physics Lab Hall C-104',
-          institutionId: session.schoolId || 'inst-stark-academy'
+          institutionId: session.schoolId || user.institutionId || ''
         });
       }
     }
@@ -291,7 +338,9 @@ export class SmartBoardService {
 
     const check = await smartboardPolicy.canReadDocument(user, doc);
     if (!check.allowed) {
-      throw new Error(check.reason || 'Forbidden.');
+      const err: any = new Error(check.reason || 'Forbidden.');
+      err.statusCode = check.statusCode || 403;
+      throw err;
     }
 
     return doc;
@@ -312,7 +361,9 @@ export class SmartBoardService {
 
     const check = await smartboardPolicy.canEditDocument(user, doc);
     if (!check.allowed) {
-      throw new Error(check.reason || 'Forbidden to edit board document.');
+      const err: any = new Error(check.reason || 'Forbidden to edit board document.');
+      err.statusCode = check.statusCode || 403;
+      throw err;
     }
 
     const savedDoc = smartboardStore.autosaveDocument(docId, updates);
@@ -349,9 +400,11 @@ export class SmartBoardService {
       throw new Error(`Board document '${docId}' not found.`);
     }
 
-    const check = await smartboardPolicy.canEditDocument(teacher, doc);
+    const check = await smartboardPolicy.canReleaseDocument(teacher, doc);
     if (!check.allowed) {
-      throw new Error(check.reason || 'Forbidden.');
+      const err: any = new Error(check.reason || 'Forbidden.');
+      err.statusCode = check.statusCode || 403;
+      throw err;
     }
 
     const updated = smartboardStore.releaseDocument(docId, isReleased);
@@ -393,7 +446,9 @@ export class SmartBoardService {
     if (board) {
       const check = await smartboardPolicy.canControlBoard(teacher, board);
       if (!check.allowed) {
-        throw new Error(check.reason || 'Forbidden.');
+        const err: any = new Error(check.reason || 'Forbidden.');
+        err.statusCode = check.statusCode || 403;
+        throw err;
       }
     }
 
@@ -417,11 +472,29 @@ export class SmartBoardService {
   }
 
   /**
-   * 11. Lists Board History for a course / class.
+   * 11. Lists Board History for a course / class with tenant and enrollment scoping.
    */
   async getBoardHistory(user: User, classId: string): Promise<BoardDocument[]> {
-    const isStudent = user.role === 'student';
-    return smartboardStore.listDocumentsForClass(classId, isStudent);
+    const check = await smartboardPolicy.canViewBoardHistory(user, classId);
+    if (!check.allowed) {
+      const err: any = new Error(check.reason || 'Forbidden.');
+      err.statusCode = check.statusCode || 403;
+      throw err;
+    }
+
+    const isStudent = user.role === 'student' || user.role === 'parent';
+    const docs = smartboardStore.listDocumentsForClass(classId, isStudent);
+
+    // Apply document read policy to each item in history to prevent any cross-tenant or unreleased leakage
+    const authorizedDocs: BoardDocument[] = [];
+    for (const doc of docs) {
+      const docCheck = await smartboardPolicy.canReadDocument(user, doc);
+      if (docCheck.allowed) {
+        authorizedDocs.push(doc);
+      }
+    }
+
+    return authorizedDocs;
   }
 
   /**

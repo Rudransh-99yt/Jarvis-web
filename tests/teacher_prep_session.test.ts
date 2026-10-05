@@ -33,6 +33,8 @@ async function runTeacherPrepTests() {
     createdAt: new Date().toISOString()
   };
 
+  classSessionStore.resetToDefaults();
+
   // Test 1: Store initialization & pre-seeded sessions
   const seeded = await classSessionStore.listSessions();
   assert(seeded.length > 0, 'ClassSessionStore contains pre-seeded realistic ClassSession');

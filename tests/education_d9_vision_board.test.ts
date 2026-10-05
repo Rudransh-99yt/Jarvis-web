@@ -34,6 +34,7 @@ const teacherUser: User = {
   email: 'helen.cho@starkacademy.edu',
   role: 'teacher',
   department: 'Faculty of Physics',
+  institutionId: 'inst-stark-academy',
   createdAt: new Date().toISOString()
 };
 
@@ -42,6 +43,7 @@ const studentUser: User = {
   displayName: 'Alex Chen',
   email: 'alex.chen@starkacademy.edu',
   role: 'student',
+  institutionId: 'inst-stark-academy',
   createdAt: new Date().toISOString()
 };
 
@@ -50,6 +52,7 @@ const rogueUser: User = {
   displayName: 'Rogue Student',
   email: 'rogue@outside.org',
   role: 'student',
+  institutionId: 'inst-outside',
   createdAt: new Date().toISOString()
 };
 

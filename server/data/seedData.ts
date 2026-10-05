@@ -12,6 +12,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       email: 'tony@starkindustries.com',
       role: 'commander',
       department: 'Executive Engineering & Defense',
+      institutionId: 'inst-stark-academy',
       createdAt: '2026-09-01T08:00:00.000Z'
     },
     {
@@ -20,6 +21,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       email: 'sarah.quantum@stark.edu',
       role: 'teacher',
       department: 'Theoretical Physics & Applied Mathematics',
+      institutionId: 'inst-stark-academy',
       createdAt: '2026-09-01T08:00:00.000Z'
     },
     {
@@ -28,6 +30,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       email: 'alex.chen@stark.edu',
       role: 'student',
       department: 'Autonomous Robotics & Quantum Systems',
+      institutionId: 'inst-stark-academy',
       createdAt: '2026-09-01T08:00:00.000Z'
     },
     {
@@ -36,6 +39,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       email: 'maya.lin@stark.edu',
       role: 'student',
       department: 'Applied Mathematics',
+      institutionId: 'inst-stark-academy',
       createdAt: '2026-09-01T08:00:00.000Z'
     },
     {
@@ -44,6 +48,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       email: 'a.vance@stark.edu',
       role: 'principal',
       department: 'Office of the Dean & Academic Directorate',
+      institutionId: 'inst-stark-academy',
       createdAt: '2026-09-01T08:00:00.000Z'
     },
     {
@@ -52,6 +57,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       email: 'maria.chen@starkfamily.org',
       role: 'parent',
       department: 'Family & Guardian Council',
+      institutionId: 'inst-stark-academy',
       createdAt: '2026-09-01T08:00:00.000Z'
     },
     {
@@ -60,6 +66,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       email: 'robert.lin@linconsulting.com',
       role: 'parent',
       department: 'Family & Guardian Council',
+      institutionId: 'inst-stark-academy',
       createdAt: '2026-09-01T08:00:00.000Z'
     }
   ],
@@ -392,6 +399,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       code: 'PHYS-301',
       name: 'Advanced Quantum & Electrodynamics',
       description: 'Foundations of non-relativistic quantum mechanics, Schrödinger equation, wave mechanics, and electromagnetic field quantization.',
+      schoolId: 'inst-stark-academy',
       instructorId: 'teacher-1',
       instructorName: 'Dr. Sarah (Lead Physicist)',
       term: 'Fall 2026',
@@ -447,6 +455,7 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       code: 'MATH-240',
       name: 'Multivariable Calculus & Differential Forms',
       description: 'Vector calculus, line and surface integrals, Green theorem, Stokes theorem, and the divergence theorem.',
+      schoolId: 'inst-stark-academy',
       instructorId: 'teacher-1',
       instructorName: 'Dr. Sarah',
       term: 'Fall 2026',
@@ -488,6 +497,8 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       code: 'CS-420',
       name: 'Autonomous AI & Neural Architecture',
       description: 'Transformer models, multi-agent reinforcement learning, attention mechanisms, and tool orchestration in intelligent operating systems.',
+      schoolId: 'inst-stark-academy',
+      institutionId: 'inst-stark-academy',
       instructorId: 'teacher-1',
       instructorName: 'Dr. Sarah',
       term: 'Fall 2026',
@@ -522,6 +533,8 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       code: 'ENG-510',
       name: 'Orbital Dynamics & Hypersonic Propulsion',
       description: 'Keplerian orbital mechanics, gravitational assist trajectories, hypersonic thermal dissipation, and sub-orbital entry vectors.',
+      schoolId: 'inst-stark-academy',
+      institutionId: 'inst-stark-academy',
       instructorId: 'teacher-1',
       instructorName: 'Dr. Sarah',
       term: 'Fall 2026',

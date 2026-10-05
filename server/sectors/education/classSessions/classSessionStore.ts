@@ -1,4 +1,5 @@
-// Centralized In-Memory & Persistent Store for ClassSession Domain Objects
+import fs from 'node:fs';
+import path from 'node:path';
 import type {
   ClassSession,
   SessionState,
@@ -513,12 +514,58 @@ const INITIAL_SEEDED_SESSIONS: ClassSession[] = [
 
 export class ClassSessionStore {
   private sessions: Map<string, ClassSession> = new Map();
+  private storageFilePath: string;
 
-  constructor() {
-    // Seed initial session
+  constructor(customStoragePath?: string) {
+    const defaultDir = path.resolve(process.cwd(), 'data');
+    this.storageFilePath = customStoragePath || process.env.CLASS_SESSIONS_STORE_FILE || path.join(defaultDir, 'class-sessions.json');
+    if (!this.loadFromDisk()) {
+      this.resetToDefaults();
+    }
+  }
+
+  private loadFromDisk(): boolean {
+    try {
+      if (fs.existsSync(this.storageFilePath)) {
+        const raw = fs.readFileSync(this.storageFilePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.sessions)) {
+          this.sessions.clear();
+          parsed.sessions.forEach((s: ClassSession) => this.sessions.set(s.id, s));
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('[ClassSessionStore] Failed to load sessions from disk, resetting to defaults:', err);
+    }
+    return false;
+  }
+
+  public persistToDisk(): void {
+    try {
+      const dir = path.dirname(this.storageFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      const data = {
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        sessions: Array.from(this.sessions.values())
+      };
+      const tmpPath = `${this.storageFilePath}.tmp`;
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf8');
+      fs.renameSync(tmpPath, this.storageFilePath);
+    } catch (err) {
+      console.warn('[ClassSessionStore] Warning: Could not persist state to disk:', err);
+    }
+  }
+
+  resetToDefaults(): void {
+    this.sessions.clear();
     INITIAL_SEEDED_SESSIONS.forEach((s) => {
-      this.sessions.set(s.id, s);
+      this.sessions.set(s.id, JSON.parse(JSON.stringify(s)));
     });
+    this.persistToDisk();
   }
 
   getSessionSync(id: string): ClassSession | null {
@@ -596,7 +643,7 @@ export class ClassSessionStore {
       lessonId: data.lessonId,
       lessonTitle: data.lessonTitle,
       topic: data.topic || 'Class Session Topic',
-      teacherId: data.teacherId || 'teacher-1',
+      teacherId: data.teacherId || '',
       teacherName: data.teacherName || 'Instructor',
       scheduledAt: data.scheduledAt,
       durationMinutes: data.durationMinutes || 45,
@@ -636,6 +683,7 @@ export class ClassSessionStore {
     };
 
     this.sessions.set(id, newSession);
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(newSession));
   }
 
@@ -652,6 +700,7 @@ export class ClassSessionStore {
     };
 
     this.sessions.set(id, updated);
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 
@@ -693,6 +742,7 @@ export class ClassSessionStore {
     }
 
     this.sessions.set(id, updated);
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 
@@ -721,6 +771,7 @@ export class ClassSessionStore {
     }
 
     this.sessions.set(id, updated);
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 
@@ -740,6 +791,7 @@ export class ClassSessionStore {
     if (updated.studentMaterials) updated.studentMaterials.isApproved = true;
 
     this.sessions.set(id, updated);
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 
@@ -757,6 +809,7 @@ export class ClassSessionStore {
     };
 
     this.sessions.set(id, updated);
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 
@@ -776,6 +829,7 @@ export class ClassSessionStore {
     };
 
     this.sessions.set(id, updated);
+    this.persistToDisk();
     return JSON.parse(JSON.stringify(updated));
   }
 
@@ -794,7 +848,9 @@ export class ClassSessionStore {
   }
 
   async deleteSession(id: string): Promise<boolean> {
-    return this.sessions.delete(id);
+    const deleted = this.sessions.delete(id);
+    if (deleted) this.persistToDisk();
+    return deleted;
   }
 }
 

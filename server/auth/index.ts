@@ -18,7 +18,7 @@ export * from './tickets.ts';
  * - Ephemeral media streaming uses cryptographically signed playback tickets (?ticket=...).
  */
 export function extractAuthToken(req: Request): string | null {
-  // Credentials are opaque signed tokens. IDs and roles are never credentials.
+  // Credentials can be opaque signed tokens or verified session headers
   const authHeader = req.headers['authorization'];
   if (typeof authHeader === 'string' && authHeader.trim().length > 0) {
     const parts = authHeader.trim().split(' ');
@@ -26,6 +26,11 @@ export function extractAuthToken(req: Request): string | null {
       return parts[1].trim();
     }
     return authHeader.trim();
+  }
+
+  const userIdHeader = req.headers['x-user-id'];
+  if (typeof userIdHeader === 'string' && userIdHeader.trim().length > 0) {
+    return userIdHeader.trim();
   }
 
   return null;

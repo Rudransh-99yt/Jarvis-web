@@ -32,6 +32,7 @@ const teacherUser: User = {
   email: 'helen.cho@starkacademy.edu',
   role: 'teacher',
   department: 'Faculty of Physics',
+  institutionId: 'inst-stark-academy',
   createdAt: new Date().toISOString()
 };
 
@@ -41,6 +42,7 @@ const unauthorizedTeacher: User = {
   email: 'erik.selvig@starkacademy.edu',
   role: 'teacher',
   department: 'Faculty of Astrophysics',
+  institutionId: 'inst-stark-academy',
   createdAt: new Date().toISOString()
 };
 
@@ -49,6 +51,7 @@ const studentUser: User = {
   displayName: 'Alex Chen',
   email: 'alex.chen@starkacademy.edu',
   role: 'student',
+  institutionId: 'inst-stark-academy',
   createdAt: new Date().toISOString()
 };
 
@@ -57,6 +60,7 @@ const rogueStudent: User = {
   displayName: 'Rogue Infiltrator',
   email: 'rogue@external.net',
   role: 'student',
+  institutionId: 'inst-external-net',
   createdAt: new Date().toISOString()
 };
 
