@@ -380,6 +380,12 @@ export class SmartBoardStore {
       .sort((a, b) => new Date(b.timestamps.updatedAt).getTime() - new Date(a.timestamps.updatedAt).getTime());
   }
 
+  listAllDocuments(onlyReleased = false): BoardDocument[] {
+    return Array.from(this.documents.values())
+      .filter((d) => !onlyReleased || d.isReleasedToStudents)
+      .sort((a, b) => new Date(b.timestamps.updatedAt).getTime() - new Date(a.timestamps.updatedAt).getTime());
+  }
+
   createOrGetDocumentForSession(params: {
     sessionId: string;
     classId: string;

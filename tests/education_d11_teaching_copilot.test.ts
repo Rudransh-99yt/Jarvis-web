@@ -132,6 +132,15 @@ async function runD11TeachingCopilotTests() {
   assert(rejectedProp.status === 'REJECTED', '5.3 Proposal correctly transitioned to REJECTED');
   assert(rejectedProp.rejectionReason === 'Time ran out in lecture', '5.4 Preserves rejection reason');
 
+  // Verify rejected proposal CANNOT be executed later
+  let rejectedExecutionBlocked = false;
+  try {
+    await copilotService.reviewProposal(teacherUser, rejectPropId, 'APPROVE');
+  } catch (err: any) {
+    rejectedExecutionBlocked = err.message.includes('already REJECTED');
+  }
+  assert(rejectedExecutionBlocked, '5.5 Rejected proposal cannot execute or be approved later');
+
   // --- SECTION 6: Multi-Role Authorization & Security Defense ---
   console.log('\n--- SECTION 6: Multi-Role Authorization & Security Defense ---');
 

@@ -54,7 +54,8 @@ export type BoardElementType =
   | 'shape'
   | 'arrow'
   | 'image'
-  | 'annotation';
+  | 'annotation'
+  | 'visualization';
 
 export interface BoardStrokePoint {
   x: number;
@@ -219,6 +220,8 @@ export interface BoardElement {
     relatedElementIds?: string[];
     equation?: EquationObject;
     diagram?: DiagramObject;
+    visualizationId?: string;
+    visualizationType?: string;
   };
   // Stroke specific
   points?: BoardStrokePoint[];
@@ -240,11 +243,13 @@ export interface BoardElement {
   endY?: number;
   fillColor?: string;
   strokeColor?: string;
-  // Image / Annotation
+  // Image / Annotation / Visualization
   imageUrl?: string;
   label?: string;
   semanticTag?: BoardSemanticTag;
   latexFormula?: string;
+  visualizationId?: string;
+  visualizationPayload?: any;
   zIndex: number;
   createdAt: string;
   updatedAt: string;
@@ -257,6 +262,51 @@ export type BoardPageBackground =
   | 'dark_grid'
   | 'dark';
 
+export type BoardDocumentLifecycle =
+  | 'LIVE'
+  | 'SAVED'
+  | 'PROCESSING'
+  | 'INDEXED'
+  | 'RELEASED'
+  | 'FAILED_INDEXING';
+
+export interface BoardDerivedKnowledge {
+  summary: string;
+  keyConcepts: string[];
+  importantEquations: Array<{
+    expression: string;
+    description?: string;
+    latex?: string;
+    confidence: number;
+    sourceElementId?: string;
+  }>;
+  definitions: Array<{
+    term: string;
+    definition: string;
+  }>;
+  misconceptions: Array<{
+    misconception: string;
+    correction: string;
+  }>;
+  revisionPoints: string[];
+  practiceQuestions: Array<{
+    question: string;
+    answer?: string;
+    difficulty?: 'easy' | 'medium' | 'hard';
+  }>;
+  suggestedTags: string[];
+  generatedAt?: string;
+  aiEnriched?: boolean;
+}
+
+export interface BoardAuditEvent {
+  id: string;
+  action: string;
+  actorId: string;
+  timestamp: string;
+  details?: Record<string, any>;
+}
+
 export interface BoardPage {
   pageId: string;
   pageIndex: number;
@@ -267,6 +317,11 @@ export interface BoardPage {
   spatialRelationships?: SpatialRelationship[];
   slideReferenceIndex?: number;
   thumbnail?: string;
+  pageSummary?: string;
+  processingStatus?: 'IDLE' | 'PROCESSING' | 'INDEXED' | 'FAILED';
+  keyConcepts?: string[];
+  extractedEquations?: Array<{ expression: string; confidence: number; sourceElementId?: string }>;
+  extractedText?: Array<{ text: string; confidence: number; sourceElementId?: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -274,6 +329,7 @@ export interface BoardPage {
 export interface BoardDocument {
   id: string;
   institutionId: string;
+  workspaceId?: string;
   classroomId: string;
   classroomName: string;
   classId: string;
@@ -288,10 +344,15 @@ export interface BoardDocument {
   teacherName: string;
   title: string;
   version: number;
+  lifecycle?: BoardDocumentLifecycle;
   isReleasedToStudents: boolean;
   releasedAt?: string;
   pages: BoardPage[];
   activePageIndex: number;
+  derivedKnowledge?: BoardDerivedKnowledge;
+  knowledgeSpaceId?: string;
+  knowledgeSourceId?: string;
+  audit?: BoardAuditEvent[];
   timestamps: {
     createdAt: string;
     updatedAt: string;

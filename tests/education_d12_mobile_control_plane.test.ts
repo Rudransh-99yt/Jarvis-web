@@ -83,6 +83,15 @@ async function runD12ControlPlaneTests() {
   assert(Boolean(pairResult.pairingTicket), '3.3 Generates cryptographic pairing ticket');
   assert(pairResult.board.pairingState.isPaired === true, '3.4 Updates board pairing state to isPaired: true');
 
+  // Replay rejection: challenge consumed on first claim
+  let replayBlocked = false;
+  try {
+    controlPlaneService.claimPairing(teacherUser, 'board-phys-01', challenge.pinCode, 'session-phys-101');
+  } catch (err: any) {
+    replayBlocked = err.message.includes('No active pairing challenge found');
+  }
+  assert(replayBlocked, '3.5 Replayed PIN challenge is rejected after single consumption');
+
   // --- SECTION 4: Send Session to Classroom & Idempotency ---
   console.log('\n--- SECTION 4: Send Session to Classroom & Idempotency ---');
 
@@ -104,6 +113,15 @@ async function runD12ControlPlaneTests() {
   assert(prevRes.ok === true, '5.3 Remote action PREV_PAGE executed successfully');
   assert(prevRes.boardDoc?.activePageIndex === 0, '5.4 Active page index decremented on board document');
 
+  const laserRes = controlPlaneService.executeRemoteAction(teacherUser, 'board-phys-01', 'TOGGLE_LASER', {
+    laserActive: true,
+    laserPoint: { x: 300, y: 250 }
+  });
+  assert(laserRes.ok === true && laserRes.laserState?.active === true, '5.5 Remote action TOGGLE_LASER activates laser state');
+
+  const clearRes = controlPlaneService.executeRemoteAction(teacherUser, 'board-phys-01', 'CLEAR_PAGE');
+  assert(clearRes.ok === true, '5.6 Remote action CLEAR_PAGE executes successfully');
+
   // --- SECTION 6: Multi-Role RBAC Defense ---
   console.log('\n--- SECTION 6: Multi-Role RBAC Defense ---');
 
@@ -122,6 +140,23 @@ async function runD12ControlPlaneTests() {
     studentRemoteBlocked = err.message.includes('403');
   }
   assert(studentRemoteBlocked, '6.2 Student blocked from executing remote actions on board (403)');
+
+  const foreignTeacher: User = {
+    id: 'teacher-foreign',
+    displayName: 'Foreign Instructor',
+    email: 'foreign@other.edu',
+    role: 'teacher',
+    institutionId: 'inst-other-academy',
+    createdAt: new Date().toISOString()
+  };
+
+  let crossInstBlocked = false;
+  try {
+    controlPlaneService.executeRemoteAction(foreignTeacher, 'board-phys-01', 'NEXT_PAGE');
+  } catch (err: any) {
+    crossInstBlocked = err.message.includes('403');
+  }
+  assert(crossInstBlocked, '6.3 Cross-institution unauthorized remote action blocked (403)');
 
   // --- SECTION 7: Test Data Hygiene & Invariant Verification ---
   console.log('\n--- SECTION 7: Test Data Hygiene & Invariant Verification ---');

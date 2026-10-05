@@ -15,8 +15,8 @@ export class GeminiProvider implements AiProvider {
   readonly name = 'Google Gemini (gemini-3.8-flash)';
   private client: GoogleGenAI | null = null;
   private lastConfiguredKey: string = '';
-  private isKeyInvalid: boolean = false;
-  private quotaExhaustedUntil: number = 0;
+  private static isKeyInvalid: boolean = false;
+  private static quotaExhaustedUntil: number = 0;
 
   constructor() {
     this.initClient();
@@ -37,14 +37,14 @@ export class GeminiProvider implements AiProvider {
             timeout: 30000
           }
         });
-        this.isKeyInvalid = false;
+        GeminiProvider.isKeyInvalid = false;
       } catch {
         this.client = null;
-        this.isKeyInvalid = true;
+        GeminiProvider.isKeyInvalid = true;
       }
     } else {
       this.client = null;
-      this.isKeyInvalid = false;
+      GeminiProvider.isKeyInvalid = false;
     }
   }
 
@@ -53,10 +53,10 @@ export class GeminiProvider implements AiProvider {
     if (currentKey !== this.lastConfiguredKey) {
       this.initClient();
     }
-    if (this.isKeyInvalid) {
+    if (GeminiProvider.isKeyInvalid) {
       return false;
     }
-    if (this.quotaExhaustedUntil > 0 && Date.now() < this.quotaExhaustedUntil) {
+    if (GeminiProvider.quotaExhaustedUntil > 0 && Date.now() < GeminiProvider.quotaExhaustedUntil) {
       return false;
     }
     return this.client !== null;
@@ -139,10 +139,17 @@ export class GeminiProvider implements AiProvider {
     } catch (err: any) {
       const errMsg = err?.message || '';
       if (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID')) {
-        this.isKeyInvalid = true;
+        GeminiProvider.isKeyInvalid = true;
       }
       if (errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429')) {
-        this.quotaExhaustedUntil = Date.now() + 60000;
+        let backoffMs = 15 * 60 * 1000; // 15 minutes default
+        const retryMatch = errMsg.match(/retryDelay["']?\s*:\s*["']?(\d+)s?/i);
+        if (retryMatch && retryMatch[1]) {
+          const secs = parseInt(retryMatch[1], 10);
+          if (!isNaN(secs) && secs > 0) backoffMs = secs * 1000;
+        }
+        GeminiProvider.quotaExhaustedUntil = Date.now() + backoffMs;
+        console.warn(`[GeminiProvider] Quota reached (429 RESOURCE_EXHAUSTED). Activating auxiliary deterministic engine for next ${Math.round(backoffMs / 1000)}s.`);
       }
       const safeMessage = errMsg.replace(/key=[^&\s]+/gi, 'key=[REDACTED]') || 'Gemini inference failed';
       throw new Error(`Gemini Provider Error: ${safeMessage}`);
@@ -207,10 +214,17 @@ export class GeminiProvider implements AiProvider {
       }
       const errMsg = err?.message || '';
       if (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID')) {
-        this.isKeyInvalid = true;
+        GeminiProvider.isKeyInvalid = true;
       }
       if (errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429')) {
-        this.quotaExhaustedUntil = Date.now() + 60000;
+        let backoffMs = 15 * 60 * 1000;
+        const retryMatch = errMsg.match(/retryDelay["']?\s*:\s*["']?(\d+)s?/i);
+        if (retryMatch && retryMatch[1]) {
+          const secs = parseInt(retryMatch[1], 10);
+          if (!isNaN(secs) && secs > 0) backoffMs = secs * 1000;
+        }
+        GeminiProvider.quotaExhaustedUntil = Date.now() + backoffMs;
+        console.warn(`[GeminiProvider] Stream quota reached (429). Activating auxiliary deterministic engine for next ${Math.round(backoffMs / 1000)}s.`);
       }
       const safeMessage = errMsg.replace(/key=[^&\s]+/gi, 'key=[REDACTED]') || 'Gemini stream failed';
       throw new Error(`Gemini Provider Stream Error: ${safeMessage}`);

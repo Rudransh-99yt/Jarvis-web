@@ -45,7 +45,7 @@ export function getElementBoundingBox(elem: BoardElement): BoundingBox {
     };
   }
 
-  if (elem.type === 'shape') {
+  if (elem.type === 'shape' || elem.type === 'visualization') {
     const x = elem.x ?? 0;
     const y = elem.y ?? 0;
     const w = elem.widthPx ?? (elem.endX !== undefined ? Math.abs(elem.endX - x) : 60);
@@ -326,7 +326,7 @@ export function moveElements(
       };
     }
 
-    if (elem.type === 'shape') {
+    if (elem.type === 'shape' || elem.type === 'visualization') {
       return {
         ...elem,
         x: elem.x !== undefined ? Math.round(elem.x + dx) : undefined,
@@ -404,7 +404,7 @@ export function scaleElements(
       };
     }
 
-    if (elem.type === 'shape') {
+    if (elem.type === 'shape' || elem.type === 'visualization') {
       const origX = elem.x ?? anchor.x;
       const origY = elem.y ?? anchor.y;
       const origW = elem.widthPx ?? 60;

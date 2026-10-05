@@ -324,6 +324,58 @@ export const SmartBoardCanvas: React.FC<SmartBoardCanvasProps> = ({
             ctx.font = '12px var(--font-mono, monospace)';
             ctx.fillText(elem.label, x + 5, y + h + 16);
           }
+        } else if (elem.type === 'visualization') {
+          const x = elem.x ?? 200;
+          const y = elem.y ?? 150;
+          const w = elem.widthPx ?? 420;
+          const h = elem.heightPx ?? 300;
+
+          // Holographic container background
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeStyle = '#00f2fe';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, w, h);
+
+          // Top Header Bar
+          ctx.fillStyle = 'rgba(0, 242, 254, 0.15)';
+          ctx.fillRect(x, y, w, 32);
+
+          // Title
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = 'bold 13px var(--font-mono, monospace)';
+          const title = elem.label || 'Interactive AI Visualization';
+          ctx.fillText(title.slice(0, 35), x + 12, y + 20);
+
+          // Badge
+          const visType = elem.semanticMetadata?.visualizationType || elem.semanticType || 'GRAPH';
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = '10px var(--font-mono, monospace)';
+          ctx.fillText(`[${visType}]`, x + w - 75, y + 20);
+
+          // Canvas Preview grid
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+          ctx.lineWidth = 1;
+          for (let gx = x + 30; gx < x + w; gx += 30) {
+            ctx.beginPath();
+            ctx.moveTo(gx, y + 32);
+            ctx.lineTo(gx, y + h);
+            ctx.stroke();
+          }
+          for (let gy = y + 60; gy < y + h; gy += 30) {
+            ctx.beginPath();
+            ctx.moveTo(x, gy);
+            ctx.lineTo(x + w, gy);
+            ctx.stroke();
+          }
+
+          // Center trajectory or waveform curve placeholder
+          ctx.strokeStyle = '#00f2fe';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(x + 20, y + h - 30);
+          ctx.bezierCurveTo(x + w * 0.3, y + 50, x + w * 0.7, y + 50, x + w - 20, y + h - 30);
+          ctx.stroke();
         } else if (elem.type === 'text' && elem.text) {
           ctx.fillStyle = elem.color || '#38bdf8';
           ctx.font = `${elem.fontSize || 20}px var(--font-mono, monospace)`;

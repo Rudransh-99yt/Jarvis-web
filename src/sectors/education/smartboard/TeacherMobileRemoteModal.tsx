@@ -99,7 +99,9 @@ export const TeacherMobileRemoteModal: React.FC<Props> = ({
     }
   };
 
-  const handleRemoteAction = async (action: 'NEXT_PAGE' | 'PREV_PAGE' | 'END_SESSION') => {
+  const handleRemoteAction = async (
+    action: 'NEXT_PAGE' | 'PREV_PAGE' | 'SET_PAGE' | 'CLEAR_PAGE' | 'TOGGLE_LASER' | 'END_SESSION'
+  ) => {
     try {
       const res = await fetch('/api/education/smartboard/control-plane/remote-action', {
         method: 'POST',
@@ -235,18 +237,79 @@ export const TeacherMobileRemoteModal: React.FC<Props> = ({
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => handleRemoteAction('PREV_PAGE')}
-                  className="py-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-mono text-xs font-bold flex flex-col items-center gap-1 cursor-pointer transition-colors"
+                  className="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-mono text-xs font-bold flex flex-col items-center gap-1 cursor-pointer transition-colors"
                 >
                   <ChevronLeft className="w-5 h-5 text-cyan-400" />
                   <span>Previous Page</span>
                 </button>
                 <button
                   onClick={() => handleRemoteAction('NEXT_PAGE')}
-                  className="py-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-mono text-xs font-bold flex flex-col items-center gap-1 cursor-pointer transition-colors"
+                  className="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-mono text-xs font-bold flex flex-col items-center gap-1 cursor-pointer transition-colors"
                 >
                   <ChevronRight className="w-5 h-5 text-cyan-400" />
                   <span>Next Page</span>
                 </button>
+              </div>
+
+              {/* Utility Actions (Clear Canvas / Laser / Knowledge) */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleRemoteAction('CLEAR_PAGE')}
+                  className="py-2.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 font-mono text-xs text-slate-300 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Clear Canvas</span>
+                </button>
+                <button
+                  onClick={() => handleRemoteAction('TOGGLE_LASER')}
+                  className="py-2.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 font-mono text-xs text-slate-300 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                  <span>Laser Pointer</span>
+                </button>
+              </div>
+
+              {/* D.13 Board Knowledge Actions */}
+              <div className="p-3 rounded-xl bg-slate-950/60 border border-cyan-500/30 space-y-2">
+                <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">Board Knowledge Actions</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/education/smartboard/knowledge/release', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ boardDocId: `doc-${activeSessionId}`, isReleased: true })
+                        });
+                        const data = await res.json();
+                        setPairingStatus(res.ok ? 'Whiteboard published to enrolled students!' : data.error);
+                      } catch {
+                        setPairingStatus('Error publishing board');
+                      }
+                    }}
+                    className="py-2 px-2.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-mono font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <span>Publish Board</span>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/education/smartboard/knowledge/index', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ boardDocId: `doc-${activeSessionId}`, triggerRagIngest: true })
+                        });
+                        const data = await res.json();
+                        setPairingStatus(res.ok ? 'Board indexed into Knowledge Space!' : data.error);
+                      } catch {
+                        setPairingStatus('Error indexing board');
+                      }
+                    }}
+                    className="py-2 px-2.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-mono font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <span>Sync Knowledge</span>
+                  </button>
+                </div>
               </div>
 
               {/* Emergency / End Action */}

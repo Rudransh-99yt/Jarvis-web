@@ -122,6 +122,21 @@ for (const tool of copilotTools) {
   toolRegistry.register(tool);
 }
 
+// 12. Register Board Knowledge Engine Tools (D.13)
+import {
+  indexBoardKnowledgeTool,
+  releaseBoardKnowledgeTool,
+  searchBoardKnowledgeTool,
+  askBoardKnowledgeTool,
+  deriveNotesTool
+} from '../sectors/education/smartboard/knowledge/boardKnowledgeTools.ts';
+
+toolRegistry.register(indexBoardKnowledgeTool);
+toolRegistry.register(releaseBoardKnowledgeTool);
+toolRegistry.register(searchBoardKnowledgeTool);
+toolRegistry.register(askBoardKnowledgeTool);
+toolRegistry.register(deriveNotesTool);
+
 console.log(`[ToolRegistry] Initialized with ${toolRegistry.list().length} registered tools across sectors: ${toolRegistry.list().map(t => t.name).join(', ')}`);
 
 export * from './types.ts';

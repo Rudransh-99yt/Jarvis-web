@@ -235,13 +235,21 @@ class CopilotService {
     decision: 'APPROVE' | 'REJECT',
     options?: { rejectionReason?: string }
   ): Promise<CopilotProposal> {
+    if (user.role !== 'teacher' && user.role !== 'principal') {
+      throw new Error('Forbidden: Only teachers can review proposals (403)');
+    }
+
     const proposal = this.proposals.get(proposalId);
     if (!proposal) {
       throw new Error(`Proposal '${proposalId}' not found`);
     }
 
-    if (user.role !== 'teacher' && user.role !== 'principal') {
-      throw new Error('Forbidden: Only teachers can review proposals (403)');
+    if (proposal.status === 'REJECTED') {
+      throw new Error(`Forbidden: Proposal '${proposalId}' was already REJECTED and cannot be executed (400)`);
+    }
+
+    if (proposal.status === 'EXECUTED' && decision === 'APPROVE') {
+      return proposal; // Idempotent return for completed proposals
     }
 
     const now = new Date().toISOString();

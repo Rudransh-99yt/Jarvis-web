@@ -187,9 +187,9 @@ class ControlPlaneService {
   public executeRemoteAction(
     user: User,
     boardId: string,
-    action: 'NEXT_PAGE' | 'PREV_PAGE' | 'SET_PAGE' | 'LAUNCH_QUIZ' | 'END_SESSION',
-    payload?: { pageIndex?: number; quizId?: string }
-  ): { ok: boolean; boardDoc?: BoardDocument } {
+    action: 'NEXT_PAGE' | 'PREV_PAGE' | 'SET_PAGE' | 'CLEAR_PAGE' | 'TOGGLE_LASER' | 'LAUNCH_QUIZ' | 'END_SESSION',
+    payload?: { pageIndex?: number; quizId?: string; laserActive?: boolean; laserPoint?: { x: number; y: number } }
+  ): { ok: boolean; boardDoc?: BoardDocument; laserState?: { active: boolean; point?: { x: number; y: number } } } {
     if (user.role !== 'teacher' && user.role !== 'principal') {
       throw new Error('Forbidden: Remote control requires teacher authorization (403)');
     }
@@ -197,6 +197,11 @@ class ControlPlaneService {
     const board = smartboardStore.getDevice(boardId);
     if (!board || !board.currentSessionId) {
       throw new Error(`SmartBoard '${boardId}' is not currently running an active session`);
+    }
+
+    // Classroom / Institution verification: user institution must match board institution
+    if (user.institutionId && board.institutionId && user.institutionId !== board.institutionId) {
+      throw new Error('Forbidden: Cross-institution control plane access denied (403)');
     }
 
     const doc = smartboardStore.getBoardDocumentForSession(board.currentSessionId);
@@ -219,6 +224,24 @@ class ControlPlaneService {
         doc.activePageIndex = payload.pageIndex;
         smartboardStore.autosaveDocument(doc.id, { activePageIndex: doc.activePageIndex });
       }
+    } else if (action === 'CLEAR_PAGE') {
+      const pageIdx = doc.activePageIndex;
+      if (doc.pages[pageIdx]) {
+        doc.pages[pageIdx].elements = [];
+        doc.pages[pageIdx].semanticCandidates = [];
+        doc.pages[pageIdx].spatialRelationships = [];
+        doc.pages[pageIdx].updatedAt = new Date().toISOString();
+        smartboardStore.autosaveDocument(doc.id, { pages: doc.pages });
+      }
+    } else if (action === 'TOGGLE_LASER') {
+      return {
+        ok: true,
+        boardDoc: doc,
+        laserState: {
+          active: Boolean(payload?.laserActive),
+          point: payload?.laserPoint
+        }
+      };
     } else if (action === 'END_SESSION') {
       smartboardStore.completeSession(board.currentSessionId);
     }

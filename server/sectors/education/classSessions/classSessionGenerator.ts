@@ -169,8 +169,8 @@ Produce a JSON object matching this exact schema:
             citationCount: session.sourceMaterials.length * 3
           }
         };
-      } catch (err) {
-        console.warn('Gemini API call failed or quota exceeded; switching to deterministic grounded curriculum engine.', err);
+      } catch (err: any) {
+        console.warn(`[ClassSessionGenerator] Remote generation unavailable (${err?.message || 'quota/network'}); switching seamlessly to deterministic grounded curriculum engine.`);
       }
     }
 
