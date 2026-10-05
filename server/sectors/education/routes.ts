@@ -12,8 +12,16 @@ import { institutionalRouter } from './institutional/institutionalRoutes.ts';
 import { smartboardRouter } from './smartboard/smartboardRoutes.ts';
 import { visualizationRouter } from './visualization/visualizationRoutes.ts';
 import { copilotRouter } from './copilot/copilotRoutes.ts';
+import { liveClassroomRouter } from './live/liveClassroomRoutes.ts';
+import { classroomIntelligenceRouter } from './intelligence/classroomIntelligenceRoutes.ts';
 
 export const educationRouter = Router();
+
+// Phase D.15: Classroom Intelligence Engine
+educationRouter.use('/intelligence', classroomIntelligenceRouter);
+
+// Phase D.14: Student Live Classroom Surface
+educationRouter.use('/live-classroom', liveClassroomRouter);
 
 // Phase D.11: Real-Time Teaching Copilot
 educationRouter.use('/copilot', copilotRouter);

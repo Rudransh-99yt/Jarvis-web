@@ -48,6 +48,7 @@ import { ParentHomeView } from './views/ParentHomeView.tsx';
 
 // Preserved Core Views
 import { SmartClassroomView } from './views/SmartClassroomView.tsx';
+import { StudentLiveClassroomView } from './views/StudentLiveClassroomView.tsx';
 import { VideoLibraryView } from './views/VideoLibraryView.tsx';
 import { ClassesView } from './views/ClassesView.tsx';
 import { AssignmentsView } from './views/AssignmentsView.tsx';
@@ -1312,7 +1313,16 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           )}
 
           {currentView === 'classroom' && (
-            <SmartClassroomView classes={classes} currentRole={currentRole} />
+            currentRole === 'student' ? (
+              <StudentLiveClassroomView
+                classes={classes}
+                currentClassId={activeCourseId}
+                onBackToHome={() => setCurrentView('student_home')}
+                onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
+              />
+            ) : (
+              <SmartClassroomView classes={classes} currentRole={currentRole} />
+            )
           )}
 
           {currentView === 'videos' && (

@@ -123,6 +123,25 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
   );
 
   const [customPrompt, setCustomPrompt] = useState<string>('');
+  const [carryForwardSignals, setCarryForwardSignals] = useState<any[]>([]);
+
+  // Load Carry-Forward Signals from Classroom Intelligence
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch(`/api/education/intelligence/classes/${selectedClassId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted) return;
+        if (data?.intelligence?.recommendedNextLessonActions) {
+          setCarryForwardSignals(data.intelligence.recommendedNextLessonActions);
+        }
+      })
+      .catch((err) => console.warn('Could not load carry-forward signals:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedClassId]);
 
   // Active Session Object State
   const [activeSession, setActiveSession] = useState<ClassSession | null>(existingSession || null);
@@ -707,6 +726,36 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
               </label>
             ))}
           </div>
+
+          {/* Carry-Forward Signals from Previous Sessions */}
+          {carryForwardSignals.length > 0 && (
+            <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-purple-300">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <span>Carry-Forward Teaching Signals (from Prior Class)</span>
+              </div>
+              <div className="space-y-1.5">
+                {carryForwardSignals.map((sig, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-black/40 border border-purple-500/15 text-xs font-mono">
+                    <div className="space-y-0.5">
+                      <div className="text-white font-bold">Revisit: {sig.concept}</div>
+                      <div className="text-[10px] text-purple-200/70">{sig.reason}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const directive = `Include 5-min recap on ${sig.concept} and reference board derivation.`;
+                        setCustomPrompt((prev) => (prev ? `${prev} ${directive}` : directive));
+                      }}
+                      className="px-2.5 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] font-mono font-bold border border-purple-400/30 transition-all cursor-pointer shrink-0"
+                    >
+                      + Include in Plan
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label className="text-xs font-mono text-cyan-300 font-semibold">

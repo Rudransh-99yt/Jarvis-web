@@ -208,6 +208,15 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - Multi-tier standings: class, cohort, and school scopes celebrating study consistency, daily streaks, and completed problem sets without publishing sensitive academic grades.
   - Student activity ledger: chronological audit trail of completed tasks and points awarded.
 
+- **Student Live Classroom Surface (Phase D.14)**:
+  - Canonical `LiveClassroomState` view model unifying SmartBoard canvas derivations, live presentation slides, formative quiz checks, private notes with provenance, released handouts/resources, and class comm links.
+  - Source of truth anchored strictly to existing `ClassSession` entities with multi-tenant institutional isolation.
+  - Dominant center-stage presentation & whiteboard canvas with page tabs and history synchronization.
+  - Bounded in-class **Ask Jarvis** AI assistant scoped strictly to active lesson objectives, whiteboard derivations, and recognized equations (refuses unreleased answer keys or out-of-scope school data).
+  - Private student notes automatically linking `sourceBoardId`, `sourcePageId`, and `sourceClassSessionId`, with transparent Workspace synchronization.
+  - Realtime SSE synchronization with automatic exponential-backoff reconnect resiliency (`CONNECTED`, `CONNECTING`, `RECONNECTING`, `DISCONNECTED`).
+  - Seamless post-class transition guiding students directly to notes review, practice, homework, and focused study.
+
 ---
 
 ## 2. Security & Boundary Guarantees

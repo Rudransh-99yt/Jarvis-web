@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ExternalLink,
   Sparkles,
-  Link2
+  Link2,
+  Radio
 } from 'lucide-react';
 
 interface AcademicContextActionsProps {
@@ -96,6 +97,18 @@ export const AcademicContextActions: React.FC<AcademicContextActionsProps> = ({
 
         {/* Contextual "Open In..." Actions Strip */}
         <div className="flex items-center flex-wrap gap-1.5 shrink-0">
+          {/* Action 0: Live Classroom */}
+          {currentView !== 'classroom' && (
+            <button
+              onClick={() => onNavigate('classroom', context)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-500/20 text-emerald-200 text-[11px] transition-all cursor-pointer"
+              title="Enter active live classroom surface"
+            >
+              <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+              <span>Live Class</span>
+            </button>
+          )}
+
           {/* Action 1: Study Lesson Workspace */}
           {currentView !== 'lesson_workspace' && (
             <button

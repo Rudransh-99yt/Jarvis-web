@@ -409,6 +409,34 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - Remote actions (`NEXT_PAGE`, `PREV_PAGE`, `GOTO_PAGE`, `CLEAR_PAGE`, `TOGGLE_LASER`, `FIT_VIEW`) and idempotent session delivery.
   - Automated test suite (`tests/education_d12_mobile_control_plane.test.ts`): 100% PASS.
 
+- **Phase D.13: Board Knowledge Engine & Structured Whiteboard Intelligence (Completed)**:
+  - Pipeline connecting physical board derivations to academic learning: `BOARD -> UNDERSTAND -> STRUCTURE -> LINK -> STORE -> SEARCH -> LEARN`.
+  - Deterministic knowledge extraction, AI enrichment, multi-tenant search, and derived notes/homework generators.
+  - Sandboxed tools (`smartboard.knowledge.index`, `smartboard.knowledge.release`, `smartboard.knowledge.search`, `smartboard.knowledge.ask`, `smartboard.knowledge.derive_notes`).
+  - Automated test suite (`tests/education_d13_board_knowledge.test.ts`): 100% PASS (27/27 assertions).
+
+- **Phase D.14: Student Live Classroom Surface (Completed)**:
+  - Unified, focused live classroom surface replacing fragmented tab hopping across SmartBoard, Quiz, Notes, Resources, Community, and AI Assistant.
+  - Canonical `LiveClassroomState` view model anchored to existing `ClassSession`, course curriculum hierarchy, and institutional boundary.
+  - Dominant center-stage SmartBoard & presentation canvas with live page synchronization and history navigation.
+  - Bounded in-class **Ask Jarvis** AI tutor grounded strictly in active lesson objectives, whiteboard derivations, and recognized equations.
+  - Private in-class student notes with provenance tracking (`sourceBoardId`, `sourcePageId`, `sourceClassSessionId`) and automatic Workspace synchronization.
+  - Seamless formative in-class quiz integration, released lesson resources, class comm link, and post-class transition summary with actionable next steps.
+  - Realtime SSE integration with auto-reconnect resiliency and robust cross-institution RBAC defenses.
+  - Automated test suite (`tests/education_d14_student_live_classroom.test.ts`): 100% PASS (20/20 assertions).
+
+- **Phase D.15: Classroom Intelligence Engine (Completed)**:
+  - Evidence-backed classroom intelligence answering: *"What happened? What does it mean? What should happen next?"*
+  - Canonical `ClassroomIntelligence` model anchored strictly to canonical `ClassSession` without a secondary or competing analytics database.
+  - 100% deterministic calculation of factual metrics (participation rate, assessment accuracy, recognized board derivations, homework submissions, focus duration, discussion activity) and transparent evidence items with source provenance (`QUIZ_QUESTION`, `QUIZ_RESULT`, `BOARD_KNOWLEDGE`, `ASSIGNMENT_SUBMISSION`, `FOCUS_SESSION`, `COMMUNITY_ACTIVITY`).
+  - Deterministic Misconception Engine identifying concept failure rates and clearly separating factual observations from AI hypotheses.
+  - Bounded AI Interpretation Layer generating structured JSON summaries and pedagogical advice with SHA-256 evidenceHash caching to prevent redundant LLM invocations and ₹0 offline deterministic fallback.
+  - Actionable Teacher Pedagogical Recommendations (reteach, diagnostic checkpoints, community posts) with 1-click navigation links.
+  - Non-leaking Student Action Recommendations (lesson review, practice checkpoints, focus sessions).
+  - Next ClassSession Carry-Forward Teaching Signals linking prior difficulties into lesson prep wizards.
+  - Strict privacy & RBAC boundaries across Student, Teacher, Parent/Family, and Principal/Executive views with IDOR protection.
+  - Automated test suite (`tests/education_d15_classroom_intelligence.test.ts`): 100% PASS (22/22 assertions).
+
 ---
 
 ## 6. Current Constraints & Active Invariants

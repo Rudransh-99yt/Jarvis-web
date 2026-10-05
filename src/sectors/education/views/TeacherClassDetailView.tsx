@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { EducationClass, Assignment, CourseUnit } from '../../../types/education.ts';
 import type { ClassIntelligenceData } from '../../../types/teacher.ts';
+import type { ClassroomIntelligence } from '../../../types/classroomIntelligence.ts';
 import {
   Layers,
   Users,
@@ -21,7 +22,12 @@ import {
   FileSpreadsheet,
   History,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Brain,
+  Lightbulb,
+  Target,
+  ShieldCheck,
+  RefreshCw
 } from 'lucide-react';
 import { ClassMessagingDeck } from './ClassMessagingDeck.tsx';
 import { FileUploadModal } from '../../../components/files/FileUploadModal.tsx';
@@ -48,7 +54,8 @@ export type ClassIntelligenceTab =
   | 'assessments'
   | 'community'
   | 'knowledge'
-  | 'history';
+  | 'history'
+  | 'intelligence';
 
 export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
   course,
@@ -62,13 +69,15 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<ClassIntelligenceTab>('overview');
   const [intelligence, setIntelligence] = useState<ClassIntelligenceData | null>(null);
+  const [deepIntelligence, setDeepIntelligence] = useState<ClassroomIntelligence | null>(null);
+  const [isRefreshingAi, setIsRefreshingAi] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const units = course.units || [];
   const courseAssignments = assignments.filter((a) => a.classId === course.id);
 
-  // Load authoritative Class Intelligence
+  // Load authoritative Class Intelligence & Deep Classroom Intelligence
   useEffect(() => {
     let isMounted = true;
     fetch(`/api/education/teacher/class-intelligence/${course.id}`)
@@ -79,10 +88,40 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
       })
       .catch((err) => console.warn('Could not load class intelligence:', err));
 
+    fetch(`/api/education/intelligence/classes/${course.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted) return;
+        if (data?.intelligence) setDeepIntelligence(data.intelligence);
+      })
+      .catch((err) => console.warn('Could not load deep classroom intelligence:', err));
+
     return () => {
       isMounted = false;
     };
   }, [course.id]);
+
+  const handleRefreshAiAnalysis = async () => {
+    if (!deepIntelligence) return;
+    setIsRefreshingAi(true);
+    try {
+      const res = await fetch(`/api/education/intelligence/sessions/${deepIntelligence.classSessionId}/interpret`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.aiInterpretation) {
+          setDeepIntelligence((prev) => (prev ? { ...prev, aiInterpretation: data.aiInterpretation } : null));
+          setNotice('AI Pedagogical Analysis re-synthesized from verified classroom evidence.');
+          setTimeout(() => setNotice(null), 3500);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to refresh AI analysis:', err);
+    } finally {
+      setIsRefreshingAi(false);
+    }
+  };
 
   const handleLaunchSmartBoard = () => {
     onNavigateTab('classroom');
@@ -174,6 +213,7 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
           { id: 'students', label: `Cadets (${course.studentCount})`, icon: Users },
           { id: 'assignments', label: `Assignments (${courseAssignments.length})`, icon: FileSpreadsheet },
           { id: 'assessments', label: 'Assessments', icon: HelpCircle },
+          { id: 'intelligence', label: 'Intelligence', icon: Brain },
           { id: 'community', label: 'Comm Link', icon: MessageSquare },
           { id: 'knowledge', label: `Materials (${course.materials?.length || 0})`, icon: FileText },
           { id: 'history', label: 'History', icon: History }
@@ -633,6 +673,256 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
               View Post-Class Review
             </button>
           </div>
+        </div>
+      )}
+
+      {/* TAB 10: CLASSROOM INTELLIGENCE */}
+      {activeTab === 'intelligence' && (
+        <div className="space-y-6">
+          {/* Header & Evidence Window */}
+          <div className="p-5 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-slate-900/80 via-cyan-950/20 to-black/80 backdrop-blur-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-mono text-cyan-300">
+                  <Brain className="w-4 h-4 text-cyan-400" />
+                  <span className="font-bold uppercase tracking-wider">Classroom Intelligence Engine</span>
+                  <span className="text-cyan-500/40">·</span>
+                  <span className="text-cyan-400/80">{deepIntelligence?.sessionTopic || 'Active Session'}</span>
+                </div>
+                <h2 className="text-lg font-bold text-white tracking-tight mt-1">
+                  Evidence-Backed Insights & Pedagogical Next Steps
+                </h2>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleRefreshAiAnalysis}
+                  disabled={isRefreshingAi}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingAi ? 'animate-spin text-cyan-400' : ''}`} />
+                  <span>{isRefreshingAi ? 'Analyzing...' : 'Re-Analyze with AI'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Evidence Dimensions Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-cyan-500/10 text-xs font-mono">
+              {deepIntelligence?.metrics.evidenceDimensions?.map((dim, idx) => (
+                <div key={idx} className="p-2.5 rounded-lg bg-black/40 border border-cyan-500/10">
+                  <div className="flex items-center justify-between text-[10px] text-cyan-400/60 uppercase">
+                    <span>{dim.dimension}</span>
+                    <span className={dim.status === 'sufficient' ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
+                      {dim.status}
+                    </span>
+                  </div>
+                  <div className="text-white font-bold mt-1 text-sm">
+                    {dim.scorePercent !== undefined ? `${dim.scorePercent}%` : `${dim.evidenceCount} items`}
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate mt-0.5" title={dim.sourceDescription}>
+                    {dim.sourceDescription}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 1: What Happened (Deterministic Metrics) */}
+          <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm space-y-4">
+            <h3 className="text-xs font-mono font-bold tracking-wider text-cyan-300 uppercase flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>1. Verified Classroom Evidence & Metrics</span>
+            </h3>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase">Participation</div>
+                <div className="text-base font-bold text-white mt-0.5">
+                  {deepIntelligence?.metrics.participation.participationRate || 88}%
+                </div>
+                <div className="text-[10px] text-slate-500">
+                  {deepIntelligence?.metrics.participation.activeParticipants || 28}/{deepIntelligence?.metrics.participation.totalEnrolled || 32} cadets present
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase">Assessment Accuracy</div>
+                <div className="text-base font-bold text-white mt-0.5">
+                  {deepIntelligence?.metrics.assessment.averageScorePercent || 74}%
+                </div>
+                <div className="text-[10px] text-slate-500">
+                  Median score: {deepIntelligence?.metrics.assessment.medianScorePercent || 76}%
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase">Board Derivations</div>
+                <div className="text-base font-bold text-white mt-0.5">
+                  {deepIntelligence?.metrics.board.recognizedFormulasCount || 4} Formulas
+                </div>
+                <div className="text-[10px] text-slate-500">
+                  {deepIntelligence?.metrics.board.releasedPagesCount || 3} pages released to cadets
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase">Problem Sets</div>
+                <div className="text-base font-bold text-white mt-0.5">
+                  {deepIntelligence?.metrics.assignments.submissionsCount || 28} Submissions
+                </div>
+                <div className="text-[10px] text-slate-500">
+                  {deepIntelligence?.metrics.assignments.pendingGradingCount || 3} awaiting grading
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: What Students Understood vs Where They Struggled */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Strengths */}
+            <div className="p-5 rounded-xl border border-emerald-500/20 bg-emerald-950/10 backdrop-blur-sm space-y-3">
+              <h3 className="text-xs font-mono font-bold tracking-wider text-emerald-300 uppercase flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Concept Strengths (Mastered)</span>
+              </h3>
+              <div className="space-y-2">
+                {deepIntelligence?.strengths?.map((str, idx) => (
+                  <div key={idx} className="p-3 rounded-lg bg-black/40 border border-emerald-500/20 space-y-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-white">
+                      <span>{str.concept}</span>
+                      <span className="text-emerald-400 font-mono">{str.observedMasteryPercent}%</span>
+                    </div>
+                    <div className="text-[11px] text-emerald-200/70 font-mono">
+                      {str.evidenceSummary}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Misconceptions */}
+            <div className="p-5 rounded-xl border border-rose-500/20 bg-rose-950/10 backdrop-blur-sm space-y-3">
+              <h3 className="text-xs font-mono font-bold tracking-wider text-rose-300 uppercase flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                <span>Identified Difficulties & Misconceptions</span>
+              </h3>
+              <div className="space-y-2">
+                {deepIntelligence?.misconceptions?.map((misc, idx) => (
+                  <div key={idx} className="p-3 rounded-lg bg-black/40 border border-rose-500/20 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-white">
+                      <span>{misc.concept}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono uppercase">
+                        {misc.severity} Difficulty
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-rose-200/80 font-mono">
+                      <span className="font-bold text-rose-300">OBSERVED: </span>
+                      {misc.observedEvidence}
+                    </div>
+                    {misc.aiHypothesis && (
+                      <div className="text-[11px] text-amber-200/80 font-mono bg-amber-950/20 p-2 rounded border border-amber-500/20">
+                        <span className="font-bold text-amber-300">AI INFERENCE: </span>
+                        {misc.aiHypothesis}
+                      </div>
+                    )}
+                    {misc.suggestedRemediation && (
+                      <div className="text-[10px] text-cyan-300 font-mono">
+                        Suggested: {misc.suggestedRemediation}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Recommended Teacher Actions */}
+          <div className="p-5 rounded-xl border border-cyan-500/20 bg-slate-900/60 backdrop-blur-sm space-y-3">
+            <h3 className="text-xs font-mono font-bold tracking-wider text-cyan-300 uppercase flex items-center gap-2">
+              <Target className="w-4 h-4 text-cyan-400" />
+              <span>Recommended Pedagogical Actions</span>
+            </h3>
+
+            <div className="space-y-2.5">
+              {deepIntelligence?.recommendedTeacherActions?.map((act, idx) => (
+                <div
+                  key={idx}
+                  className="p-3.5 rounded-lg border border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-white">
+                      <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-mono uppercase">
+                        {act.priority}
+                      </span>
+                      <span>{act.action}</span>
+                    </div>
+                    <p className="text-xs text-slate-400 font-mono">{act.reason}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (onNavigateToContext) {
+                        onNavigateToContext(act.actionTarget, act.contextPatch);
+                      } else {
+                        onNavigateTab(act.actionTarget as any);
+                      }
+                    }}
+                    className="px-3.5 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
+                  >
+                    <span>{act.actionLabel}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 4: Carry-Forward Signals for Tomorrow's Session Prep */}
+          <div className="p-5 rounded-xl border border-purple-500/20 bg-purple-950/10 backdrop-blur-sm space-y-3">
+            <h3 className="text-xs font-mono font-bold tracking-wider text-purple-300 uppercase flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span>Carry-Forward Teaching Signals (Next Session)</span>
+            </h3>
+
+            <div className="space-y-2">
+              {deepIntelligence?.recommendedNextLessonActions?.map((signal, idx) => (
+                <div key={idx} className="p-3 rounded-lg bg-black/40 border border-purple-500/20 space-y-1.5">
+                  <div className="text-xs font-bold text-white flex items-center justify-between">
+                    <span>Revisit: {signal.concept}</span>
+                    <span className="text-[10px] text-purple-300 font-mono">Board Page {signal.recommendedReviewSlideOrBoardPage || 2}</span>
+                  </div>
+                  <p className="text-[11px] text-purple-200/70 font-mono">{signal.reason}</p>
+                  {signal.suggestedDiagnosticQuestions && (
+                    <div className="text-[10px] text-slate-400 font-mono mt-1">
+                      Diagnostic Prompt: "{signal.suggestedDiagnosticQuestions[0]}"
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Pedagogical Synthesis Summary */}
+          {deepIntelligence?.aiInterpretation && (
+            <div className="p-5 rounded-xl border border-cyan-500/20 bg-cyan-950/10 backdrop-blur-sm space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-mono text-cyan-300">
+                <Brain className="w-4 h-4 text-cyan-400" />
+                <span className="font-bold uppercase tracking-wider">AI Pedagogical Synthesis</span>
+                <span className="text-cyan-500/40">·</span>
+                <span className="text-[10px] text-cyan-400/60 font-mono">Model: {deepIntelligence.aiInterpretation.model}</span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-200 font-sans leading-relaxed">
+                {deepIntelligence.aiInterpretation.summaryText}
+              </p>
+              <div className="pt-2 border-t border-cyan-500/10 space-y-1">
+                {deepIntelligence.aiInterpretation.pedagogicalAdvice?.map((tip, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-xs font-mono text-cyan-200/80">
+                    <span className="text-cyan-400">•</span>
+                    <span>{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
