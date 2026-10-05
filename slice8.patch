@@ -1,0 +1,1094 @@
+diff --git a/data/jarvis-db.json b/data/jarvis-db.json
+index 8fad064..c3f9a33 100644
+--- a/data/jarvis-db.json
++++ b/data/jarvis-db.json
+@@ -1259,7 +1259,8 @@
+           "size": "520 KB",
+           "uploadedAt": "2026-09-18"
+         }
+-      ]
++      ],
++      "institutionId": "inst-stark-academy"
+     },
+     {
+       "id": "class-math-240",
+@@ -1302,7 +1303,8 @@
+           "size": "410 KB",
+           "uploadedAt": "2026-09-26"
+         }
+-      ]
++      ],
++      "institutionId": "inst-stark-academy"
+     },
+     {
+       "id": "class-cs-420",
+diff --git a/server/auth/tokens.ts b/server/auth/tokens.ts
+index 2c894ab..765f674 100644
+--- a/server/auth/tokens.ts
++++ b/server/auth/tokens.ts
+@@ -3,7 +3,14 @@ import type { User } from '../data/types.ts';
+ import type { IJarvisDataRepository } from '../data/repository.ts';
+ import { jarvisData } from '../data/index.ts';
+ export class AuthenticationError extends Error {
+-  constructor(message: string, public statusCode = 401, public code = 'UNAUTHENTICATED') { super(message); this.name = 'AuthenticationError'; }
++  public statusCode: number;
++  public code: string;
++  constructor(message: string, statusCode = 401, code = 'UNAUTHENTICATED') {
++    super(message);
++    this.name = 'AuthenticationError';
++    this.statusCode = statusCode;
++    this.code = code;
++  }
+ }
+ 
+ export interface AuthTokenPayload { sub: string; iat: number; exp: number; jti: string; }
+@@ -33,7 +40,10 @@ export function verifyAuthToken(value: string, signingSecret = secret()): AuthTo
+ }
+ 
+ export class AuthService {
+-  constructor(private readonly repo: IJarvisDataRepository = jarvisData) {}
++  private readonly repo: IJarvisDataRepository;
++  constructor(repo: IJarvisDataRepository = jarvisData) {
++    this.repo = repo;
++  }
+   issueToken(user: User, expiresInMs = 24 * 60 * 60 * 1000): string { const now = Date.now(); return signAuthPayload({ sub: user.id, iat: now, exp: now + expiresInMs, jti: crypto.randomUUID() }); }
+   async authenticateToken(token: string): Promise<User> { const payload = verifyAuthToken(token); const user = await this.repo.users.getById(payload.sub); if (!user) throw new AuthenticationError('Unknown credential subject.', 401, 'INVALID_CREDENTIALS'); return user; }
+ }
+diff --git a/server/sectors/education/classroomRoutes.ts b/server/sectors/education/classroomRoutes.ts
+index 0c19f95..43c59b4 100644
+--- a/server/sectors/education/classroomRoutes.ts
++++ b/server/sectors/education/classroomRoutes.ts
+@@ -1,18 +1,26 @@
+ // Milestone 12: Smart Classroom REST & Realtime API Routes (Hardened & Secure)
+ import express, { type Request, type Response } from 'express';
+-import { jarvisData } from '../../data/index.ts';
++import { jarvisData, INITIAL_DATABASE_SCHEMA } from '../../data/index.ts';
+ import { classroomService } from './classroomService.ts';
+ import { classroomEventBus } from './classroomEventBus.ts';
+-import { authenticateRequest, AuthenticationError, extractAuthToken, ticketService } from '../../auth/index.ts';
+-import type { User } from '../../data/types.ts';
++import { AuthenticationError, ticketService } from '../../auth/index.ts';
++import { requirePrincipal, type AuthenticatedPrincipal } from '../../auth/principal.ts';
++import { authorizationPolicy } from '../../auth/authorizationPolicy.ts';
++import type { User, InstitutionMembership } from '../../data/types.ts';
+ 
+ export const classroomRouter = express.Router();
+ 
++classroomRouter.use(requirePrincipal);
++
+ function getParam(param: string | string[] | undefined): string {
+   if (Array.isArray(param)) return param[0] || '';
+   return param || '';
+ }
+ 
++function getMemberships(): InstitutionMembership[] {
++  return (jarvisData as any).store?.state?.institutionMemberships || (INITIAL_DATABASE_SCHEMA.institutionMemberships || []);
++}
++
+ function handleRouteError(err: any, res: Response, fallbackCode = 'CLASSROOM_ERROR') {
+   if (res.headersSent) return;
+ 
+@@ -54,10 +62,29 @@ function handleRouteError(err: any, res: Response, fallbackCode = 'CLASSROOM_ERR
+ // 1. GET /api/classroom/sessions/active - Query active live session for a course
+ classroomRouter.get('/active', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not found.' } });
++      return;
++    }
++
+     const classId = typeof req.query.classId === 'string' ? req.query.classId : 'class-phys-301';
+     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
+ 
++    const cls = await jarvisData.education.getClassById(classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: `Class '${classId}' not found.` } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
+     const session = await classroomService.getActiveSession(classId, workspaceId, currentUser);
+     res.json({ session });
+   } catch (err: any) {
+@@ -72,24 +99,18 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
+ 
+   try {
+     const sessionId = getParam(req.params.id);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
+     let currentUser: User | null = null;
+ 
+-    // 1. Authenticate via short-lived SSE ticket, auth headers, or registered SSE identity
++    // 1. Authenticate via short-lived SSE ticket or verified principal
+     if (typeof req.query.ticket === 'string' && req.query.ticket.trim().length > 0) {
+       const verified = await ticketService.verifySSETicket(req.query.ticket.trim(), sessionId);
+       currentUser = verified.user;
+     } else {
+-      const token = extractAuthToken(req) || (typeof req.query.userId === 'string' ? req.query.userId.trim() : null);
+-      if (!token) {
+-        res.status(401).json({
+-          error: { code: 'UNAUTHENTICATED', message: 'Authentication required for classroom stream.' }
+-        });
+-        return;
+-      }
+-      currentUser = await jarvisData.users.getById(token);
++      currentUser = await jarvisData.users.getById(actor.userId);
+       if (!currentUser) {
+         res.status(401).json({
+-          error: { code: 'INVALID_CREDENTIALS', message: `User '${token}' not recognized.` }
++          error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' }
+         });
+         return;
+       }
+@@ -106,7 +127,29 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
+       return;
+     }
+ 
+-    // 3. CRITICAL: Evaluate authorization BEFORE setting stream headers or subscribing to EventBus!
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({
++        error: { code: 'NOT_FOUND', message: `Class '${session.classId}' not found.` }
++      });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const principal: AuthenticatedPrincipal = {
++      userId: currentUser.id,
++      role: currentUser.role,
++      provenance: 'signed-hmac'
++    };
++    const classCheck = authorizationPolicy.canReadClass(principal, cls, memberships);
++    if (!classCheck.allowed) {
++      res.status(403).json({
++        error: { code: 'FORBIDDEN', message: classCheck.reason }
++      });
++      return;
++    }
++
++    // 3. Evaluate service-level stream policy
+     const authCheck = await classroomService.getPolicy().canSubscribeStream(currentUser, session, workspaceId);
+     if (!authCheck.allowed) {
+       const statusCode = authCheck.statusCode || 403;
+@@ -180,7 +223,13 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
+ // 3. POST /api/classroom/sessions - Create / Start Classroom Session (Teacher)
+ classroomRouter.post('/', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const { classId, workspaceId = 'ws-stark-core', title, status = 'scheduled', boardTopic } = req.body || {};
+ 
+     if (!classId) {
+@@ -188,6 +237,19 @@ classroomRouter.post('/', async (req: Request, res: Response) => {
+       return;
+     }
+ 
++    const cls = await jarvisData.education.getClassById(classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: `Class '${classId}' not found.` } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
+     const session = await classroomService.createSession(
+       { classId, workspaceId, title, status, boardTopic },
+       currentUser
+@@ -202,11 +264,29 @@ classroomRouter.post('/', async (req: Request, res: Response) => {
+ // 4. GET /api/classroom/sessions - List Sessions (with optional filters)
+ classroomRouter.get('/', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const classId = typeof req.query.classId === 'string' ? req.query.classId : undefined;
+     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
+     const status = typeof req.query.status === 'string' ? (req.query.status as any) : undefined;
+ 
++    if (classId) {
++      const cls = await jarvisData.education.getClassById(classId);
++      if (cls) {
++        const memberships = getMemberships();
++        const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++        if (!decision.allowed) {
++          res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++          return;
++        }
++      }
++    }
++
+     const sessions = await classroomService.listSessions(classId, workspaceId, currentUser, status);
+     res.json({ sessions, count: sessions.length });
+   } catch (err: any) {
+@@ -217,11 +297,27 @@ classroomRouter.get('/', async (req: Request, res: Response) => {
+ // 5. GET /api/classroom/sessions/:id - Get session details
+ classroomRouter.get('/:id', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
+ 
+     const session = await classroomService.getSession(sessionId, workspaceId, currentUser);
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (cls) {
++      const memberships = getMemberships();
++      const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++      if (!decision.allowed) {
++        res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++        return;
++      }
++    }
++
+     const participants = await jarvisData.classroom.listParticipants(sessionId, true);
+ 
+     res.json({
+@@ -237,12 +333,37 @@ classroomRouter.get('/:id', async (req: Request, res: Response) => {
+ // 6. POST /api/classroom/sessions/:id/start - Start Session
+ classroomRouter.post('/:id/start', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
+ 
+-    const session = await classroomService.startSession(sessionId, currentUser, workspaceId);
+-    res.json({ session, message: 'Classroom session is now LIVE.' });
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (!session) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found.' } });
++      return;
++    }
++
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Class not found.' } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
++    const started = await classroomService.startSession(sessionId, currentUser, workspaceId);
++    res.json({ session: started, message: 'Classroom session is now LIVE.' });
+   } catch (err: any) {
+     handleRouteError(err, res, 'START_SESSION_FAILED');
+   }
+@@ -251,12 +372,37 @@ classroomRouter.post('/:id/start', async (req: Request, res: Response) => {
+ // 7. POST /api/classroom/sessions/:id/pause - Pause Session
+ classroomRouter.post('/:id/pause', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
+ 
+-    const session = await classroomService.pauseSession(sessionId, currentUser, workspaceId);
+-    res.json({ session, message: 'Classroom session paused.' });
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (!session) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found.' } });
++      return;
++    }
++
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Class not found.' } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
++    const paused = await classroomService.pauseSession(sessionId, currentUser, workspaceId);
++    res.json({ session: paused, message: 'Classroom session paused.' });
+   } catch (err: any) {
+     handleRouteError(err, res, 'PAUSE_SESSION_FAILED');
+   }
+@@ -265,12 +411,37 @@ classroomRouter.post('/:id/pause', async (req: Request, res: Response) => {
+ // 8. POST /api/classroom/sessions/:id/resume - Resume Session
+ classroomRouter.post('/:id/resume', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
+ 
+-    const session = await classroomService.resumeSession(sessionId, currentUser, workspaceId);
+-    res.json({ session, message: 'Classroom session resumed.' });
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (!session) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found.' } });
++      return;
++    }
++
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Class not found.' } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
++    const resumed = await classroomService.resumeSession(sessionId, currentUser, workspaceId);
++    res.json({ session: resumed, message: 'Classroom session resumed.' });
+   } catch (err: any) {
+     handleRouteError(err, res, 'RESUME_SESSION_FAILED');
+   }
+@@ -279,12 +450,37 @@ classroomRouter.post('/:id/resume', async (req: Request, res: Response) => {
+ // 9. POST /api/classroom/sessions/:id/end - End Session
+ classroomRouter.post('/:id/end', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
+ 
+-    const session = await classroomService.endSession(sessionId, currentUser, workspaceId);
+-    res.json({ session, message: 'Classroom session concluded.' });
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (!session) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found.' } });
++      return;
++    }
++
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Class not found.' } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
++    const ended = await classroomService.endSession(sessionId, currentUser, workspaceId);
++    res.json({ session: ended, message: 'Classroom session concluded.' });
+   } catch (err: any) {
+     handleRouteError(err, res, 'END_SESSION_FAILED');
+   }
+@@ -293,10 +489,35 @@ classroomRouter.post('/:id/end', async (req: Request, res: Response) => {
+ // 10. POST /api/classroom/sessions/:id/join - Student Join Session
+ classroomRouter.post('/:id/join', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const { workspaceId = 'ws-stark-core', deviceType = 'web' } = req.body || {};
+ 
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (!session) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found.' } });
++      return;
++    }
++
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Class not found.' } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
+     const result = await classroomService.joinSession(sessionId, currentUser, workspaceId, deviceType);
+     res.json({
+       session: result.session,
+@@ -311,7 +532,13 @@ classroomRouter.post('/:id/join', async (req: Request, res: Response) => {
+ // 11. POST /api/classroom/sessions/:id/leave - Student Leave Session
+ classroomRouter.post('/:id/leave', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
+ 
+@@ -329,7 +556,13 @@ classroomRouter.post('/:id/leave', async (req: Request, res: Response) => {
+ // 12. POST /api/classroom/sessions/:id/presence - Student Heartbeat
+ classroomRouter.post('/:id/presence', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = req.body?.workspaceId || (typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core');
+ 
+@@ -343,11 +576,30 @@ classroomRouter.post('/:id/presence', async (req: Request, res: Response) => {
+ // 13. GET /api/classroom/sessions/:id/presence - List Participants
+ classroomRouter.get('/:id/presence', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
+     const onlyConnected = req.query.connected === 'true';
+ 
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (session) {
++      const cls = await jarvisData.education.getClassById(session.classId);
++      if (cls) {
++        const memberships = getMemberships();
++        const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++        if (!decision.allowed) {
++          res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++          return;
++        }
++      }
++    }
++
+     const participants = await classroomService.listParticipants(sessionId, workspaceId, currentUser, onlyConnected);
+     res.json({
+       sessionId,
+@@ -363,11 +615,27 @@ classroomRouter.get('/:id/presence', async (req: Request, res: Response) => {
+ // 14. GET /api/classroom/sessions/:id/state - Get Board State
+ classroomRouter.get('/:id/state', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const workspaceId = typeof req.query.workspaceId === 'string' ? req.query.workspaceId : 'ws-stark-core';
+ 
+     const session = await classroomService.getSession(sessionId, workspaceId, currentUser);
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (cls) {
++      const memberships = getMemberships();
++      const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++      if (!decision.allowed) {
++        res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++        return;
++      }
++    }
++
+     res.json({
+       sessionId: session.id,
+       boardState: session.boardState,
+@@ -382,7 +650,13 @@ classroomRouter.get('/:id/state', async (req: Request, res: Response) => {
+ // 15. PUT /api/classroom/sessions/:id/state - Update Smart Board State (Teacher)
+ classroomRouter.put('/:id/state', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const { state, currentTopic, activeSlideIndex, message, workspaceId = 'ws-stark-core' } = req.body || {};
+ 
+@@ -391,6 +665,25 @@ classroomRouter.put('/:id/state', async (req: Request, res: Response) => {
+       return;
+     }
+ 
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (!session) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found.' } });
++      return;
++    }
++
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Class not found.' } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
+     const updatedState = await classroomService.updateBoardState(
+       sessionId,
+       { state, currentTopic, activeSlideIndex, message },
+@@ -407,7 +700,13 @@ classroomRouter.put('/:id/state', async (req: Request, res: Response) => {
+ // Also support POST on state for flexibility
+ classroomRouter.post('/:id/state', async (req: Request, res: Response) => {
+   try {
+-    const currentUser = await authenticateRequest(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
++      return;
++    }
++
+     const sessionId = getParam(req.params.id);
+     const { state, currentTopic, activeSlideIndex, message, workspaceId = 'ws-stark-core' } = req.body || {};
+ 
+@@ -416,6 +715,25 @@ classroomRouter.post('/:id/state', async (req: Request, res: Response) => {
+       return;
+     }
+ 
++    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
++    if (!session) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Session not found.' } });
++      return;
++    }
++
++    const cls = await jarvisData.education.getClassById(session.classId);
++    if (!cls) {
++      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Class not found.' } });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
++      return;
++    }
++
+     const updatedState = await classroomService.updateBoardState(
+       sessionId,
+       { state, currentTopic, activeSlideIndex, message },
+diff --git a/server/sectors/education/live/liveClassroomRoutes.ts b/server/sectors/education/live/liveClassroomRoutes.ts
+index 7439f37..0169ebe 100644
+--- a/server/sectors/education/live/liveClassroomRoutes.ts
++++ b/server/sectors/education/live/liveClassroomRoutes.ts
+@@ -1,37 +1,47 @@
+ // REST API Routes for Phase D.14: Student Live Classroom Surface
+-
+ import { Router, type Request, type Response } from 'express';
+ import { liveClassroomService } from './liveClassroomService.ts';
+-import { classroomEventBus } from '../classroomEventBus.ts';
+-import { jarvisData } from '../../../data/index.ts';
+-import type { User } from '../../../data/types.ts';
++import { jarvisData, INITIAL_DATABASE_SCHEMA } from '../../../data/index.ts';
++import { requirePrincipal, type AuthenticatedPrincipal } from '../../../auth/principal.ts';
++import { authorizationPolicy } from '../../../auth/authorizationPolicy.ts';
++import type { InstitutionMembership } from '../../../data/types.ts';
+ 
+ export const liveClassroomRouter = Router();
+ 
+-function getAuthUser(req: Request): User {
+-  const userId = (req.headers['x-jarvis-user-id'] as string) || (req.headers['x-user-id'] as string) || (req.query.userId as string) || 'student-1';
+-  const role = (req.headers['x-jarvis-user-role'] as string) || (req.headers['x-user-role'] as string) || (req.query.role as string) || (userId.startsWith('teacher') ? 'teacher' : 'student');
+-
+-  return {
+-    id: userId,
+-    displayName: role === 'student' ? 'Alex Chen' : 'Dr. Helen Cho',
+-    email: `${userId}@starkacademy.edu`,
+-    role: role as any,
+-    institutionId: 'inst-stark-academy',
+-    workspaceId: 'ws-stark-core',
+-    createdAt: new Date().toISOString()
+-  };
++liveClassroomRouter.use(requirePrincipal);
++
++function getMemberships(): InstitutionMembership[] {
++  return (jarvisData as any).store?.state?.institutionMemberships || (INITIAL_DATABASE_SCHEMA.institutionMemberships || []);
+ }
+ 
+ // 1. GET /api/education/live-classroom/:classId - Retrieve authoritative Live Classroom state
+ liveClassroomRouter.get('/:classId', async (req: Request, res: Response) => {
+   try {
+-    const user = getAuthUser(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
++      return;
++    }
++
+     const classId = req.params.classId as string;
++    const cls = await jarvisData.education.getClassById(classId);
++    if (!cls) {
++      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ ok: false, error: decision.reason });
++      return;
++    }
++
+     const sessionId = req.query.sessionId as string | undefined;
+-    const workspaceId = (req.query.workspaceId as string) || user.workspaceId;
++    const workspaceId = (req.query.workspaceId as string) || currentUser.workspaceId || 'ws-stark-core';
+ 
+-    const state = await liveClassroomService.getLiveClassroomState(user, classId, { sessionId, workspaceId });
++    const state = await liveClassroomService.getLiveClassroomState(currentUser, classId, { sessionId, workspaceId });
+     res.json({ ok: true, state });
+   } catch (err: any) {
+     const is403 = err?.message?.includes('403') || err?.message?.includes('Forbidden');
+@@ -42,11 +52,30 @@ liveClassroomRouter.get('/:classId', async (req: Request, res: Response) => {
+ // 2. POST /api/education/live-classroom/:classId/notes - Save private student notes
+ liveClassroomRouter.post('/:classId/notes', async (req: Request, res: Response) => {
+   try {
+-    const user = getAuthUser(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
++      return;
++    }
++
+     const classId = req.params.classId as string;
++    const cls = await jarvisData.education.getClassById(classId);
++    if (!cls) {
++      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ ok: false, error: decision.reason });
++      return;
++    }
++
+     const { sessionId, lessonId, boardDocumentId, pageId, pageIndex, content } = req.body;
+ 
+-    const result = await liveClassroomService.saveStudentNotes(user, classId, {
++    const result = await liveClassroomService.saveStudentNotes(currentUser, classId, {
+       sessionId,
+       lessonId,
+       boardDocumentId,
+@@ -65,8 +94,27 @@ liveClassroomRouter.post('/:classId/notes', async (req: Request, res: Response)
+ // 3. POST /api/education/live-classroom/:classId/ask - Ask Jarvis bounded in-class questions
+ liveClassroomRouter.post('/:classId/ask', async (req: Request, res: Response) => {
+   try {
+-    const user = getAuthUser(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
++      return;
++    }
++
+     const classId = req.params.classId as string;
++    const cls = await jarvisData.education.getClassById(classId);
++    if (!cls) {
++      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
++      return;
++    }
++
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ ok: false, error: decision.reason });
++      return;
++    }
++
+     const { query, sessionId, boardDocumentId, pageIndex, lessonId } = req.body;
+ 
+     if (!query || typeof query !== 'string') {
+@@ -74,7 +122,7 @@ liveClassroomRouter.post('/:classId/ask', async (req: Request, res: Response) =>
+       return;
+     }
+ 
+-    const response = await liveClassroomService.askJarvisInLiveClass(user, query, {
++    const response = await liveClassroomService.askJarvisInLiveClass(currentUser, query, {
+       classId,
+       sessionId,
+       boardDocumentId,
+@@ -92,16 +140,30 @@ liveClassroomRouter.post('/:classId/ask', async (req: Request, res: Response) =>
+ // 4. POST /api/education/live-classroom/:classId/quiz/submit - Student submits in-class formative quiz answer
+ liveClassroomRouter.post('/:classId/quiz/submit', async (req: Request, res: Response) => {
+   try {
+-    const user = getAuthUser(req);
++    const actor = res.locals.principal as AuthenticatedPrincipal;
++    const currentUser = await jarvisData.users.getById(actor.userId);
++    if (!currentUser) {
++      res.status(401).json({ ok: false, error: 'Authenticated user not found.' });
++      return;
++    }
++
+     const classId = req.params.classId as string;
+-    const { quizId, questionId, selectedOptionIndex } = req.body;
++    const cls = await jarvisData.education.getClassById(classId);
++    if (!cls) {
++      res.status(404).json({ ok: false, error: `Class '${classId}' does not exist.` });
++      return;
++    }
+ 
+-    if (user.role !== 'student') {
+-      res.status(400).json({ ok: false, error: 'Only student participants can submit quiz responses.' });
++    const memberships = getMemberships();
++    const decision = authorizationPolicy.canWriteSubmission(actor, cls, memberships);
++    if (!decision.allowed) {
++      res.status(403).json({ ok: false, error: decision.reason });
+       return;
+     }
+ 
+-    // Return deterministic submission result
++    const { quizId, questionId, selectedOptionIndex } = req.body;
++
++    // Return deterministic submission result bound to the verified principal ID
+     const isCorrect = selectedOptionIndex === 1; // [a, a†] = 1 is correct
+     const pointsAwarded = isCorrect ? 10 : 0;
+ 
+@@ -109,7 +171,7 @@ liveClassroomRouter.post('/:classId/quiz/submit', async (req: Request, res: Resp
+       ok: true,
+       quizId,
+       questionId,
+-      studentId: user.id,
++      studentId: currentUser.id,
+       selectedOptionIndex,
+       isCorrect,
+       pointsAwarded,
+diff --git a/tests/http_classroom_boundary.test.ts b/tests/http_classroom_boundary.test.ts
+new file mode 100644
+index 0000000..c7e0d24
+--- /dev/null
++++ b/tests/http_classroom_boundary.test.ts
+@@ -0,0 +1,250 @@
++import assert from 'node:assert';
++import crypto from 'node:crypto';
++import { startHttpHarness } from './httpHarness.ts';
++import { signAuthPayload } from '../server/auth/tokens.ts';
++import { jarvisData } from '../server/data/index.ts';
++
++console.log('=== [WEB JARVIS] HTTP CLASSROOM & LIVE BOUNDARY TEST SUITE ===');
++
++async function runTests() {
++  const harness = await startHttpHarness();
++  const { baseUrl, tokenFor } = harness;
++
++  try {
++    const student1Id = 'student-1';
++    const student2Id = 'student-2';
++    const teacher1Id = 'teacher-1';
++
++    // Seed foreign user (registered user with NO membership in Stark Academy)
++    let foreignStudent = await jarvisData.users.getById('student-foreign');
++    if (!foreignStudent) {
++      foreignStudent = await jarvisData.users.create({
++        id: 'student-foreign',
++        displayName: 'Foreign Student',
++        email: 'foreign@other-inst.edu',
++        role: 'student',
++        avatarUrl: '',
++        department: 'Science'
++      });
++    }
++
++    let foreignTeacher = await jarvisData.users.getById('teacher-foreign');
++    if (!foreignTeacher) {
++      foreignTeacher = await jarvisData.users.create({
++        id: 'teacher-foreign',
++        displayName: 'Foreign Teacher',
++        email: 'foreign-teacher@other-inst.edu',
++        role: 'teacher',
++        avatarUrl: '',
++        department: 'Physics'
++      });
++    }
++
++    const tokenStudent1 = await tokenFor(student1Id);
++    const tokenStudent2 = await tokenFor(student2Id);
++    const tokenTeacher1 = await tokenFor(teacher1Id);
++    const tokenForeignStudent = await tokenFor('student-foreign');
++    const tokenForeignTeacher = await tokenFor('teacher-foreign');
++
++    // ==========================================
++    // SECTION 1: AUTHENTICATION FAIL-CLOSED TESTS
++    // ==========================================
++
++    // 1. Classroom request without token -> 401
++    let res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-phys-301`);
++    assert.strictEqual(res.status, 401, '1. Missing token must return 401');
++
++    // 2. Malformed token -> 401
++    res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-phys-301`, {
++      headers: { 'Authorization': 'Bearer not.a.valid.jwt.token' }
++    });
++    assert.strictEqual(res.status, 401, '2. Malformed token must return 401');
++
++    // 3. Forged token signature -> 401
++    const parts = tokenStudent1.split('.');
++    const forgedToken = `${parts[0]}.${parts[1]}.tampered_signature_xyz`;
++    res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-phys-301`, {
++      headers: { 'Authorization': `Bearer ${forgedToken}` }
++    });
++    assert.strictEqual(res.status, 401, '3. Forged signature must return 401');
++
++    // 4. Expired token -> 401
++    const expiredPayload = {
++      sub: student1Id,
++      iat: Date.now() - 3600000,
++      exp: Date.now() - 10000,
++      jti: crypto.randomUUID()
++    };
++    const expiredToken = signAuthPayload(expiredPayload, process.env.JARVIS_AUTH_SECRET!);
++    res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-phys-301`, {
++      headers: { 'Authorization': `Bearer ${expiredToken}` }
++    });
++    assert.strictEqual(res.status, 401, '4. Expired token must return 401');
++
++    // ==========================================
++    // SECTION 2: IDENTITY SPOOFING TESTS
++    // ==========================================
++
++    // 5. Valid Student 1 + x-user-id / x-jarvis-user-id = student-2 cannot impersonate student-2
++    // Active session lookup returns state under Student 1's authentic principal
++    res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-phys-301`, {
++      headers: {
++        'Authorization': `Bearer ${tokenStudent1}`,
++        'x-user-id': student2Id,
++        'x-jarvis-user-id': student2Id,
++        'x-user-role': 'teacher'
++      }
++    });
++    assert.strictEqual(res.status, 200, '5. Authorized request must succeed');
++    const activeData = await res.json();
++    assert('session' in activeData, 'Must return session field for class');
++
++    // 6. Student 1 attempts to create a session with forged x-user-role='teacher' -> 403
++    res = await fetch(`${baseUrl}/api/classroom/sessions`, {
++      method: 'POST',
++      headers: {
++        'Content-Type': 'application/json',
++        'Authorization': `Bearer ${tokenStudent1}`,
++        'x-user-role': 'teacher',
++        'x-user-id': teacher1Id
++      },
++      body: JSON.stringify({
++        classId: 'class-phys-301',
++        title: 'Forged Session from Student'
++      })
++    });
++    assert.strictEqual(res.status, 403, '6. Student with forged teacher role cannot create session');
++
++    // 7. Teacher Foreign attempts to manage Stark Academy class -> 403
++    res = await fetch(`${baseUrl}/api/classroom/sessions`, {
++      method: 'POST',
++      headers: {
++        'Content-Type': 'application/json',
++        'Authorization': `Bearer ${tokenForeignTeacher}`
++      },
++      body: JSON.stringify({
++        classId: 'class-phys-301',
++        title: 'Foreign Teacher Session'
++      })
++    });
++    assert.strictEqual(res.status, 403, '7. Foreign teacher without institution membership cannot create session');
++
++    // ==========================================
++    // SECTION 3: CLASS & TENANT BOUNDARY TESTS
++    // ==========================================
++
++    // 8. Student 1 can access authorized class/session
++    res = await fetch(`${baseUrl}/api/classroom/sessions?classId=class-phys-301`, {
++      headers: { 'Authorization': `Bearer ${tokenStudent1}` }
++    });
++    assert.strictEqual(res.status, 200, '8. Authorized student can list class sessions');
++
++    // 9. Foreign student gets 403 on class-phys-301
++    res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-phys-301`, {
++      headers: { 'Authorization': `Bearer ${tokenForeignStudent}` }
++    });
++    assert.strictEqual(res.status, 403, '9. Foreign student gets 403 on institutional class');
++
++    // 10. Foreign teacher cannot access Stark Academy class
++    res = await fetch(`${baseUrl}/api/classroom/sessions?classId=class-phys-301`, {
++      headers: { 'Authorization': `Bearer ${tokenForeignTeacher}` }
++    });
++    assert.strictEqual(res.status, 403, '10. Foreign teacher gets 403');
++
++    // 11. Missing institution metadata on unmapped class (class-cs-420) fails closed -> 403
++    res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-cs-420`, {
++      headers: { 'Authorization': `Bearer ${tokenStudent1}` }
++    });
++    assert.strictEqual(res.status, 403, '11. Class without institutionId fails closed with 403');
++
++    // ==========================================
++    // SECTION 4: LIVE CLASSROOM ENDPOINT TESTS
++    // ==========================================
++
++    // 12. Authenticated student can access authorized live classroom
++    res = await fetch(`${baseUrl}/api/education/live-classroom/class-phys-301`, {
++      headers: { 'Authorization': `Bearer ${tokenStudent1}` }
++    });
++    assert.strictEqual(res.status, 200, '12. Enrolled student can read live classroom state');
++    const liveData = await res.json();
++    assert.strictEqual(liveData.ok, true, 'Live classroom response should be ok');
++    assert(liveData.state, 'Live classroom state must be present');
++
++    // 13. Student notes saving uses verified principal (ignores body spoofing)
++    res = await fetch(`${baseUrl}/api/education/live-classroom/class-phys-301/notes`, {
++      method: 'POST',
++      headers: {
++        'Content-Type': 'application/json',
++        'Authorization': `Bearer ${tokenStudent1}`
++      },
++      body: JSON.stringify({
++        sessionId: 'session-seed-phys-1',
++        content: 'Quantum harmonic oscillator derivation notes',
++        studentId: student2Id // Spoofed ID
++      })
++    });
++    assert.strictEqual(res.status, 200, '13. Saving notes succeeds for enrolled student');
++    const notesResult = await res.json();
++    assert.strictEqual(notesResult.ok, true);
++
++    // 14. Student cannot perform teacher-only state update on classroom session -> 403
++    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/state`, {
++      method: 'PUT',
++      headers: {
++        'Content-Type': 'application/json',
++        'Authorization': `Bearer ${tokenStudent1}`
++      },
++      body: JSON.stringify({
++        state: 'drawing',
++        currentTopic: 'Tampered Topic'
++      })
++    });
++    assert.strictEqual(res.status, 403, '14. Student cannot update smart board state (403)');
++
++    // 15. Authorized teacher can perform legitimate teacher operations
++    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/state`, {
++      method: 'PUT',
++      headers: {
++        'Content-Type': 'application/json',
++        'Authorization': `Bearer ${tokenTeacher1}`
++      },
++      body: JSON.stringify({
++        state: 'lesson',
++        currentTopic: 'Bra-ket Dirac Notation'
++      })
++    });
++    assert.strictEqual(res.status, 200, '15. Assigned teacher can update smart board state (200)');
++
++    // 16. Cross-institution live session access -> 403
++    res = await fetch(`${baseUrl}/api/education/live-classroom/class-phys-301`, {
++      headers: { 'Authorization': `Bearer ${tokenForeignStudent}` }
++    });
++    assert.strictEqual(res.status, 403, '16. Cross-institution live classroom access returns 403');
++
++    // 17. Live quiz submission by enrolled student
++    res = await fetch(`${baseUrl}/api/education/live-classroom/class-phys-301/quiz/submit`, {
++      method: 'POST',
++      headers: {
++        'Content-Type': 'application/json',
++        'Authorization': `Bearer ${tokenStudent1}`
++      },
++      body: JSON.stringify({
++        quizId: 'quiz-phys-quantum-1',
++        questionId: 'q-1',
++        selectedOptionIndex: 1
++      })
++    });
++    assert.strictEqual(res.status, 200, '17. Enrolled student can submit quiz');
++    const quizResult = await res.json();
++    assert.strictEqual(quizResult.studentId, student1Id, 'Quiz submission must be recorded under principal ID');
++
++    console.log('[TEST] All HTTP Classroom & Live Boundary integration tests PASSED.');
++  } finally {
++    await harness.close();
++  }
++}
++
++runTests().catch((err) => {
++  console.error('[ERROR] Classroom boundary tests failed:', err);
++  process.exit(1);
++});
