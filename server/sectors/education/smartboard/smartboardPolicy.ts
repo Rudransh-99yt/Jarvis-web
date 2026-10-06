@@ -28,12 +28,12 @@ export class SmartBoardPolicy {
       return { allowed: false, statusCode: 401, reason: 'Unauthenticated: User identity required.' };
     }
 
-    if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander' && user.role !== 'principal') {
+    if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander') {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Only verified faculty may operate SmartBoard hardware.' };
     }
 
     // Verify institutional boundary
-    if (board.institutionId !== 'inst-stark-academy') {
+    if (!user.institutionId || (board.institutionId && user.institutionId !== board.institutionId)) {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Cross-institution hardware control is prohibited.' };
     }
 
@@ -78,7 +78,7 @@ export class SmartBoardPolicy {
 
   /**
    * 3. Validates whether a user can read a BoardDocument.
-   * Teachers/Admins can read any document.
+   * Teachers/Admins can read any document within their institution.
    * Students can only read released documents and MUST NOT receive teacher private notes or answer keys.
    */
   async canReadDocument(
@@ -87,6 +87,14 @@ export class SmartBoardPolicy {
   ): Promise<SmartBoardPolicyResult> {
     if (!user || !user.id) {
       return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
+    }
+
+    if (!user.institutionId) {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Missing institutional tenant context.' };
+    }
+
+    if (doc.institutionId && user.institutionId !== doc.institutionId) {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Cross-institution document access is prohibited.' };
     }
 
     if (user.role === 'teacher' || user.role === 'admin' || user.role === 'commander' || user.role === 'principal') {
@@ -99,6 +107,31 @@ export class SmartBoardPolicy {
           allowed: false,
           statusCode: 403,
           reason: 'Forbidden: This board document has not yet been released to students by the instructor.'
+        };
+      }
+      if (doc.classId) {
+        const cls = await this.repo.education.getClassById(doc.classId);
+        if (cls && cls.studentIds && !cls.studentIds.includes(user.id)) {
+          return {
+            allowed: false,
+            statusCode: 403,
+            reason: `Forbidden: Student '${user.id}' is not enrolled in class '${doc.classId}'.`
+          };
+        }
+      }
+      return { allowed: true };
+    }
+
+    if (user.role === 'parent') {
+      const { familyService } = await import('../family/familyService.ts');
+      const children = await familyService.getChildrenForParent(user.id);
+      const childStudentIds = children.map((c) => c.studentId);
+      const cls = await this.repo.education.getClassById(doc.classId);
+      if (!cls || !cls.studentIds.some((sid) => childStudentIds.includes(sid))) {
+        return {
+          allowed: false,
+          statusCode: 403,
+          reason: 'Parent cannot view document for class where no linked child is enrolled'
         };
       }
       return { allowed: true };
@@ -122,7 +155,15 @@ export class SmartBoardPolicy {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Students cannot modify board canvas documents.' };
     }
 
-    if (user.role === 'teacher' && doc.teacherId !== user.id && user.id !== 'teacher-1') {
+    if (user.role === 'principal') {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Leadership oversight is read-only.' };
+    }
+
+    if (!user.institutionId || (doc.institutionId && user.institutionId !== doc.institutionId)) {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Cross-institution document modification is prohibited.' };
+    }
+
+    if (user.role === 'teacher' && doc.teacherId !== user.id) {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Only the assigned instructor may edit this board document.' };
     }
 
@@ -144,7 +185,15 @@ export class SmartBoardPolicy {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Students cannot release documents.' };
     }
 
-    if (user.role === 'teacher' && doc.teacherId !== user.id && user.id !== 'teacher-1') {
+    if (user.role === 'principal') {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Leadership oversight cannot release documents.' };
+    }
+
+    if (!user.institutionId || (doc.institutionId && user.institutionId !== doc.institutionId)) {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Cross-institution document release is prohibited.' };
+    }
+
+    if (user.role === 'teacher' && doc.teacherId !== user.id) {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Only the assigned instructor may release this board document.' };
     }
 
@@ -156,10 +205,25 @@ export class SmartBoardPolicy {
    */
   async canViewBoardHistory(
     user: User,
-    _classId: string
+    classId: string
   ): Promise<SmartBoardPolicyResult> {
     if (!user || !user.id) {
       return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
+    }
+
+    if (!user.institutionId) {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Missing institutional tenant context.' };
+    }
+
+    if (user.role === 'student' && classId) {
+      const cls = await this.repo.education.getClassById(classId);
+      if (cls && cls.studentIds && !cls.studentIds.includes(user.id)) {
+        return {
+          allowed: false,
+          statusCode: 403,
+          reason: `Forbidden: Student '${user.id}' is not enrolled in class '${classId}'.`
+        };
+      }
     }
 
     return { allowed: true };

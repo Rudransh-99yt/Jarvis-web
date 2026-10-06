@@ -379,7 +379,7 @@ export class SmartBoardService {
         docId,
         version: savedDoc.version,
         activePageIndex: savedDoc.activePageIndex,
-        pageCount: savedDoc.pages.length,
+        pageCount: savedDoc.pages?.length || 0,
         lastAutosavedAt: savedDoc.timestamps.lastAutosavedAt
       },
       timestamp: new Date().toISOString()

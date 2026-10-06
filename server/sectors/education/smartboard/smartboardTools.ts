@@ -7,19 +7,10 @@ import type { User } from '../../../data/types.ts';
 import { jarvisData } from '../../../data/index.ts';
 
 async function resolveUserFromContext(context: ToolExecutionContext): Promise<User> {
-
-  if (!context.userId) throw new Error("userId missing in tool context");
-  const userId = context.userId;
-    
-  const user = await jarvisData.users.getById(userId);
-  if (user) return user;
-  return {
-    id: userId,
-    displayName: context.role === 'student' ? 'Alex Chen' : 'Dr. Sarah',
-    email: 'user@starkacademy.edu',
-    role: (context.role as any) || 'teacher',
-    createdAt: new Date().toISOString()
-  };
+  if (!context.userId) throw new Error('userId missing in tool context');
+  const user = await jarvisData.users.getById(context.userId);
+  if (!user) throw new Error(`Tool execution error: User '${context.userId}' is not a registered user.`);
+  return user;
 }
 
 // 1. Tool: smartboard.device.list

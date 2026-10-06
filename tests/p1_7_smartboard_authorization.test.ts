@@ -159,7 +159,7 @@ async function runSmartboardAuthorizationTests() {
     // Test 2: Forged raw user ID header -> 401
     {
       const res = await fetch(`${baseUrl}/devices`, {
-        headers: { Authorization: 'Bearer teacher-1', 'Authorization': `Bearer ${await authService.issueToken(await jarvisData.users.getById('teacher-1') || { id: 'teacher-1', role: 'student' } as any)}`}
+        headers: { Authorization: 'Bearer teacher-1', 'x-user-id': 'teacher-1' }
       });
       assert.strictEqual(res.status, 401, 'Raw user ID header must be rejected');
       console.log('[PASS] Test 2: Raw user ID header strictly rejected with 401');
@@ -261,7 +261,8 @@ async function runSmartboardAuthorizationTests() {
       });
       assert.strictEqual(res.status, 200);
       const data = await res.json();
-      assert.strictEqual(data.board.status, 'PAIRED');
+      assert(data.board.status === 'LIVE' || data.board.status === 'READY');
+      assert.strictEqual(data.board.pairingState.isPaired, true);
       assert(data.ticket && typeof data.ticket === 'string');
       console.log('[PASS] Test 9b: Authorized teacher pairs with board successfully');
     }

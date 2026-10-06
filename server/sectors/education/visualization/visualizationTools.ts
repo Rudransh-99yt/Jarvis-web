@@ -7,18 +7,14 @@ import type { User } from '../../../../server/data/types.ts';
 import { jarvisData } from '../../../../server/data/index.ts';
 
 async function resolveUserFromContext(context: ToolExecutionContext): Promise<User> {
-  const userId = context.userId || (context.role === 'student' ? 'student-1' : 'teacher-1');
-  const user = await jarvisData.users.getById(userId);
-  if (user) return user;
-  return {
-    id: userId,
-    displayName: context.role === 'student' ? 'Alex Chen' : 'Dr. Helen Cho',
-    email: 'user@starkacademy.edu',
-    role: (context.role as any) || 'teacher',
-    institutionId: 'inst-stark-academy',
-    workspaceId: 'ws-main',
-    createdAt: new Date().toISOString()
-  };
+  if (!context.userId) {
+    throw new Error('Tool execution error: Unauthenticated tool context (missing userId).');
+  }
+  const user = await jarvisData.users.getById(context.userId);
+  if (!user) {
+    throw new Error(`Tool execution error: User '${context.userId}' is not a registered user.`);
+  }
+  return user;
 }
 
 export const validateVisualizationTool: ToolDefinition<{ payload: any }> = {

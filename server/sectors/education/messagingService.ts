@@ -45,7 +45,7 @@ export class MessagingService {
 
     if (currentUser.role === 'teacher') {
       // Teachers can access classes they instruct or within their educational workspace
-      if (cls.instructorId === currentUser.id || currentUser.id === 'teacher-1') {
+      if (cls.instructorId === currentUser.id) {
         return { allowed: true, cls };
       }
       return { allowed: false, reason: `Teacher '${currentUser.id}' is not assigned to course '${cls.code}'.` };

@@ -62,7 +62,7 @@ export class ClassSessionPolicy {
     }
 
     // Role check: Only assigned instructor or system admin/commander can create/prepare sessions
-    const isInstructor = cls.instructorId === user.id || cls.instructorName === user.displayName || user.id === 'teacher-1';
+    const isInstructor = cls.instructorId === user.id;
     const isSystemAdmin = user.role === 'commander' || user.role === 'admin';
 
     if (!isInstructor && !isSystemAdmin) {
@@ -89,7 +89,8 @@ export class ClassSessionPolicy {
       };
     }
 
-    const isOwner = session.teacherId === user.id || user.id === 'teacher-1';
+    const sessionTeacherId = session.teacherId || (session as any).teacher?.id;
+    const isOwner = Boolean(sessionTeacherId && sessionTeacherId === user.id);
     const isSystemAdmin = user.role === 'commander' || user.role === 'admin';
 
     if (!isOwner && !isSystemAdmin) {

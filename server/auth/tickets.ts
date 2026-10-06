@@ -5,8 +5,9 @@ import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
 import { resolveAuthSecret } from './tokens.ts';
 
-// Persistent or environment-backed secret for ticket HMAC signing
-const TICKET_SECRET = process.env.TICKET_SECRET || resolveAuthSecret();
+function getTicketSecret(): string {
+  return process.env.TICKET_SECRET || resolveAuthSecret();
+}
 
 export interface PlaybackTicketPayload {
   type: 'video_playback';
@@ -58,7 +59,7 @@ export class TicketAuthenticationError extends Error {
 function signPayload(payload: Record<string, any>): string {
   const jsonStr = JSON.stringify(payload);
   const dataB64 = Buffer.from(jsonStr, 'utf8').toString('base64url');
-  const hmac = crypto.createHmac('sha256', TICKET_SECRET).update(dataB64).digest('base64url');
+  const hmac = crypto.createHmac('sha256', getTicketSecret()).update(dataB64).digest('base64url');
   return `${dataB64}.${hmac}`;
 }
 
@@ -76,7 +77,7 @@ function verifySignature<T = any>(ticketString: string): T {
   }
 
   const [dataB64, hmac] = parts;
-  const expectedHmac = crypto.createHmac('sha256', TICKET_SECRET).update(dataB64).digest('base64url');
+  const expectedHmac = crypto.createHmac('sha256', getTicketSecret()).update(dataB64).digest('base64url');
 
   // Constant-time comparison to prevent timing attacks
   const hmacBuf = Buffer.from(hmac);

@@ -3,8 +3,9 @@ import type { User } from '../data/types.ts';
 import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
 import { AuthService, AuthenticationError } from './tokens.ts';
-export { AuthenticationError } from './tokens.ts';
-
+export * from './tokens.ts';
+export * from './capabilities.ts';
+export * from './principal.ts';
 export * from './classroomPolicy.ts';
 export * from './tickets.ts';
 

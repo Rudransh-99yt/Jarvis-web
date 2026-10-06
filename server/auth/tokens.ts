@@ -19,10 +19,10 @@ export interface AuthTokenPayload { sub: string; iat: number; exp: number; jti: 
 export function resolveAuthSecret(): string {
   const value = process.env.JARVIS_AUTH_SECRET || process.env.SESSION_SECRET;
   if (!value) {
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-      return 'jarvis-default-development-auth-secret-key-32chars';
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: Missing authentication secret in production. System fails closed.');
     }
-    throw new Error('FATAL: Missing authentication secret in production. System fails closed.');
+    return 'jarvis-default-development-auth-secret-key-32chars';
   }
   return value;
 }

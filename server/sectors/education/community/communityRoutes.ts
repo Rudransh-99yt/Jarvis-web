@@ -14,26 +14,53 @@ export const communityRouter = Router();
 /**
  * Helper to resolve user from request with development fallback
  */
-async function resolveUser(req: Request, res: any) {
-  const user = await jarvisData.users.getById(res.locals.principal!.userId);
-  if (!user) throw new Error('User not found');
-  return user;
+async function resolveUser(req: Request, res: any): Promise<User> {
+  if (res.locals?.principal?.userId) {
+    const user = await jarvisData.users.getById(res.locals.principal.userId);
+    if (user) return user;
+  }
+  return authenticateRequest(req);
 }
 
 // 1. GET /api/education/community/events - Server-Sent Events (SSE) Real-Time Stream
 communityRouter.get('/events', async (req: Request, res: Response) => {
-  if (!req.query.ticket || typeof req.query.ticket !== 'string') {
-    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Missing SSE ticket' } });
+  let actor: User;
+  let filterPayload: { classId?: string; workspaceId?: string; schoolId?: string } = {};
+
+  if (req.query.ticket && typeof req.query.ticket === 'string') {
+    try {
+      const verified = await ticketService.verifySSETicket(req.query.ticket.trim());
+      actor = verified.user;
+      filterPayload = verified.payload;
+    } catch (err: any) {
+      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: err.message } });
+      return;
+    }
+  } else {
+    try {
+      actor = await authenticateRequest(req);
+    } catch (err: any) {
+      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: err.message || 'Authentication required' } });
+      return;
+    }
+  }
+
+  // Cross-institution check
+  const requestedSchoolId = (req.query.schoolId as string) || filterPayload.schoolId;
+  if (requestedSchoolId && actor.institutionId && requestedSchoolId !== actor.institutionId) {
+    res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Cross-institution access is prohibited' } });
     return;
   }
-  let verified;
-  try {
-    verified = await ticketService.verifySSETicket(req.query.ticket.trim());
-  } catch (err: any) {
-    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: err.message } });
-    return;
+
+  // Class enrollment boundary check
+  const requestedClassId = (req.query.classId as string) || filterPayload.classId;
+  if (requestedClassId && actor.role === 'student') {
+    const cls = await jarvisData.education.getClassById(requestedClassId);
+    if (cls && cls.studentIds && !cls.studentIds.includes(actor.id)) {
+      res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Student is not enrolled in class' } });
+      return;
+    }
   }
-  const actor = verified.user;
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -44,12 +71,10 @@ communityRouter.get('/events', async (req: Request, res: Response) => {
   res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`);
 
   const onCommunityEvent = (event: any) => {
-    const payload = verified.payload;
-    if (payload.classId && event.classId && event.classId !== payload.classId) return;
-    if (payload.workspaceId && event.workspaceId && event.workspaceId !== payload.workspaceId) return;
-    res.write(`data: ${JSON.stringify(event)}
-
-`);
+    if (requestedClassId && event.classId && event.classId !== requestedClassId) return;
+    if (filterPayload.workspaceId && event.workspaceId && event.workspaceId !== filterPayload.workspaceId) return;
+    if (requestedSchoolId && event.schoolId && event.schoolId !== requestedSchoolId) return;
+    res.write(`data: ${JSON.stringify(event)}\n\n`);
   };
 
   communityEventBus.on('community_event', onCommunityEvent);
