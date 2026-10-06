@@ -13,7 +13,7 @@ export interface BadgeProps {
 }
 
 export const Badge: React.FC<BadgeProps> = ({
-  variant = 'info',
+  variant = 'neutral',
   label,
   children,
   dot = true,
@@ -24,32 +24,32 @@ export const Badge: React.FC<BadgeProps> = ({
   const content = children !== undefined ? children : label;
 
   const dotColor = {
-    info: 'bg-cyan-400',
+    info: 'bg-neutral-300',
     cyan: 'bg-cyan-400',
     success: 'bg-emerald-400',
     warning: 'bg-amber-400',
     danger: 'bg-rose-400',
-    neutral: 'bg-slate-400',
+    neutral: 'bg-neutral-300',
     purple: 'bg-purple-400',
   }[variant];
 
   const textColor = {
-    info: 'text-cyan-300',
+    info: 'text-neutral-200',
     cyan: 'text-cyan-300',
     success: 'text-emerald-300',
     warning: 'text-amber-300',
     danger: 'text-rose-300',
-    neutral: 'text-slate-300',
+    neutral: 'text-neutral-300',
     purple: 'text-purple-300',
   }[variant];
 
   const boxedStyles = {
-    info: 'bg-cyan-500/10 border-cyan-500/25',
+    info: 'bg-white/[0.05] border-white/[0.1]',
     cyan: 'bg-cyan-500/10 border-cyan-500/25',
     success: 'bg-emerald-500/10 border-emerald-500/25',
     warning: 'bg-amber-500/10 border-amber-500/25',
     danger: 'bg-rose-500/10 border-rose-500/25',
-    neutral: 'bg-slate-800/60 border-white/[0.08]',
+    neutral: 'bg-white/[0.05] border-white/[0.1]',
     purple: 'bg-purple-500/10 border-purple-500/25',
   }[variant];
 

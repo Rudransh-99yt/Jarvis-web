@@ -54,10 +54,10 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
     <div className={`p-4 sm:p-5 flex items-start justify-between gap-3 border-b border-white/[0.06] ${className}`} {...props}>
       {(title || subtitle || icon) ? (
         <div className="flex items-center gap-3 min-w-0">
-          {icon && <div className="text-cyan-400 shrink-0">{icon}</div>}
+          {icon && <div className="text-neutral-300 shrink-0">{icon}</div>}
           <div className="min-w-0">
-            {title && <h3 className="text-sm sm:text-base font-semibold text-slate-100 truncate">{title}</h3>}
-            {subtitle && <p className="text-xs text-slate-400 truncate mt-0.5">{subtitle}</p>}
+            {title && <h3 className="text-sm sm:text-base font-semibold text-neutral-100 truncate">{title}</h3>}
+            {subtitle && <p className="text-xs text-neutral-400 truncate mt-0.5">{subtitle}</p>}
           </div>
         </div>
       ) : children}

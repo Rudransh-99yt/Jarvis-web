@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-06T16:16:24.872Z",
+  "updatedAt": "2026-10-06T16:51:20.644Z",
   "sessions": [
     {
       "id": "session-phys-101",
@@ -17,7 +17,7 @@
       "topic": "Electrostatics & Electric Field Formulations",
       "teacherId": "teacher-1",
       "teacherName": "Dr. Helen Cho",
-      "scheduledAt": "2026-10-07T16:16:24.872Z",
+      "scheduledAt": "2026-10-07T16:51:20.643Z",
       "durationMinutes": 45,
       "status": "SCHEDULED",
       "generationConfig": {
@@ -404,7 +404,7 @@
       "homework": {
         "id": "hw-phys-101",
         "title": "Homework Problem Set: Electrostatics & Gauss Applications",
-        "dueDate": "2026-10-09T16:16:24.865Z",
+        "dueDate": "2026-10-09T16:51:20.586Z",
         "instructions": "Solve all 4 problems showing step-by-step mathematical reasoning. Upload handwritten or LaTeX solutions to Jarvis Workspace.",
         "totalMarks": 20,
         "isApproved": true,
@@ -524,7 +524,7 @@
         "flashcardsReleased": true
       },
       "createdAt": "2026-10-02T14:00:00.000Z",
-      "updatedAt": "2026-10-06T16:16:24.872Z"
+      "updatedAt": "2026-10-06T16:51:20.643Z"
     }
   ]
 }

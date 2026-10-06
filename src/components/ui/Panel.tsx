@@ -23,10 +23,10 @@ export const Panel: React.FC<PanelProps> = ({
       {(title || subtitle || action || icon) && (
         <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            {icon && <div className="text-cyan-400 shrink-0">{icon}</div>}
+            {icon && <div className="text-neutral-300 shrink-0">{icon}</div>}
             <div className="min-w-0">
-              {title && <h2 className="text-sm sm:text-base font-semibold text-slate-100 truncate">{title}</h2>}
-              {subtitle && <p className="text-xs text-slate-400 truncate mt-0.5">{subtitle}</p>}
+              {title && <h2 className="text-sm sm:text-base font-semibold text-neutral-100 truncate">{title}</h2>}
+              {subtitle && <p className="text-xs text-neutral-400 mt-0.5">{subtitle}</p>}
             </div>
           </div>
           {action && <div className="shrink-0">{action}</div>}

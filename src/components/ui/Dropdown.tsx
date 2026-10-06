@@ -52,7 +52,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} mt-2 ${width} rounded-xl glass-level-3 p-1.5 shadow-2xl z-50 animate-scale-in border border-cyan-500/25`}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} mt-2 ${width} rounded-xl glass-level-3 p-1.5 shadow-2xl z-50 animate-scale-in`}
         >
           {items.map((item) => (
             <button

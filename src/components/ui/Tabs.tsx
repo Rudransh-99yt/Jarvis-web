@@ -33,17 +33,17 @@ export const Tabs: React.FC<TabsProps> = ({
               key={tab.id}
               onClick={() => !tab.disabled && onChange(tab.id)}
               disabled={tab.disabled}
-              className={`flex items-center gap-2 py-3 px-1 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed focus-ring ${
+              className={`flex items-center gap-2 py-3 px-1 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed focus-ring select-none ${
                 isActive
-                  ? 'border-cyan-400 text-cyan-300 font-semibold shadow-[0_1px_0_0_#06b6d4]'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-white text-white font-semibold shadow-[0_1px_0_0_#ffffff]'
+                  : 'border-transparent text-neutral-400 hover:text-neutral-200'
               }`}
             >
               {tab.icon && <span className="shrink-0">{tab.icon}</span>}
               <span>{tab.label}</span>
               {typeof tab.count === 'number' && (
                 <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                  isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800 text-slate-400'
+                  isActive ? 'bg-white/[0.15] text-white' : 'bg-white/[0.06] text-neutral-400'
                 }`}>
                   {tab.count}
                 </span>
@@ -57,7 +57,7 @@ export const Tabs: React.FC<TabsProps> = ({
 
   // Segmented control variant
   return (
-    <div className={`inline-flex items-center gap-1 p-1 rounded-xl bg-slate-900/80 border border-white/[0.08] backdrop-blur-md overflow-x-auto max-w-full ${className}`}>
+    <div className={`inline-flex items-center gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-md overflow-x-auto max-w-full ${className}`}>
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (
@@ -65,17 +65,17 @@ export const Tabs: React.FC<TabsProps> = ({
             key={tab.id}
             onClick={() => !tab.disabled && onChange(tab.id)}
             disabled={tab.disabled}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed focus-ring ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed focus-ring select-none ${
               isActive
-                ? 'bg-slate-800 text-cyan-300 font-semibold shadow-sm border border-white/[0.08]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+                ? 'bg-white/[0.09] text-white font-semibold shadow-sm border border-white/[0.14]'
+                : 'text-neutral-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
             }`}
           >
             {tab.icon && <span className="shrink-0">{tab.icon}</span>}
             <span>{tab.label}</span>
             {typeof tab.count === 'number' && (
               <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800 text-slate-400'
+                isActive ? 'bg-white/[0.15] text-white' : 'bg-white/[0.06] text-neutral-400'
               }`}>
                 {tab.count}
               </span>

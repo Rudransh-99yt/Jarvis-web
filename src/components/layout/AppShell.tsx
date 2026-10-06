@@ -26,8 +26,8 @@ interface AppShellProps {
 export const AppShell: React.FC<AppShellProps> = ({
   currentSector,
   onSelectSector,
-  isMuted,
-  onToggleMute,
+  isMuted: _isMuted,
+  onToggleMute: _onToggleMute,
   isApiOnline = true,
   children
 }) => {
@@ -89,11 +89,11 @@ export const AppShell: React.FC<AppShellProps> = ({
   const activeSectorDef = sectors.find((s) => s.id === currentSector) || sectors[0];
 
   return (
-    <div className={`h-screen h-[100dvh] ${glassTokens.level0} text-slate-100 flex flex-col overflow-hidden selection:bg-cyan-500/30 selection:text-cyan-200`}>
-      {/* Level 0: Atmospheric ambient diffusion */}
+    <div className={`h-screen h-[100dvh] ${glassTokens.level0} text-neutral-100 flex flex-col overflow-hidden selection:bg-white/20 selection:text-white`}>
+      {/* Level 0: Pure neutral subtle atmospheric ambient lighting */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute top-[-15%] left-[20%] w-[50%] h-[35%] bg-cyan-900/[0.07] rounded-full blur-[140px]" />
-        <div className="absolute bottom-[-10%] right-[10%] w-[45%] h-[35%] bg-blue-900/[0.05] rounded-full blur-[140px]" />
+        <div className="absolute top-[-10%] left-[30%] w-[40%] h-[30%] bg-white/[0.018] rounded-full blur-[160px]" />
+        <div className="absolute bottom-[-10%] right-[20%] w-[35%] h-[30%] bg-white/[0.012] rounded-full blur-[160px]" />
       </div>
 
       {/* Level 1: Primary Shell Top Navigation Bar */}
@@ -102,23 +102,23 @@ export const AppShell: React.FC<AppShellProps> = ({
           <div className="flex h-full items-center justify-between gap-3 min-w-0">
             {/* Zone 1: Brand & Sector Context */}
             <div className="flex items-center gap-3 min-w-0 shrink">
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-950/80 to-slate-900 border border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.2)] shrink-0">
-                <Radio className="h-4 w-4 text-cyan-400 animate-pulse" />
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.12] shadow-sm shrink-0">
+                <Radio className="h-4 w-4 text-neutral-200" />
               </div>
 
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm font-bold font-mono tracking-widest text-white truncate">
                   J.A.R.V.I.S.
                 </span>
-                <span className="text-xs text-slate-500" aria-hidden="true">/</span>
-                <span className="text-xs font-medium text-slate-300 truncate">
+                <span className="text-xs text-neutral-500" aria-hidden="true">/</span>
+                <span className="text-xs font-medium text-neutral-300 truncate">
                   {activeSectorDef.name}
                 </span>
               </div>
             </div>
 
             {/* Zone 2: Sector Segmented Tabs (Desktop) */}
-            <nav className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-slate-900/60 border border-white/[0.06] backdrop-blur-md max-w-lg mx-2">
+            <nav className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-md max-w-lg mx-2">
               {sectors.map((sector) => {
                 const Icon = sector.icon;
                 const isActive = sector.id === currentSector;
@@ -131,13 +131,13 @@ export const AppShell: React.FC<AppShellProps> = ({
                       if (!isPlanned) onSelectSector(sector.id);
                     }}
                     disabled={isPlanned}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none ${
                       isActive
-                        ? 'bg-slate-800 text-cyan-300 font-semibold shadow-sm border border-white/[0.08]'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+                        ? 'bg-white/[0.09] text-white font-semibold shadow-sm border border-white/[0.14]'
+                        : 'text-neutral-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
                     }`}
                   >
-                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
                     <span className="truncate">{sector.shortName}</span>
                   </button>
                 );
@@ -150,17 +150,17 @@ export const AppShell: React.FC<AppShellProps> = ({
               <div className="relative md:hidden">
                 <button
                   onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-[36px] rounded-lg border border-white/[0.08] bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800 cursor-pointer focus-ring"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-[36px] rounded-lg border border-white/[0.08] bg-white/[0.04] text-xs text-neutral-200 hover:bg-white/[0.08] cursor-pointer focus-ring"
                   title="Switch Platform Sector"
                 >
-                  <activeSectorDef.icon className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <activeSectorDef.icon className="w-3.5 h-3.5 text-neutral-300 shrink-0" />
                   <span className="truncate max-w-[80px]">{activeSectorDef.shortName}</span>
-                  <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+                  <ChevronDown className="w-3 h-3 text-neutral-400 shrink-0" />
                 </button>
 
                 {isSectorDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl glass-level-3 p-1.5 shadow-2xl z-50 space-y-1 animate-scale-in text-xs border border-cyan-500/25">
-                    <div className="px-2 py-1 text-[10px] text-slate-400 uppercase tracking-wider font-mono">
+                  <div className="absolute right-0 mt-2 w-56 rounded-xl glass-level-3 p-1.5 shadow-2xl z-50 space-y-1 animate-scale-in text-xs border border-white/[0.12]">
+                    <div className="px-2 py-1 text-[10px] text-neutral-400 uppercase tracking-wider font-mono">
                       Platform Sectors
                     </div>
                     {sectors.map((s) => {
@@ -178,10 +178,10 @@ export const AppShell: React.FC<AppShellProps> = ({
                           disabled={isPlanned}
                           className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer ${
                             s.id === currentSector
-                              ? 'bg-slate-800 text-cyan-300 font-semibold border border-white/[0.08]'
+                              ? 'bg-white/[0.1] text-white font-semibold border border-white/[0.14]'
                               : isPlanned
-                              ? 'opacity-40 text-slate-500 cursor-not-allowed'
-                              : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                              ? 'opacity-40 text-neutral-500 cursor-not-allowed'
+                              : 'text-neutral-300 hover:bg-white/[0.06] hover:text-white'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
@@ -189,7 +189,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                             <span className="truncate">{s.name}</span>
                           </div>
                           {s.badge && (
-                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 shrink-0">
+                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/[0.06] text-neutral-400 shrink-0">
                               {s.badge}
                             </span>
                           )}
@@ -201,9 +201,9 @@ export const AppShell: React.FC<AppShellProps> = ({
               </div>
 
               {/* Status Uplink Indicator */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/[0.06] bg-slate-900/40 text-xs text-slate-300">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/[0.06] bg-white/[0.03] text-xs text-neutral-300">
                 <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isApiOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                <span className="text-[11px] font-mono text-slate-400">{isApiOnline ? 'Online' : 'Auxiliary'}</span>
+                <span className="text-[11px] font-mono text-neutral-400">{isApiOnline ? 'Online' : 'Auxiliary'}</span>
               </div>
             </div>
           </div>
@@ -227,13 +227,13 @@ export const AppShell: React.FC<AppShellProps> = ({
 
       {/* Bottom Status Bar for non-education sectors */}
       {currentSector !== 'education' && (
-        <footer className="shrink-0 border-t border-white/[0.06] glass-level-1 py-2 text-center text-xs text-slate-400 relative z-30 min-w-0">
+        <footer className="shrink-0 border-t border-white/[0.06] glass-level-1 py-2 text-center text-xs text-neutral-400 relative z-30 min-w-0">
           <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-1 min-w-0">
-            <div className="truncate text-xs text-slate-400 font-mono">
+            <div className="truncate text-xs text-neutral-400 font-mono">
               JARVIS INTELLIGENT OPERATING SYSTEM
             </div>
-            <div className="text-xs text-slate-400 font-mono tabular-nums truncate">
-              Core: <span className="text-cyan-300 font-medium">{activeSectorDef.name}</span> · Gemini 3.8 Flash
+            <div className="text-xs text-neutral-400 font-mono tabular-nums truncate">
+              Core: <span className="text-neutral-200 font-medium">{activeSectorDef.name}</span> · Gemini 3.8 Flash
             </div>
           </div>
         </footer>

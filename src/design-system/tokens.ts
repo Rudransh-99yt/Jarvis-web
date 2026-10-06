@@ -2,8 +2,8 @@
  * JARVIS-WEB — Design System Tokens & Semantic Utilities
  * 
  * Provides consistent tokens for:
- * - Liquid-Glass Material Levels (Level 0 Environment -> Level 3 Floating)
- * - Semantic Palette (Background, Surface, Border, Text, Accent, Status)
+ * - Neutral Liquid-Glass Material Levels (Level 0 Environment -> Level 3 Floating)
+ * - Semantic Neutral Palette (Background, Surface, Border, Text, Accent, Status)
  * - Typography Hierarchy (Display, Page Title, Section, Body, Caption, Tabular)
  * - Radius, Spacing, and Elevation math
  */
@@ -25,19 +25,20 @@ export const glassTokens = {
 
 export const colorTokens = {
   bg: {
-    base: '#050811',
-    surface: '#0b1120',
-    elevated: '#111a2e',
+    base: '#09090b',
+    surface: '#121215',
+    elevated: '#18181c',
   },
   text: {
-    primary: 'text-slate-100',
-    secondary: 'text-slate-400',
-    muted: 'text-slate-500',
+    primary: 'text-neutral-100',
+    secondary: 'text-neutral-400',
+    muted: 'text-neutral-500',
     accent: 'text-cyan-400',
   },
   border: {
     subtle: 'border-white/[0.08]',
-    strong: 'border-white/[0.15]',
+    specular: 'border-white/[0.16]',
+    strong: 'border-white/[0.22]',
     accent: 'border-cyan-500/30',
     accentActive: 'border-cyan-400/60',
   },
@@ -61,23 +62,23 @@ export const colorTokens = {
       dot: 'bg-rose-400',
     },
     info: {
-      text: 'text-cyan-400',
-      bg: 'bg-cyan-500/10',
-      border: 'border-cyan-500/25',
+      text: 'text-neutral-200',
+      bg: 'bg-white/[0.06]',
+      border: 'border-white/[0.12]',
       dot: 'bg-cyan-400',
     },
   },
 } as const;
 
 export const typographyTokens = {
-  display: 'text-2xl sm:text-3xl font-bold tracking-tight text-slate-100',
-  pageTitle: 'text-xl sm:text-2xl font-bold tracking-tight text-slate-100',
-  sectionTitle: 'text-base sm:text-lg font-semibold tracking-tight text-slate-100',
-  cardTitle: 'text-sm sm:text-base font-semibold text-slate-100',
-  body: 'text-sm text-slate-300 leading-relaxed',
-  secondary: 'text-xs sm:text-sm text-slate-400 leading-normal',
-  caption: 'text-xs text-slate-400 font-normal',
-  metadata: 'text-xs font-mono text-slate-400 tracking-wide',
+  display: 'text-2xl sm:text-3xl font-bold tracking-tight text-neutral-100',
+  pageTitle: 'text-xl sm:text-2xl font-bold tracking-tight text-neutral-100',
+  sectionTitle: 'text-base sm:text-lg font-semibold tracking-tight text-neutral-100',
+  cardTitle: 'text-sm sm:text-base font-semibold text-neutral-100',
+  body: 'text-sm text-neutral-300 leading-relaxed',
+  secondary: 'text-xs sm:text-sm text-neutral-400 leading-normal',
+  caption: 'text-xs text-neutral-400 font-normal',
+  metadata: 'text-xs font-mono text-neutral-400 tracking-wide',
   tabular: 'font-mono tabular-nums',
 } as const;
 

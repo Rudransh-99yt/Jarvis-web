@@ -622,7 +622,7 @@ export const SmartQuizTeacherPanel: React.FC<SmartQuizTeacherPanelProps> = ({
 
           {/* Live Question Monitor (When Live/Paused) */}
           {(activeSelectedQuiz.status === 'live' || activeSelectedQuiz.status === 'paused') && currentAggregate && (
-            <div className="bg-slate-950/90 border border-cyan-900/40 rounded-lg p-4 space-y-4">
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">

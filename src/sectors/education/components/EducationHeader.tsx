@@ -55,8 +55,8 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
   const roles: Array<{ id: EducationRole; label: string; name: string; icon: any; color: string }> = [
-    { id: 'student', label: 'Student', name: 'Alex Chen', icon: GraduationCap, color: 'text-cyan-400' },
-    { id: 'teacher', label: 'Instructor', name: 'Dr. Sarah', icon: BookOpen, color: 'text-blue-400' },
+    { id: 'student', label: 'Student', name: 'Alex Chen', icon: GraduationCap, color: 'text-neutral-200' },
+    { id: 'teacher', label: 'Instructor', name: 'Dr. Sarah', icon: BookOpen, color: 'text-neutral-200' },
     { id: 'principal', label: 'Principal / Admin', name: 'Dean Stark', icon: ShieldAlert, color: 'text-amber-400' }
   ];
 
@@ -100,20 +100,20 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl glass-level-2 border border-white/[0.08]">
         {/* Left: Institution Context (Clean typography, zero pill clutter) */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-sm">
-            <Building2 className="w-4 h-4 text-cyan-400" />
+          <div className="h-9 w-9 rounded-lg bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0 shadow-sm">
+            <Building2 className="w-4 h-4 text-neutral-200" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-semibold text-slate-100 truncate">
+              <span className="text-xs sm:text-sm font-semibold text-neutral-100 truncate">
                 {institution?.name || 'Stark Academy of Science & Advanced Engineering'}
               </span>
-              <span className="text-xs text-slate-500 hidden sm:inline" aria-hidden="true">·</span>
-              <span className="hidden sm:inline text-xs font-mono text-cyan-400/80">
+              <span className="text-xs text-neutral-500 hidden sm:inline" aria-hidden="true">·</span>
+              <span className="hidden sm:inline text-xs font-mono text-neutral-400">
                 {institution?.currentAcademicYear || '2026–2027'}
               </span>
             </div>
-            <div className="text-[11px] text-slate-400 truncate">
+            <div className="text-[11px] text-neutral-400 truncate">
               {institution?.campus || 'Stark Industries R&D Campus • Sector 4'}
             </div>
           </div>
@@ -123,13 +123,13 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
         <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
           {/* Search Box */}
           <div className="relative hidden md:block w-48 lg:w-60">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Search curriculum..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full bg-slate-900/60 border border-white/[0.08] focus:border-cyan-500/50 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus-ring transition-all"
+              className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-white/[0.2] rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-neutral-100 placeholder:text-neutral-500 focus-ring transition-all"
             />
           </div>
 
@@ -138,28 +138,28 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
             onClick={onRefresh}
             disabled={isSyncing}
             title="Refresh academic data"
-            className="p-2 rounded-lg border border-white/[0.08] bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring shrink-0"
+            className="p-2 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-400 hover:text-white transition-colors cursor-pointer focus-ring shrink-0"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-cyan-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-white' : ''}`} />
           </button>
 
           {/* Role Switcher Dropdown */}
           <div className="relative">
             <button
               onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-200 transition-all cursor-pointer focus-ring"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-xs text-neutral-200 transition-all cursor-pointer focus-ring"
             >
               <Avatar name={currentRoleObj.name} size="sm" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-400 leading-none">Role Mode</span>
-                <span className="text-slate-100 font-semibold leading-tight">{currentRoleObj.label}</span>
+                <span className="text-[10px] text-neutral-400 leading-none">Role Mode</span>
+                <span className="text-neutral-100 font-semibold leading-tight">{currentRoleObj.label}</span>
               </div>
-              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3 h-3 text-neutral-400 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {roleDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-52 rounded-xl glass-level-3 p-1.5 shadow-2xl z-50 space-y-1 text-xs border border-cyan-500/25 animate-scale-in">
-                <div className="px-2.5 py-1 text-[10px] font-mono text-slate-400 uppercase tracking-wider border-b border-white/[0.06]">
+              <div className="absolute right-0 mt-2 w-52 rounded-xl glass-level-3 p-1.5 shadow-2xl z-50 space-y-1 text-xs border border-white/[0.12] animate-scale-in">
+                <div className="px-2.5 py-1 text-[10px] font-mono text-neutral-400 uppercase tracking-wider border-b border-white/[0.06]">
                   Active Persona
                 </div>
                 {roles.map((r) => {
@@ -175,18 +175,18 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
                       }}
                       className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-slate-800 text-white font-semibold border border-white/[0.08]'
-                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                          ? 'bg-white/[0.1] text-white font-semibold border border-white/[0.14]'
+                          : 'text-neutral-300 hover:bg-white/[0.06] hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <Icon className={`w-3.5 h-3.5 ${r.color}`} />
                         <div>
                           <div className="font-medium">{r.label}</div>
-                          <div className="text-[10px] text-slate-400">{r.name}</div>
+                          <div className="text-[10px] text-neutral-400">{r.name}</div>
                         </div>
                       </div>
-                      {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />}
+                      {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
                     </button>
                   );
                 })}
@@ -206,13 +206,13 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
             <button
               key={item.id}
               onClick={() => onSelectSection(item.id as EducationNavSection)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer focus-ring ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer focus-ring select-none ${
                 isActive
-                  ? 'bg-slate-800 text-cyan-300 font-semibold border border-white/[0.08] shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+                  ? 'bg-white/[0.09] text-white font-semibold border border-white/[0.14] shadow-sm'
+                  : 'text-neutral-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
               <span>{item.label}</span>
               {item.pulse && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
             </button>

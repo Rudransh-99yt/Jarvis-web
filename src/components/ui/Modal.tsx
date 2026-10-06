@@ -68,7 +68,7 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Floating Glass Surface (Level 3) */}
       <div
         ref={modalRef}
-        className={`relative w-full ${widthClasses} rounded-2xl glass-level-3 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] z-10 animate-scale-in border border-cyan-500/30 ${className}`}
+        className={`relative w-full ${widthClasses} rounded-2xl glass-level-3 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] z-10 animate-scale-in ${className}`}
       >
         {/* Header */}
         {(title || subtitle) && (
@@ -96,7 +96,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="px-5 sm:px-6 py-3.5 border-t border-white/[0.08] bg-slate-950/40 flex items-center justify-end gap-3 shrink-0">
+          <div className="px-5 sm:px-6 py-3.5 border-t border-white/[0.08] bg-black/25 flex items-center justify-end gap-3 shrink-0">
             {footer}
           </div>
         )}

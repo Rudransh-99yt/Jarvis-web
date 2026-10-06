@@ -15,45 +15,51 @@ export const Avatar: React.FC<AvatarProps> = ({
   status,
   className = '',
 }) => {
-  const sizeClasses = {
-    sm: 'w-7 h-7 text-[10px]',
-    md: 'w-9 h-9 text-xs',
-    lg: 'w-11 h-11 text-sm',
-    xl: 'w-14 h-14 text-base font-semibold',
-  }[size];
-
-  const statusColor = {
-    online: 'bg-emerald-400',
-    offline: 'bg-slate-500',
-    busy: 'bg-amber-400',
-  }[status || 'online'];
-
   const initials = name
     .split(' ')
-    .map((n) => n[0])
+    .map((part) => part[0])
+    .slice(0, 2)
     .join('')
-    .substring(0, 2)
     .toUpperCase();
 
+  const sizeClasses = {
+    sm: 'w-7 h-7 text-xs',
+    md: 'w-9 h-9 text-sm',
+    lg: 'w-11 h-11 text-base',
+    xl: 'w-14 h-14 text-lg',
+  }[size];
+
+  const statusSizeClasses = {
+    sm: 'w-2 h-2',
+    md: 'w-2.5 h-2.5',
+    lg: 'w-3 h-3',
+    xl: 'w-3.5 h-3.5',
+  }[size];
+
+  const statusColors = {
+    online: 'bg-emerald-400',
+    offline: 'bg-neutral-500',
+    busy: 'bg-amber-400',
+  };
+
   return (
-    <div className={`relative inline-flex shrink-0 ${className}`}>
+    <div className={`relative inline-block shrink-0 ${className}`}>
       {src ? (
         <img
           src={src}
           alt={name}
-          referrerPolicy="no-referrer"
           className={`rounded-full object-cover border border-white/[0.12] ${sizeClasses}`}
         />
       ) : (
         <div
-          className={`rounded-full bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-500/30 flex items-center justify-center font-mono font-medium text-cyan-300 ${sizeClasses}`}
+          className={`rounded-full bg-white/[0.06] border border-white/[0.12] flex items-center justify-center font-mono font-medium text-neutral-200 ${sizeClasses}`}
         >
           {initials}
         </div>
       )}
       {status && (
         <span
-          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${statusColor}`}
+          className={`absolute bottom-0 right-0 rounded-full border-2 border-black ${statusSizeClasses} ${statusColors[status]}`}
         />
       )}
     </div>

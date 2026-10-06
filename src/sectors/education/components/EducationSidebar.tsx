@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { EducationRole, AcademicInstitution, EducationClass } from '../../../types/education.ts';
 import {
   Home,
@@ -27,7 +27,6 @@ import {
   Tv,
   Timer
 } from 'lucide-react';
-import { can } from '../../../services/authClient.ts';
 import { Avatar } from '../../../components/ui/Avatar.tsx';
 
 export type EducationSidebarSection =
@@ -87,9 +86,14 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
 }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
+  // macOS Dock-style magnification tracking
+  const navContainerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const rafId = useRef<number | null>(null);
+
   const roles: Array<{ id: EducationRole; label: string; name: string; icon: any; color: string; department: string }> = [
-    { id: 'student', label: 'Student', name: 'Alex Chen', icon: GraduationCap, color: 'text-cyan-400', department: 'Class 12 Physics' },
-    { id: 'teacher', label: 'Instructor', name: 'Dr. Sarah', icon: BookOpen, color: 'text-blue-400', department: 'Faculty of Physics' },
+    { id: 'student', label: 'Student', name: 'Alex Chen', icon: GraduationCap, color: 'text-neutral-200', department: 'Class 12 Physics' },
+    { id: 'teacher', label: 'Instructor', name: 'Dr. Sarah', icon: BookOpen, color: 'text-neutral-200', department: 'Faculty of Physics' },
     { id: 'principal', label: 'Principal / Dean', name: 'Dean Alistair Vance', icon: ShieldAlert, color: 'text-amber-400', department: 'Academic Directorate' },
     { id: 'parent', label: 'Parent / Family', name: 'Maria Chen', icon: Heart, color: 'text-rose-400', department: 'Family & Guardian Council' }
   ];
@@ -106,6 +110,85 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
     onCloseMobile();
   };
 
+  // Reset Dock magnification variables for all registered items
+  const resetDockMagnification = useCallback(() => {
+    itemRefs.current.forEach((el) => {
+      if (el) {
+        el.style.setProperty('--dock-scale', '1');
+        el.style.setProperty('--dock-translate-y', '0px');
+        el.style.setProperty('--dock-brightness', '1');
+        el.style.setProperty('--dock-specular', '0');
+      }
+    });
+  }, []);
+
+  // Pointer Move Handler for macOS Dock Spatial Curve
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+    }
+
+    const pointerY = e.clientY;
+
+    rafId.current = requestAnimationFrame(() => {
+      const R = 90;
+
+      itemRefs.current.forEach((el) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const itemCenterY = rect.top + rect.height / 2;
+        const dist = Math.abs(pointerY - itemCenterY);
+
+        if (dist < R) {
+          const t = 1 - dist / R;
+          const factor = Math.sin(t * (Math.PI / 2));
+          const scale = 1.0 + 0.08 * factor;
+          const translateY = -3 * factor;
+          const brightness = 1.0 + 0.12 * factor;
+
+          el.style.setProperty('--dock-scale', scale.toFixed(3));
+          el.style.setProperty('--dock-translate-y', `${translateY.toFixed(1)}px`);
+          el.style.setProperty('--dock-brightness', brightness.toFixed(3));
+          el.style.setProperty('--dock-specular', (0.14 * factor).toFixed(3));
+        } else {
+          el.style.setProperty('--dock-scale', '1');
+          el.style.setProperty('--dock-translate-y', '0px');
+          el.style.setProperty('--dock-brightness', '1');
+          el.style.setProperty('--dock-specular', '0');
+        }
+      });
+    });
+  };
+
+  const handlePointerLeave = () => {
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+    }
+    resetDockMagnification();
+  };
+
+  useEffect(() => {
+    return () => {
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
+    };
+  }, []);
+
+  const registerItemRef = (id: string) => (el: HTMLElement | null) => {
+    if (el) {
+      itemRefs.current.set(id, el);
+    } else {
+      itemRefs.current.delete(id);
+    }
+  };
+
   const renderNavButton = (
     id: EducationSidebarSection,
     label: string,
@@ -115,46 +198,65 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
   ) => {
     const isActive = activeSection === id;
     return (
-      <button
+      <div
         key={id}
-        onClick={() => handleNavClick(id)}
-        className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-medium transition-all text-left group cursor-pointer focus-ring relative ${
-          isActive
-            ? 'bg-slate-800/90 text-white font-semibold border border-cyan-500/30 shadow-sm nav-active-indicator pl-4'
-            : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.04] border border-transparent'
-        }`}
+        ref={registerItemRef(`nav-${id}`)}
+        className="w-full relative transition-[transform,filter] duration-150 ease-out"
+        style={{
+          transform: 'translateY(var(--dock-translate-y, 0px)) scale(var(--dock-scale, 1))',
+          filter: 'brightness(var(--dock-brightness, 1))',
+          transformOrigin: '16px center',
+          willChange: 'transform, filter'
+        }}
       >
-        <div className="flex items-center gap-2.5 truncate min-w-0">
-          <Icon
-            className={`w-4 h-4 shrink-0 transition-colors ${
-              isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200'
-            } ${isPulse ? 'animate-pulse text-emerald-400' : ''}`}
+        <button
+          onClick={() => handleNavClick(id)}
+          className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-medium transition-colors text-left group cursor-pointer focus-ring relative select-none ${
+            isActive
+              ? 'bg-white/[0.09] text-white font-semibold border border-white/[0.14] shadow-sm nav-active-indicator pl-4'
+              : 'text-neutral-400 hover:text-neutral-100 hover:bg-white/[0.04] border border-transparent'
+          }`}
+        >
+          {/* Subtle Dynamic Specular Edge Highlight on Hover */}
+          <div
+            className="absolute inset-0 rounded-lg pointer-events-none transition-opacity duration-150"
+            style={{
+              boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, var(--dock-specular, 0))'
+            }}
           />
-          <span className="truncate">{label}</span>
-        </div>
-        {badge !== undefined && (
-          <span className="text-[11px] font-mono tabular-nums text-slate-400 shrink-0">
-            {badge}
-          </span>
-        )}
-      </button>
+
+          <div className="flex items-center gap-2.5 truncate min-w-0">
+            <Icon
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isActive ? 'text-white' : 'text-neutral-400 group-hover:text-neutral-200'
+              } ${isPulse ? 'animate-pulse text-emerald-400' : ''}`}
+            />
+            <span className="truncate">{label}</span>
+          </div>
+          {badge !== undefined && (
+            <span className="text-[11px] font-mono tabular-nums text-neutral-400 shrink-0">
+              {badge}
+            </span>
+          )}
+        </button>
+      </div>
     );
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full glass-level-1 border-r border-white/[0.08] text-slate-200 select-none">
+    <div className="flex flex-col h-full glass-level-1 border-r border-white/[0.08] text-neutral-200 select-none">
       {/* 1. Header: Academic Institution & Sync */}
-      <div className="p-3.5 border-b border-white/[0.08] space-y-2.5">
+      <div className="p-3.5 border-b border-white/[0.08] space-y-2.5 shrink-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-sm">
-              <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="h-7 w-7 rounded-lg bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0 shadow-sm">
+              <Building2 className="w-3.5 h-3.5 text-neutral-200" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-semibold text-slate-100 truncate">
+              <div className="text-xs font-semibold text-neutral-100 truncate">
                 {institution?.name || 'Stark Academy'}
               </div>
-              <div className="text-[11px] text-slate-400 truncate">
+              <div className="text-[11px] text-neutral-400 truncate">
                 {institution?.currentAcademicYear || '2026–2027'} · Education OS
               </div>
             </div>
@@ -165,13 +267,13 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               onClick={onRefresh}
               disabled={isSyncing}
               title="Sync Academic State"
-              className="p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring"
+              className="p-1.5 rounded-lg hover:bg-white/[0.06] text-neutral-400 hover:text-neutral-200 transition-colors cursor-pointer focus-ring"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-cyan-400' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-white' : ''}`} />
             </button>
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-slate-200 cursor-pointer focus-ring"
+              className="lg:hidden p-1.5 rounded-lg hover:bg-white/[0.06] text-neutral-400 hover:text-neutral-200 cursor-pointer focus-ring"
             >
               <X className="w-4 h-4" />
             </button>
@@ -182,35 +284,35 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         <div className="relative">
           <button
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="w-full flex items-center justify-between p-2 rounded-lg border border-white/[0.08] bg-slate-900/60 hover:border-white/[0.15] hover:bg-slate-900/90 transition-all text-left cursor-pointer focus-ring"
+            className="w-full flex items-center justify-between p-2 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:border-white/[0.14] hover:bg-white/[0.07] transition-all text-left cursor-pointer focus-ring"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar name={currentRoleObj.name} size="sm" />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-slate-100 truncate">
+                <div className="text-xs font-semibold text-neutral-100 truncate">
                   {currentRoleObj.name}
                 </div>
-                <div className="text-[10px] text-slate-400 flex items-center gap-1.5 truncate">
+                <div className="text-[10px] text-neutral-400 flex items-center gap-1.5 truncate">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   <span>{currentRoleObj.label}</span>
                 </div>
               </div>
             </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 ml-1 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 shrink-0 ml-1 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {profileDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl glass-level-3 shadow-2xl p-2 z-50 animate-scale-in space-y-2 text-xs border border-cyan-500/25">
-              <div className="p-2 rounded-lg bg-slate-900/80 border border-white/[0.06] space-y-0.5">
-                <div className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Active School</div>
-                <div className="font-semibold text-slate-100">{institution?.name || 'Stark Academy'}</div>
-                <div className="text-[11px] text-cyan-400">{currentRoleObj.department}</div>
+            <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl glass-level-3 shadow-2xl p-2 z-50 animate-scale-in space-y-2 text-xs border border-white/[0.12]">
+              <div className="p-2 rounded-lg bg-white/[0.04] border border-white/[0.06] space-y-0.5">
+                <div className="text-[10px] text-neutral-400 uppercase font-mono tracking-wider">Active School</div>
+                <div className="font-semibold text-neutral-100">{institution?.name || 'Stark Academy'}</div>
+                <div className="text-[11px] text-neutral-300">{currentRoleObj.department}</div>
               </div>
 
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider text-slate-400 px-1">
+                <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider text-neutral-400 px-1">
                   <span>Switch Role</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-mono">RBAC</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/[0.06] text-neutral-300 border border-white/[0.1] font-mono">RBAC</span>
                 </div>
                 {roles.map((r) => {
                   const Icon = r.icon;
@@ -224,14 +326,14 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
                       }}
                       className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer ${
                         isCurrent
-                          ? 'bg-slate-800 text-white font-semibold border border-white/[0.08]'
-                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
+                          ? 'bg-white/[0.1] text-white font-semibold border border-white/[0.14]'
+                          : 'text-neutral-300 hover:bg-white/[0.06] hover:text-white'
                       }`}
                     >
                       <Icon className={`w-3.5 h-3.5 ${r.color} shrink-0`} />
                       <div className="min-w-0">
                         <div className="font-semibold text-xs truncate">{r.name}</div>
-                        <div className="text-[10px] text-slate-400">{r.label}</div>
+                        <div className="text-[10px] text-neutral-400">{r.label}</div>
                       </div>
                     </button>
                   );
@@ -242,11 +344,16 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         </div>
       </div>
 
-      {/* 2. Scrollable Navigation Hierarchy */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar">
+      {/* 2. Scrollable Navigation Hierarchy with Dock Magnification Engine */}
+      <div
+        ref={navContainerRef}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar overscroll-contain"
+      >
         {/* Primary Role Workflow Section */}
         <div className="space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 px-3 mb-1.5 font-semibold">
             {currentRole === 'principal' ? 'Institution' :
              currentRole === 'teacher' ? 'Teach' :
              currentRole === 'parent' ? 'Family' : 'Learn'}
@@ -303,7 +410,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         {/* FOCUS & WORKSPACE Section — Student-Only */}
         {currentRole === 'student' && (
           <div className="space-y-1">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 px-3 mb-1.5 font-semibold">
               Focus & Workspace
             </div>
 
@@ -315,7 +422,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         {/* CONNECT Section */}
         {(currentRole === 'student' || currentRole === 'teacher') && (
           <div className="space-y-1">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 px-3 mb-1.5 font-semibold">
               Connect
             </div>
 
@@ -327,7 +434,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         {/* KNOWLEDGE & SMART SURFACES Section */}
         {(currentRole === 'student' || currentRole === 'teacher') && (
           <div className="space-y-1">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 px-3 mb-1.5 font-semibold">
               Knowledge & Surfaces
             </div>
 
@@ -344,32 +451,43 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         {/* Course Directory Quick Access */}
         {(currentRole === 'student' || currentRole === 'teacher') && (
           <div className="space-y-1 pt-2 border-t border-white/[0.06]">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 flex items-center justify-between font-semibold">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 px-3 mb-1.5 flex items-center justify-between font-semibold">
               <span>{currentRole === 'teacher' ? 'Assigned Courses' : 'Enrolled Courses'}</span>
-              <span className="text-[10px] text-slate-400 font-mono tabular-nums">{classes.length}</span>
+              <span className="text-[10px] text-neutral-400 font-mono tabular-nums">{classes.length}</span>
             </div>
 
             <div className="space-y-0.5">
               {classes.map((cls) => {
                 const isSelectedCourse = activeSection === 'classes' && cls.id === activeCourseId;
                 return (
-                  <button
+                  <div
                     key={cls.id}
-                    onClick={() => handleCourseClick(cls.id)}
-                    className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-mono transition-all text-left group cursor-pointer focus-ring ${
-                      isSelectedCourse
-                        ? 'bg-slate-800 text-cyan-300 font-semibold border border-white/[0.08]'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
-                    }`}
+                    ref={registerItemRef(`course-${cls.id}`)}
+                    className="w-full relative transition-[transform,filter] duration-150 ease-out"
+                    style={{
+                      transform: 'translateY(var(--dock-translate-y, 0px)) scale(var(--dock-scale, 1))',
+                      filter: 'brightness(var(--dock-brightness, 1))',
+                      transformOrigin: '16px center',
+                      willChange: 'transform, filter'
+                    }}
                   >
-                    <div className="flex items-center gap-2 truncate min-w-0">
-                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/80 group-hover:bg-cyan-300 shrink-0" />
-                      <span className="truncate">{cls.code}</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-mono tabular-nums shrink-0">
-                      {cls.units?.length || 0} units
-                    </span>
-                  </button>
+                    <button
+                      onClick={() => handleCourseClick(cls.id)}
+                      className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-mono transition-colors text-left group cursor-pointer focus-ring select-none ${
+                        isSelectedCourse
+                          ? 'bg-white/[0.09] text-white font-semibold border border-white/[0.14]'
+                          : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04] border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate min-w-0">
+                        <span className="h-1.5 w-1.5 rounded-full bg-neutral-300 group-hover:bg-white shrink-0" />
+                        <span className="truncate">{cls.code}</span>
+                      </div>
+                      <span className="text-[10px] text-neutral-400 font-mono tabular-nums shrink-0">
+                        {cls.units?.length || 0} units
+                      </span>
+                    </button>
+                  </div>
                 );
               })}
             </div>

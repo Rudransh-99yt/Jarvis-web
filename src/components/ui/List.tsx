@@ -5,9 +5,10 @@ export interface ListItemProps {
   subtitle?: React.ReactNode;
   icon?: React.ReactNode;
   action?: React.ReactNode;
+  badge?: React.ReactNode;
+  active?: boolean;
   onClick?: () => void;
   className?: string;
-  active?: boolean;
 }
 
 export const ListItem: React.FC<ListItemProps> = ({
@@ -15,29 +16,35 @@ export const ListItem: React.FC<ListItemProps> = ({
   subtitle,
   icon,
   action,
+  badge,
+  active = false,
   onClick,
   className = '',
-  active = false,
 }) => {
   return (
     <div
       onClick={onClick}
-      className={`flex items-center justify-between gap-3 p-3 sm:p-3.5 rounded-lg transition-all duration-150 ${
+      className={`p-3 sm:p-3.5 rounded-xl transition-all flex items-center justify-between gap-3 ${
         onClick ? 'cursor-pointer hover:bg-white/[0.05]' : ''
       } ${
         active
-          ? 'bg-slate-800/80 border border-cyan-500/30 text-white'
-          : 'border border-transparent'
+          ? 'bg-white/[0.08] border border-white/[0.14] text-white'
+          : 'border border-transparent text-neutral-200'
       } ${className}`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        {icon && <div className="text-cyan-400 shrink-0">{icon}</div>}
+        {icon && <div className="text-neutral-400 shrink-0">{icon}</div>}
         <div className="min-w-0">
-          <div className="text-xs sm:text-sm font-medium text-slate-100 truncate">{title}</div>
-          {subtitle && <div className="text-xs text-slate-400 truncate mt-0.5">{subtitle}</div>}
+          <div className="text-xs sm:text-sm font-medium truncate">{title}</div>
+          {subtitle && <div className="text-[11px] text-neutral-400 truncate mt-0.5">{subtitle}</div>}
         </div>
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {(badge || action) && (
+        <div className="flex items-center gap-2 shrink-0">
+          {badge}
+          {action}
+        </div>
+      )}
     </div>
   );
 };
@@ -45,16 +52,11 @@ export const ListItem: React.FC<ListItemProps> = ({
 export interface ListProps {
   children: React.ReactNode;
   className?: string;
-  divided?: boolean;
 }
 
-export const List: React.FC<ListProps> = ({
-  children,
-  className = '',
-  divided = false,
-}) => {
+export const List: React.FC<ListProps> = ({ children, className = '' }) => {
   return (
-    <div className={`space-y-1 ${divided ? 'divide-y divide-white/[0.04]' : ''} ${className}`}>
+    <div className={`space-y-1.5 ${className}`}>
       {children}
     </div>
   );
