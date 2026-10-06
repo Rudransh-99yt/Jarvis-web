@@ -123,19 +123,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
         </button>
 
-        {/* Voice Synth Narration Mute/Unmute */}
-        <button
-          onClick={toggleVoice}
-          title={voiceEnabled ? 'Jarvis Voice Enabled' : 'Jarvis Voice Muted'}
-          className={`p-1.5 rounded border transition-colors ${
-            voiceEnabled
-              ? 'bg-cyan-950/40 border-cyan-500/30 text-cyan-300 hover:border-cyan-400'
-              : 'bg-red-950/30 border-red-500/30 text-red-400'
-          }`}
-        >
-          {voiceEnabled ? <Radio className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
-        </button>
-
         {/* HUD Theme Palette */}
         <div className="flex items-center gap-1 bg-black/60 border border-cyan-500/20 rounded p-1">
           {themeList.map((t) => (

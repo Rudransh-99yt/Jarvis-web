@@ -16,7 +16,6 @@ import {
   Radio,
   FileText
 } from 'lucide-react';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
 
 interface PostClassReviewViewProps {
   sessionId?: string;
@@ -62,18 +61,6 @@ export const PostClassReviewView: React.FC<PostClassReviewViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto w-full font-sans">
-      {/* 1. Universal Back Navigation */}
-      <SharedBackButton
-        onBack={onBack}
-        parentLabel="Teacher Command Center"
-        currentLabel="Post-Class Review & Analytics"
-        hierarchySegments={[
-          { label: 'Faculty Hub', onClick: onBack },
-          { label: report?.courseCode || 'PHYS-301' },
-          { label: 'Post-Class Review' }
-        ]}
-      />
-
       {/* 2. Hero Header */}
       <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">

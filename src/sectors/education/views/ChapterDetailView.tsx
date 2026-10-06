@@ -15,7 +15,8 @@ import {
   BookOpen,
   Award
 } from 'lucide-react';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
+import { GlassCard, ProgressIndicator } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface ChapterDetailViewProps {
   course: EducationClass;
@@ -31,7 +32,7 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
   course,
   unit,
   onOpenLesson,
-  onBackToCourse,
+  onBackToCourse: _onBackToCourse,
   onOpenPractice,
   onOpenQuiz,
   onLaunchStudyAssistant
@@ -43,20 +44,9 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto font-sans">
-      {/* 1. Universal Back Navigation */}
-      <SharedBackButton
-        onBack={onBackToCourse}
-        parentLabel={`${course.code} Course Hub`}
-        currentLabel={`Unit ${unit.number}: ${unit.title}`}
-        hierarchySegments={[
-          { label: course.code, onClick: onBackToCourse },
-          { label: `Unit ${unit.number}: ${unit.title}` }
-        ]}
-      />
-
-      {/* 2. Chapter Header */}
-      <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
+    <div className="space-y-6 max-w-5xl mx-auto font-sans pb-12">
+      {/* 1. Chapter Header */}
+      <GlassCard className="p-6 space-y-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-mono">
             <span className="font-bold text-cyan-300">{course.code}</span>
@@ -74,27 +64,22 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
         </div>
 
         {/* Progress Bar */}
-        <div className="space-y-1 pt-2 border-t border-slate-800">
+        <div className="space-y-2 pt-3 border-t border-white/[0.06]">
           <div className="flex items-center justify-between text-xs font-mono">
             <span className="text-slate-400">Chapter Mastery</span>
-            <span className="text-cyan-300 font-bold">{completedCount} / {totalCount} Topics Finished ({progressPct}%)</span>
+            <span className="text-cyan-300 font-bold tabular-nums">{completedCount} / {totalCount} Topics Finished ({progressPct}%)</span>
           </div>
-          <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
-            <div
-              className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
+          <ProgressIndicator value={progressPct} size="md" />
         </div>
-      </div>
+      </GlassCard>
 
       {/* 3. Progressive Disclosure Tabs */}
-      <div className="flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-slate-800 bg-slate-900/60 font-mono text-xs">
+      <div className={`flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-white/[0.08] ${glassTokens.level2} font-mono text-xs`}>
         <button
           type="button"
           onClick={() => setActiveTab('lessons')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'lessons' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'lessons' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
@@ -104,8 +89,8 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('practice')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'practice' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'practice' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
@@ -115,8 +100,8 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'overview' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'overview' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -126,8 +111,8 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('resources')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'resources' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'resources' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -145,12 +130,12 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
             <span className="text-xs font-mono text-slate-500">Click to enter Study Room</span>
           </div>
 
-          <div className="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 shadow-sm">
+          <GlassCard className="divide-y divide-white/[0.06] p-0 overflow-hidden shadow-sm">
             {unit.lessons?.map((lesson) => (
               <div
                 key={lesson.id}
                 onClick={() => onOpenLesson(lesson.id)}
-                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-800/40 cursor-pointer transition-colors group"
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.03] cursor-pointer transition-colors group"
               >
                 <div className="flex items-start gap-3.5 min-w-0">
                   <div className="pt-0.5">
@@ -189,7 +174,7 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
                       if (onOpenPractice) onOpenPractice(lesson.id);
                       else onOpenLesson(lesson.id);
                     }}
-                    className="px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs transition-colors"
+                    className="px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs transition-colors cursor-pointer focus-ring"
                   >
                     Practice
                   </button>
@@ -201,28 +186,28 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
                 </div>
               </div>
             ))}
-          </div>
+          </GlassCard>
         </div>
       )}
 
       {/* TAB 2: PRACTICE & CHECKPOINTS */}
       {activeTab === 'practice' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+        <GlassCard className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
               Diagnostic Practice Checkpoints (+10 pts each)
             </h2>
           </div>
 
-          <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/60">
+          <div className="divide-y divide-white/[0.06] border border-white/[0.06] rounded-xl overflow-hidden bg-slate-950/60">
             {unit.lessons?.map((lesson) => (
               <div
                 key={lesson.id}
-                className="p-4 flex items-center justify-between gap-3 hover:bg-slate-900/40"
+                className="p-4 flex items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors"
               >
                 <div>
                   <div className="text-sm font-semibold text-white">{lesson.title} Checkpoint</div>
-                  <div className="text-xs font-mono text-slate-500">Conceptual verification & derivations</div>
+                  <div className="text-xs font-mono text-slate-400">Conceptual verification & derivations</div>
                 </div>
                 <button
                   type="button"
@@ -230,7 +215,7 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
                     if (onOpenPractice) onOpenPractice(lesson.id);
                     else onOpenLesson(lesson.id);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-mono cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-mono cursor-pointer focus-ring"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Launch Practice Test</span>
@@ -238,12 +223,12 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* TAB 3: LEARNING OBJECTIVES */}
       {activeTab === 'overview' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+        <GlassCard className="p-6 space-y-4">
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
             Core Unit Objectives & Competencies
           </h2>
@@ -255,22 +240,22 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* TAB 4: RESOURCES & REFERENCES */}
       {activeTab === 'resources' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+        <GlassCard className="p-6 space-y-4">
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
             Formulas, Reference Readings & Proofs
           </h2>
-          <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 text-xs font-mono space-y-2 text-slate-300">
+          <div className="p-4 rounded-xl border border-white/[0.06] bg-slate-950/60 text-xs font-mono space-y-2 text-slate-300">
             <div className="text-cyan-300 font-bold uppercase">Formulas Sheet</div>
             <div>• Time-Dependent Schrödinger: iℏ ∂Ψ/∂t = ĤΨ</div>
             <div>• Probability Density: P(x,t) = |Ψ(x,t)|²</div>
             <div>• Normalization Condition: ∫ |Ψ|² dV = 1</div>
           </div>
-        </div>
+        </GlassCard>
       )}
     </div>
   );

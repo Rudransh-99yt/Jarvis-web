@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   Clock
 } from 'lucide-react';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
 
 interface EngagementLeaderboardViewProps {
   onBack: () => void;
@@ -67,18 +66,6 @@ export const EngagementLeaderboardView: React.FC<EngagementLeaderboardViewProps>
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto w-full">
-      {/* 1. Universal Back Navigation */}
-      <SharedBackButton
-        onBack={onBack}
-        parentLabel="Student Home"
-        currentLabel="Cadet Engagement Leaderboard"
-        hierarchySegments={[
-          { label: 'Education', onClick: onBack },
-          { label: 'Engagement' },
-          { label: 'Leaderboard' }
-        ]}
-      />
-
       {/* 2. Personal Ranking Hero */}
       <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChevronRight, Home, Building2, BookOpen, Layers, FileText } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Home, Building2, BookOpen, Layers, FileText } from 'lucide-react';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 export interface BreadcrumbItem {
   id: string;
@@ -12,36 +13,58 @@ export interface BreadcrumbItem {
 interface EducationBreadcrumbsProps {
   items: BreadcrumbItem[];
   onHomeClick?: () => void;
+  onBack?: () => void;
+  backLabel?: string;
 }
 
-export const EducationBreadcrumbs: React.FC<EducationBreadcrumbsProps> = ({ items, onHomeClick }) => {
+export const EducationBreadcrumbs: React.FC<EducationBreadcrumbsProps> = ({
+  items,
+  onHomeClick,
+  onBack,
+  backLabel
+}) => {
   if (items.length === 0) return null;
 
   const getIcon = (type: BreadcrumbItem['type']) => {
     switch (type) {
       case 'institution':
-        return <Building2 className="w-3.5 h-3.5 text-cyan-400" />;
+        return <Building2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />;
       case 'subject':
-        return <BookOpen className="w-3.5 h-3.5 text-cyan-400" />;
+        return <BookOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />;
       case 'unit':
-        return <Layers className="w-3.5 h-3.5 text-cyan-400" />;
+        return <Layers className="w-3.5 h-3.5 text-cyan-400 shrink-0" />;
       case 'lesson':
-        return <FileText className="w-3.5 h-3.5 text-cyan-400" />;
+        return <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />;
       default:
         return null;
     }
   };
 
   return (
-    <nav aria-label="Education Breadcrumb" className="flex items-center flex-wrap gap-1.5 text-xs font-mono text-cyan-400/60 py-1.5 px-3 rounded-lg border border-cyan-500/15 bg-black/40 backdrop-blur-sm">
+    <nav aria-label="Education Breadcrumb" className={`flex items-center flex-wrap gap-1.5 text-xs text-slate-400 py-1.5 px-3 rounded-xl border border-white/[0.08] ${glassTokens.level2}`}>
+      {onBack && (
+        <>
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-slate-300 hover:text-cyan-300 transition-colors py-1 px-2 rounded-lg cursor-pointer focus-ring bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-xs font-mono mr-0.5"
+            title={backLabel ? `Back to ${backLabel}` : 'Back to previous view'}
+            aria-label={backLabel ? `Back to ${backLabel}` : 'Back to previous view'}
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-medium">Back</span>
+          </button>
+          <span className="text-white/[0.15] select-none mx-0.5">|</span>
+        </>
+      )}
+
       {onHomeClick && (
         <button
           onClick={onHomeClick}
-          className="flex items-center gap-1 text-cyan-400 hover:text-cyan-200 hover:underline transition-colors p-1 rounded"
+          className="flex items-center gap-1.5 text-slate-300 hover:text-cyan-300 transition-colors p-1 rounded-md cursor-pointer focus-ring"
           title="Education Home"
         >
-          <Home className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Education</span>
+          <Home className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden sm:inline font-medium">Home</span>
         </button>
       )}
 
@@ -51,16 +74,16 @@ export const EducationBreadcrumbs: React.FC<EducationBreadcrumbsProps> = ({ item
 
         return (
           <React.Fragment key={item.id || index}>
-            <ChevronRight className="w-3 h-3 text-cyan-500/30 shrink-0" />
+            <ChevronRight className="w-3 h-3 text-slate-600 shrink-0" />
             {isLast || !item.onClick ? (
-              <span className={`flex items-center gap-1.5 font-bold truncate max-w-[200px] sm:max-w-[320px] ${isLast ? 'text-white' : 'text-cyan-300'}`}>
+              <span className={`flex items-center gap-1.5 truncate max-w-[200px] sm:max-w-[320px] ${isLast ? 'text-slate-100 font-medium' : 'text-slate-300'}`}>
                 {icon}
                 <span className="truncate">{item.label}</span>
               </span>
             ) : (
               <button
                 onClick={item.onClick}
-                className="flex items-center gap-1.5 text-cyan-400/80 hover:text-cyan-200 hover:underline transition-colors truncate max-w-[160px] sm:max-w-[240px] text-left"
+                className="flex items-center gap-1.5 text-slate-400 hover:text-cyan-300 transition-colors truncate max-w-[160px] sm:max-w-[240px] text-left cursor-pointer focus-ring rounded-md p-0.5"
                 title={item.label}
               >
                 {icon}
@@ -73,3 +96,4 @@ export const EducationBreadcrumbs: React.FC<EducationBreadcrumbsProps> = ({ item
     </nav>
   );
 };
+

@@ -15,7 +15,8 @@ import {
   Sparkles,
   BookOpen
 } from 'lucide-react';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
+import { GlassCard, Badge } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface TeacherReviewViewProps {
   classes: EducationClass[];
@@ -31,7 +32,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
   classes,
   assignments,
   submissions,
-  onBack,
+  onBack: _onBack,
   onGradeSubmission,
   selectedSubmission,
   onSelectSubmission
@@ -77,27 +78,16 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto w-full font-sans">
-      {/* 1. Universal Back Navigation */}
-      <SharedBackButton
-        onBack={onBack}
-        parentLabel="Teacher Command Center"
-        currentLabel="Review Queue & Student Assessment"
-        hierarchySegments={[
-          { label: 'Faculty Hub', onClick: onBack },
-          { label: 'Review & Grade' }
-        ]}
-      />
-
-      {/* 2. Header & KPI Strip */}
-      <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+    <div className="space-y-6 max-w-5xl mx-auto w-full font-sans pb-12">
+      {/* 1. Header & KPI Strip */}
+      <GlassCard className="p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
               <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
               <span>Assessment Ledger & Review Queue</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
               Evaluation & Grading Command
             </h1>
             <p className="text-xs text-slate-400 font-mono">
@@ -106,12 +96,12 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2 font-mono text-xs">
-            <span className="px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 font-bold">
+            <Badge variant="warning" className="font-bold">
               {pendingCount} Awaiting Review
-            </span>
-            <span className="px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 font-bold">
+            </Badge>
+            <Badge variant="success" className="font-bold">
               {gradedCount} Completed
-            </span>
+            </Badge>
           </div>
         </div>
 
@@ -119,12 +109,12 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs pt-1">
           <div className="flex flex-wrap items-center gap-2">
             {/* Status Tabs */}
-            <div className="flex items-center gap-1 p-1 rounded-lg border border-slate-800 bg-slate-950">
+            <div className="flex items-center gap-1 p-1 rounded-xl border border-white/[0.08] bg-slate-900/80">
               <button
                 type="button"
                 onClick={() => setSelectedStatusFilter('all')}
-                className={`px-3 py-1.5 rounded transition-colors cursor-pointer ${
-                  selectedStatusFilter === 'all' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  selectedStatusFilter === 'all' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 All ({submissions.length})
@@ -132,7 +122,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedStatusFilter('pending')}
-                className={`px-3 py-1.5 rounded transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
                   selectedStatusFilter === 'pending'
                     ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30'
                     : 'text-slate-400 hover:text-white'
@@ -143,7 +133,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedStatusFilter('graded')}
-                className={`px-3 py-1.5 rounded transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
                   selectedStatusFilter === 'graded'
                     ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30'
                     : 'text-slate-400 hover:text-white'
@@ -157,7 +147,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
             <select
               value={selectedClassFilter}
               onChange={(e) => setSelectedClassFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+              className="bg-slate-900/80 border border-white/[0.08] rounded-xl px-2.5 py-1.5 text-xs text-white focus-ring cursor-pointer"
             >
               <option value="all">All Managed Classes</option>
               {classes.map((c) => (
@@ -170,22 +160,22 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
 
           {/* Search */}
           <div className="relative w-full sm:w-56">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Search student or task..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-slate-900/80 border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus-ring"
             />
           </div>
         </div>
-      </div>
+      </GlassCard>
 
-      {/* 3. Submissions Table / Queue */}
-      <div className="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60">
+      {/* 2. Submissions Table / Queue */}
+      <GlassCard className="divide-y divide-white/[0.06] p-0 overflow-hidden">
         {filteredSubmissions.length === 0 ? (
-          <div className="p-8 text-center text-xs font-mono text-slate-500">
+          <div className="p-8 text-center text-xs font-mono text-slate-400">
             No submissions found matching criteria.
           </div>
         ) : (
@@ -195,7 +185,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
             return (
               <div
                 key={sub.id}
-                className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-800/30 transition-colors"
+                className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.03] transition-colors"
               >
                 <div className="space-y-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
@@ -207,7 +197,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
                   </div>
 
                   <h3 className="text-sm font-semibold text-slate-200">{sub.assignmentTitle}</h3>
-                  <p className="text-xs text-slate-400 line-clamp-2 italic font-mono bg-slate-950/40 p-2 rounded-lg border border-slate-800/60">
+                  <p className="text-xs text-slate-400 line-clamp-2 italic font-mono bg-slate-950/40 p-2.5 rounded-lg border border-white/[0.06]">
                     "{sub.content}"
                   </p>
 
@@ -223,7 +213,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenGrading(sub)}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold tracking-wider transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold tracking-wider transition-all cursor-pointer focus-ring"
                     >
                       <Clock className="w-3.5 h-3.5 text-amber-400" />
                       <span>Grade Now</span>
@@ -232,7 +222,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenGrading(sub)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-bold cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-bold cursor-pointer focus-ring"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>{sub.grade}/100 Graded</span>
@@ -243,13 +233,13 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
             );
           })
         )}
-      </div>
+      </GlassCard>
 
-      {/* 4. Inline Grading Dialog / Drawer */}
+      {/* 3. Inline Grading Dialog / Drawer */}
       {activeSub && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="max-w-xl w-full rounded-2xl border border-slate-700 bg-slate-900 p-6 space-y-5 shadow-2xl animate-fade-in font-sans">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className={`max-w-xl w-full rounded-2xl ${glassTokens.level3} border border-cyan-500/30 p-6 space-y-5 shadow-2xl animate-fade-in font-sans`}>
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
                 <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider">
                   Grading Review · {activeSub.className.split(':')[0]}
@@ -260,7 +250,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveSub(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -269,7 +259,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
             {/* Student Submission Payload */}
             <div className="space-y-1.5">
               <label className="text-xs font-mono font-bold uppercase text-slate-400">Student Submission Payload</label>
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-950 font-mono text-xs text-slate-200 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap">
+              <div className="p-4 rounded-xl border border-white/[0.08] bg-slate-950/80 font-mono text-xs text-slate-200 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap">
                 {activeSub.content}
               </div>
             </div>
@@ -285,7 +275,7 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
                     max="100"
                     value={gradeInput}
                     onChange={(e) => setGradeInput(e.target.value)}
-                    className="w-24 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-cyan-500"
+                    className="w-24 bg-slate-950 border border-white/[0.12] rounded-lg px-3 py-2 text-white font-bold focus-ring"
                   />
                   <span className="text-slate-400">/ 100 Pts</span>
                 </div>
@@ -305,23 +295,23 @@ export const TeacherReviewView: React.FC<TeacherReviewViewProps> = ({
                 value={feedbackInput}
                 onChange={(e) => setFeedbackInput(e.target.value)}
                 placeholder="Provide constructive feedback and pointers on derivations..."
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-sans"
+                className="w-full bg-slate-950 border border-white/[0.12] rounded-xl p-3 text-white placeholder-slate-500 focus-ring font-sans"
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => setActiveSub(null)}
-                className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-mono hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 rounded-xl border border-white/[0.08] text-slate-300 text-xs font-mono hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSubmitGrade}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl border border-cyan-400/50 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 text-xs font-mono font-bold transition-all shadow-md cursor-pointer"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl border border-cyan-400/50 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 text-xs font-mono font-bold transition-all shadow-md cursor-pointer focus-ring"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Submit Evaluation & Publish</span>

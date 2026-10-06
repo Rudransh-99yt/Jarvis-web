@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Search
 } from 'lucide-react';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
+import { GlassCard, Badge } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface TeacherAttentionViewProps {
   classes: EducationClass[];
@@ -25,7 +26,7 @@ interface TeacherAttentionViewProps {
 
 export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
   classes,
-  onBack,
+  onBack: _onBack,
   onNavigateToContext
 }) => {
   const [signals, setSignals] = useState<StudentAttentionSignal[]>([]);
@@ -75,49 +76,21 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
   const getSignalBadge = (type: string) => {
     switch (type) {
       case 'missed_work':
-        return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
-            Missed Work
-          </span>
-        );
+        return <Badge variant="danger" className="font-mono font-bold">Missed Assessment</Badge>;
       case 'practice_difficulty':
-        return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30">
-            Practice Difficulty Detected
-          </span>
-        );
+        return <Badge variant="warning" className="font-mono font-bold">Practice Gap</Badge>;
       case 'low_activity':
-        return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-500/10 text-slate-300 border border-slate-500/30">
-            Low Recent Activity
-          </span>
-        );
+        return <Badge variant="purple" className="font-mono font-bold">Low Activity</Badge>;
       default:
-        return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
-            Needs Follow-up
-          </span>
-        );
+        return <Badge variant="cyan" className="font-mono font-bold">Needs Follow-up</Badge>;
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto w-full font-sans">
-      {/* 1. Universal Back Navigation */}
-      <SharedBackButton
-        onBack={onBack}
-        parentLabel="Teacher Command Center"
-        currentLabel="Evidence-Based Student Attention & Follow-up"
-        hierarchySegments={[
-          { label: 'Faculty Hub', onClick: onBack },
-          { label: 'Cadet Support' },
-          { label: 'Follow-up Signals' }
-        ]}
-      />
-
-      {/* 2. Hero Card */}
-      <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+    <div className="space-y-6 max-w-5xl mx-auto w-full font-sans pb-12">
+      {/* 1. Hero Card */}
+      <GlassCard className="p-6 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono text-amber-400">
               <AlertTriangle className="w-3.5 h-3.5" />
@@ -132,25 +105,25 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2 text-xs font-mono shrink-0">
-            <span className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300">
+            <Badge variant="warning" className="font-bold">
               {filteredSignals.length} Active Signals
-            </span>
+            </Badge>
           </div>
         </div>
 
         <p className="text-xs text-slate-400 font-mono leading-relaxed">
           Jarvis does not label or diagnose students. Every signal contains verifiable source timestamps, academic context, and a specific pedagogical action.
         </p>
-      </div>
+      </GlassCard>
 
-      {/* 3. Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900/60 font-mono text-xs">
+      {/* 2. Filter Controls */}
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-white/[0.08] ${glassTokens.level2} font-mono text-xs`}>
         <div className="flex flex-wrap items-center gap-2">
           {/* Class Filter */}
           <select
             value={selectedClassFilter}
             onChange={(e) => setSelectedClassFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+            className="bg-slate-900/80 border border-white/[0.08] rounded-xl px-2.5 py-1.5 text-xs text-white focus-ring cursor-pointer"
           >
             <option value="all">All Managed Classes</option>
             {classes.map((cls) => (
@@ -164,7 +137,7 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
           <select
             value={selectedTypeFilter}
             onChange={(e) => setSelectedTypeFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+            className="bg-slate-900/80 border border-white/[0.08] rounded-xl px-2.5 py-1.5 text-xs text-white focus-ring cursor-pointer"
           >
             <option value="all">All Signal Types</option>
             <option value="missed_work">Missed Work</option>
@@ -176,23 +149,23 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
 
         {/* Search Input */}
         <div className="relative w-full sm:w-56">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Search cadet or issue..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+            className="w-full bg-slate-900/80 border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus-ring"
           />
         </div>
       </div>
 
-      {/* 4. Signals List */}
-      <div className="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60">
+      {/* 3. Signals List */}
+      <GlassCard className="divide-y divide-white/[0.06] p-0 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-xs font-mono text-slate-400">Loading verified signals...</div>
         ) : filteredSignals.length === 0 ? (
-          <div className="p-8 text-center text-xs font-mono text-slate-500">
+          <div className="p-8 text-center text-xs font-mono text-slate-400">
             No active follow-up signals matching the selected criteria.
           </div>
         ) : (
@@ -202,7 +175,7 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
             return (
               <div
                 key={signal.id}
-                className="p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 hover:bg-slate-800/30 transition-colors"
+                className="p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 hover:bg-white/[0.03] transition-colors"
               >
                 <div className="space-y-2 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
@@ -217,7 +190,7 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
                     {signal.description}
                   </p>
 
-                  <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/70 text-xs font-mono text-slate-400 space-y-1">
+                  <div className="p-3 rounded-xl border border-white/[0.06] bg-slate-950/70 text-xs font-mono text-slate-400 space-y-1">
                     <div className="text-[10px] text-slate-500 uppercase font-semibold">Evidence Log</div>
                     <div className="text-slate-300">{signal.evidenceSnippet}</div>
                     <div className="text-[10px] text-slate-500">Source: {signal.source} · Detected {new Date(signal.detectedAt).toLocaleDateString()}</div>
@@ -228,7 +201,7 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
                   <button
                     type="button"
                     onClick={() => handleActionClick(signal)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold tracking-wider transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold tracking-wider transition-all cursor-pointer focus-ring ${
                       isHandled
                         ? 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
                         : 'border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300'
@@ -251,7 +224,7 @@ export const TeacherAttentionView: React.FC<TeacherAttentionViewProps> = ({
             );
           })
         )}
-      </div>
+      </GlassCard>
     </div>
   );
 };

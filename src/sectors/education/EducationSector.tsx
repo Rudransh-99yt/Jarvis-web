@@ -214,6 +214,17 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     reason?: string;
   } | null>(null);
 
+  // Navigation History Stack for deep previous/back logic
+  interface NavHistoryItem {
+    view: DeepEducationView;
+    courseId?: string;
+    unitId?: string;
+    lessonId?: string;
+    gradeId?: string;
+    classSessionId?: string;
+  }
+  const [navHistory, setNavHistory] = useState<NavHistoryItem[]>([]);
+
   const fetchActiveFocusSession = async () => {
     try {
       const res = await fetch('/api/education/focus/active', {
@@ -251,6 +262,19 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
         return;
       }
     }
+    if (targetView !== currentView) {
+      setNavHistory((prev) => [
+        ...prev.slice(-15),
+        {
+          view: currentView,
+          courseId: activeCourseId,
+          unitId: activeUnitId,
+          lessonId: activeLessonId,
+          gradeId: activeGradeId,
+          classSessionId: academicContext.classSessionId
+        }
+      ]);
+    }
     if (typeof window !== 'undefined' && window.history && window.history.pushState) {
       window.history.pushState(
         {
@@ -265,6 +289,112 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     }
     setCurrentView(targetView);
   };
+
+  const isRootView =
+    (currentRole === 'student' && currentView === 'student_home') ||
+    (currentRole === 'teacher' && currentView === 'teacher_home') ||
+    (currentRole === 'principal' && currentView === 'principal_home') ||
+    (currentRole === 'parent' && currentView === 'parent_home');
+
+  const canGoBack = navHistory.length > 0 || !isRootView;
+
+  const handleGoBack = () => {
+    if (navHistory.length > 0) {
+      const prev = navHistory[navHistory.length - 1];
+      setNavHistory((prevH) => prevH.slice(0, -1));
+      if (prev.gradeId) setActiveGradeId(prev.gradeId);
+      if (prev.courseId) setActiveCourseId(prev.courseId);
+      if (prev.unitId) setActiveUnitId(prev.unitId);
+      if (prev.lessonId) setActiveLessonId(prev.lessonId);
+      if (prev.classSessionId) {
+        setAcademicContext((c) => ({ ...c, classSessionId: prev.classSessionId }));
+      }
+      setCurrentView(prev.view);
+    } else {
+      // Logical fallback parent based on hierarchy
+      const rootHome: DeepEducationView =
+        currentRole === 'student'
+          ? 'student_home'
+          : currentRole === 'teacher'
+          ? 'teacher_home'
+          : currentRole === 'parent'
+          ? 'parent_home'
+          : 'principal_home';
+
+      if (['principal_grade', 'principal_teachers', 'principal_audit', 'principal_classes', 'principal_calendar'].includes(currentView)) {
+        setCurrentView('principal_home');
+      } else if (currentView === 'teacher_class_detail') {
+        if (currentRole === 'principal') setCurrentView('principal_grade');
+        else setCurrentView('teacher_home');
+      } else if (['lesson_workspace', 'lesson_practice'].includes(currentView)) {
+        setCurrentView('chapter_detail');
+      } else if (currentView === 'chapter_detail') {
+        if (currentRole === 'teacher') setCurrentView('teacher_class_detail');
+        else setCurrentView('subject_detail');
+      } else if (currentView === 'subject_detail') {
+        if (currentRole === 'principal') setCurrentView('principal_grade');
+        else if (currentRole === 'teacher') setCurrentView('teacher_home');
+        else setCurrentView('student_my_learning');
+      } else if (['teacher_review', 'teacher_attention', 'teacher_session_prep', 'teacher_post_class_review'].includes(currentView)) {
+        setCurrentView('teacher_home');
+      } else {
+        setCurrentView(rootHome);
+      }
+    }
+  };
+
+  const getPreviousLabel = (): string => {
+    if (navHistory.length > 0) {
+      const prev = navHistory[navHistory.length - 1];
+      switch (prev.view) {
+        case 'principal_home': return 'Executive Overview';
+        case 'principal_grade': return `Grade Intelligence (${prev.gradeId?.toUpperCase() || 'Overview'})`;
+        case 'principal_teachers': return 'Faculty Leadership';
+        case 'principal_audit': return 'Audit Ledger';
+        case 'teacher_home': return 'Faculty Hub';
+        case 'teacher_class_detail': return 'Class Detail';
+        case 'student_home': return 'Student Hub';
+        case 'student_my_learning': return 'My Learning';
+        case 'subject_detail': return 'Course Hub';
+        case 'chapter_detail': return 'Chapter';
+        case 'lesson_workspace': return 'Lesson';
+        case 'assignments': return 'Assignments';
+        case 'calendar': return 'Calendar';
+        default: return 'Previous View';
+      }
+    }
+    if (['principal_grade', 'principal_teachers', 'principal_audit'].includes(currentView)) {
+      return 'Executive Overview';
+    }
+    if (currentView === 'teacher_class_detail') {
+      return currentRole === 'principal' ? 'Grade Intelligence' : 'Faculty Hub';
+    }
+    if (currentView === 'lesson_workspace') return 'Chapter';
+    if (currentView === 'chapter_detail') return 'Course';
+    if (currentView === 'subject_detail') return currentRole === 'student' ? 'My Learning' : 'Classes';
+    return 'Home';
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.altKey && e.key === 'ArrowLeft' && canGoBack) {
+        e.preventDefault();
+        handleGoBack();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canGoBack, navHistory, currentView, currentRole]);
 
   const handleNavigateWithContext = (
     targetView: DeepEducationView,
@@ -363,9 +493,9 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
       }
     }
     if (currentRole === 'teacher') {
-      setCurrentView('teacher_class_detail');
+      handleSafeNavigate('teacher_class_detail', courseId);
     } else {
-      setCurrentView('subject_detail');
+      handleSafeNavigate('subject_detail', courseId);
     }
   };
 
@@ -377,14 +507,14 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (unit?.lessons && unit.lessons.length > 0) {
       setActiveLessonId(unit.lessons[0].id);
     }
-    setCurrentView('chapter_detail');
+    handleSafeNavigate('chapter_detail', courseId);
   };
 
   const handleOpenLesson = (courseId: string, unitId: string, lessonId: string) => {
     setActiveCourseId(courseId);
     setActiveUnitId(unitId);
     setActiveLessonId(lessonId);
-    setCurrentView('lesson_workspace');
+    handleSafeNavigate('lesson_workspace', courseId);
   };
 
   const handleToggleLessonComplete = async (isCompleted: boolean) => {
@@ -653,7 +783,12 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (['engagement_leaderboard', 'engagement_activity'].includes(currentView)) return 'engagement';
     if (currentView === 'teacher_review') return 'teacher_review';
     if (currentView === 'teacher_attention') return 'teacher_attention';
-    if (currentView === 'teacher_session_prep' || currentView === 'teacher_post_class_review') return 'teacher_prep';
+    if (currentView === 'teacher_session_prep') return 'teacher_prep';
+    if (currentView === 'teacher_post_class_review') return 'teacher_post_class_review';
+    if (currentView === 'principal_home') return 'principal_overview';
+    if (currentView === 'principal_grade') return 'principal_grade';
+    if (currentView === 'principal_teachers') return 'principal_teachers';
+    if (currentView === 'principal_audit') return 'principal_audit';
     if (currentView === 'assignments') return 'assignments';
     if (currentView === 'calendar') return 'calendar';
     if (currentView === 'focus') return 'focus';
@@ -666,14 +801,13 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (currentView === 'classroom') return 'classroom';
     if (currentView === 'smartboard_os') return 'smartboard_os';
     if (currentView === 'board_history') return 'board_history';
-    if (['principal_home', 'principal_grade', 'principal_teachers', 'principal_audit'].includes(currentView)) return 'principal_overview';
     return 'home';
   };
 
   const handleSidebarSelectSection = (section: EducationSidebarSection) => {
     switch (section) {
       case 'home':
-        setCurrentView(
+        handleSafeNavigate(
           currentRole === 'student'
             ? 'student_home'
             : currentRole === 'teacher'
@@ -684,64 +818,73 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
         );
         break;
       case 'principal_overview':
-        setCurrentView('principal_home');
+        handleSafeNavigate('principal_home');
+        break;
+      case 'principal_grade':
+        handleSafeNavigate('principal_grade');
+        break;
+      case 'principal_teachers':
+        handleSafeNavigate('principal_teachers');
+        break;
+      case 'principal_audit':
+        handleSafeNavigate('principal_audit');
         break;
       case 'teacher_prep':
-        setCurrentView('teacher_session_prep');
+        handleSafeNavigate('teacher_session_prep');
         break;
       case 'teacher_review':
-        setCurrentView('teacher_review');
+        handleSafeNavigate('teacher_review');
         break;
       case 'teacher_attention':
-        setCurrentView('teacher_attention');
+        handleSafeNavigate('teacher_attention');
         break;
       case 'teacher_post_class_review':
-        setCurrentView('teacher_post_class_review');
+        handleSafeNavigate('teacher_post_class_review');
         break;
       case 'my_learning':
-        setCurrentView('student_my_learning');
+        handleSafeNavigate('student_my_learning');
         break;
       case 'engagement':
-        setCurrentView('engagement_leaderboard');
+        handleSafeNavigate('engagement_leaderboard');
         break;
       case 'classes':
-        setCurrentView('classes');
+        handleSafeNavigate('classes');
         break;
       case 'assignments':
-        setCurrentView('assignments');
+        handleSafeNavigate('assignments');
         break;
       case 'calendar':
-        setCurrentView('calendar');
+        handleSafeNavigate('calendar');
         break;
       case 'focus':
-        setCurrentView('focus');
+        handleSafeNavigate('focus');
         break;
       case 'workspace':
-        setCurrentView('workspace');
+        handleSafeNavigate('workspace');
         break;
       case 'community':
-        setCurrentView('community');
+        handleSafeNavigate('community');
         break;
       case 'study_groups':
-        setCurrentView('study_groups');
+        handleSafeNavigate('study_groups');
         break;
       case 'notes':
-        setCurrentView('notes');
+        handleSafeNavigate('notes');
         break;
       case 'knowledge':
-        setCurrentView('knowledge');
+        handleSafeNavigate('knowledge');
         break;
       case 'videos':
-        setCurrentView('videos');
+        handleSafeNavigate('videos');
         break;
       case 'classroom':
-        setCurrentView('classroom');
+        handleSafeNavigate('classroom');
         break;
       case 'smartboard_os':
-        setCurrentView('smartboard_os');
+        handleSafeNavigate('smartboard_os');
         break;
       case 'board_history':
-        setCurrentView('board_history');
+        handleSafeNavigate('board_history');
         break;
     }
   };
@@ -979,7 +1122,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
         </div>
 
         {/* Interactive Breadcrumb Trail & Persistent Focus Indicator */}
-        <div className="mb-6 max-w-4xl mx-auto w-full flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-6 max-w-5xl mx-auto w-full flex flex-wrap items-center justify-between gap-3">
           {breadcrumbs.length > 0 ? (
             <EducationBreadcrumbs
               items={breadcrumbs}
@@ -992,6 +1135,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
                     : 'principal_home'
                 )
               }
+              onBack={canGoBack ? handleGoBack : undefined}
+              backLabel={getPreviousLabel()}
             />
           ) : <div />}
 
@@ -1039,6 +1184,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onSelectUnit={(uId) => handleSelectUnit(activeCourse.id, uId)}
               onOpenLesson={(uId, lId) => handleOpenLesson(activeCourse.id, uId, lId)}
               onNavigateTab={(t) => setCurrentView(t as any)}
+              onBack={handleGoBack}
             />
           )}
 
@@ -1047,7 +1193,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               course={activeCourse}
               unit={activeUnit}
               onOpenLesson={(lId) => handleOpenLesson(activeCourse.id, activeUnit.id, lId)}
-              onBackToCourse={() => setCurrentView('subject_detail')}
+              onBackToCourse={handleGoBack}
               onOpenPractice={(lId) => {
                 setActiveLessonId(lId);
                 setCurrentView('lesson_practice');
@@ -1066,7 +1212,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               lesson={activeLesson}
               onToggleComplete={handleToggleLessonComplete}
               onNavigateLesson={(uId, lId) => handleOpenLesson(activeCourse.id, uId, lId)}
-              onBackToChapter={() => setCurrentView('chapter_detail')}
+              onBackToChapter={handleGoBack}
               onOpenPractice={(lId) => {
                 setActiveLessonId(lId);
                 setCurrentView('lesson_practice');
@@ -1081,7 +1227,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               course={activeCourse}
               unit={activeUnit}
               lesson={activeLesson}
-              onBackToLesson={() => setCurrentView('lesson_workspace')}
+              onBackToLesson={handleGoBack}
               onCompletePractice={(score, total) => {
                 showNotification(`Practice completed: scored ${score}/${total} (+10 points awarded)`);
               }}
@@ -1180,7 +1326,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             <TeacherClassDetailView
               course={activeCourse}
               assignments={assignments}
-              onBackToClasses={() => setCurrentView('classes')}
+              onBackToClasses={handleGoBack}
               onOpenUnit={(uId) => handleSelectUnit(activeCourse.id, uId)}
               onOpenCreateUnitModal={() =>
                 setCurriculumModal({
@@ -1212,7 +1358,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               classes={classes}
               assignments={assignments}
               submissions={submissions}
-              onBack={() => setCurrentView('teacher_home')}
+              onBack={handleGoBack}
               onGradeSubmission={(submissionId, grade, feedback) => {
                 handleGradeSubmission(submissionId, grade, feedback);
               }}
@@ -1225,7 +1371,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           {currentView === 'teacher_attention' && (
             <TeacherAttentionView
               classes={classes}
-              onBack={() => setCurrentView('teacher_home')}
+              onBack={handleGoBack}
               onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
@@ -1234,7 +1380,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           {currentView === 'teacher_post_class_review' && (
             <PostClassReviewView
               sessionId={academicContext.classSessionId || 'session-phys-101'}
-              onBack={() => setCurrentView('teacher_home')}
+              onBack={handleGoBack}
               onNavigateToContext={(v, ctx) => handleNavigateWithContext(v as any, ctx)}
             />
           )}
@@ -1267,20 +1413,20 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
           {currentView === 'principal_grade' && (
             <PrincipalGradeView
               gradeId={activeGradeId}
-              onBack={() => setCurrentView('principal_home')}
+              onBack={handleGoBack}
               onNavigateToClass={(clsId) => handleSelectCourse(clsId)}
             />
           )}
 
           {currentView === 'principal_teachers' && (
             <PrincipalTeachersView
-              onBack={() => setCurrentView('principal_home')}
+              onBack={handleGoBack}
             />
           )}
 
           {currentView === 'principal_audit' && (
             <PrincipalAuditView
-              onBack={() => setCurrentView('principal_home')}
+              onBack={handleGoBack}
             />
           )}
 

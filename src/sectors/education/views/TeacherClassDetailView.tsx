@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { ClassMessagingDeck } from './ClassMessagingDeck.tsx';
 import { FileUploadModal } from '../../../components/files/FileUploadModal.tsx';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
 import type { FileRecord } from '../../../types/storage.ts';
 
 interface TeacherClassDetailViewProps {
@@ -129,19 +128,7 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto w-full font-sans pb-12">
-      {/* 1. Universal Back Navigation */}
-      <SharedBackButton
-        onBack={onBackToClasses}
-        parentLabel="Managed Classes"
-        currentLabel={course.code}
-        hierarchySegments={[
-          { label: 'Faculty Hub', onClick: onBackToClasses },
-          { label: 'Classes', onClick: onBackToClasses },
-          { label: course.code }
-        ]}
-      />
-
-      {/* 2. Class Intelligence Hero Banner */}
+      {/* 1. Class Intelligence Hero Banner */}
       <div className="p-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-blue-950/40 via-cyan-950/30 to-black/70 backdrop-blur-md space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

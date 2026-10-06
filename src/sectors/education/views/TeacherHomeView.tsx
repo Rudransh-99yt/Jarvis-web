@@ -22,6 +22,8 @@ import {
   HelpCircle,
   MessageSquare
 } from 'lucide-react';
+import { GlassCard } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface TeacherHomeViewProps {
   classes: EducationClass[];
@@ -114,42 +116,42 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
   const nextSession = sessions.find((s) => s.status === 'APPROVED' || s.status === 'SCHEDULED') || sessions[0];
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto w-full font-sans pb-12">
+    <div className="space-y-6 max-w-5xl mx-auto w-full font-sans pb-12">
       {/* 1. Command Center Identity & Calm Header */}
       <div className="space-y-1">
-        <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase font-semibold flex items-center gap-2">
+        <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase font-medium flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
           <span>Teacher Operating System · Command Center</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-100 tracking-tight">
           Today's Teaching Operations
         </h1>
-        <p className="text-xs sm:text-sm text-slate-400 font-mono">
-          Dr. Helen Cho · {classes.length} Active Cohorts · {totalStudents} Cadets Enrolled · Stark Faculty of Physics
+        <p className="text-xs sm:text-sm text-slate-400">
+          Dr. Helen Cho <span className="text-slate-500">·</span> {classes.length} Active Cohorts <span className="text-slate-500">·</span> {totalStudents} Cadets Enrolled <span className="text-slate-500">·</span> Stark Faculty of Physics
         </p>
       </div>
 
       {/* 2. TODAY: What matters to me right now? */}
-      <div className="rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-950/40 via-slate-900/80 to-slate-950 p-6 backdrop-blur-md shadow-[0_0_30px_rgba(59,130,246,0.12)] space-y-4">
+      <GlassCard className="p-6 border-blue-500/30 bg-gradient-to-r from-blue-950/40 via-slate-900/80 to-slate-950 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-semibold">
+            <div className="flex items-center gap-2 text-cyan-400 text-xs font-medium">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>TODAY'S NEXT CLASS · 09:00 AM</span>
-              <span className="text-slate-600">·</span>
-              <span className="text-emerald-400 font-bold uppercase tracking-wider">
+              <span className="text-slate-600" aria-hidden="true">·</span>
+              <span className="text-emerald-400 font-semibold uppercase tracking-wider">
                 {nextSession ? nextSession.status : 'READY TO TEACH'}
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
               {nextSession ? `${nextSession.courseCode}: ${nextSession.topic}` : `${primaryClass.code}: Harmonic Oscillators & Annihilation Algebra`}
             </h2>
-            <div className="text-xs sm:text-sm text-slate-300 font-mono flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="text-xs sm:text-sm text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-1">
               <span>{primaryClass.name}</span>
-              <span className="text-slate-600">·</span>
+              <span className="text-slate-600" aria-hidden="true">·</span>
               <span>Room: {primaryClass.room || 'Quantum Hall 4B'}</span>
-              <span className="text-slate-600">·</span>
-              <span>{primaryClass.studentCount} Cadets</span>
+              <span className="text-slate-600" aria-hidden="true">·</span>
+              <span className="tabular-nums font-mono">{primaryClass.studentCount}</span> Cadets
             </div>
           </div>
 
@@ -157,7 +159,7 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
             <button
               type="button"
               onClick={() => onNavigateTab('classroom')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-400/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold tracking-wider transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)] cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-400/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-semibold tracking-wider transition-all cursor-pointer focus-ring"
             >
               <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
               <span>Launch SmartBoard</span>
@@ -165,7 +167,7 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
             <button
               type="button"
               onClick={() => onNavigateTab('teacher_session_prep')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-slate-800/80 hover:bg-slate-700/80 text-cyan-300 hover:text-white text-xs font-semibold tracking-wider transition-all cursor-pointer focus-ring"
             >
               <Sparkles className="w-4 h-4 text-cyan-400" />
               <span>Session Plan</span>
@@ -174,42 +176,42 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
         </div>
 
         {/* Operational Overview Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-800/80 text-xs font-mono">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-white/[0.06] text-xs">
           <div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Scheduled Today</div>
-            <div className="text-white font-bold">1 Lecture · 45 mins</div>
+            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Scheduled Today</div>
+            <div className="text-slate-100 font-bold mt-0.5">1 Lecture · 45 mins</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Preparation Status</div>
-            <div className="text-emerald-400 font-bold">Approved & Synchronized</div>
+            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Preparation Status</div>
+            <div className="text-emerald-400 font-bold mt-0.5">Approved & Synchronized</div>
           </div>
           <div>
-            <div className="text-[10px] text-amber-400/80 uppercase tracking-wider">Pending Grading</div>
-            <div className="text-amber-300 font-bold">{pendingGrading.length} Submissions</div>
+            <div className="text-[11px] text-amber-400/80 uppercase tracking-wider">Pending Grading</div>
+            <div className="text-amber-300 font-bold mt-0.5 tabular-nums font-mono">{pendingGrading.length} Submissions</div>
           </div>
           <div>
-            <div className="text-[10px] text-purple-400/80 uppercase tracking-wider">Attention Signals</div>
-            <div className="text-purple-300 font-bold">{attentionSignals.length} Cadets Need Follow-up</div>
+            <div className="text-[11px] text-purple-400/80 uppercase tracking-wider">Attention Signals</div>
+            <div className="text-purple-300 font-bold mt-0.5 tabular-nums font-mono">{attentionSignals.length} Cadets Need Follow-up</div>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
       {/* 3. TEACHER ACTION QUEUE: Aggregated actionable work */}
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
           <div className="flex items-center gap-2">
             <Flame className="w-4 h-4 text-amber-400" />
-            <h2 className="text-xs font-mono font-bold tracking-wider text-slate-200 uppercase">
+            <h2 className="text-xs font-semibold tracking-wider text-slate-200 uppercase">
               Teacher Action Queue ({actionQueue.length} Active Items)
             </h2>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs font-mono">
+          <div className="flex items-center gap-1.5 text-xs">
             <button
               onClick={() => setActiveQueueFilter('all')}
-              className={`px-2.5 py-1 rounded text-[11px] transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer focus-ring ${
                 activeQueueFilter === 'all'
-                  ? 'bg-slate-800 text-white font-bold border border-slate-700'
+                  ? 'bg-slate-800 text-white font-semibold border border-white/[0.08]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -217,9 +219,9 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
             </button>
             <button
               onClick={() => setActiveQueueFilter('grading')}
-              className={`px-2.5 py-1 rounded text-[11px] transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer focus-ring ${
                 activeQueueFilter === 'grading'
-                  ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30'
+                  ? 'bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -227,9 +229,9 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
             </button>
             <button
               onClick={() => setActiveQueueFilter('session')}
-              className={`px-2.5 py-1 rounded text-[11px] transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer focus-ring ${
                 activeQueueFilter === 'session'
-                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -237,9 +239,9 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
             </button>
             <button
               onClick={() => setActiveQueueFilter('attention')}
-              className={`px-2.5 py-1 rounded text-[11px] transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer focus-ring ${
                 activeQueueFilter === 'attention'
-                  ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30'
+                  ? 'bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -248,9 +250,9 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
           </div>
         </div>
 
-        <div className="divide-y divide-slate-800/80 border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 backdrop-blur-sm">
+        <GlassCard className="divide-y divide-white/[0.06] p-0 overflow-hidden">
           {filteredQueue.length === 0 ? (
-            <div className="p-6 text-center text-xs font-mono text-slate-500">
+            <div className="p-6 text-center text-xs text-slate-400">
               No pending action items matching the active filter.
             </div>
           ) : (
@@ -261,12 +263,12 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
               return (
                 <div
                   key={item.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-800/40 transition-colors"
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors"
                 >
                   <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2 text-xs font-mono">
+                    <div className="flex items-center gap-2 text-xs">
                       <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider font-mono ${
                           isUrgent
                             ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                             : isHigh
@@ -276,18 +278,18 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                       >
                         {item.priority}
                       </span>
-                      <span className="font-bold text-white">{item.courseCode}</span>
-                      <span className="text-slate-600">·</span>
+                      <span className="font-semibold text-slate-100 font-mono">{item.courseCode}</span>
+                      <span className="text-slate-600" aria-hidden="true">·</span>
                       <span className="text-slate-400 truncate">{item.title}</span>
                     </div>
-                    <p className="text-xs text-slate-300 font-sans line-clamp-1">{item.subtitle}</p>
+                    <p className="text-xs text-slate-300 line-clamp-1">{item.subtitle}</p>
                   </div>
 
                   <div className="shrink-0 self-start sm:self-center">
                     <button
                       type="button"
                       onClick={() => handleActionClick(item)}
-                      className="px-3.5 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg border border-white/[0.08] bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white text-xs transition-all flex items-center gap-1.5 cursor-pointer focus-ring"
                     >
                       <span>{item.actionLabel}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -297,7 +299,7 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
               );
             })
           )}
-        </div>
+        </GlassCard>
       </div>
 
       {/* 4. TEACHING QUEUE: Preparation, Approvals, Ready to Teach */}
@@ -305,14 +307,14 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-xs font-mono font-bold tracking-wider text-slate-200 uppercase">
+            <h2 className="text-xs font-semibold tracking-wider text-slate-200 uppercase">
               Teaching Queue · Instructional Preparation & Lifecycle
             </h2>
           </div>
           <button
             type="button"
             onClick={() => onNavigateTab('teacher_session_prep')}
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer focus-ring rounded"
           >
             <span>All ClassSessions</span>
             <ArrowRight className="w-3 h-3" />
@@ -324,7 +326,6 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
             const isApproved = s.status === 'APPROVED';
             const isReadyForReview = s.status === 'READY_FOR_REVIEW';
             const isScheduled = s.status === 'SCHEDULED';
-            const isDraft = s.status === 'DRAFT';
 
             return (
               <div
@@ -336,12 +337,12 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                     onNavigateTab('teacher_session_prep');
                   }
                 }}
-                className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/40 transition-all cursor-pointer group space-y-2.5"
+                className="p-4 rounded-xl border border-white/[0.08] glass-level-2-interactive cursor-pointer group space-y-2.5"
               >
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="font-bold text-cyan-300">{s.courseCode}</span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-cyan-300 font-mono">{s.courseCode}</span>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-semibold font-mono ${
                       isApproved
                         ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
                         : isReadyForReview
@@ -356,17 +357,17 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-bold text-white group-hover:text-cyan-100 transition-colors line-clamp-1">
+                  <h3 className="text-sm font-semibold text-slate-100 group-hover:text-cyan-100 transition-colors line-clamp-1">
                     {s.topic}
                   </h3>
-                  <div className="text-xs text-slate-400 font-mono mt-0.5">
-                    {s.durationMinutes} mins · {s.sourceMaterials?.length || 0} Sources Attached
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    <span className="tabular-nums font-mono">{s.durationMinutes}</span> mins · <span className="tabular-nums font-mono">{s.sourceMaterials?.length || 0}</span> Sources Attached
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
+                <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400">
                   <span>{isApproved ? 'Ready for classroom' : isReadyForReview ? 'Needs approval' : 'Draft stage'}</span>
-                  <span className="text-cyan-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                  <span className="text-cyan-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform font-medium">
                     <span>Open Plan</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </span>
@@ -382,39 +383,39 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="w-4 h-4 text-amber-400" />
-            <h2 className="text-xs font-mono font-bold tracking-wider text-slate-200 uppercase">
+            <h2 className="text-xs font-semibold tracking-wider text-slate-200 uppercase">
               Review Queue · Problem Sets & Quizzes ({pendingGrading.length} Pending)
             </h2>
           </div>
           <button
             type="button"
             onClick={() => onNavigateTab('teacher_review')}
-            className="text-xs font-mono text-amber-400 hover:text-amber-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-amber-400 hover:text-amber-200 flex items-center gap-1 transition-colors cursor-pointer focus-ring rounded"
           >
             <span>Open Review Queue</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
 
-        <div className="divide-y divide-slate-800/80 border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60">
+        <GlassCard className="divide-y divide-white/[0.06] p-0 overflow-hidden">
           {submissions.slice(0, 3).map((sub) => {
             const isPending = sub.status === 'submitted';
 
             return (
               <div
                 key={sub.id}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-800/40 transition-colors"
+                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors"
               >
                 <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2 text-xs font-mono">
-                    <span className="font-bold text-white">{sub.studentName}</span>
-                    <span className="text-slate-600">·</span>
-                    <span className="text-cyan-300 font-semibold">{sub.className.split(':')[0]}</span>
-                    <span className="text-slate-600">·</span>
-                    <span className="text-slate-400">{sub.submittedAt}</span>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="font-semibold text-slate-100">{sub.studentName}</span>
+                    <span className="text-slate-600" aria-hidden="true">·</span>
+                    <span className="text-cyan-300 font-mono text-xs">{sub.className.split(':')[0]}</span>
+                    <span className="text-slate-600" aria-hidden="true">·</span>
+                    <span className="text-slate-400 text-xs">{sub.submittedAt}</span>
                   </div>
                   <h3 className="text-sm text-slate-200 font-semibold truncate">{sub.assignmentTitle}</h3>
-                  <p className="text-xs text-slate-400 line-clamp-1 italic font-mono">"{sub.content}"</p>
+                  <p className="text-xs text-slate-400 line-clamp-1 italic">"{sub.content}"</p>
                 </div>
 
                 <div className="shrink-0 self-start sm:self-center">
@@ -428,13 +429,13 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                           onSelectSubmissionForGrading(sub);
                         }
                       }}
-                      className="px-3.5 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs transition-all flex items-center gap-1.5 cursor-pointer focus-ring"
                     >
                       <Clock className="w-3.5 h-3.5 text-amber-400" />
                       <span>Grade Submission</span>
                     </button>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-400 font-bold px-2.5 py-1 rounded bg-emerald-950/50 border border-emerald-500/30">
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-semibold px-2.5 py-1 rounded bg-emerald-950/50 border border-emerald-500/30 tabular-nums font-mono">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>{sub.grade}/100</span>
                     </span>
@@ -443,22 +444,22 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
               </div>
             );
           })}
-        </div>
+        </GlassCard>
       </div>
 
       {/* 6. STUDENTS NEEDING ATTENTION: Evidence-Based Signals */}
-      <div className="p-5 rounded-2xl border border-purple-500/20 bg-purple-950/10 backdrop-blur-md space-y-3">
+      <GlassCard className="p-5 border-purple-500/20 bg-purple-950/10 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-purple-300">
             <AlertTriangle className="w-4 h-4 text-purple-400" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider">
+            <h3 className="text-xs font-semibold uppercase tracking-wider">
               Students Needing Follow-up ({attentionSignals.length} Detected Signals)
             </h3>
           </div>
           <button
             type="button"
             onClick={() => onNavigateTab('teacher_attention')}
-            className="text-xs font-mono text-purple-400 hover:text-purple-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-purple-400 hover:text-purple-200 flex items-center gap-1 transition-colors cursor-pointer focus-ring rounded"
           >
             <span>All Attention Signals</span>
             <ArrowRight className="w-3 h-3" />
@@ -469,15 +470,15 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
           {attentionSignals.slice(0, 3).map((sig) => (
             <div
               key={sig.id}
-              className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs font-mono"
+              className="p-3.5 rounded-xl border border-white/[0.06] bg-slate-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs"
             >
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-white">{sig.studentName}</span>
-                  <span className="text-slate-500">· {sig.courseCode}</span>
-                  <span className="text-purple-400 font-semibold">[{sig.title}]</span>
+                  <span className="font-semibold text-slate-100">{sig.studentName}</span>
+                  <span className="text-slate-400">· {sig.courseCode}</span>
+                  <span className="text-purple-400 font-medium">[{sig.title}]</span>
                 </div>
-                <p className="text-[11px] text-slate-300 font-sans">{sig.description}</p>
+                <p className="text-[11px] text-slate-300">{sig.description}</p>
                 <p className="text-[10px] text-slate-400 italic">Evidence: {sig.evidenceSnippet}</p>
               </div>
 
@@ -490,22 +491,22 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                     onNavigateTab(sig.actionTarget as any);
                   }
                 }}
-                className="px-3 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-[11px] self-start sm:self-center transition-colors shrink-0 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-[11px] self-start sm:self-center transition-colors shrink-0 cursor-pointer focus-ring"
               >
                 {sig.actionLabel}
               </button>
             </div>
           ))}
         </div>
-      </div>
+      </GlassCard>
 
       {/* 7. RECENT CLASS ACTIVITY & POST-CLASS REVIEW */}
       {recentReview && (
-        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-3">
+        <GlassCard className="p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
                 Recent Class Delivery & Post-Class Review
               </h3>
             </div>
@@ -518,34 +519,34 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                   onNavigateTab('teacher_post_class_review');
                 }
               }}
-              className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-xs text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer focus-ring rounded"
             >
               <span>Full Analytics Report</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/60 space-y-3">
+          <div className="p-4 rounded-xl border border-white/[0.06] bg-slate-900/60 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <div className="text-sm font-bold text-white">{recentReview.sessionTopic}</div>
-                <div className="text-xs font-mono text-slate-400">
-                  {recentReview.courseCode}: {recentReview.courseName} · Delivered Oct 3 · {recentReview.durationMinutes} mins
+                <div className="text-sm font-semibold text-slate-100">{recentReview.sessionTopic}</div>
+                <div className="text-xs text-slate-400">
+                  {recentReview.courseCode}: {recentReview.courseName} <span className="text-slate-600">·</span> Delivered Oct 3 <span className="text-slate-600">·</span> <span className="tabular-nums font-mono">{recentReview.durationMinutes}</span> mins
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="text-emerald-400 font-bold">{recentReview.participationRate}% Attendance</span>
-                <span className="text-slate-600">·</span>
-                <span className="text-cyan-400 font-bold">{recentReview.quizAccuracy}% Pulse Accuracy</span>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-emerald-400 font-semibold tabular-nums font-mono">{recentReview.participationRate}% Attendance</span>
+                <span className="text-slate-600" aria-hidden="true">·</span>
+                <span className="text-cyan-400 font-semibold tabular-nums font-mono">{recentReview.quizAccuracy}% Pulse Accuracy</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 font-sans border-t border-slate-800/60 pt-2">
+            <p className="text-xs text-slate-300 border-t border-white/[0.06] pt-2 leading-relaxed">
               {recentReview.summaryNotes}
             </p>
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-[10px] font-mono uppercase text-slate-400 font-bold">Suggested Follow-ups:</span>
+              <span className="text-[10px] uppercase text-slate-400 font-semibold">Suggested Follow-ups:</span>
               {recentReview.groundedNextActions.slice(0, 2).map((na) => (
                 <button
                   key={na.id}
@@ -557,7 +558,7 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                       onNavigateTab(na.actionTarget as any);
                     }
                   }}
-                  className="px-2.5 py-1 rounded-md border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                  className="px-2.5 py-1 rounded-md border border-white/[0.08] bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-[11px] flex items-center gap-1 cursor-pointer transition-colors focus-ring"
                 >
                   <ArrowRight className="w-3 h-3 text-cyan-400" />
                   <span>{na.actionLabel}</span>
@@ -565,37 +566,37 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
               ))}
             </div>
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* 8. NEXT: Tomorrow & Next Unprepared Lesson */}
-      <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-3">
+      <GlassCard className="p-5 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
               Next in Curriculum Track & Tomorrow's Preparation
             </h3>
           </div>
           <button
             type="button"
             onClick={() => onNavigateTab('calendar')}
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer focus-ring rounded"
           >
             <span>Academic Calendar</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
 
-        <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 rounded-xl border border-white/[0.06] bg-slate-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
-            <div className="text-xs font-mono text-cyan-400 font-semibold">
+            <div className="text-xs text-cyan-400 font-medium">
               Tomorrow · 09:00 AM · Lesson 1.2
             </div>
-            <div className="text-sm font-bold text-white">
+            <div className="text-sm font-semibold text-slate-100">
               Gauss Theorem Applications & Electric Conductors
             </div>
-            <div className="text-xs text-slate-400 font-mono">
+            <div className="text-xs text-slate-400">
               PHYS-301 · Unit 1: Electrostatics · Preparation recommended from NCERT Chapter 1
             </div>
           </div>
@@ -609,13 +610,13 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
                 onNavigateTab('teacher_session_prep');
               }
             }}
-            className="px-3.5 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
+            className="px-3.5 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold tracking-wider transition-all flex items-center gap-1.5 self-start sm:self-center cursor-pointer focus-ring"
           >
             <Sparkles className="w-4 h-4 text-cyan-400" />
             <span>Prepare Tomorrow's Class</span>
           </button>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 };

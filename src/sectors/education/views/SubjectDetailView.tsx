@@ -18,7 +18,8 @@ import {
   HelpCircle,
   Sparkles
 } from 'lucide-react';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
+import { GlassCard, Badge, ProgressIndicator } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface SubjectDetailViewProps {
   course: EducationClass;
@@ -26,6 +27,7 @@ interface SubjectDetailViewProps {
   onSelectUnit: (unitId: string) => void;
   onOpenLesson: (unitId: string, lessonId: string) => void;
   onNavigateTab: (tab: 'classroom' | 'videos' | 'assignments' | 'knowledge' | 'classes' | 'my_learning') => void;
+  onBack?: () => void;
 }
 
 export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
@@ -33,7 +35,8 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
   assignments,
   onSelectUnit,
   onOpenLesson,
-  onNavigateTab
+  onNavigateTab,
+  onBack: _onBack
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'chapters' | 'tests' | 'resources' | 'progress'>('chapters');
   const [notice, setNotice] = useState<string | null>(null);
@@ -57,24 +60,18 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto font-sans">
-      {/* 1. Universal Back Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <SharedBackButton
-          onBack={() => onNavigateTab('my_learning')}
-          parentLabel="My Learning"
-          currentLabel={course.name}
-          hierarchySegments={[
-            { label: 'My Learning', onClick: () => onNavigateTab('my_learning') },
-            { label: course.code }
-          ]}
-        />
+    <div className="space-y-6 max-w-5xl mx-auto font-sans pb-12">
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-xs font-mono text-cyan-400/80">
+          Viewing course syllabus: <span className="font-semibold text-cyan-300">{course.code}</span>
+        </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => onNavigateTab('classroom')}
-            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-all cursor-pointer focus-ring"
           >
             <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
             <span>Smart Classroom</span>
@@ -90,7 +87,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
       )}
 
       {/* 2. Course Header Banner */}
-      <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
+      <GlassCard className="p-6 space-y-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-mono">
             <span className="font-bold text-cyan-300">{course.code}</span>
@@ -108,33 +105,33 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         </div>
 
         {/* Compact Metadata Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-800 text-xs font-mono">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-white/[0.06] text-xs font-mono">
           <div>
-            <div className="text-[10px] text-slate-500 uppercase">Syllabus Chapters</div>
-            <div className="text-white font-bold">{units.length} Units</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Syllabus Chapters</div>
+            <div className="text-white font-bold mt-0.5">{units.length} Units</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-500 uppercase">Total Lessons</div>
-            <div className="text-cyan-300 font-bold">{totalLessons} Topics</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Total Lessons</div>
+            <div className="text-cyan-300 font-bold mt-0.5">{totalLessons} Topics</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-500 uppercase">Curriculum Mastery</div>
-            <div className="text-emerald-400 font-bold">{progressPct}%</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Curriculum Mastery</div>
+            <div className="text-emerald-400 font-bold mt-0.5">{progressPct}%</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-500 uppercase">Cohort Schedule</div>
-            <div className="text-slate-300 font-bold truncate">{course.schedule.split(' ')[0]}</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Cohort Schedule</div>
+            <div className="text-slate-300 font-bold truncate mt-0.5">{course.schedule.split(' ')[0]}</div>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
       {/* 3. Deep Progressive Disclosure Tab Bar */}
-      <div className="flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-slate-800 bg-slate-900/60 font-mono text-xs">
+      <div className={`flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-white/[0.08] ${glassTokens.level2} font-mono text-xs`}>
         <button
           type="button"
           onClick={() => setActiveTab('chapters')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'chapters' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'chapters' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -144,8 +141,8 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'overview' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'overview' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
@@ -155,8 +152,8 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('tests')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'tests' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'tests' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
@@ -166,8 +163,8 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('resources')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'resources' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'resources' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -177,8 +174,8 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('progress')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'progress' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+            activeTab === 'progress' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
@@ -191,7 +188,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <div className="space-y-4">
           {/* Quick Resume Card for Next Lesson */}
           {nextLesson && currentChapter && (
-            <div className="p-5 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 to-slate-900/80 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <GlassCard className="p-5 border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 to-slate-900/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
                   Recommended Next Lesson
@@ -207,12 +204,12 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenLesson(currentChapter.id, nextLesson.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-white text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shrink-0"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-white text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shrink-0 focus-ring"
               >
                 <PlayCircle className="w-4 h-4 text-cyan-300" />
                 <span>Enter Study Room →</span>
               </button>
-            </div>
+            </GlassCard>
           )}
 
           {/* Chapters Directory */}
@@ -228,10 +225,11 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
                 const uPct = uTotal > 0 ? Math.round((uCompleted / uTotal) * 100) : 0;
 
                 return (
-                  <div
+                  <GlassCard
                     key={unit.id}
                     onClick={() => onSelectUnit(unit.id)}
-                    className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/40 hover:bg-slate-900/90 cursor-pointer transition-all space-y-3 group"
+                    interactive
+                    className="p-5 space-y-3 group"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="space-y-1">
@@ -248,7 +246,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
                       </div>
 
                       <div className="flex items-center gap-3 self-start sm:self-center">
-                        <span className="text-xs font-mono font-bold text-cyan-300">{uPct}%</span>
+                        <span className="text-xs font-mono font-bold text-cyan-300 tabular-nums">{uPct}%</span>
                         <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </div>
@@ -257,13 +255,8 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
                       {unit.description}
                     </p>
 
-                    <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
-                      <div
-                        className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all"
-                        style={{ width: `${uPct}%` }}
-                      />
-                    </div>
-                  </div>
+                    <ProgressIndicator value={uPct} size="sm" />
+                  </GlassCard>
                 );
               })}
             </div>
@@ -273,25 +266,25 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
 
       {/* TAB 2: COURSE OVERVIEW */}
       {activeTab === 'overview' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+        <GlassCard className="p-6 space-y-4">
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
             Course Objectives & Curriculum Overview
           </h2>
           <p className="text-sm text-slate-200 leading-relaxed font-sans">
             {course.description}
           </p>
-          <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 text-xs font-mono space-y-2">
+          <div className="p-4 rounded-xl border border-white/[0.06] bg-slate-950/60 text-xs font-mono space-y-2">
             <div className="text-slate-400 font-bold uppercase">Classroom & Meeting Schedule</div>
             <div className="text-white">{course.schedule}</div>
             <div className="text-slate-400">Campus Location: {course.room}</div>
             <div className="text-slate-400">Enrolled Cadets: {course.studentCount} active students</div>
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* TAB 3: ASSIGNMENTS & TESTS */}
       {activeTab === 'tests' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+        <GlassCard className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
               Coursework & Problem Sets ({courseAssignments.length})
@@ -299,52 +292,52 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
             <button
               type="button"
               onClick={() => onNavigateTab('assignments')}
-              className="text-xs font-mono text-cyan-400 hover:text-cyan-300"
+              className="text-xs font-mono text-cyan-400 hover:text-cyan-300 cursor-pointer focus-ring rounded"
             >
               Open Full Ledger →
             </button>
           </div>
 
-          <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/60">
+          <div className="divide-y divide-white/[0.06] border border-white/[0.06] rounded-xl overflow-hidden bg-slate-950/60">
             {courseAssignments.map((asg) => (
-              <div key={asg.id} className="p-4 flex items-center justify-between gap-3 hover:bg-slate-900/40">
+              <div key={asg.id} className="p-4 flex items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors">
                 <div className="space-y-0.5">
                   <div className="text-sm font-semibold text-white">{asg.title}</div>
-                  <div className="text-xs font-mono text-slate-500">Due {asg.dueDate} · {asg.category}</div>
+                  <div className="text-xs font-mono text-slate-400">Due {asg.dueDate} · {asg.category}</div>
                 </div>
                 <button
                   type="button"
                   onClick={() => onNavigateTab('assignments')}
-                  className="px-3 py-1 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 text-xs font-mono hover:bg-slate-700"
+                  className="px-3 py-1 rounded-lg border border-white/[0.08] bg-slate-800 text-slate-300 text-xs font-mono hover:bg-slate-700 cursor-pointer focus-ring"
                 >
                   View Problem
                 </button>
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* TAB 4: RESOURCES & HANDOUTS */}
       {activeTab === 'resources' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+        <GlassCard className="p-6 space-y-4">
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
             Course Formula Sheets & Materials
           </h2>
-          <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/60">
+          <div className="divide-y divide-white/[0.06] border border-white/[0.06] rounded-xl overflow-hidden bg-slate-950/60">
             {course.materials.map((mat) => (
-              <div key={mat.id} className="p-4 flex items-center justify-between gap-3 hover:bg-slate-900/40">
+              <div key={mat.id} className="p-4 flex items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors">
                 <div className="flex items-center gap-3">
                   <FileText className="w-4 h-4 text-cyan-400 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-white">{mat.title}</div>
-                    <div className="text-xs font-mono text-slate-500">{mat.type} · {mat.size}</div>
+                    <div className="text-xs font-mono text-slate-400">{mat.type} · {mat.size}</div>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleDownload(mat.title)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-200 text-xs font-mono hover:bg-slate-700"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-slate-800 text-slate-200 text-xs font-mono hover:bg-slate-700 cursor-pointer focus-ring"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download</span>
@@ -352,28 +345,23 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* TAB 5: MASTERY PROGRESS */}
       {activeTab === 'progress' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
+        <GlassCard className="p-6 space-y-4">
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
             Curriculum Completion Progress
           </h2>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-slate-300">Total Topics Finished</span>
-              <span className="text-cyan-300 font-bold">{completedLessons} / {totalLessons} ({progressPct}%)</span>
+              <span className="text-cyan-300 font-bold tabular-nums">{completedLessons} / {totalLessons} ({progressPct}%)</span>
             </div>
-            <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-              <div
-                className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
+            <ProgressIndicator value={progressPct} size="md" />
           </div>
-        </div>
+        </GlassCard>
       )}
     </div>
   );

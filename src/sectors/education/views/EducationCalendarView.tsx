@@ -13,6 +13,8 @@ import {
   Sparkles,
   ArrowRight
 } from 'lucide-react';
+import { GlassCard, Badge } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface EducationCalendarViewProps {
   classes: EducationClass[];
@@ -176,15 +178,15 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto w-full">
+    <div className="space-y-6 max-w-5xl mx-auto w-full font-sans pb-12">
       {/* 1. Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
+      <GlassCard className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
         <div className="space-y-1">
-          <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+          <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase flex items-center gap-1.5 font-medium">
             <CalendarIcon className="w-3.5 h-3.5 text-cyan-400" />
             <span>Academic Temporal Ledger</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
             Schedule & Deadlines
           </h1>
           <p className="text-xs text-slate-400 font-mono">
@@ -193,37 +195,37 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
         </div>
 
         {/* Legend Chips */}
-        <div className="flex items-center gap-2 font-mono text-[11px] shrink-0">
-          <span className="flex items-center gap-1 text-blue-300">
-            <span className="h-2 w-2 rounded-full bg-blue-400" />
+        <div className="flex items-center gap-3 font-mono text-[11px] shrink-0">
+          <span className="flex items-center gap-1.5 text-cyan-300">
+            <span className="h-2 w-2 rounded-full bg-cyan-400" />
             <span>Class</span>
           </span>
-          <span className="flex items-center gap-1 text-amber-300">
+          <span className="flex items-center gap-1.5 text-amber-300">
             <span className="h-2 w-2 rounded-full bg-amber-400" />
             <span>Due</span>
           </span>
-          <span className="flex items-center gap-1 text-purple-300">
+          <span className="flex items-center gap-1.5 text-purple-300">
             <span className="h-2 w-2 rounded-full bg-purple-400" />
             <span>Focus</span>
           </span>
         </div>
-      </div>
+      </GlassCard>
 
       {/* 2. Week Strip Navigation */}
-      <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-mono font-bold text-white">
+      <GlassCard className="p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm font-mono font-bold text-slate-100">
             <CalendarIcon className="w-4 h-4 text-cyan-400" />
             <span>October 2026 · Week 8</span>
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-lg border border-slate-800 bg-slate-950 text-xs font-mono">
+          <div className="flex items-center gap-1 p-1 rounded-xl border border-white/[0.08] bg-slate-900/80 text-xs font-mono self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setViewFilter('all')}
-              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                viewFilter === 'all' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                viewFilter === 'all' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
               }`}
             >
               All
@@ -231,8 +233,8 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
             <button
               type="button"
               onClick={() => setViewFilter('classes')}
-              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                viewFilter === 'classes' ? 'bg-slate-800 text-blue-300 font-bold' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                viewFilter === 'classes' ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30' : 'text-slate-400 hover:text-white'
               }`}
             >
               Classes
@@ -240,8 +242,8 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
             <button
               type="button"
               onClick={() => setViewFilter('deadlines')}
-              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                viewFilter === 'deadlines' ? 'bg-slate-800 text-amber-300 font-bold' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                viewFilter === 'deadlines' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-slate-400 hover:text-white'
               }`}
             >
               Deadlines
@@ -249,8 +251,8 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
             <button
               type="button"
               onClick={() => setViewFilter('study')}
-              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
-                viewFilter === 'study' ? 'bg-slate-800 text-purple-300 font-bold' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                viewFilter === 'study' ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30' : 'text-slate-400 hover:text-white'
               }`}
             >
               Study
@@ -267,24 +269,24 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
                 type="button"
                 key={d.date}
                 onClick={() => setSelectedDate(d.date)}
-                className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer focus-ring ${
                   isSelected
-                    ? 'border-cyan-400 bg-cyan-500/20 text-white shadow-[0_0_12px_rgba(6,182,212,0.15)]'
-                    : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 text-slate-400 hover:text-white'
+                    ? 'border-cyan-400/60 bg-cyan-500/20 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.15)]'
+                    : 'border-white/[0.06] bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
                 <span className="text-[10px] font-mono uppercase">{d.day}</span>
                 <span className="text-base font-bold font-mono">{d.num}</span>
                 {d.hasEvent && (
                   <span
-                    className={`h-1 w-1 rounded-full ${isSelected ? 'bg-cyan-300' : 'bg-cyan-400/60'}`}
+                    className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-cyan-300' : 'bg-cyan-400/60'}`}
                   />
                 )}
               </button>
             );
           })}
         </div>
-      </div>
+      </GlassCard>
 
       {/* 3. Chronological Daily Agenda */}
       <div className="space-y-4">
@@ -292,7 +294,7 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
           <h2 className="text-xs font-mono font-bold tracking-wider text-slate-300 uppercase">
             Chronological Timeline · {selectedDate === '2026-10-18' ? 'Today (Sunday, Oct 18)' : selectedDate}
           </h2>
-          <span className="text-xs font-mono text-slate-500">
+          <span className="text-xs font-mono text-slate-400">
             {selectedDayEvents.length} scheduled items
           </span>
         </div>
@@ -304,10 +306,10 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
             const isStudy = evt.type === 'study_block';
 
             return (
-              <div
+              <GlassCard
                 key={evt.id}
                 onClick={() => handleOpenCanonical(evt)}
-                className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/40 transition-all cursor-pointer group space-y-2.5 backdrop-blur-sm"
+                className="p-4.5 space-y-3 cursor-pointer group hover:border-cyan-500/40 transition-all"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
@@ -316,35 +318,30 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
                     </span>
                     <span aria-hidden="true" className="text-slate-600">·</span>
                     <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-500" />
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
                       {evt.time}
                     </span>
                   </div>
 
-                  <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded self-start sm:self-auto font-medium ${
-                      isClass
-                        ? 'bg-blue-950/60 text-blue-300 border border-blue-500/30'
-                        : isDue
-                        ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
-                        : 'bg-purple-950/60 text-purple-300 border border-purple-500/30'
-                    }`}
+                  <Badge
+                    variant={isClass ? 'cyan' : isDue ? 'warning' : 'purple'}
+                    className="self-start sm:self-auto font-mono text-[11px]"
                   >
                     {isClass ? 'Lecture Session' : isDue ? 'Assignment Deadline' : 'Focus Study Block'}
-                  </span>
+                  </Badge>
                 </div>
 
-                <h3 className="text-sm font-semibold text-white group-hover:text-cyan-200 transition-colors">
+                <h3 className="text-sm font-semibold text-slate-100 group-hover:text-cyan-200 transition-colors">
                   {evt.title}
                 </h3>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 pt-2 border-t border-slate-800/80">
-                  <span className="flex items-center gap-1 text-slate-500">
-                    {evt.location && <MapPin className="w-3.5 h-3.5 text-slate-500" />}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 pt-2 border-t border-white/[0.06]">
+                  <span className="flex items-center gap-1.5 text-slate-400">
+                    {evt.location && <MapPin className="w-3.5 h-3.5 text-slate-400" />}
                     <span>{evt.location || 'Online / Jarvis LMS'}</span>
                   </span>
 
-                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     {isClass && onNavigateWithContext && (
                       <button
                         type="button"
@@ -353,7 +350,7 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
                             classId: evt.courseId || 'class-phys-301'
                           })
                         }
-                        className="px-2.5 py-1 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-300 hover:text-white transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:text-white hover:bg-cyan-500/20 transition-colors cursor-pointer text-xs font-mono focus-ring"
                       >
                         Enter Classroom →
                       </button>
@@ -367,7 +364,7 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
                             classId: evt.courseId || 'class-phys-301'
                           })
                         }
-                        className="px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300 hover:text-white transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:text-white hover:bg-amber-500/20 transition-colors cursor-pointer text-xs font-mono focus-ring"
                       >
                         Open Assignment →
                       </button>
@@ -382,7 +379,7 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
                             topic: evt.title
                           })
                         }
-                        className="px-2.5 py-1 rounded-lg bg-purple-950/40 border border-purple-500/30 text-purple-300 hover:text-white transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:text-white hover:bg-purple-500/20 transition-colors cursor-pointer text-xs font-mono focus-ring"
                       >
                         Start Focus →
                       </button>
@@ -392,25 +389,25 @@ export const EducationCalendarView: React.FC<EducationCalendarViewProps> = ({
                       <button
                         type="button"
                         onClick={() => onSelectCourse(evt.courseId!)}
-                        className="text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer pl-1"
+                        className="text-cyan-400 hover:text-cyan-200 transition-colors cursor-pointer pl-1 text-xs font-mono focus-ring"
                       >
                         Syllabus →
                       </button>
                     )}
                   </div>
                 </div>
-              </div>
+              </GlassCard>
             );
           })}
 
           {selectedDayEvents.length === 0 && (
-            <div className="p-8 rounded-2xl border border-slate-800 bg-slate-900/40 text-center space-y-2">
-              <CalendarIcon className="w-6 h-6 text-slate-600 mx-auto" />
-              <div className="text-sm font-mono font-bold text-white">No Scheduled Events</div>
+            <GlassCard className="p-8 text-center space-y-2">
+              <CalendarIcon className="w-6 h-6 text-slate-500 mx-auto" />
+              <div className="text-sm font-mono font-bold text-slate-200">No Scheduled Events</div>
               <p className="text-xs text-slate-400">
                 You have no lectures or assignment deadlines scheduled for this date.
               </p>
-            </div>
+            </GlassCard>
           )}
         </div>
       </div>

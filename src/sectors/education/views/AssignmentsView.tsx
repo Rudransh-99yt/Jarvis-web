@@ -21,6 +21,8 @@ import {
   Sparkles,
   ExternalLink
 } from 'lucide-react';
+import { GlassCard, Badge } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface AssignmentsViewProps {
   assignments: Assignment[];
@@ -217,9 +219,9 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
     });
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto w-full">
+    <div className="space-y-6 max-w-5xl mx-auto w-full pb-12">
       {/* 1. Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
+      <GlassCard className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
         <div className="space-y-1">
           <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -240,7 +242,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+              className="flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.15)] focus-ring"
             >
               <PlusCircle className="w-4 h-4 text-cyan-300" />
               <span>+ Create Assignment</span>
@@ -251,21 +253,21 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
             <button
               type="button"
               onClick={() => setSelectedAsgId(null)}
-              className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-mono transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl border border-white/[0.08] bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono transition-all cursor-pointer focus-ring"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Ledger</span>
             </button>
           )}
         </div>
-      </div>
+      </GlassCard>
 
       {/* 2. Main Content Surface */}
       {selectedAsg ? (
         /* DEDICATED ASSIGNMENT DETAIL WORKSPACE */
-        <div className="p-6 sm:p-8 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-6 animate-fade-in">
+        <GlassCard className="p-6 sm:p-8 space-y-6 animate-fade-in">
           {/* Header Metadata */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-mono">
                 <span className="font-bold text-cyan-300">{selectedAsg.className.split(':')[0]}</span>
@@ -424,18 +426,18 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               </div>
             </div>
           )}
-        </div>
+        </GlassCard>
       ) : (
         /* ACADEMIC LEDGER TABULAR VIEW */
         <div className="space-y-4">
           {/* Controls Bar: Filters & Search */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900/60">
+          <div className={`flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border border-white/[0.08] ${glassTokens.level2}`}>
             <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
               <button
                 type="button"
                 onClick={() => setFilterMode('all')}
-                className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                  filterMode === 'all' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'all' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 All ({assignments.length})
@@ -443,8 +445,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterMode('pending')}
-                className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                  filterMode === 'pending' ? 'bg-slate-800 text-amber-300 font-bold' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'pending' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Pending
@@ -452,8 +454,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterMode('submitted')}
-                className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                  filterMode === 'submitted' ? 'bg-slate-800 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'submitted' ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Submitted
@@ -461,8 +463,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterMode('graded')}
-                className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                  filterMode === 'graded' ? 'bg-slate-800 text-emerald-300 font-bold' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'graded' ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Graded
@@ -474,7 +476,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <select
                 value={courseFilter}
                 onChange={(e) => setCourseFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-300 focus:outline-none focus:border-cyan-500/50"
+                className="bg-slate-950/80 border border-white/[0.08] rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-300 focus-ring"
               >
                 <option value="all">All Courses</option>
                 {classes.map((c) => (
@@ -491,16 +493,16 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                   placeholder="Filter assignments..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                  className="w-full bg-slate-950/80 border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs font-mono text-white placeholder-slate-500 focus-ring"
                 />
               </div>
             </div>
           </div>
 
           {/* Tabular Ledger */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-sm">
+          <div className={`rounded-2xl border border-white/[0.08] ${glassTokens.level2} overflow-hidden shadow-sm`}>
             {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-slate-800 bg-slate-950/70 text-[11px] font-mono uppercase tracking-wider text-slate-400">
+            <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/[0.08] bg-slate-950/70 text-[11px] font-mono uppercase tracking-wider text-slate-400">
               <button
                 type="button"
                 onClick={() => toggleSort('title')}

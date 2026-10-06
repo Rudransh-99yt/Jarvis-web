@@ -12,6 +12,8 @@ import {
   Flame,
   ChevronDown
 } from 'lucide-react';
+import { GlassCard, ProgressIndicator } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface StudentMyLearningViewProps {
   classes: EducationClass[];
@@ -44,7 +46,7 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
   const nextLesson = currentChapter?.lessons?.find((l) => !l.isCompleted) || currentChapter?.lessons?.[0];
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto font-sans">
+    <div className="space-y-6 max-w-5xl mx-auto font-sans pb-12">
       {/* 1. Page Header */}
       <div className="space-y-1">
         <div className="text-xs font-mono text-cyan-400/80 tracking-wider uppercase font-semibold">
@@ -59,7 +61,7 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
       </div>
 
       {/* 2. Course Switcher Tabs */}
-      <div className="flex items-center gap-1.5 p-1.5 rounded-xl border border-slate-800 bg-slate-900/60 overflow-x-auto text-xs font-mono">
+      <div className={`flex items-center gap-1.5 p-1.5 rounded-xl border border-white/[0.08] ${glassTokens.level2} overflow-x-auto text-xs font-mono`}>
         {classes.map((cls) => {
           const isSelected = cls.id === activeCourse?.id;
           return (
@@ -69,9 +71,9 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
                 setSelectedCourseId(cls.id);
                 setExpandedUnitId(null);
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg transition-colors cursor-pointer whitespace-nowrap focus-ring ${
                 isSelected
-                  ? 'bg-slate-800 text-white font-bold border border-slate-700'
+                  ? 'bg-slate-800 text-white font-bold border border-white/[0.08] shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -85,8 +87,8 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
 
       {/* 3. Course Progression Overview Card */}
       {activeCourse && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <GlassCard className="p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
             <div className="space-y-0.5">
               <div className="text-xs font-mono text-cyan-400">
                 {activeCourse.code} · {activeCourse.term} · {activeCourse.instructorName}
@@ -97,7 +99,7 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
             </div>
 
             <div className="text-right font-mono">
-              <div className="text-base font-bold text-cyan-300">{overallPct}% Completed</div>
+              <div className="text-base font-bold text-cyan-300 tabular-nums">{overallPct}% Completed</div>
               <div className="text-xs text-slate-400">
                 {completedLessons} of {totalLessons} Lessons Finished
               </div>
@@ -105,16 +107,11 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-            <div
-              className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500"
-              style={{ width: `${overallPct}%` }}
-            />
-          </div>
+          <ProgressIndicator value={overallPct} size="md" />
 
           {/* Current Chapter & Next Lesson Anchor */}
           {currentChapter && nextLesson && (
-            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="p-4 rounded-xl bg-slate-950/70 border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-0.5 min-w-0">
                 <div className="text-[11px] font-mono text-cyan-400 flex items-center gap-1.5 font-semibold uppercase">
                   <Flame className="w-3.5 h-3.5 text-amber-400" />
@@ -131,14 +128,14 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
 
               <button
                 onClick={() => onOpenLesson(activeCourse.id, currentChapter.id, nextLesson.id)}
-                className="px-4 py-2 rounded-lg border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 self-start sm:self-center"
+                className="px-4 py-2 rounded-xl border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 self-start sm:self-center focus-ring"
               >
                 <PlayCircle className="w-4 h-4 text-cyan-300" />
                 <span>Study Lesson</span>
               </button>
             </div>
           )}
-        </div>
+        </GlassCard>
       )}
 
       {/* 4. Sequential Chapters & Lessons */}
@@ -159,12 +156,12 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
             const isExpanded = expandedUnitId === unit.id;
 
             return (
-              <div
+              <GlassCard
                 key={unit.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden transition-all shadow-sm"
+                className="overflow-hidden transition-all shadow-sm p-0"
               >
                 {/* Chapter Row Header */}
-                <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-800/30 transition-colors">
+                <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.02] transition-colors">
                   <div
                     onClick={() => onSelectUnit(activeCourse.id, unit.id)}
                     className="space-y-1 min-w-0 cursor-pointer flex-1 group"
@@ -188,20 +185,20 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
 
                   <div className="flex items-center gap-3 shrink-0 self-start sm:self-center">
                     <div className="text-right font-mono text-xs">
-                      <div className="text-cyan-300 font-bold">{unitPct}%</div>
+                      <div className="text-cyan-300 font-bold tabular-nums">{unitPct}%</div>
                       <div className="text-[10px] text-slate-500">{unitDone}/{unitTotal} done</div>
                     </div>
 
                     <button
                       onClick={() => onSelectUnit(activeCourse.id, unit.id)}
-                      className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-colors cursor-pointer focus-ring"
                     >
                       Chapter Overview
                     </button>
 
                     <button
                       onClick={() => setExpandedUnitId(isExpanded ? null : unit.id)}
-                      className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg border border-white/[0.08] bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer focus-ring"
                       title={isExpanded ? 'Collapse lessons' : 'Expand lessons'}
                     >
                       <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
@@ -211,7 +208,7 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
 
                 {/* Expanded Lessons Sequence */}
                 {isExpanded && (
-                  <div className="border-t border-slate-800/80 bg-slate-950/60 p-4 space-y-2">
+                  <div className="border-t border-white/[0.06] bg-slate-950/60 p-4 space-y-2">
                     <div className="text-[11px] font-mono uppercase text-slate-400 font-semibold mb-2">
                       Chapter {unit.number} Lessons
                     </div>
@@ -220,7 +217,7 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
                       <div
                         key={lesson.id}
                         onClick={() => onOpenLesson(activeCourse.id, unit.id, lesson.id)}
-                        className="p-3 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/40 transition-all flex items-center justify-between gap-3 cursor-pointer group"
+                        className="p-3 rounded-xl border border-white/[0.06] bg-slate-900/40 hover:border-cyan-500/30 hover:bg-slate-800/40 transition-all flex items-center justify-between gap-3 cursor-pointer group"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {lesson.isCompleted ? (
@@ -249,7 +246,7 @@ export const StudentMyLearningView: React.FC<StudentMyLearningViewProps> = ({
                     ))}
                   </div>
                 )}
-              </div>
+              </GlassCard>
             );
           })}
         </div>

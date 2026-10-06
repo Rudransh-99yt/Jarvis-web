@@ -244,16 +244,16 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
 
       {/* 2. Scrollable Navigation Hierarchy */}
       <div className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar">
-        {/* Role-Specific Primary Section */}
+        {/* Primary Role Workflow Section */}
         <div className="space-y-1">
           <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
-            {can('principal.institution.view') ? 'Institution' :
-             can('teacher.classes.manage') ? 'Teach' :
-             can('parent.family_intelligence.view') ? 'Family' : 'Learn'}
+            {currentRole === 'principal' ? 'Institution' :
+             currentRole === 'teacher' ? 'Teach' :
+             currentRole === 'parent' ? 'Family' : 'Learn'}
           </div>
 
           {/* Student Hub Workflows */}
-          {can('student.learning.view') && !can('teacher.classes.manage') && !can('principal.institution.view') && !can('parent.family_intelligence.view') && (
+          {currentRole === 'student' && (
             <>
               {renderNavButton('home', 'Home', Home)}
               {renderNavButton('my_learning', 'My Learning', Layers)}
@@ -265,7 +265,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           )}
 
           {/* Teacher Hub Workflows */}
-          {can('teacher.classes.manage') && (
+          {currentRole === 'teacher' && (
             <>
               {renderNavButton('home', 'Command Center', Home)}
               {renderNavButton('teacher_review', 'Review Queue', FileSpreadsheet, '2 pending')}
@@ -279,7 +279,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           )}
 
           {/* Principal Executive Workflows */}
-          {can('principal.institution.view') && (
+          {currentRole === 'principal' && (
             <>
               {renderNavButton('principal_overview', 'Executive Overview', ShieldAlert)}
               {renderNavButton('principal_grade', 'Grade Intelligence', Layers)}
@@ -291,7 +291,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           )}
 
           {/* Parent Family Workflows */}
-          {can('parent.family_intelligence.view') && (
+          {currentRole === 'parent' && (
             <>
               {renderNavButton('home', 'Family Portal', Heart)}
               {renderNavButton('calendar', 'School Calendar', Calendar)}
@@ -300,8 +300,8 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           )}
         </div>
 
-        {/* FOCUS & WORKSPACE Section — Strictly Student-Only */}
-        {can('student.focus.manage') && !can('principal.institution.view') && !can('parent.family_intelligence.view') && (
+        {/* FOCUS & WORKSPACE Section — Student-Only */}
+        {currentRole === 'student' && (
           <div className="space-y-1">
             <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
               Focus & Workspace
@@ -313,47 +313,45 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         )}
 
         {/* CONNECT Section */}
-        {(can('student.community.view') || can('teacher.community.moderate') || can('parent.community.view')) && (
+        {(currentRole === 'student' || currentRole === 'teacher') && (
           <div className="space-y-1">
             <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
               Connect
             </div>
 
             {renderNavButton('community', 'Community', MessageSquare)}
-            {can('student.community.participate') && renderNavButton('study_groups', 'Study Groups', Users)}
+            {currentRole === 'student' && renderNavButton('study_groups', 'Study Groups', Users)}
           </div>
         )}
 
         {/* KNOWLEDGE & SMART SURFACES Section */}
-        {(can('student.learning.view') || can('teacher.smartboard.control') || can('teacher.curriculum.manage')) &&
-         !can('parent.family_intelligence.view') && !can('principal.institution.view') && (
+        {(currentRole === 'student' || currentRole === 'teacher') && (
           <div className="space-y-1">
             <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
               Knowledge & Surfaces
             </div>
 
-            {can('student.learning.view') && renderNavButton('notes', 'Notes & Formulas', Bookmark)}
-            {can('student.smartboard.view_released') && renderNavButton('board_history', 'Board History', FileCheck2)}
-            {can('teacher.smartboard.control') && renderNavButton('smartboard_os', 'SmartBoard OS', Tv)}
-            {can('teacher.smartboard.control') && renderNavButton('board_history', 'Board Archive', FileCheck2)}
-            {(can('student.learning.view') || can('teacher.curriculum.manage')) && renderNavButton('knowledge', 'Knowledge Spaces', Brain)}
-            {(can('student.videos.view') || can('teacher.videos.manage')) && renderNavButton('videos', 'Video Library', Video)}
-            {(can('student.classroom.participate') || can('teacher.classroom.host')) && renderNavButton('classroom', 'Smart Classroom', Radio)}
+            {currentRole === 'student' && renderNavButton('notes', 'Notes & Formulas', Bookmark)}
+            {currentRole === 'student' && renderNavButton('board_history', 'Board History', FileCheck2)}
+            {currentRole === 'teacher' && renderNavButton('smartboard_os', 'SmartBoard OS', Tv)}
+            {currentRole === 'teacher' && renderNavButton('board_history', 'Board Archive', FileCheck2)}
+            {renderNavButton('knowledge', 'Knowledge Spaces', Brain)}
+            {renderNavButton('videos', 'Video Library', Video)}
+            {renderNavButton('classroom', currentRole === 'teacher' ? 'Smart Classroom' : 'Live Classroom', Radio)}
           </div>
         )}
 
         {/* Course Directory Quick Access */}
-        {(can('student.learning.view') || can('teacher.classes.manage')) &&
-         !can('parent.family_intelligence.view') && !can('principal.institution.view') && (
+        {(currentRole === 'student' || currentRole === 'teacher') && (
           <div className="space-y-1 pt-2 border-t border-white/[0.06]">
             <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 flex items-center justify-between font-semibold">
-              <span>{can('teacher.classes.manage') ? 'Assigned Courses' : 'Enrolled Courses'}</span>
+              <span>{currentRole === 'teacher' ? 'Assigned Courses' : 'Enrolled Courses'}</span>
               <span className="text-[10px] text-slate-400 font-mono tabular-nums">{classes.length}</span>
             </div>
 
             <div className="space-y-0.5">
               {classes.map((cls) => {
-                const isSelectedCourse = cls.id === activeCourseId;
+                const isSelectedCourse = activeSection === 'classes' && cls.id === activeCourseId;
                 return (
                   <button
                     key={cls.id}

@@ -6,8 +6,6 @@ import {
   FlaskConical,
   BarChart3,
   Home,
-  Volume2,
-  VolumeX,
   Radio,
   ChevronDown
 } from 'lucide-react';
@@ -207,15 +205,6 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isApiOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                 <span className="text-[11px] font-mono text-slate-400">{isApiOnline ? 'Online' : 'Auxiliary'}</span>
               </div>
-
-              {/* Audio Synthesizer Mute Toggle */}
-              <button
-                onClick={onToggleMute}
-                title={isMuted ? 'Unmute Jarvis Speech' : 'Mute Jarvis Speech'}
-                className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border border-white/[0.08] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 transition-colors cursor-pointer focus-ring shrink-0"
-              >
-                {isMuted ? <VolumeX className="w-4 h-4 text-slate-500" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
-              </button>
             </div>
           </div>
         </div>

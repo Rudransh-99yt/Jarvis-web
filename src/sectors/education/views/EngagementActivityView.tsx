@@ -12,7 +12,6 @@ import {
   Flame,
   ArrowRight
 } from 'lucide-react';
-import { SharedBackButton } from '../components/SharedBackButton.tsx';
 
 interface EngagementActivityViewProps {
   onBack: () => void;
@@ -81,18 +80,6 @@ export const EngagementActivityView: React.FC<EngagementActivityViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto w-full">
-      {/* 1. Universal Back Navigation */}
-      <SharedBackButton
-        onBack={onBack}
-        parentLabel="Engagement Leaderboard"
-        currentLabel="My Verified Activity History"
-        hierarchySegments={[
-          { label: 'Education' },
-          { label: 'Engagement', onClick: onNavigateToLeaderboard },
-          { label: 'My Activity' }
-        ]}
-      />
-
       {/* 2. Header & Points Breakdown */}
       <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">

@@ -23,6 +23,8 @@ import {
   FileCheck2,
   ExternalLink
 } from 'lucide-react';
+import { GlassCard } from '../../../components/ui/index.ts';
+import { glassTokens } from '../../../design-system/tokens.ts';
 
 interface LessonWorkspaceViewProps {
   course: EducationClass;
@@ -131,21 +133,15 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto font-sans">
+    <div className="space-y-6 max-w-5xl mx-auto font-sans pb-12">
       {/* 1. Contextual "Open In" Action Strip */}
-      <div className="p-3.5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+      <div className={`p-3.5 rounded-2xl border border-white/[0.08] ${glassTokens.level2} flex flex-wrap items-center justify-between gap-3 text-xs font-mono`}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <button
-            onClick={onBackToChapter}
-            className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Chapter {unit.number}</span>
-          </button>
-          <span className="text-slate-600">·</span>
           <span className="text-cyan-300 font-bold truncate">{course.code}</span>
           <span className="text-slate-600">·</span>
-          <span className="text-slate-300 truncate">Lesson {unit.number}.{lesson.number}</span>
+          <span className="text-slate-400 truncate">Unit {unit.number}</span>
+          <span className="text-slate-600">·</span>
+          <span className="text-slate-200 font-medium truncate">Lesson {unit.number}.{lesson.number}: {lesson.title}</span>
         </div>
 
         {/* Canonical Open In Actions */}
@@ -153,7 +149,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => onNavigateToContext('focus', academicContext)}
-              className="px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-200 hover:bg-amber-900/40 flex items-center gap-1 transition-all cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-200 hover:bg-amber-900/40 flex items-center gap-1 transition-all cursor-pointer focus-ring"
             >
               <Timer className="w-3 h-3 text-amber-400" />
               <span>Focus (25m)</span>
@@ -161,7 +157,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
 
             <button
               onClick={() => onNavigateToContext('workspace', academicContext)}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-white/[0.08] text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer focus-ring"
             >
               <FileText className="w-3 h-3 text-cyan-400" />
               <span>Notes</span>
@@ -169,7 +165,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
 
             <button
               onClick={() => onNavigateToContext('community', academicContext)}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-white/[0.08] text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer focus-ring"
             >
               <MessageSquare className="w-3 h-3 text-indigo-400" />
               <span>Discuss</span>
@@ -177,7 +173,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
 
             <button
               onClick={() => onNavigateToContext('assignments', academicContext)}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-white/[0.08] text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer focus-ring"
             >
               <FileCheck2 className="w-3 h-3 text-emerald-400" />
               <span>Assignment</span>
@@ -185,7 +181,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
 
             <button
               onClick={() => onNavigateToContext('knowledge', academicContext)}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-slate-800 border border-white/[0.08] text-slate-200 hover:bg-slate-700 flex items-center gap-1 transition-colors cursor-pointer focus-ring"
             >
               <Layers className="w-3 h-3 text-cyan-400" />
               <span>Resources</span>
@@ -195,7 +191,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
       </div>
 
       {/* 2. Lesson Title & Completion Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
+      <GlassCard className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5">
         <div className="space-y-1 min-w-0">
           <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-semibold">
             {course.name} · Unit {unit.number}: {unit.title}
@@ -213,7 +209,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
           {onOpenPractice && (
             <button
               onClick={() => onOpenPractice(lesson.id)}
-              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl text-xs font-mono font-bold border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl text-xs font-mono font-bold border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 transition-all cursor-pointer focus-ring"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Practice & Test (+10 pts)</span>
@@ -222,7 +218,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
 
           <button
             onClick={() => onToggleComplete(!lesson.isCompleted)}
-            className={`flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-xl text-xs font-mono font-bold transition-all cursor-pointer focus-ring ${
               lesson.isCompleted
                 ? 'bg-emerald-500/20 border border-emerald-400/50 text-emerald-300'
                 : 'border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200'
@@ -232,7 +228,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
             <span>{lesson.isCompleted ? 'Lesson Completed' : 'Mark as Complete'}</span>
           </button>
         </div>
-      </div>
+      </GlassCard>
 
       {/* 3. Primary Study Area: Video Player with Seek Timestamps */}
       {videoData && (
@@ -283,12 +279,12 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
       )}
 
       {/* 4. Segmented Workspace Mode Selector */}
-      <div className="flex items-center gap-1.5 p-1 rounded-xl border border-slate-800 bg-slate-900/60 font-mono text-xs overflow-x-auto">
+      <div className={`flex items-center gap-1.5 p-1 rounded-xl border border-white/[0.08] ${glassTokens.level2} font-mono text-xs overflow-x-auto`}>
         <button
           onClick={() => setActiveTab('content')}
-          className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap focus-ring ${
             activeTab === 'content'
-              ? 'bg-slate-800 text-white font-bold border border-slate-700'
+              ? 'bg-slate-800 text-white font-bold border border-white/[0.08]'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -299,9 +295,9 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
         {lesson.keyTakeaways && lesson.keyTakeaways.length > 0 && (
           <button
             onClick={() => setActiveTab('takeaways')}
-            className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap focus-ring ${
               activeTab === 'takeaways'
-                ? 'bg-slate-800 text-white font-bold border border-slate-700'
+                ? 'bg-slate-800 text-white font-bold border border-white/[0.08]'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -313,9 +309,9 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
         {lesson.practiceQuestions && lesson.practiceQuestions.length > 0 && (
           <button
             onClick={() => setActiveTab('quiz')}
-            className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap focus-ring ${
               activeTab === 'quiz'
-                ? 'bg-slate-800 text-white font-bold border border-slate-700'
+                ? 'bg-slate-800 text-white font-bold border border-white/[0.08]'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -326,9 +322,9 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
 
         <button
           onClick={() => setActiveTab('tutor')}
-          className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap focus-ring ${
             activeTab === 'tutor'
-              ? 'bg-slate-800 text-white font-bold border border-slate-700'
+              ? 'bg-slate-800 text-white font-bold border border-white/[0.08]'
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -339,8 +335,8 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
 
       {/* 5. Tab Panels */}
       {activeTab === 'content' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <GlassCard className="p-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-white/[0.06] pb-3">
             <BookOpen className="w-4 h-4 text-cyan-400" />
             <h2 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
               Lecture Notes & Theoretical Derivation
@@ -350,12 +346,12 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
           <div className="prose prose-invert max-w-none text-xs sm:text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-line">
             {lesson.notes || lesson.description}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {activeTab === 'takeaways' && lesson.keyTakeaways && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <GlassCard className="p-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-white/[0.06] pb-3">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <h2 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
               Core Key Takeaways
@@ -366,7 +362,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
             {lesson.keyTakeaways.map((takeaway, idx) => (
               <div
                 key={idx}
-                className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-start gap-3"
+                className="p-3.5 rounded-xl border border-white/[0.06] bg-slate-950/60 flex items-start gap-3"
               >
                 <div className="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 text-cyan-300 text-xs font-mono flex items-center justify-center shrink-0 mt-0.5">
                   {idx + 1}
@@ -375,12 +371,12 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {activeTab === 'quiz' && lesson.practiceQuestions && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <GlassCard className="p-6 space-y-5">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
               <HelpCircle className="w-4 h-4 text-cyan-400" />
               <h2 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
@@ -397,7 +393,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
               const isCorrect = selectedOpt === q.correctIndex;
 
               return (
-                <div key={q.id} className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 space-y-3">
+                <div key={q.id} className="p-4 rounded-xl border border-white/[0.06] bg-slate-950/60 space-y-3">
                   <div className="text-xs sm:text-sm font-semibold text-white">
                     {qIdx + 1}. {q.question}
                   </div>
@@ -406,7 +402,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
                     {q.options.map((opt, optIdx) => {
                       const isOptionSelected = selectedOpt === optIdx;
                       let optionClasses =
-                        'p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs font-mono cursor-pointer transition-colors flex items-center justify-between';
+                        'p-2.5 rounded-lg border border-white/[0.08] bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs font-mono cursor-pointer transition-colors flex items-center justify-between focus-ring';
 
                       if (isRevealed) {
                         if (optIdx === q.correctIndex) {
@@ -444,14 +440,14 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
                     {!isRevealed && selectedOpt !== undefined && (
                       <button
                         onClick={() => setRevealedAnswers((prev) => ({ ...prev, [q.id]: true }))}
-                        className="px-3 py-1 rounded border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono transition-all cursor-pointer"
+                        className="px-3 py-1 rounded-lg border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-mono transition-all cursor-pointer focus-ring"
                       >
                         Check Answer
                       </button>
                     )}
 
                     {isRevealed && (
-                      <div className="text-xs font-mono text-slate-200 p-2.5 rounded bg-slate-900/80 border border-slate-800 w-full">
+                      <div className="text-xs font-mono text-slate-200 p-2.5 rounded-lg bg-slate-900/80 border border-white/[0.06] w-full">
                         <strong className={isCorrect ? 'text-emerald-400' : 'text-amber-400'}>
                           {isCorrect ? 'Correct! ' : 'Incorrect. '}
                         </strong>
@@ -463,12 +459,12 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
               );
             })}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {activeTab === 'tutor' && (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <GlassCard className="p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-cyan-400" />
               <h2 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
@@ -482,13 +478,13 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
           <div className="flex flex-wrap gap-2 text-xs font-mono">
             <button
               onClick={() => handleAskTutor('Can you explain ladder operator commutation relations [a, a†] = 1?')}
-              className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 text-slate-300 transition-colors"
+              className="px-2.5 py-1 rounded-lg border border-white/[0.08] bg-slate-950 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer focus-ring"
             >
               Explain commutation relations
             </button>
             <button
               onClick={() => handleAskTutor('Summarize the harmonic ground state zero-point energy in 3 bullet points.')}
-              className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 text-slate-300 transition-colors"
+              className="px-2.5 py-1 rounded-lg border border-white/[0.08] bg-slate-950 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer focus-ring"
             >
               Summarize zero-point energy
             </button>
@@ -502,12 +498,12 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
               onChange={(e) => setStudyQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
               placeholder="Ask a question about this lesson..."
-              className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              className="flex-1 bg-slate-950 border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus-ring"
             />
             <button
               onClick={() => handleAskTutor()}
               disabled={isAnswering || !studyQuery.trim()}
-              className="px-4 py-2.5 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 disabled:opacity-50 text-cyan-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+              className="px-4 py-2.5 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 disabled:opacity-50 text-cyan-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shrink-0 focus-ring"
             >
               {isAnswering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               <span>Ask Tutor</span>
@@ -520,12 +516,12 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
               {studyHistory.map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-4 rounded-xl border border-slate-800 bg-slate-950/70 space-y-2 text-xs font-mono"
+                  className="p-4 rounded-xl border border-white/[0.06] bg-slate-950/70 space-y-2 text-xs font-mono"
                 >
                   <div className="text-cyan-300 font-bold">Q: {item.query}</div>
                   <div className="text-slate-200 leading-relaxed font-sans">{item.answer}</div>
                   {item.citations && item.citations.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-800 text-[10px] text-slate-400">
+                    <div className="flex flex-wrap gap-2 pt-1 border-t border-white/[0.06] text-[10px] text-slate-400">
                       <span>Verified Citations:</span>
                       {item.citations.map((c: any, cIdx: number) => (
                         <span key={cIdx} className="text-cyan-300">
@@ -538,15 +534,15 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
               ))}
             </div>
           )}
-        </div>
+        </GlassCard>
       )}
 
       {/* 6. Lesson Footer Progression Control */}
-      <div className="flex items-center justify-between p-4 rounded-xl border border-slate-800 bg-slate-900/60">
+      <div className={`flex items-center justify-between p-4 rounded-xl border border-white/[0.08] ${glassTokens.level2}`}>
         {prevLesson ? (
           <button
             onClick={() => onNavigateLesson(unit.id, prevLesson.id)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-mono transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-white/[0.08] hover:bg-slate-800 text-slate-300 text-xs font-mono transition-colors cursor-pointer focus-ring"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Previous: Lesson {unit.number}.{prevLesson.number}</span>
@@ -558,7 +554,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
         {nextLesson ? (
           <button
             onClick={() => onNavigateLesson(unit.id, nextLesson.id)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-cyan-400/50 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer shadow-md"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-cyan-400/50 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer shadow-md focus-ring"
           >
             <span>Next: Lesson {unit.number}.{nextLesson.number}</span>
             <ChevronRight className="w-4 h-4" />
@@ -566,7 +562,7 @@ export const LessonWorkspaceView: React.FC<LessonWorkspaceViewProps> = ({
         ) : (
           <button
             onClick={onBackToChapter}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-emerald-400/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-emerald-400/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold transition-all cursor-pointer focus-ring"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>Finish Chapter</span>
