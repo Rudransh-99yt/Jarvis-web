@@ -8,20 +8,31 @@ import { smartboardRouter } from '../server/sectors/education/smartboard/smartbo
 import { smartboardStore } from '../server/sectors/education/smartboard/smartboardStore.ts';
 import { smartboardService } from '../server/sectors/education/smartboard/smartboardService.ts';
 import { smartboardPolicy } from '../server/sectors/education/smartboard/smartboardPolicy.ts';
-import { authService, ticketService } from '../server/auth/index.ts';
+import { authService } from '../server/auth/tokens.ts';
+import { ticketService } from '../server/auth/tickets.ts';
 import type { SmartBoardDevice, BoardDocument } from '../src/types/smartboard.ts';
 import type { User } from '../server/data/types.ts';
 
 console.log('=== [JARVIS-WEB] P1-7 SMARTBOARD AUTHORIZATION HARDENING TEST SUITE ===');
 
+async function getTokenForUser(userId: string): Promise<string> {
+  const res = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const data = await res.json();
+  return data.token;
+}
+
 async function runSmartboardAuthorizationTests() {
   await jarvisData.seed();
   smartboardStore.resetToDefaults();
 
+  const { requirePrincipal } = await import('../server/auth/principal.ts');
   const app = express();
   app.use(express.json());
   app.use('/api/auth', authRouter);
-  app.use('/api/education/smartboard', smartboardRouter);
+  app.use('/api/education/smartboard', requirePrincipal, smartboardRouter);
 
   const server: Server = await new Promise((resolve) => {
     const s = app.listen(0, '127.0.0.1', () => resolve(s));
@@ -122,14 +133,14 @@ async function runSmartboardAuthorizationTests() {
     (smartboardStore as any).documents.set(privateDraftDoc.id, privateDraftDoc);
 
     // Tokens
-    const teacherToken = authService.issueToken(teacher1);
-    const unassignedTeacherToken = authService.issueToken(unassignedTeacher);
-    const student1Token = authService.issueToken(student1);
-    const student2Token = authService.issueToken(student2);
-    const parentToken = authService.issueToken(parent1);
-    const principalToken = authService.issueToken(principal1);
-    const adminToken = authService.issueToken(adminUser);
-    const externalTeacherToken = authService.issueToken(externalTeacher);
+    const teacherToken = await authService.issueToken(teacher1);
+    const unassignedTeacherToken = await authService.issueToken(unassignedTeacher);
+    const student1Token = await authService.issueToken(student1);
+    const student2Token = await authService.issueToken(student2);
+    const parentToken = await authService.issueToken(parent1);
+    const principalToken = await authService.issueToken(principal1);
+    const adminToken = await authService.issueToken(adminUser);
+    const externalTeacherToken = await authService.issueToken(externalTeacher);
 
     // =========================================================================
     // SECTION 1: AUTHENTICATION INTEGRITY
@@ -148,7 +159,7 @@ async function runSmartboardAuthorizationTests() {
     // Test 2: Forged raw user ID header -> 401
     {
       const res = await fetch(`${baseUrl}/devices`, {
-        headers: { Authorization: 'Bearer teacher-1', 'x-user-id': 'teacher-1' }
+        headers: { Authorization: 'Bearer teacher-1', 'Authorization': `Bearer ${await authService.issueToken(await jarvisData.users.getById('teacher-1') || { id: 'teacher-1', role: 'student' } as any)}`}
       });
       assert.strictEqual(res.status, 401, 'Raw user ID header must be rejected');
       console.log('[PASS] Test 2: Raw user ID header strictly rejected with 401');
@@ -550,7 +561,7 @@ async function runSmartboardAuthorizationTests() {
         createdAt: new Date().toISOString()
       };
       await jarvisData.users.create(tenantlessUser);
-      const tenantlessToken = authService.issueToken(tenantlessUser);
+      const tenantlessToken = await authService.issueToken(tenantlessUser);
 
       const res = await fetch(`${baseUrl}/devices/board-phys-01`, {
         headers: { Authorization: `Bearer ${tenantlessToken}` }

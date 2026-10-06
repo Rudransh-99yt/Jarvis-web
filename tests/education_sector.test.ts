@@ -14,9 +14,12 @@ const dummyContext: ToolExecutionContext = {
   sessionId: 'test-edu-session',
   callCount: 1,
   maxRounds: 5,
-  executedTools: []
+  executedTools: [],
+  userId: 'user-tony',
+  role: 'commander'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runEducationTests() {
   console.log('\n=== [WEB JARVIS] EDUCATION SECTOR & KNOWLEDGE SUITE ===');
 
@@ -74,17 +77,29 @@ async function runEducationTests() {
     typeof queryRes.data?.answer === 'string' &&
     Array.isArray(queryRes.data?.citations) &&
     queryRes.data.citations.length > 0,
-    '9. Tool knowledge.query grounded retrieval with citations'
+    '9. Tool knowledge.query grounded retrieval with citations',
+    JSON.stringify(queryRes)
   );
 
+  let authHeaders: any = { 'Content-Type': 'application/json' };
+  try {
+    const authRes = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ userId: 'user-tony' })
+    });
+    if (authRes.ok) {
+      const authData = await authRes.json();
+      authHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authData.token}` };
+    }
+  } catch (e) {}
   // 8. REST API Endpoints Verification
-  const stateRes = await fetch('http://localhost:3000/api/education/state');
+  const stateRes = await fetch('http://localhost:3000/api/education/state', { headers: authHeaders });
   const stateData: any = await stateRes.json();
-  assert(stateRes.ok && Array.isArray(stateData.classes) && Array.isArray(stateData.knowledgeSpaces), '10. REST API GET /api/education/state');
+  assert(stateRes.ok && Array.isArray(stateData.classes) && Array.isArray(stateData.knowledgeSpaces), '10. REST API GET /api/education/state', JSON.stringify(stateData));
 
   const groundedApiRes = await fetch('http://localhost:3000/api/education/knowledge-spaces/ks-quantum/query', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders,
     body: JSON.stringify({ query: 'Explain decoherence in quantum systems' })
   });
   const groundedData: any = await groundedApiRes.json();

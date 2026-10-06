@@ -40,6 +40,7 @@ const studentUser: User = {
   createdAt: new Date().toISOString()
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD12ControlPlaneTests() {
   console.log('\n===================================================================');
   console.log('=== [WEB JARVIS] PHASE D.12: MOBILE CONTROL PLANE TEST SUITE ===');

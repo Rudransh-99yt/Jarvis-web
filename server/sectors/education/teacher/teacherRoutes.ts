@@ -10,11 +10,19 @@ import type { User } from '../../../data/types.ts';
 
 export const teacherRouter = Router();
 
+
 async function resolveUser(req: Request, res: any) {
   const user = await jarvisData.users.getById(res.locals.principal!.userId);
   if (!user) throw new Error('User not found');
+  if (user.role !== 'teacher' && user.role !== 'admin') {
+    const error: any = new Error('Forbidden');
+    error.code = 'FORBIDDEN';
+    error.statusCode = 403;
+    throw error;
+  }
   return user;
 }
+
 
 // 1. GET /api/education/teacher/action-queue - Aggregated priority queue
 teacherRouter.get('/action-queue', async (req: Request, res: Response) => {
@@ -23,7 +31,7 @@ teacherRouter.get('/action-queue', async (req: Request, res: Response) => {
     const queue = teacherService.getActionQueue(user.id);
     res.json({ queue, count: queue.length });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
   }
 });
 
@@ -35,7 +43,7 @@ teacherRouter.get('/attention', async (req: Request, res: Response) => {
     const signals = teacherService.getAttentionSignals(user.id, classId);
     res.json({ signals, count: signals.length });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
   }
 });
 
@@ -46,7 +54,7 @@ teacherRouter.get('/post-class-review', async (req: Request, res: Response) => {
     const report = teacherService.getPostClassReview(sessionId);
     res.json({ report });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
   }
 });
 
@@ -57,6 +65,6 @@ teacherRouter.get('/class-intelligence/:classId', async (req: Request, res: Resp
     const intelligence = teacherService.getClassIntelligence(classId);
     res.json({ intelligence });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
   }
 });

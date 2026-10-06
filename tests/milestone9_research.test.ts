@@ -21,6 +21,7 @@ const dummyContext: ToolExecutionContext = {
   role: 'commander'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runMilestone9Tests() {
   console.log('\n=== [WEB JARVIS] MILESTONE 9: RESEARCH & LABS SECTOR TEST SUITE ===\n');
 

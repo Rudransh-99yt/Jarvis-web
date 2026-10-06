@@ -128,6 +128,7 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
       currentUser = verified.user;
     } else {
       currentUser = await jarvisData.users.getById(actor.userId);
+      console.log('Stream user lookup for', actor.userId, '=>', currentUser?.id);
       if (!currentUser) {
         res.status(401).json({
           error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' }

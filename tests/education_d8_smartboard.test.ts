@@ -82,6 +82,7 @@ const studentContext: ToolExecutionContext = {
   role: 'student'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD8SmartBoardTests() {
   console.log('\n===================================================================');
   console.log('=== [WEB JARVIS] PHASE D.8: SMARTBOARD OS FOUNDATION TEST SUITE ===');

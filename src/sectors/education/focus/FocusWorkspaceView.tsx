@@ -98,7 +98,7 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
     setIsLoading(true);
     try {
       const res = await fetch('/api/education/focus/active', {
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -120,7 +120,7 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/education/focus/statistics', {
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -189,8 +189,8 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({
           mode: selectedMode,
@@ -211,10 +211,7 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
       // 2. Start session immediately
       const startRes = await fetch(`/api/education/focus/sessions/${newSession.id}/start`, {
         method: 'POST',
-        headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
-        }
+        headers: { ...authClient.getAuthHeaders() }
       });
 
       if (!startRes.ok) throw new Error('Failed to start session timer');
@@ -238,7 +235,7 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
     try {
       const res = await fetch(`/api/education/focus/sessions/${session.id}/pause`, {
         method: 'POST',
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -256,7 +253,7 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
     try {
       const res = await fetch(`/api/education/focus/sessions/${session.id}/resume`, {
         method: 'POST',
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -276,8 +273,8 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ breakType })
       });
@@ -296,7 +293,7 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
     try {
       const res = await fetch(`/api/education/focus/sessions/${session.id}/skip-break`, {
         method: 'POST',
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -314,7 +311,7 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
     try {
       const res = await fetch(`/api/education/focus/sessions/${session.id}/complete`, {
         method: 'POST',
-        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -358,8 +355,8 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ reason })
       });
@@ -382,8 +379,8 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ notes: text })
       });
@@ -403,8 +400,8 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ tasks: updatedTasks })
       });
@@ -429,8 +426,8 @@ export const FocusWorkspaceView: React.FC<FocusWorkspaceViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ tasks: updatedTasks })
       });

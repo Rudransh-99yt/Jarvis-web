@@ -29,6 +29,7 @@ const testContext: ToolExecutionContext = {
   role: 'commander'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runMilestone10Tests() {
   console.log('\n=== [WEB JARVIS] MILESTONE 10: UNIFIED FILE & STORAGE FOUNDATION TEST SUITE ===\n');
 

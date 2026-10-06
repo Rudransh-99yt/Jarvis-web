@@ -55,6 +55,7 @@ const FOREIGN_USER: User = {
   createdAt: '2026-10-01T00:00:00.000Z'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD15ClassroomIntelligenceTests() {
   console.log('\n========================================================');
   console.log('🧪 RUNNING PHASE D.15 CLASSROOM INTELLIGENCE ENGINE TESTS');

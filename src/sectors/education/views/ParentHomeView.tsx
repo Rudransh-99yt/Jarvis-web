@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ChildSummary, FamilyHomeIntelligence } from '../../../types/family.ts';
+import { authClient } from '../../../services/authClient.ts';
+
 import {
   Heart,
   Clock,
@@ -41,10 +43,7 @@ export const ParentHomeView: React.FC<ParentHomeViewProps> = ({
     setIsLoading(true);
 
     fetch('/api/education/family/children', {
-      headers: {
-        'x-user-id': activeParentId,
-        'x-user-role': 'parent'
-      }
+      headers: { ...authClient.getAuthHeaders() }
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -70,10 +69,7 @@ export const ParentHomeView: React.FC<ParentHomeViewProps> = ({
     let isMounted = true;
 
     fetch(`/api/education/family/child/${selectedStudentId}/intelligence`, {
-      headers: {
-        'x-user-id': activeParentId,
-        'x-user-role': 'parent'
-      }
+      headers: { ...authClient.getAuthHeaders() }
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {

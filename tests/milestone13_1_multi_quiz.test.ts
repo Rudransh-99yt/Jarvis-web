@@ -7,6 +7,7 @@ import type { Quiz, QuizQuestion } from '../src/types/quiz.ts';
 
 console.log('=== [WEB JARVIS] MILESTONE 13.1: MULTI-QUIZ STABILITY & LIFECYCLE TEST SUITE ===');
 
+import { authService } from '../server/auth/tokens.ts';
 async function runMultiQuizRegressionSuite() {
   await jarvisData.seed();
   const repo = jarvisData;

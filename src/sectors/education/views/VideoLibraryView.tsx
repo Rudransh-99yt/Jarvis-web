@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { EducationRole, EducationClass } from '../../../types/education.ts';
 import type { VideoRecord, VideoSearchResult, VideoQAResult, VideoCitation } from '../../../types/video.ts';
 import { VideoPlayer } from '../../../components/video/VideoPlayer.tsx';
+import { authClient } from '../../../services/authClient.ts';
+
 import {
   Video,
   Upload,
@@ -239,8 +241,8 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'x-user-id': 'teacher-1',
-        'x-user-role': 'teacher'
+        ...authClient.getAuthHeaders(),
+        
       };
 
       let base64Data: string | undefined;
@@ -301,10 +303,7 @@ export const VideoLibraryView: React.FC<VideoLibraryViewProps> = ({ classes, cur
   const handleDeleteVideo = async (videoId: string) => {
     if (!confirm('Are you sure you want to permanently delete this video lecture?')) return;
     try {
-      const headers: Record<string, string> = {
-        'x-user-id': 'teacher-1',
-        'x-user-role': 'teacher'
-      };
+      const headers: Record<string, string> = { ...authClient.getAuthHeaders() };
       const res = await fetch(`/api/education/videos/${videoId}`, {
         method: 'DELETE',
         headers

@@ -19,8 +19,17 @@ async function resolveUser(req: Request, res: any) {
 
 // 1. GET /api/education/integration/context - Resolve academic context by entity
 academicIntegrationRouter.get('/context', (req: Request, res: Response) => {
+  const actor = res.locals.principal;
+  if (!actor) {
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Missing actor context.' } });
+    return;
+  }
   const entityType = (req.query.type as LearningObjectType) || 'classSession';
-  const entityId = (req.query.id as string) || 'session-phys-101';
+  const entityId = req.query.id as string;
+  if (!entityId) {
+    res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'id is required' } });
+    return;
+  }
 
   const context = academicIntegrationService.resolveContext(entityType, entityId);
   res.json({ context });
@@ -88,10 +97,20 @@ academicIntegrationRouter.delete('/links/:id', async (req: Request, res: Respons
 
 // 5. GET /api/education/integration/events - List domain events
 academicIntegrationRouter.get('/events', (req: Request, res: Response) => {
-  const { workspaceId, actorId, entityId, type, limit } = req.query as any;
+  const actor = res.locals.principal;
+  if (!actor) {
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Missing actor context.' } });
+    return;
+  }
+  const { workspaceId, entityId, type, limit } = req.query as any;
+  if (req.query.actorId && req.query.actorId !== actor.userId) {
+    res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Cannot impersonate another actorId.' } });
+    return;
+  }
+  
   const events = academicIntegrationService.getEvents({
     workspaceId,
-    actorId,
+    actorId: actor.userId,
     entityId,
     type,
     limit: limit ? parseInt(limit, 10) : 50

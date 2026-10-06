@@ -28,6 +28,7 @@ function assert(condition: boolean, testName: string, detail?: any) {
   }
 }
 
+import { authService } from '../server/auth/tokens.ts';
 async function runMilestone11Tests() {
   console.log('\n================================================================');
   console.log('=== [WEB JARVIS] MILESTONE 11: CLASS MESSAGING & ATTACHMENTS ===');

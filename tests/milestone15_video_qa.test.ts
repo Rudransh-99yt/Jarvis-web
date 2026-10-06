@@ -16,6 +16,7 @@ function assert(condition: boolean, testName: string, detail?: any) {
   console.log(`[PASS] ${testName}`);
 }
 
+import { authService } from '../server/auth/tokens.ts';
 async function runMilestone15Tests() {
   console.log('\n=== [WEB JARVIS] MILESTONE 15: AI VIDEO DISCOVERY & GROUNDED VIDEO Q&A TEST SUITE ===\n');
 

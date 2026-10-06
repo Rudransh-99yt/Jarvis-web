@@ -31,6 +31,7 @@ function getFileSha256(filePath: string): string {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD85InteractionTests() {
   console.log('\n======================================================================');
   console.log('=== [WEB JARVIS] PHASE D.8.5: SMARTBOARD INTERACTION HARDENING TEST SUITE ===');

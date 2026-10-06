@@ -9,6 +9,16 @@ import type { Request } from 'express';
 
 console.log('=== [WEB JARVIS] MILESTONE 14.2: SECURITY & DATA-HYGIENE TEST SUITE ===');
 
+async function getTokenForUser(userId: string): Promise<string> {
+  const res = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const data = await res.json();
+  return data.token;
+}
+
+import { authService } from '../server/auth/tokens.ts';
 async function runSecurityTests() {
   await jarvisData.seed();
   const repo = jarvisData;
@@ -56,9 +66,7 @@ async function runSecurityTests() {
   console.log('[TEST] 3. Client-supplied role spoofing prevented');
   const spoofRoleReq = {
     headers: {
-      'x-user-id': 'student-1',
-      'x-user-role': 'commander' // student tries to claim commander role
-    },
+      'authorization': `Bearer ${await authService.issueToken(await jarvisData.users.getById('student-1') || { id: 'student-1', role: 'student' } as any)}`},
     query: {}
   } as unknown as Request;
 

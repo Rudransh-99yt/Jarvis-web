@@ -2,8 +2,22 @@ import { toolRegistry, toolExecutor, serverProtocolStore } from '../server/tools
 import type { ToolExecutionContext, ToolCall } from '../server/tools/types.ts';
 import { sessionStore } from '../server/session/sessionStore.ts';
 
+import { authService } from '../server/auth/tokens.ts';
 async function runTestSuite() {
   console.log('=== [WEB JARVIS] MILESTONE 4 TEST SUITE ===\n');
+  let authHeaders: any = { 'Content-Type': 'application/json' };
+  try {
+    const authRes = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ userId: 'user-tony' })
+    });
+    if (authRes.ok) {
+      const authData = await authRes.json();
+      authHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authData.token}` };
+    }
+  } catch (e) {
+    console.warn("Failed to fetch auth token", e);
+  }
   let passed = 0;
   let total = 0;
 
@@ -20,7 +34,7 @@ async function runTestSuite() {
   const dummyContext: ToolExecutionContext = {
     sessionId: 'test-session-1',
     timestamp: new Date().toISOString(),
-    serverUptime: 42
+    serverUptime: 42, userId: "user-tony", role: "commander"
   };
 
   // 1. Tool registry registration
@@ -73,7 +87,7 @@ async function runTestSuite() {
   // 12. Tool execution loop (calling chat route with tool query)
   const chatResponse = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders,
     body: JSON.stringify({ message: 'What is the system health?', stream: false })
   });
   const chatData: any = await chatResponse.json();
@@ -82,7 +96,7 @@ async function runTestSuite() {
   // 13. Multiple tool rounds test (simulated via chat)
   const protoTest = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders,
     body: JSON.stringify({ message: 'Activate defense matrix protocol', stream: false })
   });
   const protoData: any = await protoTest.json();
@@ -99,7 +113,7 @@ async function runTestSuite() {
   // 16 & 17. SSE tool_start and tool_result event streaming
   const sseResponse = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+    headers: { ...authHeaders, 'Accept': 'text/event-stream' },
     body: JSON.stringify({ message: 'Run a system health check.', stream: true })
   });
   assert(sseResponse.ok && sseResponse.headers.get('content-type')?.includes('text/event-stream') === true, '16. SSE transport connection established');
@@ -138,7 +152,7 @@ async function runTestSuite() {
   // 18. Existing normal streaming still works
   const normalSse = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+    headers: { ...authHeaders, 'Accept': 'text/event-stream' },
     body: JSON.stringify({ message: 'Hello Jarvis', stream: true })
   });
   assert(normalSse.ok, '18. Existing normal streaming still works');

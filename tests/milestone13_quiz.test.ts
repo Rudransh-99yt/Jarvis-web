@@ -39,6 +39,16 @@ function getFileSha256(filePath: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
+async function getTokenForUser(userId: string): Promise<string> {
+  const res = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const data = await res.json();
+  return data.token;
+}
+
+import { authService } from '../server/auth/tokens.ts';
 async function runMilestone13Tests() {
   console.log('\n================================================================');
   console.log('=== [WEB JARVIS] MILESTONE 13: SMART QUIZ & LIVE RESPONSES   ===');
@@ -571,8 +581,10 @@ async function runMilestone13Tests() {
   // --- PART 10: HTTP REST Route Layer & Authorization ---
   console.log('\n--- PART 10: HTTP REST Route Layer & Authorization ---');
 
+  const { requirePrincipal } = await import('../server/auth/principal.ts');
   const app = express();
   app.use(express.json());
+  app.use(requirePrincipal);
   app.use('/api/classroom/sessions', classroomRouter);
   app.use('/api/classroom/quizzes', quizRouter);
 
@@ -590,7 +602,7 @@ async function runMilestone13Tests() {
 
     // 2. Authenticated list quizzes (200)
     const listRes = await fetch(`${baseUrl}/api/classroom/quizzes?sessionId=${sessionId}&classId=${classId}&workspaceId=${workspaceId}`, {
-      headers: { 'x-user-id': teacherUser.id, 'x-user-role': teacherUser.role }
+      headers: { 'Authorization': `Bearer ${await authService.issueToken(teacherUser)}`}
     });
     assert(listRes.status === 200, '79. HTTP GET /api/classroom/quizzes with teacher credentials returns 200 OK');
     const listData = await listRes.json();
@@ -601,9 +613,7 @@ async function runMilestone13Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': studentUser.id,
-        'x-user-role': studentUser.role
-      },
+        'Authorization': `Bearer ${await authService.issueToken(studentUser)}`},
       body: JSON.stringify({
         classId,
         classroomSessionId: sessionId,
@@ -615,13 +625,13 @@ async function runMilestone13Tests() {
 
     // 4. Cross-workspace access rejected
     const crossWsRes = await fetch(`${baseUrl}/api/classroom/quizzes?workspaceId=ws-other-alien`, {
-      headers: { 'x-user-id': teacherUser.id, 'x-user-role': teacherUser.role }
+      headers: { 'Authorization': `Bearer ${await authService.issueToken(teacherUser)}`}
     });
     assert(crossWsRes.status === 403 || crossWsRes.status === 404, '82. HTTP Cross-workspace query rejected with 403/404');
 
     // 5. Student recovery: fetch active question state
     const recoveryRes = await fetch(`${baseUrl}/api/classroom/quizzes/${createdQuiz.id}/active-question?workspaceId=${workspaceId}`, {
-      headers: { 'x-user-id': studentUser.id, 'x-user-role': studentUser.role }
+      headers: { 'Authorization': `Bearer ${await authService.issueToken(studentUser)}`}
     });
     assert(recoveryRes.status === 200, '83. HTTP GET /active-question returns 200 OK for student recovery');
     const recoveryData = await recoveryRes.json();
@@ -629,7 +639,7 @@ async function runMilestone13Tests() {
 
     // 6. Query results via HTTP
     const httpResultsRes = await fetch(`${baseUrl}/api/classroom/quizzes/${createdQuiz.id}/results?workspaceId=${workspaceId}`, {
-      headers: { 'x-user-id': teacherUser.id, 'x-user-role': teacherUser.role }
+      headers: { 'Authorization': `Bearer ${await authService.issueToken(teacherUser)}`}
     });
     assert(httpResultsRes.status === 200, '85. HTTP GET /results returns 200 OK');
     const httpResultsData = await httpResultsRes.json();

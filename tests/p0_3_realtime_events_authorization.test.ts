@@ -33,10 +33,10 @@ async function runRealtimeAuthorizationTests() {
 
     assert(student1 && student2 && teacher1 && adminUser, 'Seed users must exist');
 
-    const student1Token = authService.issueToken(student1);
-    const student2Token = authService.issueToken(student2);
-    const teacher1Token = authService.issueToken(teacher1);
-    const adminToken = authService.issueToken(adminUser);
+    const student1Token = await authService.issueToken(student1);
+    const student2Token = await authService.issueToken(student2);
+    const teacher1Token = await authService.issueToken(teacher1);
+    const adminToken = await authService.issueToken(adminUser);
 
     // =========================================================================
     // 1. Anonymous Access to SSE Stream Rejected (401)

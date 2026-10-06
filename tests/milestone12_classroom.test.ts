@@ -37,7 +37,28 @@ function getFileSha256(filePath: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
+async function getTokenForUser(userId: string): Promise<string> {
+  const res = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const data = await res.json();
+  return data.token;
+}
+
+import { authService } from '../server/auth/tokens.ts';
 async function runMilestone12Tests() {
+  let authHeaders: any = { 'Content-Type': 'application/json' };
+  try {
+    const authRes = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ userId: 'user-tony' })
+    });
+    if (authRes.ok) {
+      const authData = await authRes.json();
+      authHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authData.token}` };
+    }
+  } catch (e) {}
   console.log('\n================================================================');
   console.log('=== [WEB JARVIS] MILESTONE 12: SMART CLASSROOM FOUNDATION SUITE ===');
   console.log('=== (HARDENED AUTHORIZATION & DATA HYGIENE VALIDATION)         ===');
@@ -653,9 +674,12 @@ async function runMilestone12Tests() {
   // --- PART 9: HTTP/API BOUNDARY AUTHORIZATION TESTS (REQUIREMENT 5) ---
   console.log('\n--- PART 9: HTTP / Route Boundary Authorization Tests ---');
 
+  const { requirePrincipal } = await import('../server/auth/principal.ts');
   const app = express();
   app.use(express.json());
+  const { authRouter } = await import('../server/auth/authRoutes.ts');
   app.use('/api/classroom/sessions', classroomRouter);
+  app.use('/api/auth', authRouter);
 
   const server: Server = await new Promise((resolve) => {
     const s = app.listen(0, '127.0.0.1', () => resolve(s));
@@ -688,7 +712,7 @@ async function runMilestone12Tests() {
 
     // 43. Invalid identity / unknown user ID header -> 401
     const invalidUserRes = await fetch(`${baseUrl}/active?classId=${classId}&workspaceId=${workspaceId}`, {
-      headers: { 'x-user-id': 'user-unknown-adversary' }
+      headers: { 'Authorization': `Bearer ${await authService.issueToken(await jarvisData.users.getById('user-unknown-adversary') || { id: 'user-unknown-adversary', role: 'student' } as any)}` }
     });
     assert(
       invalidUserRes.status === 401,
@@ -698,7 +722,7 @@ async function runMilestone12Tests() {
 
     // 44. Forged user ID header (non-existent) -> 401
     const forgedIdRes = await fetch(`${baseUrl}/${httpTestSession.id}`, {
-      headers: { 'x-user-id': 'fake-hacker-999' }
+      headers: { 'Authorization': `Bearer ${await authService.issueToken(await jarvisData.users.getById('fake-hacker-999') || { id: 'fake-hacker-999', role: 'student' } as any)}` }
     });
     assert(
       forgedIdRes.status === 401,
@@ -707,12 +731,20 @@ async function runMilestone12Tests() {
     );
 
     // 45. Forged user role header (student passes role: teacher to control session) -> 403
+    
+    // We need a student token to test authorization failure
+    const studentAuthRes = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ userId: studentUser.id })
+    });
+    const studentAuthData = await studentAuthRes.json();
+    const studentToken = studentAuthData.token;
+
     const forgedRoleRes = await fetch(`${baseUrl}/${httpTestSession.id}/pause`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': studentUser.id,
-        'x-user-role': 'teacher' // Client attempts to forge role!
+        'Authorization': `Bearer ${studentToken}`
       },
       body: JSON.stringify({ workspaceId })
     });
@@ -727,8 +759,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': studentUser.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(studentUser)}`},
       body: JSON.stringify({ workspaceId })
     });
     assert(
@@ -742,8 +773,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': nonEnrolledStudent.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(nonEnrolledStudent)}`},
       body: JSON.stringify({ workspaceId, deviceType: 'web' })
     });
     assert(
@@ -757,8 +787,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': unauthorizedTeacher.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(unauthorizedTeacher)}`},
       body: JSON.stringify({ workspaceId })
     });
     assert(
@@ -769,7 +798,7 @@ async function runMilestone12Tests() {
 
     // 49. Cross-workspace access rejected -> 403 / 404
     const crossWsRes = await fetch(`${baseUrl}/${httpTestSession.id}?workspaceId=ws-other-unauthorized`, {
-      headers: { 'x-user-id': teacherUser.id }
+      headers: { 'Authorization': `Bearer ${await authService.issueToken(teacherUser)}` }
     });
     assert(
       crossWsRes.status === 403 || crossWsRes.status === 404,
@@ -792,8 +821,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': outsiderUser.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(outsiderUser)}`},
       body: JSON.stringify({ workspaceId })
     });
     assert(
@@ -816,7 +844,13 @@ async function runMilestone12Tests() {
     );
 
     // 51c. Non-enrolled student on stream -> 403
-    const rogueStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&userId=${nonEnrolledStudent.id}`);
+    const test51cToken = await authService.issueToken(await jarvisData.users.getById(nonEnrolledStudent.id) || { id: nonEnrolledStudent.id, role: 'student' } as any);
+    const rogueTicketRes = await fetch(`http://127.0.0.1:${port}/api/auth/sse-ticket?scope=session&resourceId=${httpTestSession.id}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${test51cToken}` }
+    });
+    const rogueTicketData = await rogueTicketRes.json();
+    const rogueStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&ticket=${rogueTicketData.ticket}`);
     assert(
       rogueStreamRes.status === 403,
       '51c. HTTP: Non-enrolled student SSE stream subscription rejected with 403 Forbidden',
@@ -824,7 +858,13 @@ async function runMilestone12Tests() {
     );
 
     // 51d. Teacher from another class on stream -> 403
-    const otherTeacherStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&userId=${unauthorizedTeacher.id}`);
+    const test51dToken = await authService.issueToken(await jarvisData.users.getById(unauthorizedTeacher.id) || { id: unauthorizedTeacher.id, role: 'teacher' } as any);
+    const otherTeacherTicketRes = await fetch(`http://127.0.0.1:${port}/api/auth/sse-ticket?scope=session&resourceId=${httpTestSession.id}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${test51dToken}` }
+    });
+    const otherTeacherTicketData = await otherTeacherTicketRes.json();
+    const otherTeacherStreamRes = await fetch(`${baseUrl}/${httpTestSession.id}/stream?workspaceId=${workspaceId}&ticket=${otherTeacherTicketData.ticket}`);
     assert(
       otherTeacherStreamRes.status === 403,
       '51d. HTTP: Unauthorized teacher SSE stream subscription rejected with 403 Forbidden',
@@ -836,8 +876,7 @@ async function runMilestone12Tests() {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': studentUser.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(studentUser)}`},
       body: JSON.stringify({ state: 'question', workspaceId })
     });
     assert(
@@ -852,8 +891,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': studentUser.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(studentUser)}`},
       body: JSON.stringify({ workspaceId, deviceType: 'software_remote' })
     });
     assert(authJoinRes.status === 200, '53a. HTTP: Authorized enrolled student join succeeds (200 OK)');
@@ -863,8 +901,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': studentUser.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(studentUser)}`},
       body: JSON.stringify({ workspaceId })
     });
     assert(authPresenceRes.status === 200, '53b. HTTP: Authorized student presence heartbeat succeeds (200 OK)');
@@ -874,8 +911,7 @@ async function runMilestone12Tests() {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': teacherUser.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(teacherUser)}`},
       body: JSON.stringify({ state: 'lesson', currentTopic: 'Quantum Electrodynamics', workspaceId })
     });
     assert(authBoardRes.status === 200, '53c. HTTP: Authorized teacher board state update succeeds (200 OK)');
@@ -885,8 +921,7 @@ async function runMilestone12Tests() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-user-id': teacherUser.id
-      },
+        'Authorization': `Bearer ${await authService.issueToken(teacherUser)}`},
       body: JSON.stringify({ workspaceId })
     });
     assert(authEndRes.status === 200, '53d. HTTP: Authorized teacher end session succeeds (200 OK)');

@@ -3,6 +3,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { EducationClass, EducationRole } from '../../../types/education.ts';
+import { authClient } from '../../../services/authClient.ts';
+
 import type {
   LiveClassroomState,
   LiveConnectionState,
@@ -108,10 +110,7 @@ export const StudentLiveClassroomView: React.FC<StudentLiveClassroomViewProps> =
     setErrorMessage(null);
     try {
       const res = await fetch(`/api/education/live-classroom/${selectedClassId}`, {
-        headers: {
-          'x-user-id': 'student-1',
-          'x-user-role': 'student'
-        }
+        headers: { ...authClient.getAuthHeaders() }
       });
 
       if (res.ok) {
@@ -145,11 +144,12 @@ export const StudentLiveClassroomView: React.FC<StudentLiveClassroomViewProps> =
   useEffect(() => {
     let isCancelled = false;
 
-    const connectSSE = () => {
+    const connectSSE = async () => {
       if (isCancelled) return;
       setConnectionState('CONNECTING');
-
-      const sseUrl = `/api/classroom/sessions/session-phys-101/stream?workspaceId=ws-stark-core&userId=student-1`;
+      const ticket = await authClient.getSSETicket('class', 'session-phys-101');
+      if (!ticket || isCancelled) return;
+      const sseUrl = `/api/classroom/sessions/session-phys-101/stream?workspaceId=ws-stark-core&ticket=${ticket}`;
       const es = new EventSource(sseUrl);
       eventSourceRef.current = es;
 
@@ -230,8 +230,8 @@ export const StudentLiveClassroomView: React.FC<StudentLiveClassroomViewProps> =
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-id': 'student-1',
-            'x-user-role': 'student'
+            ...authClient.getAuthHeaders(),
+            
           },
           body: JSON.stringify({
             sessionId: classroomState?.academicContext.classSessionId,
@@ -265,8 +265,8 @@ export const StudentLiveClassroomView: React.FC<StudentLiveClassroomViewProps> =
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'student-1',
-          'x-user-role': 'student'
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({
           query,
@@ -301,8 +301,8 @@ export const StudentLiveClassroomView: React.FC<StudentLiveClassroomViewProps> =
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'student-1',
-          'x-user-role': 'student'
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({
           quizId: classroomState.activeQuiz.id,

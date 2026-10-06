@@ -5,6 +5,7 @@ import assert from 'node:assert';
 import { engagementStore } from '../server/sectors/education/engagement/engagementStore.ts';
 import { academicIntegrationService } from '../server/sectors/education/academicIntegrationService.ts';
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD5Tests() {
   console.log('===================================================================');
   console.log(' JARVIS EDUCATION OS — PHASE D.5 NAVIGATION & ENGAGEMENT TESTS');

@@ -28,6 +28,7 @@ function assert(condition: boolean, testName: string, detail?: any) {
   }
 }
 
+import { authService } from '../server/auth/tokens.ts';
 async function runAcademicIntegrationTestSuite() {
   console.log('\n================================================================');
   console.log('=== JARVIS EDUCATION OS — PHASE D INTEGRATION TEST SUITE ===');

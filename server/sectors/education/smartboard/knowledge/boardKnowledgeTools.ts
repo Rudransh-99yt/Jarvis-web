@@ -7,7 +7,10 @@ import type { User } from '../../../../data/types.ts';
 import { jarvisData } from '../../../../data/index.ts';
 
 async function resolveUser(context: ToolExecutionContext): Promise<User> {
-  const userId = context.userId || (context.role === 'student' ? 'student-1' : 'teacher-1');
+
+  if (!context.userId) throw new Error("userId missing in tool context");
+  const userId = context.userId;
+    
   const user = await jarvisData.users.getById(userId);
   if (user) return user;
   return {

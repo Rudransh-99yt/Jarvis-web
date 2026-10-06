@@ -7,6 +7,7 @@ import { classSessionPolicy } from '../server/sectors/education/classSessions/cl
 import { educationStore } from '../server/sectors/education/educationStore.ts';
 import type { User } from '../server/data/types.ts';
 
+import { authService } from '../server/auth/tokens.ts';
 async function runTeacherOsTests() {
   console.log('===================================================================');
   console.log(' JARVIS EDUCATION OS — PHASE D.6 TEACHER OPERATING SYSTEM TESTS');

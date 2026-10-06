@@ -217,7 +217,7 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
         const record: Conversation = {
           id: conversation.id || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           workspaceId: conversation.workspaceId || 'ws-stark-core',
-          userId: conversation.userId || 'user-tony',
+          userId: conversation.userId,
           title: conversation.title,
           sector: conversation.sector || 'command',
           classId: conversation.classId,
@@ -261,17 +261,7 @@ export class MemoryJarvisDataRepository implements IJarvisDataRepository {
 
         let conv = this.state.conversations.find((c) => c.id === conversationId);
         if (!conv) {
-          conv = {
-            id: conversationId,
-            workspaceId: 'ws-stark-core',
-            userId: 'user-tony',
-            title: content.slice(0, 30) || 'Conversation',
-            sector: 'command',
-            createdAt: now,
-            updatedAt: now,
-            messageCount: 0
-          };
-          this.state.conversations.push(conv);
+          throw new Error(`Conversation ${conversationId} not found`);
         } else {
           conv.updatedAt = now;
         }

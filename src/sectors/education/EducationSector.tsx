@@ -62,6 +62,8 @@ import { SmartBoardWorkspace } from './smartboard/SmartBoardWorkspace.tsx';
 import { BoardHistoryView } from './smartboard/BoardHistoryView.tsx';
 
 import { Menu, Home, Layers, Flame, FileCheck2, Building2 } from 'lucide-react';
+import { authClient } from '../../services/authClient.ts';
+
 
 interface EducationSectorProps {
   currentRole: EducationRole;
@@ -218,7 +220,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     try {
       const res = await fetch('/api/education/focus/active', {
         headers: {
-          'x-user-id': currentRole === 'student' ? 'student-1' : 'teacher-1',
+          ...authClient.getAuthHeaders(),
           'x-user-role': currentRole
         }
       });
@@ -1501,7 +1503,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'x-user-id': currentRole === 'student' ? 'student-1' : 'teacher-1',
+                  ...authClient.getAuthHeaders(),
                   'x-user-role': currentRole
                 },
                 body: JSON.stringify({ reason })

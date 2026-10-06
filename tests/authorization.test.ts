@@ -68,6 +68,7 @@ const memberships: InstitutionMembership[] = [
   { id: 'mem-6', institutionId: instB, userId: 'teacher-C', role: 'teacher', joinedAt: '2026-01-01' }
 ];
 
+import { authService } from '../server/auth/tokens.ts';
 async function runAuthorizationTests() {
   // PHASE 5: TESTS
   

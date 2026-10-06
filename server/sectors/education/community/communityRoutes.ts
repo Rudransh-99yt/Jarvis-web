@@ -44,7 +44,12 @@ communityRouter.get('/events', async (req: Request, res: Response) => {
   res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`);
 
   const onCommunityEvent = (event: any) => {
-    res.write(`data: ${JSON.stringify(event)}\n\n`);
+    const payload = verified.payload;
+    if (payload.classId && event.classId && event.classId !== payload.classId) return;
+    if (payload.workspaceId && event.workspaceId && event.workspaceId !== payload.workspaceId) return;
+    res.write(`data: ${JSON.stringify(event)}
+
+`);
   };
 
   communityEventBus.on('community_event', onCommunityEvent);

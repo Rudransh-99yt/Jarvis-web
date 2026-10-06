@@ -48,9 +48,9 @@ async function runPersistenceConcurrencyTests() {
 
     assert(teacher1 && student1 && unassignedTeacher, 'Test users must exist');
 
-    const teacherToken = authService.issueToken(teacher1);
-    const unassignedTeacherToken = authService.issueToken(unassignedTeacher);
-    const studentToken = authService.issueToken(student1);
+    const teacherToken = await authService.issueToken(teacher1);
+    const unassignedTeacherToken = await authService.issueToken(unassignedTeacher);
+    const studentToken = await authService.issueToken(student1);
 
     // =========================================================================
     // 1. Initial Seed Document Availability

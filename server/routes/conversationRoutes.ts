@@ -1,8 +1,13 @@
 // Conversations REST API Routes
+
 import { Router, type Request, type Response } from 'express';
 import { jarvisData } from '../data/index.ts';
+import { requirePrincipal } from '../auth/principal.ts';
 
 export const conversationRouter = Router();
+
+conversationRouter.use(requirePrincipal);
+
 
 // GET /api/conversations
 conversationRouter.get('/', async (req: Request, res: Response) => {
@@ -31,8 +36,8 @@ conversationRouter.post('/', async (req: Request, res: Response) => {
 
     const conv = await jarvisData.conversations.create({
       title: title.trim(),
-      workspaceId: workspaceId || 'ws-stark-core',
-      userId: userId || 'user-tony',
+      workspaceId: workspaceId || res.locals.principal!.workspaceId || 'ws-stark-core',
+      userId: res.locals.principal!.userId,
       sector: sector || 'command'
     });
 

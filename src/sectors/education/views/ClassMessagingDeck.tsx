@@ -17,6 +17,8 @@ import {
 import { FileUploadModal } from '../../../components/files/FileUploadModal.tsx';
 import { FileAttachmentBadge } from '../../../components/files/FileAttachmentBadge.tsx';
 import { FileViewerModal } from '../../../components/files/FileViewerModal.tsx';
+import { authClient } from '../../../services/authClient.ts';
+
 
 interface MessageItem {
   id: string;
@@ -73,7 +75,7 @@ export const ClassMessagingDeck: React.FC<ClassMessagingDeckProps> = ({
         `/api/messages?classId=${currentClass.id}&workspaceId=${workspaceId}`,
         {
           headers: {
-            'x-user-id': currentUserId,
+            ...authClient.getAuthHeaders(),
             'x-user-role': currentRole
           }
         }
@@ -186,7 +188,7 @@ export const ClassMessagingDeck: React.FC<ClassMessagingDeckProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUserId,
+          ...authClient.getAuthHeaders(),
           'x-user-role': currentRole
         },
         body: JSON.stringify({

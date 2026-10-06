@@ -5,7 +5,8 @@ import type { Server } from 'node:http';
 import { jarvisData } from '../server/data/index.ts';
 import { authRouter } from '../server/auth/authRoutes.ts';
 import { educationRouter } from '../server/sectors/education/routes.ts';
-import { authService, resolveCapabilities, hasCapability } from '../server/auth/index.ts';
+import { authService } from '../server/auth/tokens.ts';
+import { resolveCapabilities, hasCapability } from '../server/auth/capabilities.ts';
 import { VIEW_CAPABILITY_MAP, canAccessView, getDefaultHomeViewForUser } from '../src/services/capabilityMap.ts';
 import { authClient } from '../src/services/authClient.ts';
 import type { User } from '../server/data/types.ts';
@@ -13,6 +14,15 @@ import type { User } from '../server/data/types.ts';
 import { knowledgeRouter } from '../server/routes/knowledgeRoutes.ts';
 
 console.log('=== [JARVIS-WEB] P0-5 SERVER-DERIVED ROLE CAPABILITIES & IA TEST SUITE ===');
+
+async function getTokenForUser(userId: string): Promise<string> {
+  const res = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const data = await res.json();
+  return data.token;
+}
 
 async function runServerRoleCapabilitiesTests() {
   await jarvisData.seed();
@@ -42,11 +52,11 @@ async function runServerRoleCapabilitiesTests() {
 
     assert(student1 && teacher1 && principal1 && parent1 && adminUser, 'Seed users must exist');
 
-    const studentToken = authService.issueToken(student1);
-    const teacherToken = authService.issueToken(teacher1);
-    const principalToken = authService.issueToken(principal1);
-    const parentToken = authService.issueToken(parent1);
-    const adminToken = authService.issueToken(adminUser);
+    const studentToken = await authService.issueToken(student1);
+    const teacherToken = await authService.issueToken(teacher1);
+    const principalToken = await authService.issueToken(principal1);
+    const parentToken = await authService.issueToken(parent1);
+    const adminToken = await authService.issueToken(adminUser);
 
     // =========================================================================
     // SECTION 1: AUTH & GET /ME BEHAVIOR
@@ -74,7 +84,7 @@ async function runServerRoleCapabilitiesTests() {
       const res = await fetch(`${authUrl}/me`, {
         headers: {
           Authorization: `Bearer ${studentToken}`,
-          'x-user-role': 'admin',
+          'x-user-role': 'commander',
           'x-user-id': 'user-tony',
           role: 'principal'
         }
@@ -300,6 +310,7 @@ async function runServerRoleCapabilitiesTests() {
       console.log('[PASS] Test 4.1: Centralized View Capability Map definitions verified');
     }
 
+
     // Test 4.2: Default Home View Derivation from Authenticated Capabilities
     {
       const studentCan = (cap: string) => resolveCapabilities(student1).includes(cap);
@@ -307,7 +318,10 @@ async function runServerRoleCapabilitiesTests() {
       const principalCan = (cap: string) => resolveCapabilities(principal1).includes(cap);
       const parentCan = (cap: string) => resolveCapabilities(parent1).includes(cap);
 
+      // Reset client to student to test fallback
+      (authClient as any).currentUser = { role: 'student', capabilities: [] };
       assert.strictEqual(getDefaultHomeViewForUser(), 'student_home', 'Default fallback is student_home');
+
       assert.strictEqual(studentCan('student.focus.manage'), true);
       assert.strictEqual(principalCan('student.focus.manage'), false);
       assert.strictEqual(parentCan('teacher.review.manage'), false);
@@ -323,7 +337,7 @@ async function runServerRoleCapabilitiesTests() {
         process.env.NODE_ENV = 'production';
         delete process.env.ALLOW_DEV_AUTH;
 
-        const res = await fetch(`${authUrl}/dev-session`, {
+        const res = await fetch(`${authUrl}/dev-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ role: 'teacher' })

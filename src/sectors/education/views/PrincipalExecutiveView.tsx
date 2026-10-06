@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { EducationClass, Assignment, StudentSubmission, AcademicInstitution } from '../../../types/education.ts';
+import { authClient } from '../../../services/authClient.ts';
+
 import type {
   SchoolIntelligenceData,
   PrincipalCommandProposal,
@@ -57,10 +59,7 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
   // Fetch live School Intelligence
   const fetchSchoolData = () => {
     fetch('/api/education/institutional/school', {
-      headers: {
-        'x-user-id': 'principal-1',
-        'x-user-role': 'principal'
-      }
+      headers: { ...authClient.getAuthHeaders() }
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -83,8 +82,8 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'principal-1',
-          'x-user-role': 'principal'
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({
           commandPrompt: commandInput,
@@ -114,8 +113,8 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'principal-1',
-          'x-user-role': 'principal'
+          ...authClient.getAuthHeaders(),
+          
         }
       });
 

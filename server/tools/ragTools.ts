@@ -86,9 +86,14 @@ export const addSourceTool: ToolDefinition<AddSourceArgs> = {
     };
   },
   async execute(args: AddSourceArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    const userId = context.userId || 'user-tony';
-    const role = (context.role || 'commander') as any;
-    const actor: AuthenticatedPrincipal = { userId, role, provenance: 'signed-hmac' };
+    if (!context.userId) {
+      return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Missing authenticated context.userId.' } };
+    }
+    const actor: AuthenticatedPrincipal = { 
+      userId: context.userId, 
+      role: (context.role || 'student') as any, 
+      provenance: 'signed-hmac' 
+    };
 
     const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
     if (!space) {
@@ -178,9 +183,14 @@ export const listSourcesTool: ToolDefinition<ListSourcesArgs> = {
     };
   },
   async execute(args: ListSourcesArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    const userId = context.userId || 'user-tony';
-    const role = (context.role || 'commander') as any;
-    const actor: AuthenticatedPrincipal = { userId, role, provenance: 'signed-hmac' };
+    if (!context.userId) {
+      return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Missing authenticated context.userId.' } };
+    }
+    const actor: AuthenticatedPrincipal = { 
+      userId: context.userId, 
+      role: (context.role || 'student') as any, 
+      provenance: 'signed-hmac' 
+    };
 
     const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
     if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };
@@ -259,9 +269,14 @@ export const ingestSourceTool: ToolDefinition<IngestSourceArgs> = {
     };
   },
   async execute(args: IngestSourceArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    const userId = context.userId || 'user-tony';
-    const role = (context.role || 'commander') as any;
-    const actor: AuthenticatedPrincipal = { userId, role, provenance: 'signed-hmac' };
+    if (!context.userId) {
+      return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Missing authenticated context.userId.' } };
+    }
+    const actor: AuthenticatedPrincipal = { 
+      userId: context.userId, 
+      role: (context.role || 'student') as any, 
+      provenance: 'signed-hmac' 
+    };
 
     const source = await jarvisData.knowledge.getSourceById(args.sourceId);
     if (!source) {
@@ -343,9 +358,14 @@ export const deleteSourceTool: ToolDefinition<DeleteSourceArgs> = {
     };
   },
   async execute(args: DeleteSourceArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    const userId = context.userId || 'user-tony';
-    const role = (context.role || 'commander') as any;
-    const actor: AuthenticatedPrincipal = { userId, role, provenance: 'signed-hmac' };
+    if (!context.userId) {
+      return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Missing authenticated context.userId.' } };
+    }
+    const actor: AuthenticatedPrincipal = { 
+      userId: context.userId, 
+      role: (context.role || 'student') as any, 
+      provenance: 'signed-hmac' 
+    };
 
     const source = await jarvisData.knowledge.getSourceById(args.sourceId);
     if (!source) return { ok: false, error: { code: 'SOURCE_NOT_FOUND', message: 'Knowledge source not found' } };
@@ -433,9 +453,14 @@ export const retrieveKnowledgeTool: ToolDefinition<RetrieveArgs> = {
     };
   },
   async execute(args: RetrieveArgs, context: ToolExecutionContext): Promise<ToolResult> {
-    const userId = context.userId || 'user-tony';
-    const role = (context.role || 'commander') as any;
-    const actor: AuthenticatedPrincipal = { userId, role, provenance: 'signed-hmac' };
+    if (!context.userId) {
+      return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Missing authenticated context.userId.' } };
+    }
+    const actor: AuthenticatedPrincipal = { 
+      userId: context.userId, 
+      role: (context.role || 'student') as any, 
+      provenance: 'signed-hmac' 
+    };
 
     const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
     if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };
@@ -540,9 +565,14 @@ export const queryKnowledgeTool: ToolDefinition<QueryKnowledgeArgs> = {
   },
   async execute(args: QueryKnowledgeArgs, context: ToolExecutionContext): Promise<ToolResult> {
     try {
-      const userId = context.userId || args.userId || 'user-tony';
-      const role = (context.role || args.userRole || 'commander') as any;
-      const actor: AuthenticatedPrincipal = { userId, role, provenance: 'signed-hmac' };
+      if (!context.userId) {
+      return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'Missing authenticated context.userId.' } };
+    }
+    const actor: AuthenticatedPrincipal = { 
+      userId: context.userId, 
+      role: (context.role || 'student') as any, 
+      provenance: 'signed-hmac' 
+    };
 
       const space = await jarvisData.knowledge.getSpaceById(args.spaceId, context.workspaceId);
       if (!space) return { ok: false, error: { code: 'SPACE_NOT_FOUND', message: 'Knowledge space not found' } };

@@ -32,7 +32,19 @@ function assert(condition: boolean, testName: string, detail?: any) {
   }
 }
 
+import { authService } from '../server/auth/tokens.ts';
 async function runAuditTestSuite() {
+  let authHeaders: any = { 'Content-Type': 'application/json' };
+  try {
+    const authRes = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ userId: 'user-tony' })
+    });
+    if (authRes.ok) {
+      const authData = await authRes.json();
+      authHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authData.token}` };
+    }
+  } catch (e) {}
   console.log('\n================================================================');
   console.log('=== JARVIS-WEB FULL MILESTONES 1–10 VERIFICATION & AUDIT SUITE ===');
   console.log('================================================================\n');
@@ -127,7 +139,7 @@ async function runAuditTestSuite() {
 
   // 5. REST API Health check handshake
   try {
-    const healthRes = await fetch('http://localhost:3000/api/health');
+    const healthRes = await fetch('http://localhost:3000/api/health', { headers: authHeaders });
     const health = await healthRes.json();
     assert(
       healthRes.ok &&

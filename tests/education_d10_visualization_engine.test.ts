@@ -94,6 +94,7 @@ const studentContext: ToolExecutionContext = {
   role: 'student'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD10VisualizationTests() {
   console.log('\n===================================================================');
   console.log('=== [WEB JARVIS] PHASE D.10: AI VISUALIZATION ENGINE TEST SUITE ===');

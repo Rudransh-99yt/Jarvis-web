@@ -234,7 +234,7 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
         const record: Conversation = {
           id: conversation.id || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           workspaceId: conversation.workspaceId || 'ws-stark-core',
-          userId: conversation.userId || 'user-tony',
+          userId: conversation.userId,
           title: conversation.title,
           sector: conversation.sector || 'command',
           classId: conversation.classId,

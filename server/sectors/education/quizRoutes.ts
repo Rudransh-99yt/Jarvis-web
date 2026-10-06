@@ -8,6 +8,8 @@ import { authenticateRequest, AuthenticationError } from '../../auth/index.ts';
 
 export const quizRouter = express.Router();
 
+quizRouter.use(requirePrincipal);
+
 function getParam(param: string | string[] | undefined): string {
   if (Array.isArray(param)) return param[0] || '';
   return param || '';
@@ -90,8 +92,14 @@ quizRouter.get('/', async (req: Request, res: Response) => {
       return;
     }
     const cls = await jarvisData.education.getClassById(classId);
-    const memberships: any[] = [];
-    const decision = authorizationPolicy.canReadClass(res.locals.principal, cls || undefined, memberships);
+    const actor = res.locals.principal;
+    if (!actor) {
+      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Missing actor context.' } });
+      return;
+    }
+    const user = await jarvisData.users.getById(actor.userId);
+    const memberships = user?.institutionId ? [{ id: 'm-1', institutionId: user.institutionId, userId: user.id, role: user.role, joinedAt: user.createdAt }] : [];
+    const decision = authorizationPolicy.canReadClass(actor, cls || undefined, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Not authorized for this class.' } });
       return;

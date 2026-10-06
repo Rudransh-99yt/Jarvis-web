@@ -4,6 +4,7 @@ import { communityPolicy } from '../server/sectors/education/community/community
 import { communityEventBus } from '../server/sectors/education/community/communityEventBus.ts';
 import type { User } from '../server/data/types.ts';
 
+import { authService } from '../server/auth/tokens.ts';
 async function runCommunityTests() {
   console.log('=== [JARVIS EDUCATION] DISCORD-STYLE ACADEMIC COMMUNITY TEST SUITE ===');
 

@@ -11,6 +11,8 @@ import type {
   SessionTeacherNotes
 } from '../../../types/classSession.ts';
 import type { EducationClass } from '../../../types/education.ts';
+import { authClient } from '../../../services/authClient.ts';
+
 import {
   Sparkles,
   ArrowLeft,
@@ -348,7 +350,7 @@ export const TeacherSessionPrepWizard: React.FC<TeacherSessionPrepWizardProps> =
     try {
       const res = await fetch(`/api/education/integration/sessions/${activeSession.id}/link-all`, {
         method: 'POST',
-        headers: { 'x-user-role': 'teacher', 'x-user-id': 'teacher-1' }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();

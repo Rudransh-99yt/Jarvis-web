@@ -22,10 +22,24 @@ const dummyContext: ToolExecutionContext = {
   sessionId: 'test-rag-session-1',
   callCount: 1,
   maxRounds: 5,
-  executedTools: []
+  executedTools: [],
+  userId: 'user-tony',
+  role: 'commander'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runMilestone8Tests() {
+  let authHeaders: any = { 'Content-Type': 'application/json' };
+  try {
+    const authRes = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ userId: 'user-tony' })
+    });
+    if (authRes.ok) {
+      const authData = await authRes.json();
+      authHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authData.token}` };
+    }
+  } catch (e) {}
   console.log('\n=== [WEB JARVIS] MILESTONE 8: GROUNDED RAG & MULTI-SOURCE KNOWLEDGE TEST SUITE ===\n');
 
   // Initialize data repository
@@ -167,7 +181,7 @@ Unlike wave function collapse, decoherence is a continuous unitary evolution of 
       type: 'notes'
     }
   }, dummyContext);
-  assert(addToolRes.ok && addToolRes.data?.status === 'ready', '21. Tool knowledge.source.add executes RAG ingestion pipeline');
+  assert(addToolRes.ok && addToolRes.data?.status === 'ready', '21. Tool knowledge.source.add executes RAG ingestion pipeline', JSON.stringify(addToolRes));
 
   const queryToolRes = await toolExecutor.execute({
     name: 'knowledge.query',
@@ -180,7 +194,7 @@ Unlike wave function collapse, decoherence is a continuous unitary evolution of 
 
   // 23. Milestones 1-7 Regression Verification
   try {
-    const healthRes = await fetch('http://localhost:3000/api/health');
+    const healthRes = await fetch('http://localhost:3000/api/health', { headers: authHeaders });
     const healthData: any = await healthRes.json();
     assert(healthRes.ok && healthData.status === 'healthy', '23. Regression check: GET /api/health endpoint functional');
   } catch {

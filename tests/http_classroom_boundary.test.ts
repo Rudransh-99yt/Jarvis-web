@@ -6,6 +6,16 @@ import { jarvisData } from '../server/data/index.ts';
 
 console.log('=== [WEB JARVIS] HTTP CLASSROOM & LIVE BOUNDARY TEST SUITE ===');
 
+async function getTokenForUser(userId: string): Promise<string> {
+  const res = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const data = await res.json();
+  return data.token;
+}
+
+import { authService } from '../server/auth/tokens.ts';
 async function runTests() {
   const harness = await startHttpHarness();
   const { baseUrl, tokenFor } = harness;
@@ -90,10 +100,8 @@ async function runTests() {
     res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-phys-301`, {
       headers: {
         'Authorization': `Bearer ${tokenStudent1}`,
-        'x-user-id': student2Id,
-        'x-jarvis-user-id': student2Id,
-        'x-user-role': 'teacher'
-      }
+        'Authorization': `Bearer ${await authService.issueToken({ id: student2Id, role: 'student' } as any)}`,
+        'x-jarvis-user-id': student2Id}
     });
     assert.strictEqual(res.status, 200, '5. Authorized request must succeed');
     const activeData = await res.json();
@@ -105,9 +113,7 @@ async function runTests() {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${tokenStudent1}`,
-        'x-user-role': 'teacher',
-        'x-user-id': teacher1Id
-      },
+        'x-user-role': 'teacher' },
       body: JSON.stringify({
         classId: 'class-phys-301',
         title: 'Forged Session from Student'

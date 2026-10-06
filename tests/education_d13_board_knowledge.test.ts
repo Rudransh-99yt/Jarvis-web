@@ -26,7 +26,8 @@ function getFileSha256(filePath: string): string {
   return crypto.createHash('sha256').update(fileBuffer).digest('hex');
 }
 
-export async function runD13BoardKnowledgeTests(): Promise<void> {
+import { authService } from '../server/auth/tokens.ts';
+async function runD13BoardKnowledgeTests(): Promise<void> {
   console.log('\n======================================================================');
   console.log('=== [WEB JARVIS] PHASE D.13: BOARD KNOWLEDGE ENGINE TEST SUITE ===');
   console.log('======================================================================\n');

@@ -65,6 +65,7 @@ const teacherContext: ToolExecutionContext = {
   role: 'teacher'
 };
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD9VisionBoardTests() {
   console.log('\n===================================================================');
   console.log('=== [WEB JARVIS] PHASE D.9: VISION BOARD FOUNDATION TEST SUITE ===');

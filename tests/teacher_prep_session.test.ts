@@ -4,6 +4,7 @@ import { classSessionGenerator } from '../server/sectors/education/classSessions
 import type { User } from '../server/data/types.ts';
 import type { ClassSession } from '../src/types/classSession.ts';
 
+import { authService } from '../server/auth/tokens.ts';
 async function runTeacherPrepTests() {
   console.log('=== [JARVIS EDUCATION] AI TEACHER PREPARATION & CLASS SESSION TEST SUITE ===');
 

@@ -4,6 +4,7 @@ import { FocusPolicyEngine } from '../src/sectors/education/focus/focusPolicy.ts
 import type { User } from '../server/data/types.ts';
 import type { FocusMode, FocusTarget } from '../src/types/focus.ts';
 
+import { authService } from '../server/auth/tokens.ts';
 async function runFocusTests() {
   console.log('=== [JARVIS EDUCATION] PRO FOCUS & FOCUS LOCK TEST SUITE ===');
 

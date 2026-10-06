@@ -150,9 +150,16 @@ educationRouter.post('/classes/:id/units/:unitId/lessons', (req: Request, res: R
   res.status(201).json({ lesson });
 });
 
+
 // POST /api/education/classes/:id/units/:unitId/lessons/:lessonId/complete - Toggle lesson completion
 educationRouter.post('/classes/:id/units/:unitId/lessons/:lessonId/complete', (req: Request, res: Response) => {
+  const principal = res.locals.principal;
+  if (!principal || principal.role !== 'student') {
+    res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Only students can mark lessons as complete.' } });
+    return;
+  }
   const { isCompleted } = req.body;
+
   const classId = req.params.id as string;
   const unitId = req.params.unitId as string;
   const lessonId = req.params.lessonId as string;
@@ -203,9 +210,16 @@ educationRouter.get('/submissions', (req: Request, res: Response) => {
   });
 });
 
+
 // POST /api/education/submissions - Student submits work
 educationRouter.post('/submissions', (req: Request, res: Response) => {
+  const principal = res.locals.principal;
+  if (!principal || principal.role !== 'student') {
+    res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Only students can submit assignments.' } });
+    return;
+  }
   const { assignmentId, studentId, studentName, content, attachments } = req.body;
+
 
   if (!assignmentId || !studentId || !content) {
     res.status(400).json({

@@ -225,7 +225,20 @@ class AuthClient {
     return this.currentUser;
   }
 
-    getAuthHeaders(): Record<string, string> {
+    async getSSETicket(scope: string = 'user', resourceId?: string): Promise<string | null> {
+    try {
+      let url = `/api/auth/sse-ticket?scope=${scope}`;
+      if (resourceId) url += `&resourceId=${resourceId}`;
+      const res = await fetch(url, { headers: this.getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        return data.ticket;
+      }
+    } catch { }
+    return null;
+  }
+
+  getAuthHeaders(): Record<string, string> {
     if (this.currentToken) {
       return { 'Authorization': `Bearer ${this.currentToken}` };
     }

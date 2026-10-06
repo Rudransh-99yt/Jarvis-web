@@ -5,6 +5,16 @@ import crypto from 'node:crypto';
 
 console.log('=== [WEB JARVIS] HTTP AUTHENTICATION BOUNDARY TEST SUITE ===');
 
+async function getTokenForUser(userId: string): Promise<string> {
+  const res = await fetch(`http://localhost:3000/api/auth/dev-login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const data = await res.json();
+  return data.token;
+}
+
+import { authService } from '../server/auth/tokens.ts';
 async function runTests() {
   const harness = await startHttpHarness();
   const { baseUrl, tokenFor } = harness;
@@ -112,8 +122,7 @@ async function runTests() {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${validTokenA}`,
-        'x-user-id': 'student-2' // Forge to be someone else
-      },
+        'x-user-id': 'student-2' },
       body: JSON.stringify({ message: 'Hello from forged identity', sessionId: sessionId2 })
     });
     assert.strictEqual(res.status, 200, 'Expected 200 for forged header request');
@@ -138,8 +147,7 @@ async function runTests() {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${validTokenA}`,
-        'x-user-role': 'principal' // Forge role
-      },
+        'x-user-role': 'commander' },
       body: JSON.stringify({ message: 'Hello from forged role', sessionId: sessionId3 })
     });
     assert.strictEqual(res.status, 200, 'Expected 200 for forged role request');

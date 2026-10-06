@@ -56,13 +56,9 @@ export const listFilesTool: ToolDefinition<ListFilesArgs> = {
   async execute(args: ListFilesArgs, context: ToolExecutionContext): Promise<ToolResult> {
     try {
       const workspaceId = args.workspaceId || 'ws-stark-core';
-      const currentUser = (await jarvisData.users.getById(context.userId || 'user-tony')) || {
-        id: context.userId || 'user-tony',
-        displayName: 'User',
-        email: 'user@stark.local',
-        role: context.role === 'teacher' ? 'teacher' : 'commander',
-        createdAt: new Date().toISOString()
-      };
+      if (!context.userId) throw new Error("Missing authenticated context.userId.");
+      const currentUser = await jarvisData.users.getById(context.userId);
+      if (!currentUser) throw new Error("Authenticated actor not found.");
 
       const filter: FileListFilter = {
         workspaceId,
@@ -141,13 +137,9 @@ export const getFileTool: ToolDefinition<GetFileArgs> = {
   },
   async execute(args: GetFileArgs, context: ToolExecutionContext): Promise<ToolResult> {
     try {
-      const currentUser = (await jarvisData.users.getById(context.userId || 'user-tony')) || {
-        id: context.userId || 'user-tony',
-        displayName: 'User',
-        email: 'user@stark.local',
-        role: context.role === 'teacher' ? 'teacher' : 'commander',
-        createdAt: new Date().toISOString()
-      };
+      if (!context.userId) throw new Error("Missing authenticated context.userId.");
+      const currentUser = await jarvisData.users.getById(context.userId);
+      if (!currentUser) throw new Error("Authenticated actor not found.");
 
       const file = await fileService.getFileMetadata(args.fileId, currentUser, args.workspaceId);
 
@@ -206,13 +198,9 @@ export const deleteFileTool: ToolDefinition<DeleteFileArgs> = {
   },
   async execute(args: DeleteFileArgs, context: ToolExecutionContext): Promise<ToolResult> {
     try {
-      const currentUser = (await jarvisData.users.getById(context.userId || 'user-tony')) || {
-        id: context.userId || 'user-tony',
-        displayName: 'User',
-        email: 'user@stark.local',
-        role: context.role === 'teacher' ? 'teacher' : 'commander',
-        createdAt: new Date().toISOString()
-      };
+      if (!context.userId) throw new Error("Missing authenticated context.userId.");
+      const currentUser = await jarvisData.users.getById(context.userId);
+      if (!currentUser) throw new Error("Authenticated actor not found.");
 
       const file = await jarvisData.files.getById(args.fileId, args.workspaceId);
       if (!file) {
@@ -275,13 +263,9 @@ export const ingestFileTool: ToolDefinition<IngestFileArgs> = {
   },
   async execute(args: IngestFileArgs, context: ToolExecutionContext): Promise<ToolResult> {
     try {
-      const currentUser = (await jarvisData.users.getById(context.userId || 'user-tony')) || {
-        id: context.userId || 'user-tony',
-        displayName: 'User',
-        email: 'user@stark.local',
-        role: context.role === 'teacher' ? 'teacher' : 'commander',
-        createdAt: new Date().toISOString()
-      };
+      if (!context.userId) throw new Error("Missing authenticated context.userId.");
+      const currentUser = await jarvisData.users.getById(context.userId);
+      if (!currentUser) throw new Error("Authenticated actor not found.");
 
       const result = await ragStorageBridge.ingestFileToKnowledgeSpace(args.fileId, args.knowledgeSpaceId, currentUser);
 

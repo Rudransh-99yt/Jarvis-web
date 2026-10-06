@@ -8,6 +8,7 @@ import { classSessionStore } from '../server/sectors/education/classSessions/cla
 import { jarvisData } from '../server/data/index.ts';
 import type { User } from '../server/data/types.ts';
 
+import { authService } from '../server/auth/tokens.ts';
 async function runD7InstitutionalFamilyTests() {
   console.log('===================================================================');
   console.log(' JARVIS EDUCATION OS — PHASE D.7 INSTITUTIONAL & FAMILY TESTS');

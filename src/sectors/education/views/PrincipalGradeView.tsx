@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { GradeIntelligenceData } from '../../../types/institutional.ts';
 import { SharedBackButton } from '../components/SharedBackButton.tsx';
+import { authClient } from '../../../services/authClient.ts';
+
 import {
   Layers,
   Users,
@@ -34,10 +36,7 @@ export const PrincipalGradeView: React.FC<PrincipalGradeViewProps> = ({
     setIsLoading(true);
 
     fetch(`/api/education/institutional/grade/${selectedGradeId}`, {
-      headers: {
-        'x-user-id': 'principal-1',
-        'x-user-role': 'principal'
-      }
+      headers: { ...authClient.getAuthHeaders() }
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((resData) => {

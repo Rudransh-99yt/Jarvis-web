@@ -11,6 +11,8 @@ import type { Quiz, QuizQuestion, QuestionAggregate, QuizResults } from '../../.
 import { SmartQuizTeacherPanel } from '../components/SmartQuizTeacherPanel.tsx';
 import { SmartQuizSmartBoardView } from '../components/SmartQuizSmartBoardView.tsx';
 import { SmartQuizStudentRemote } from '../components/SmartQuizStudentRemote.tsx';
+import { authClient } from '../../../services/authClient.ts';
+
 import {
   Radio,
   Play,
@@ -111,10 +113,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
       // Query SmartBoard for AI prepared session for this class
       try {
         const prepRes = await fetch(`/api/education/sessions/smartboard/active?classId=${selectedClassId}`, {
-          headers: {
-            'x-user-id': currentUser.id,
-            'x-user-role': currentUser.role
-          }
+          headers: { ...authClient.getAuthHeaders() }
         });
         if (prepRes.ok) {
           const prepData = await prepRes.json();
@@ -127,10 +126,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
       }
 
       const res = await fetch(`/api/classroom/sessions/active?classId=${selectedClassId}&workspaceId=ws-stark-core`, {
-        headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
-        }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -146,7 +142,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
           // Fetch active quiz for session
           try {
             const qRes = await fetch(`/api/classroom/quizzes?sessionId=${data.session.id}&classId=${selectedClassId}&workspaceId=ws-stark-core`, {
-              headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+              headers: { ...authClient.getAuthHeaders() }
             });
             if (qRes.ok) {
               const qData = await qRes.json();
@@ -155,7 +151,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
               setActiveQuiz(liveOrLatest);
               if (liveOrLatest) {
                 const stateRes = await fetch(`/api/classroom/quizzes/${liveOrLatest.id}/active-question?workspaceId=ws-stark-core`, {
-                  headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role }
+                  headers: { ...authClient.getAuthHeaders() }
                 });
                 if (stateRes.ok) {
                   const stateData = await stateRes.json();
@@ -191,10 +187,7 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
   const fetchParticipants = async (sessionId: string) => {
     try {
       const res = await fetch(`/api/classroom/sessions/${sessionId}/presence?workspaceId=ws-stark-core`, {
-        headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
-        }
+        headers: { ...authClient.getAuthHeaders() }
       });
       if (res.ok) {
         const data = await res.json();
@@ -233,8 +226,11 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
     const sessionId = session.id;
 
     // Connect SSE stream
-    const sseUrl = `/api/classroom/sessions/${sessionId}/stream?workspaceId=ws-stark-core&userId=${currentUser.id}`;
-    const es = new EventSource(sseUrl);
+    authClient.getSSETicket('class', sessionId).then(ticket => {
+      if (!ticket) return;
+      const sseUrl = `/api/classroom/sessions/${sessionId}/stream?workspaceId=ws-stark-core&ticket=${ticket}`;
+      const es = new EventSource(sseUrl);
+      eventSourceRef.current = es;
     eventSourceRef.current = es;
 
     es.addEventListener('connected', (e: MessageEvent) => {
@@ -471,8 +467,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': currentUser.id,
-              'x-user-role': currentUser.role
+              ...authClient.getAuthHeaders(),
+              
             },
             body: JSON.stringify({ workspaceId: 'ws-stark-core' })
           });
@@ -481,6 +477,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         }
       }, 15000);
     }
+
+        });
 
     return () => {
       if (eventSourceRef.current) {
@@ -505,8 +503,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-id': currentUser.id,
-            'x-user-role': currentUser.role
+            ...authClient.getAuthHeaders(),
+            
           },
           body: JSON.stringify({
             classId: selectedClassId,
@@ -532,8 +530,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-id': currentUser.id,
-            'x-user-role': currentUser.role
+            ...authClient.getAuthHeaders(),
+            
           },
           body: JSON.stringify({ workspaceId: 'ws-stark-core' })
         });
@@ -561,8 +559,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
@@ -587,8 +585,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
@@ -612,8 +610,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({
           state: selectedStateType,
@@ -644,8 +642,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({
           workspaceId: 'ws-stark-core',
@@ -677,8 +675,8 @@ export const SmartClassroomView: React.FC<SmartClassroomViewProps> = ({ classes,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role
+          ...authClient.getAuthHeaders(),
+          
         },
         body: JSON.stringify({ workspaceId: 'ws-stark-core' })
       });
