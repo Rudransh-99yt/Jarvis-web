@@ -3,23 +3,26 @@ import type { EducationClass, Assignment, StudentSubmission } from '../../../typ
 import {
   PlayCircle,
   Clock,
-  CheckCircle,
+  CheckCircle2,
   ArrowRight,
-  BookOpen,
-  Radio,
-  FileCheck2,
-  Brain,
   Video,
   Flame,
   Layers,
   Sparkles,
   Calendar,
-  Compass,
-  CheckCircle2,
   Bookmark,
   Trophy,
-  Award
+  Brain,
+  Radio
 } from 'lucide-react';
+import {
+  GlassCard,
+  CardHeader,
+  CardContent,
+  Button,
+  Badge,
+  ProgressIndicator
+} from '../../../components/ui/index.ts';
 
 interface StudentHomeViewProps {
   classes: EducationClass[];
@@ -80,82 +83,81 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
   ];
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto font-sans">
-      {/* 1. Quiet Header & Status */}
+    <div className="space-y-6 max-w-4xl mx-auto font-sans pb-8">
+      {/* 1. Page Header & Atmospheric Context */}
       <div className="space-y-4">
         <div className="space-y-1">
-          <div className="text-xs font-mono text-cyan-400/80 tracking-wider uppercase font-semibold">
-            Cadet Alex Chen · Grade 12 Advanced Physics
+          <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase font-medium">
+            Cadet Alex Chen <span className="text-slate-500">·</span> Grade 12 Advanced Physics
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-100 tracking-tight">
             Good morning, Alex
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 font-mono">
-            Here is what you need to focus on next today.
+          <p className="text-xs sm:text-sm text-slate-400">
+            Here is your curated academic focus and active learning track for today.
           </p>
         </div>
 
-        {/* Student Personal OS: Engagement & Study Consistency Strip */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-mono">
-            <div className="flex items-center gap-1.5 text-amber-400">
-              <Flame className="w-4 h-4 fill-amber-400/20" />
-              <span className="font-bold">5-Day Study Streak</span>
+        {/* Consistency & Standings Strip (Level 2 Content Glass, Zero-Pill Metadata) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl glass-level-2 border border-white/[0.08]">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs">
+            <div className="flex items-center gap-1.5 text-amber-400 font-medium">
+              <Flame className="w-4 h-4 fill-amber-400/20 text-amber-400" />
+              <span className="font-mono tabular-nums">5-Day</span> Study Streak
             </div>
-            <span aria-hidden="true" className="text-slate-700 hidden sm:inline">·</span>
+            <span aria-hidden="true" className="text-slate-600 hidden sm:inline">·</span>
             <div className="flex items-center gap-1.5 text-slate-300">
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              <span>Class Rank <strong className="text-white">#5</strong></span>
+              <span>Class Rank <strong className="font-mono tabular-nums text-white">#5</strong></span>
               <span className="text-slate-500 text-[11px]">(PHYS-301)</span>
             </div>
-            <span aria-hidden="true" className="text-slate-700 hidden sm:inline">·</span>
+            <span aria-hidden="true" className="text-slate-600 hidden sm:inline">·</span>
             <div className="text-slate-300">
-              <strong className="text-cyan-300">1,160</strong> pts verified
+              <strong className="font-mono tabular-nums text-cyan-300">1,160</strong> pts verified
             </div>
           </div>
 
-          <button
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => onNavigateTab('engagement_leaderboard')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 hover:text-white text-cyan-300 text-xs font-mono transition-colors cursor-pointer self-start sm:self-center"
+            iconRight={<ArrowRight className="w-3.5 h-3.5 text-cyan-400" />}
+            className="self-start sm:self-center text-cyan-300 hover:text-cyan-200"
           >
-            <span>Standings & History</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+            Standings & History
+          </Button>
         </div>
       </div>
 
-      {/* 2. Priority 1: Continue Learning (The Dominant Focal Anchor) */}
-      <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-blue-950/20 to-black/70 p-6 backdrop-blur-md shadow-[0_0_25px_rgba(6,182,212,0.1)] space-y-4">
-        <div className="flex items-center justify-between text-xs font-mono">
-          <div className="flex items-center gap-1.5 text-cyan-400 font-bold uppercase tracking-wider text-[11px]">
-            <PlayCircle className="w-3.5 h-3.5 text-cyan-300" />
-            <span>Continue Learning</span>
-          </div>
-          <span className="text-slate-400 text-[11px]">Active Academic Track</span>
+      {/* 2. Priority 1: Continue Learning (Dominant Focal Anchor, Level 2 Glass with specular highlight) */}
+      <GlassCard level="2" highlight className="p-6 border border-cyan-500/25 space-y-4">
+        <div className="flex items-center justify-between text-xs">
+          <Badge variant="info" label="Continue Learning" dot />
+          <span className="text-slate-400 text-xs font-mono">Active Track</span>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {/* Breadcrumb Path: Subject → Chapter → Lesson */}
-          <div className="flex items-center gap-1.5 text-xs font-mono text-cyan-300">
-            <span className="font-bold">{physClass?.code || 'PHYS-301'}</span>
-            <span aria-hidden="true" className="text-slate-600">→</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 flex-wrap">
+            <span className="font-mono text-cyan-400 font-semibold">{physClass?.code || 'PHYS-301'}</span>
+            <span aria-hidden="true" className="text-slate-600">/</span>
             <span className="text-slate-300">{physUnit?.title || 'Quantum Harmonic Oscillators'}</span>
-            <span aria-hidden="true" className="text-slate-600">→</span>
-            <span className="text-white font-semibold">{activeLesson?.title || 'Creation & Annihilation Operator Dynamics'}</span>
+            <span aria-hidden="true" className="text-slate-600">/</span>
+            <span className="text-slate-100 font-medium">{activeLesson?.title || 'Creation & Annihilation Operator Dynamics'}</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
             Lesson {activeLesson?.number || 2}: {activeLesson?.title || 'Creation & Annihilation Operator Dynamics'}
           </h2>
 
-          <p className="text-xs sm:text-sm text-slate-300 line-clamp-2 leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans max-w-2xl">
             {activeLesson?.description ||
               'Derive commutation relations [a, a†] = 1, construct the ladder operator spectrum, and calculate harmonic ground state zero-point energy.'}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-slate-400 pt-1">
-          <span className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 pt-1">
+          <span className="flex items-center gap-1.5 font-mono tabular-nums">
             <Clock className="w-3.5 h-3.5 text-cyan-400" />
             {activeLesson?.durationMinutes || 45} mins
           </span>
@@ -168,37 +170,39 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
           {activeLesson && physUnit && physClass && (
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={() => onOpenLesson(physClass.id, physUnit.id, activeLesson.id)}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-cyan-400/60 bg-gradient-to-r from-cyan-500/25 to-blue-500/25 hover:from-cyan-500/35 hover:to-blue-500/35 text-cyan-100 text-xs font-mono font-bold tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] cursor-pointer"
+              icon={<PlayCircle className="w-4 h-4 text-slate-950" />}
             >
-              <PlayCircle className="w-4 h-4 text-cyan-300" />
-              <span>Continue Lesson</span>
-            </button>
+              Continue Lesson
+            </Button>
           )}
 
-          <button
+          <Button
+            variant="glass"
+            size="md"
             onClick={() => onNavigateTab('focus')}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-cyan-500/25 bg-black/60 hover:bg-cyan-500/10 text-cyan-300 text-xs font-mono tracking-wider transition-all cursor-pointer"
+            icon={<Flame className="w-4 h-4 text-amber-400" />}
           >
-            <Flame className="w-4 h-4 text-amber-400" />
-            <span>Start Focus Session (25m)</span>
-          </button>
+            Start Focus Session (25m)
+          </Button>
         </div>
-      </div>
+      </GlassCard>
 
       {/* 3. Priority 2: Today's Classes */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
-              Today's Classes ({todayClasses.length})
+            <h2 className="text-sm font-semibold text-slate-200">
+              Today's Schedule ({todayClasses.length})
             </h2>
           </div>
           <button
             onClick={() => onNavigateTab('calendar')}
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
           >
             <span>Full Schedule</span>
             <ArrowRight className="w-3 h-3" />
@@ -209,50 +213,53 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           {todayClasses.map((cls, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 backdrop-blur-sm"
+              className="p-4 rounded-xl glass-level-2 border border-white/[0.06] hover:border-white/[0.12] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="space-y-1 min-w-0">
-                <div className="flex items-center gap-2 text-xs font-mono">
-                  <span className="font-bold text-cyan-300">{cls.time}</span>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-mono tabular-nums text-cyan-300 font-semibold">{cls.time}</span>
                   <span aria-hidden="true" className="text-slate-600">·</span>
-                  <span className="text-slate-300 font-semibold">{cls.code}</span>
+                  <span className="font-mono text-slate-300">{cls.code}</span>
                 </div>
-                <h3 className="text-sm font-medium text-white truncate">{cls.name}</h3>
-                <div className="text-xs font-mono text-slate-400">{cls.room}</div>
+                <h3 className="text-sm font-medium text-slate-100 truncate">{cls.name}</h3>
+                <div className="text-xs text-slate-400 font-mono">{cls.room}</div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
-                <button
+                <Button
+                  size="sm"
+                  variant="glass"
                   onClick={() => onNavigateTab('classroom')}
-                  className="px-3.5 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+                  icon={<Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />}
+                  className="text-emerald-300 hover:text-emerald-200 border-emerald-500/30"
                 >
-                  <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                  <span>Join Classroom</span>
-                </button>
-                <button
+                  Join Classroom
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={() => onSelectCourse(cls.classId)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-colors cursor-pointer"
                 >
-                  <span>Syllabus</span>
-                </button>
+                  Syllabus
+                </Button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 4. Priority 3: Due Soon / Urgent Work */}
+      {/* 4. Priority 3: Due Soon / Pending Work */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-amber-400" />
-            <h2 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
+            <h2 className="text-sm font-semibold text-slate-200">
               Due Soon ({pendingAssignments.length})
             </h2>
           </div>
           <button
             onClick={() => onNavigateTab('assignments')}
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
           >
             <span>Assignments Ledger</span>
             <ArrowRight className="w-3 h-3" />
@@ -263,42 +270,44 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           {pendingAssignments.slice(0, 2).map((asg) => (
             <div
               key={asg.id}
-              className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 backdrop-blur-sm"
+              className="p-4 rounded-xl glass-level-2 border border-white/[0.06] hover:border-white/[0.12] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="space-y-1 min-w-0">
-                <div className="flex items-center gap-2 text-xs font-mono">
-                  <span className="font-bold text-cyan-300">{asg.className.split(':')[0]}</span>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-mono font-medium text-cyan-300">{asg.className.split(':')[0]}</span>
                   <span aria-hidden="true" className="text-slate-600">·</span>
-                  <span className="text-amber-400 font-semibold">Due {asg.dueDate}</span>
+                  <span className="text-amber-400 font-medium">Due {asg.dueDate}</span>
                   <span aria-hidden="true" className="text-slate-600">·</span>
-                  <span className="text-slate-400">{asg.maxScore} pts</span>
+                  <span className="text-slate-400 font-mono tabular-nums">{asg.maxScore} pts</span>
                 </div>
-                <h3 className="text-sm font-semibold text-white truncate">{asg.title}</h3>
+                <h3 className="text-sm font-semibold text-slate-100 truncate">{asg.title}</h3>
                 <p className="text-xs text-slate-400 line-clamp-1">{asg.description}</p>
               </div>
 
-              <button
+              <Button
+                size="sm"
+                variant="glass"
                 onClick={() => onNavigateTab('assignments')}
-                className="px-4 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono font-medium tracking-wider transition-all shrink-0 self-start sm:self-center cursor-pointer"
+                className="text-amber-300 border-amber-500/30 self-start sm:self-center"
               >
                 Submit Work
-              </button>
+              </Button>
             </div>
           ))}
 
           {pendingAssignments.length === 0 && (
-            <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-950/20 text-center space-y-1">
-              <CheckCircle className="w-5 h-5 text-emerald-400 mx-auto" />
-              <div className="text-xs font-bold text-emerald-300 font-mono">All Caught Up!</div>
-              <div className="text-[11px] text-slate-400 font-mono">No coursework due in the next 48 hours.</div>
+            <div className="p-4 rounded-xl glass-level-2 border border-emerald-500/20 text-center space-y-1">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" />
+              <div className="text-xs font-semibold text-emerald-300">All Caught Up!</div>
+              <div className="text-[11px] text-slate-400">No coursework due in the next 48 hours.</div>
             </div>
           )}
         </div>
       </div>
 
       {/* 5. Priority 4: Your Next Best Action */}
-      <div className="p-5 rounded-xl border border-slate-800 bg-slate-950/80 space-y-3">
-        <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-wider font-bold">
+      <GlassCard level="2" className="p-5 border border-white/[0.08] space-y-3">
+        <div className="flex items-center gap-2 text-xs text-cyan-400 font-medium">
           <Sparkles className="w-4 h-4 text-cyan-300" />
           <span>Your Next Best Action</span>
         </div>
@@ -308,33 +317,36 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
         </p>
 
         <div className="flex items-center gap-3 pt-1">
-          <button
+          <Button
+            size="sm"
+            variant="glass"
             onClick={() => onNavigateTab('focus')}
-            className="px-4 py-2 rounded-lg border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer"
+            className="text-cyan-300 border-cyan-500/40"
           >
             Start 20m Focus Session
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => onNavigateTab('notes')}
-            className="px-3.5 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-colors cursor-pointer"
           >
             Open Notes & Formulas
-          </button>
+          </Button>
         </div>
-      </div>
+      </GlassCard>
 
-      {/* 6. Section 5: Deeper Academic Progression (Course Tracks) */}
-      <div className="space-y-3 pt-2 border-t border-slate-800/80">
+      {/* 6. Section 5: Course Progression Tracks */}
+      <div className="space-y-3 pt-2 border-t border-white/[0.06]">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-bold font-mono tracking-wider text-slate-200 uppercase">
+            <h2 className="text-sm font-semibold text-slate-200">
               Curriculum Progress ({classes.length})
             </h2>
           </div>
           <button
             onClick={() => onNavigateTab('my_learning')}
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-200 flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
           >
             <span>My Learning Tracks</span>
             <ArrowRight className="w-3 h-3" />
@@ -355,25 +367,20 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
               <div
                 key={cls.id}
                 onClick={() => onSelectCourse(cls.id)}
-                className="p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer group space-y-2.5"
+                className="p-3.5 rounded-xl glass-level-2-interactive border border-white/[0.06] hover:border-white/[0.12] transition-all cursor-pointer group space-y-2.5"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <div className="flex items-center gap-2 text-xs font-mono">
-                    <span className="font-bold text-cyan-300 group-hover:text-cyan-200">{cls.code}</span>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="font-mono text-cyan-300 font-semibold">{cls.code}</span>
                     <span aria-hidden="true" className="text-slate-600">·</span>
-                    <span className="text-slate-300 font-medium truncate">{cls.name}</span>
+                    <span className="text-slate-200 font-medium truncate">{cls.name}</span>
                   </div>
-                  <div className="text-xs font-mono text-slate-400 shrink-0">
-                    <span className="text-cyan-300 font-bold">{progressPct}%</span> ({completedLessons}/{totalLessons} lessons)
+                  <div className="text-xs text-slate-400 shrink-0 font-mono tabular-nums">
+                    <span className="text-cyan-300 font-semibold">{progressPct}%</span> ({completedLessons}/{totalLessons} lessons)
                   </div>
                 </div>
 
-                <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
-                  <div
-                    className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${progressPct}%` }}
-                  />
-                </div>
+                <ProgressIndicator value={progressPct} showPercentage={false} size="sm" />
               </div>
             );
           })}
@@ -381,35 +388,35 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
       </div>
 
       {/* 7. Section 6: Recent Knowledge & Study Resources */}
-      <div className="space-y-3 pt-2 border-t border-slate-800/80">
-        <div className="text-xs font-mono uppercase tracking-wider text-slate-400 px-1 font-semibold">
-          Recent Knowledge & Media
+      <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+        <div className="text-xs font-semibold text-slate-400 px-1 uppercase tracking-wider font-mono">
+          Knowledge & Media Library
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <button
             onClick={() => onNavigateTab('notes')}
-            className="p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/70 text-left transition-all cursor-pointer group"
+            className="p-3.5 rounded-xl glass-level-2-interactive text-left transition-all cursor-pointer group border border-white/[0.06]"
           >
             <Bookmark className="w-4 h-4 text-cyan-400 mb-2" />
-            <div className="font-bold text-white group-hover:text-cyan-200">Study Notes & Formulas</div>
+            <div className="font-semibold text-slate-100 group-hover:text-cyan-300">Study Notes & Formulas</div>
             <div className="text-[11px] text-slate-400 mt-0.5">Quick formula reference sheet</div>
           </button>
 
           <button
             onClick={() => onNavigateTab('knowledge')}
-            className="p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/70 text-left transition-all cursor-pointer group"
+            className="p-3.5 rounded-xl glass-level-2-interactive text-left transition-all cursor-pointer group border border-white/[0.06]"
           >
             <Brain className="w-4 h-4 text-cyan-400 mb-2" />
-            <div className="font-bold text-white group-hover:text-cyan-200">Knowledge Spaces</div>
+            <div className="font-semibold text-slate-100 group-hover:text-cyan-300">Knowledge Spaces</div>
             <div className="text-[11px] text-slate-400 mt-0.5">Verified textbooks & RAG index</div>
           </button>
 
           <button
             onClick={() => onNavigateTab('videos')}
-            className="p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/70 text-left transition-all cursor-pointer group"
+            className="p-3.5 rounded-xl glass-level-2-interactive text-left transition-all cursor-pointer group border border-white/[0.06]"
           >
             <Video className="w-4 h-4 text-cyan-400 mb-2" />
-            <div className="font-bold text-white group-hover:text-cyan-200">Video Library</div>
+            <div className="font-semibold text-slate-100 group-hover:text-cyan-300">Video Library</div>
             <div className="text-[11px] text-slate-400 mt-0.5">Transcript-grounded Q&A</div>
           </button>
         </div>

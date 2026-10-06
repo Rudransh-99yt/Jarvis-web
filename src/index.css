@@ -1,12 +1,42 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-orbitron: 'Orbitron', monospace, sans-serif;
+  --font-rajdhani: 'Rajdhani', sans-serif;
+  --font-hud: 'Chakra Petch', sans-serif;
+}
+
 @layer base {
   :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
     --font-orbitron: 'Orbitron', monospace, sans-serif;
     --font-rajdhani: 'Rajdhani', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
     --font-hud: 'Chakra Petch', sans-serif;
+
+    /* Semantic Color Tokens */
+    --jarvis-bg: #050811;
+    --jarvis-surface: #0b1120;
+    --jarvis-surface-elevated: #111a2e;
+    --jarvis-border-subtle: rgba(255, 255, 255, 0.08);
+    --jarvis-border-active: rgba(6, 182, 212, 0.35);
+    --jarvis-accent: #06b6d4;
+    --jarvis-accent-soft: rgba(6, 182, 212, 0.12);
+    --jarvis-accent-glow: rgba(6, 182, 212, 0.25);
   }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--jarvis-bg);
+    color: #f1f5f9;
+    letter-spacing: -0.01em;
+  }
+}
+
+.font-sans-main {
+  font-family: var(--font-sans);
 }
 
 .font-orbitron {
@@ -25,131 +55,168 @@
   font-family: var(--font-hud);
 }
 
-/* Futuristic Scanline and Grid Effects */
+/* =========================================================================
+   LIQUID-GLASS MATERIAL SYSTEM (Levels 0 through 3)
+   ========================================================================= */
+
+/* LEVEL 0 — ENVIRONMENT BACKGROUND */
+.glass-level-0 {
+  background-color: #050811;
+  background-image: 
+    radial-gradient(ellipse 65% 55% at 50% -15%, rgba(6, 182, 212, 0.08), transparent 75%),
+    radial-gradient(ellipse 50% 40% at 85% 105%, rgba(30, 58, 138, 0.06), transparent 70%),
+    radial-gradient(ellipse 40% 35% at 10% 95%, rgba(14, 165, 233, 0.05), transparent 70%);
+}
+
+/* LEVEL 1 — PRIMARY GLASS (Shell Chrome, Sidebar, Top Bar) */
+.glass-level-1 {
+  background: rgba(10, 16, 29, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* LEVEL 2 — CONTENT GLASS (Dashboard Cards, Lesson Cards, Data Panels) */
+.glass-level-2 {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.glass-level-2-interactive {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-level-2-interactive:hover {
+  background: rgba(22, 33, 56, 0.7);
+  border-color: rgba(6, 182, 212, 0.25);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 0 16px -2px rgba(6, 182, 212, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+/* LEVEL 3 — FLOATING GLASS (Modals, Dropdowns, Command Palettes, Tooltips) */
+.glass-level-3 {
+  background: rgba(8, 14, 26, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.75), 0 0 25px -5px rgba(6, 182, 212, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Subtle Specular Top Highlight */
+.glass-highlight {
+  position: relative;
+}
+.glass-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Subtle Active Nav Glow */
+.nav-active-indicator {
+  position: relative;
+}
+.nav-active-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 9999px;
+  background: #06b6d4;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.8);
+}
+
+/* Accessible & Sleek Focus Rings */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #050811, 0 0 0 4px rgba(6, 182, 212, 0.6);
+}
+
+/* Futuristic Scanline and Grid Effects (for Tactical/HUD contexts) */
 .hud-grid-bg {
   background-size: 40px 40px;
   background-image: 
-    linear-gradient(to right, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
 }
 
 .hud-grid-dense {
   background-size: 16px 16px;
   background-image: 
-    linear-gradient(to right, rgba(6, 182, 212, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(6, 182, 212, 0.07) 1px, transparent 1px);
+    linear-gradient(to right, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
 }
 
 .hud-scanline {
   background: linear-gradient(
     to bottom,
     transparent 50%,
-    rgba(0, 242, 254, 0.03) 51%,
+    rgba(0, 242, 254, 0.02) 51%,
     transparent 52%
   );
   background-size: 100% 4px;
 }
 
-/* Animations */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes spin-reverse {
-  from {
-    transform: rotate(360deg);
-  }
-  to {
-    transform: rotate(0deg);
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.6;
-    filter: drop-shadow(0 0 15px rgba(6, 182, 212, 0.6));
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 35px rgba(6, 182, 212, 0.95));
-  }
-}
-
-@keyframes radar-sweep {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes hud-scan {
-  0% {
-    top: 0%;
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 24s linear infinite;
-}
-
-.animate-spin-medium {
-  animation: spin-slow 12s linear infinite;
-}
-
-.animate-spin-fast {
-  animation: spin-slow 6s linear infinite;
-}
-
-.animate-spin-reverse-slow {
-  animation: spin-reverse 20s linear infinite;
-}
-
-.animate-spin-reverse-medium {
-  animation: spin-reverse 10s linear infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
-}
-
-.animate-radar {
-  animation: radar-sweep 4s linear infinite;
-}
-
-.animate-scan {
-  animation: hud-scan 3s ease-in-out infinite;
-}
-
-/* Custom scrollbar for HUD panels */
+/* Clean Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(10, 16, 29, 0.5);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.35);
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.6);
+  background: rgba(6, 182, 212, 0.4);
+}
+
+/* Motion & Animation Tokens */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

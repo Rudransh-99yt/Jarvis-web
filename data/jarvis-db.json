@@ -198,96 +198,6 @@
       "createdAt": "2026-10-02T09:00:00.000Z",
       "updatedAt": "2026-10-02T09:30:00.000Z",
       "messageCount": 3
-    },
-    {
-      "id": "session-1791220669082-nci4r",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "hello",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:17:49.082Z",
-      "updatedAt": "2026-10-05T17:17:49.456Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791221427268-1ayhx",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "ping",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:30:27.268Z",
-      "updatedAt": "2026-10-05T17:30:27.554Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791221427567-2mg9k",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "ping",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:30:27.567Z",
-      "updatedAt": "2026-10-05T17:30:27.567Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791221427571-isfh7",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "ping",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:30:27.571Z",
-      "updatedAt": "2026-10-05T17:30:27.571Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791221427576-1qazu",
-      "workspaceId": "ws-stark-core",
-      "userId": "teacher-1",
-      "title": "ping",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:30:27.576Z",
-      "updatedAt": "2026-10-05T17:30:27.576Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791222353830-k4bsb",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "What is the system health?",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:45:53.830Z",
-      "updatedAt": "2026-10-05T17:45:54.103Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791222354114-kgkga",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "Activate defense matrix protocol",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:45:54.114Z",
-      "updatedAt": "2026-10-05T17:45:54.114Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791222354118-t28jw",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "Run a system health check.",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:45:54.118Z",
-      "updatedAt": "2026-10-05T17:45:54.119Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791222354292-fs19v",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "Hello Jarvis",
-      "sector": "command",
-      "createdAt": "2026-10-05T17:45:54.292Z",
-      "updatedAt": "2026-10-05T17:45:54.292Z",
-      "messageCount": 0
     }
   ],
   "messages": [
@@ -360,132 +270,6 @@
       "readBy": [
         "teacher-1"
       ]
-    },
-    {
-      "id": "msg-1791220669082-2yoo4",
-      "role": "user",
-      "content": "hello",
-      "timestamp": "2026-10-05T17:17:49.082Z",
-      "conversationId": "session-1791220669082-nci4r"
-    },
-    {
-      "id": "msg-1791220669456-vc1q3",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive acknowledged: \"hello\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
-      "timestamp": "2026-10-05T17:17:49.456Z",
-      "conversationId": "session-1791220669082-nci4r"
-    },
-    {
-      "id": "msg-1791221427268-0f2qx",
-      "role": "user",
-      "content": "ping",
-      "timestamp": "2026-10-05T17:30:27.268Z",
-      "conversationId": "session-1791221427268-1ayhx"
-    },
-    {
-      "id": "msg-1791221427554-8sht6",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive acknowledged: \"ping\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
-      "timestamp": "2026-10-05T17:30:27.554Z",
-      "conversationId": "session-1791221427268-1ayhx"
-    },
-    {
-      "id": "msg-1791221427567-qzfsw",
-      "role": "user",
-      "content": "ping",
-      "timestamp": "2026-10-05T17:30:27.567Z",
-      "conversationId": "session-1791221427567-2mg9k"
-    },
-    {
-      "id": "msg-1791221427567-mxe7w",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive acknowledged: \"ping\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
-      "timestamp": "2026-10-05T17:30:27.567Z",
-      "conversationId": "session-1791221427567-2mg9k"
-    },
-    {
-      "id": "msg-1791221427571-n0exf",
-      "role": "user",
-      "content": "ping",
-      "timestamp": "2026-10-05T17:30:27.571Z",
-      "conversationId": "session-1791221427571-isfh7"
-    },
-    {
-      "id": "msg-1791221427571-pqlhw",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive acknowledged: \"ping\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
-      "timestamp": "2026-10-05T17:30:27.571Z",
-      "conversationId": "session-1791221427571-isfh7"
-    },
-    {
-      "id": "msg-1791221427576-4bc66",
-      "role": "user",
-      "content": "ping",
-      "timestamp": "2026-10-05T17:30:27.576Z",
-      "conversationId": "session-1791221427576-1qazu"
-    },
-    {
-      "id": "msg-1791221427576-9c15y",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive acknowledged: \"ping\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
-      "timestamp": "2026-10-05T17:30:27.576Z",
-      "conversationId": "session-1791221427576-1qazu"
-    },
-    {
-      "id": "msg-1791222353830-sakxi",
-      "role": "user",
-      "content": "What is the system health?",
-      "timestamp": "2026-10-05T17:45:53.830Z",
-      "conversationId": "session-1791222353830-k4bsb"
-    },
-    {
-      "id": "msg-1791222354103-jhz5y",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 888s, and internal diagnostic buses remain nominal, sir.",
-      "timestamp": "2026-10-05T17:45:54.103Z",
-      "conversationId": "session-1791222353830-k4bsb"
-    },
-    {
-      "id": "msg-1791222354114-bdz2j",
-      "role": "user",
-      "content": "Activate defense matrix protocol",
-      "timestamp": "2026-10-05T17:45:54.114Z",
-      "conversationId": "session-1791222354114-kgkga"
-    },
-    {
-      "id": "msg-1791222354114-ojnf7",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive executed: Protocol [Defense Matrix] has been successfully ENGAGED. Subsystem harmonics updated, sir.",
-      "timestamp": "2026-10-05T17:45:54.114Z",
-      "conversationId": "session-1791222354114-kgkga"
-    },
-    {
-      "id": "msg-1791222354118-0wj2f",
-      "role": "user",
-      "content": "Run a system health check.",
-      "timestamp": "2026-10-05T17:45:54.118Z",
-      "conversationId": "session-1791222354118-t28jw"
-    },
-    {
-      "id": "msg-1791222354119-r837d",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 888s, and internal diagnostic buses remain nominal, sir.",
-      "timestamp": "2026-10-05T17:45:54.119Z",
-      "conversationId": "session-1791222354118-t28jw"
-    },
-    {
-      "id": "msg-1791222354292-q2n7e",
-      "role": "user",
-      "content": "Hello Jarvis",
-      "timestamp": "2026-10-05T17:45:54.292Z",
-      "conversationId": "session-1791222354292-fs19v"
-    },
-    {
-      "id": "msg-1791222354292-nan8i",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive acknowledged: \"Hello Jarvis\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
-      "timestamp": "2026-10-05T17:45:54.292Z",
-      "conversationId": "session-1791222354292-fs19v"
     }
   ],
   "knowledgeSpaces": [
@@ -662,7 +446,7 @@
       ],
       "studentCount": 2,
       "materialsCount": 3,
-      "assignmentsCount": 2,
+      "assignmentsCount": 3,
       "announcements": [
         {
           "id": "ann-1",
@@ -700,255 +484,6 @@
           "type": "dataset",
           "size": "520 KB",
           "uploadedAt": "2026-09-18"
-        }
-      ],
-      "units": [
-        {
-          "id": "unit-phys-1",
-          "courseId": "class-phys-301",
-          "number": 1,
-          "title": "Foundations of Wave Mechanics & Schrödinger Dynamics",
-          "description": "Origins of quantum mechanics, wave-particle duality, state vectors, probability density conservation, and Hermitian operator observables.",
-          "learningObjectives": [
-            "Formulate the time-dependent and time-independent Schrödinger equations.",
-            "Derive probability current density and prove conservation of total probability.",
-            "Apply boundary conditions to infinite and finite square potential wells."
-          ],
-          "estimatedHours": 12,
-          "masteryPercent": 92,
-          "isCompleted": true,
-          "lessons": [
-            {
-              "id": "les-phys-101",
-              "unitId": "unit-phys-1",
-              "courseId": "class-phys-301",
-              "number": 1,
-              "title": "Schrödinger Wave Equation & Postulates",
-              "description": "Historical formulation of the de Broglie hypothesis, wave-packet propagation, and differential wave equation.",
-              "durationMinutes": 45,
-              "isCompleted": true,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "The Schrödinger equation i ħ ∂Ψ/∂t = HΨ serves as the fundamental equation of motion in non-relativistic quantum physics. State vectors belong to a complex Hilbert space.",
-              "keyTakeaways": [
-                "State function Ψ(x,t) contains all measurable physical information about the quantum system.",
-                "Linear superposition implies interference of probability amplitudes.",
-                "Operators corresponding to physical observables must be Hermitian to yield real eigenvalues."
-              ],
-              "practiceQuestions": [
-                {
-                  "id": "pq-101-1",
-                  "question": "Why must quantum observable operators be Hermitian?",
-                  "options": [
-                    "To guarantee that all measurement eigenvalues are strictly real numbers",
-                    "To ensure wave functions decay to zero at infinity",
-                    "To prevent magnetic field divergence",
-                    "To conserve relativistic kinetic energy"
-                  ],
-                  "correctIndex": 0,
-                  "explanation": "Hermitian operators (H = H†) have real eigenvalues and orthogonal eigenvectors, ensuring real measurement outcomes."
-                }
-              ]
-            },
-            {
-              "id": "les-phys-102",
-              "unitId": "unit-phys-1",
-              "courseId": "class-phys-301",
-              "number": 2,
-              "title": "Probability Current & Born Rule Continuity",
-              "description": "Derivation of the continuity equation ∂ρ/∂t + ∇·J = 0 and probability current vector.",
-              "durationMinutes": 40,
-              "isCompleted": true,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "Probability density ρ(x,t) = |Ψ(x,t)|² is conserved under unitary time evolution generated by Hermitian Hamiltonians.",
-              "keyTakeaways": [
-                "Probability current J = (ħ/2mi) [Ψ* ∇Ψ - Ψ ∇Ψ*]",
-                "Stationary states have zero net probability flux divergence.",
-                "Unitary evolution guarantees total probability ∫|Ψ|² d³x = 1 for all time."
-              ]
-            },
-            {
-              "id": "les-phys-103",
-              "unitId": "unit-phys-1",
-              "courseId": "class-phys-301",
-              "number": 3,
-              "title": "Hermitian Operators & Quantum Measurements",
-              "description": "Measurement postulates, projection operators, commutator relations, and the generalized Heisenberg uncertainty principle.",
-              "durationMinutes": 50,
-              "isCompleted": true,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "The commutator [A, B] = AB - BA measures compatibility. Non-commuting observables obey σ_A σ_B ≥ 1/2 |⟨[A,B]⟩|.",
-              "keyTakeaways": [
-                "Canonical commutation relation [x, p] = i ħ",
-                "Compatible observables share a simultaneous eigenbasis.",
-                "Expectation value ⟨A⟩ = ⟨Ψ|A|Ψ⟩."
-              ]
-            }
-          ]
-        },
-        {
-          "id": "unit-phys-2",
-          "courseId": "class-phys-301",
-          "number": 2,
-          "title": "Quantum Harmonic Oscillators & Ladder Operators",
-          "description": "Algebraic solution of the 1D quantum oscillator using lowering (a) and raising (a†) operators, energy eigenvalue spectra, and ground state zero-point fluctuations.",
-          "learningObjectives": [
-            "Define dimensionless position and momentum ladder operators.",
-            "Prove the commutation relation [a, a†] = 1.",
-            "Derive energy eigenvalues E_n = ħω (n + 1/2) and stationary wavefunctions.",
-            "Analyze vacuum zero-point energy and coherent states."
-          ],
-          "estimatedHours": 16,
-          "masteryPercent": 78,
-          "isCompleted": false,
-          "quizId": "quiz-seed-phys-1",
-          "lessons": [
-            {
-              "id": "les-phys-201",
-              "unitId": "unit-phys-2",
-              "courseId": "class-phys-301",
-              "number": 1,
-              "title": "Harmonic Hamiltonian & Algebraic Factorization",
-              "description": "Recasting the quadratic potential H = p²/2m + 1/2 m ω² x² into dimensionless operator products.",
-              "durationMinutes": 40,
-              "isCompleted": true,
-              "videoId": "vid-seed-phys-1",
-              "videoTimestampSeconds": 0,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "By factoring the Hamiltonian H = ħω (a† a + 1/2), we simplify differential equations into algebraic ladder mechanics.",
-              "keyTakeaways": [
-                "Ladder operator a = √(mω/2ħ) (x + i p / mω)",
-                "Adjoint operator a† = √(mω/2ħ) (x - i p / mω)",
-                "Number operator N = a† a is Hermitian with integer eigenvalues n ≥ 0."
-              ],
-              "practiceQuestions": [
-                {
-                  "id": "pq-201-1",
-                  "question": "What is the ground state energy of a 1D quantum harmonic oscillator of frequency ω?",
-                  "options": [
-                    "E_0 = 0 (zero energy)",
-                    "E_0 = 1/2 ħ ω (zero-point energy)",
-                    "E_0 = ħ ω",
-                    "E_0 = 2 ħ ω"
-                  ],
-                  "correctIndex": 1,
-                  "explanation": "Due to the Heisenberg uncertainty principle, quantum ground states retain zero-point fluctuations E_0 = 1/2 ħ ω."
-                }
-              ]
-            },
-            {
-              "id": "les-phys-202",
-              "unitId": "unit-phys-2",
-              "courseId": "class-phys-301",
-              "number": 2,
-              "title": "Creation & Annihilation Operator Algebra",
-              "description": "Step-by-step proof of ladder commutator [a, a†] = 1 and derivation of state transitions a|n⟩ = √n |n-1⟩ and a†|n⟩ = √(n+1) |n+1⟩.",
-              "durationMinutes": 45,
-              "isCompleted": true,
-              "videoId": "vid-seed-phys-1",
-              "videoTimestampSeconds": 420,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "The ladder action creates and annihilates discrete quanta of energy ħω. The ground state is uniquely annihilated: a|0⟩ = 0.",
-              "keyTakeaways": [
-                "[a, a†] = 1 is the fundamental bosonic commutation relation.",
-                "Any excited state |n⟩ can be generated as (a†)ⁿ / √(n!) |0⟩.",
-                "Position expectation value ⟨x⟩ and momentum expectation ⟨p⟩ vanish for all energy eigenstates."
-              ]
-            },
-            {
-              "id": "les-phys-203",
-              "unitId": "unit-phys-2",
-              "courseId": "class-phys-301",
-              "number": 3,
-              "title": "Zero-Point Fluctuations & Vacuum Ground States",
-              "description": "Physical implications of the 1/2 ħω vacuum baseline, Casimir effect analogy, and Gaussian ground state wavepackets.",
-              "durationMinutes": 50,
-              "isCompleted": false,
-              "videoId": "vid-seed-phys-1",
-              "videoTimestampSeconds": 750,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "Zero-point fluctuations mean a quantum particle in a harmonic potential can never come to rest. The ground state wavefunction is a minimum-uncertainty Gaussian.",
-              "keyTakeaways": [
-                "Ψ_0(x) = (mω/πħ)^(1/4) exp(-mω x² / 2ħ)",
-                "Uncertainty product Δx Δp = ħ/2 attains the theoretical minimum bound.",
-                "Zero-point fluctuations play a critical role in quantum optics and vacuum field quantization."
-              ],
-              "practiceQuestions": [
-                {
-                  "id": "pq-203-1",
-                  "question": "How does the ground state wavefunction Ψ_0(x) behave spatially?",
-                  "options": [
-                    "It is an asymmetric sinusoidal wave",
-                    "It is a centered Gaussian wavepacket with no nodes",
-                    "It is an exponential decay with one zero crossing",
-                    "It vanishes at the origin"
-                  ],
-                  "correctIndex": 1,
-                  "explanation": "The ground state n=0 is an even Gaussian function exp(-mω x² / 2ħ) with zero nodes."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "unit-phys-3",
-          "courseId": "class-phys-301",
-          "number": 3,
-          "title": "Electromagnetic Field Quantization & Dirac Formalism",
-          "description": "Second quantization of the electromagnetic field, photon Fock space, vector potentials in Coulomb gauge, and radiation-matter interaction.",
-          "learningObjectives": [
-            "Express vector potential A(r,t) in terms of Fourier normal modes and photon creation/annihilation operators.",
-            "Construct multi-photon Fock states |n_k,λ⟩.",
-            "Analyze spontaneous emission and dipole radiation transitions."
-          ],
-          "estimatedHours": 14,
-          "masteryPercent": 45,
-          "isCompleted": false,
-          "lessons": [
-            {
-              "id": "les-phys-301",
-              "unitId": "unit-phys-3",
-              "courseId": "class-phys-301",
-              "number": 1,
-              "title": "Vector Potential Normal Mode Expansion",
-              "description": "Coulomb gauge condition ∇·A = 0 and harmonic decomposition of the free radiation field in a periodic cavity.",
-              "durationMinutes": 45,
-              "isCompleted": false,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "Each radiation mode of wavevector k and polarization λ acts as an independent quantum harmonic oscillator.",
-              "keyTakeaways": [
-                "H_em = ∑_{k,λ} ħ ω_k (a†_{k,λ} a_{k,λ} + 1/2)",
-                "Photons are quantized excitations of normal field modes.",
-                "Vacuum energy divergence is regularized via normal ordering."
-              ]
-            },
-            {
-              "id": "les-phys-302",
-              "unitId": "unit-phys-3",
-              "courseId": "class-phys-301",
-              "number": 2,
-              "title": "Photon Fock States & Radiation Transitions",
-              "description": "Construction of number states, photon statistics, coherent states vs Fock states, and stimulated vs spontaneous emission.",
-              "durationMinutes": 50,
-              "isCompleted": false,
-              "knowledgeSpaceId": "ks-quantum",
-              "notes": "Spontaneous emission rate is derived via Fermi Golden Rule and quantized vacuum mode interactions.",
-              "keyTakeaways": [
-                "Fock states |n⟩ have definite photon number but completely indeterminate phase.",
-                "Coherent states |α⟩ represent classical-like minimum uncertainty laser light.",
-                "Einstein A and B coefficients emerge naturally from quantized field operators."
-              ]
-            }
-          ]
-        },
-        {
-          "courseId": "class-phys-301",
-          "number": 99,
-          "title": "Injected Unit by Attacker",
-          "description": "",
-          "learningObjectives": [],
-          "estimatedHours": 10,
-          "lessons": [],
-          "id": "unit-class-phys-301-muvizsrz"
         }
       ]
     },
@@ -1145,6 +680,22 @@
       "totalEnrolled": 1,
       "submittedCount": 0,
       "gradedCount": 0
+    },
+    {
+      "id": "asg-1791299824287-213s",
+      "classId": "class-phys-301",
+      "className": "PHYS-301: Advanced Quantum & Electrodynamics",
+      "title": "Quantum Entanglement & Bell Inequalities Lab",
+      "description": "Analyze experimental Bell state correlations.",
+      "instructions": "Submit lab observations and Bell parameter S calculations.",
+      "assignedDate": "2026-10-06",
+      "dueDate": "2026-11-15",
+      "maxScore": 100,
+      "category": "Lab Report",
+      "teacherId": "teacher-1",
+      "totalEnrolled": 2,
+      "submittedCount": 0,
+      "gradedCount": 0
     }
   ],
   "submissions": [
@@ -1189,44 +740,7 @@
     }
   ],
   "studyArtifacts": [],
-  "auditEvents": [
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "session-1791222353830-k4bsb",
-      "toolName": "get_system_health",
-      "sector": "command",
-      "args": {},
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791222354103-13g5",
-      "timestamp": "2026-10-05T17:45:54.103Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "session-1791222354114-kgkga",
-      "toolName": "set_protocol",
-      "sector": "command",
-      "args": {
-        "protocolId": "defense_matrix",
-        "active": true
-      },
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791222354114-loqy",
-      "timestamp": "2026-10-05T17:45:54.114Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "session-1791222354118-t28jw",
-      "toolName": "get_system_health",
-      "sector": "command",
-      "args": {},
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791222354119-1qaw",
-      "timestamp": "2026-10-05T17:45:54.119Z"
-    }
-  ],
+  "auditEvents": [],
   "researchProjects": [
     {
       "id": "proj-arc-stabilization",
@@ -1591,20 +1105,6 @@
       "currentQuestionIndex": 0,
       "totalQuestions": 2,
       "createdAt": "2026-10-02T10:30:00.000Z"
-    },
-    {
-      "id": "diag-quiz-1791219082471",
-      "quizId": "diag-quiz-1791219082471",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-phys-101",
-      "teacherId": "principal-1",
-      "title": "PHYS-301 Institutional Diagnostic: Grade 11 / Junior Level",
-      "description": "Comprehensive 15-minute diagnostic requested by Academic Leadership covering Electrostatics: Coulomb Law & Vector Superposition, Electric Flux & Cylindrical Gaussian Surfaces, Operator Commutation Relations in Energy Eigenstates.",
-      "status": "live",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 3,
-      "createdAt": "2026-10-05T16:51:22.472Z"
     }
   ],
   "quizQuestions": [
@@ -1636,57 +1136,6 @@
         "B) Magnetic vector potential phase angle",
         "C) Quantum decoherence rate",
         "D) Relativistic mass dilation factor"
-      ],
-      "correctOption": "A",
-      "points": 10,
-      "timeLimitSeconds": 30,
-      "status": "pending"
-    },
-    {
-      "id": "diag-q-1-1791219082474",
-      "questionId": "diag-q-1-1791219082474",
-      "quizId": "diag-quiz-1791219082471",
-      "order": 1,
-      "questionText": "Calculate the total electric flux Φ_E through a cylindrical surface of length L enclosing line charge λ.",
-      "options": [
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D"
-      ],
-      "correctOption": "A",
-      "points": 10,
-      "timeLimitSeconds": 30,
-      "status": "pending"
-    },
-    {
-      "id": "diag-q-2-1791219082475",
-      "questionId": "diag-q-2-1791219082475",
-      "quizId": "diag-quiz-1791219082471",
-      "order": 2,
-      "questionText": "Which of the following describes the field inside an ideal spherical conductor in electrostatic equilibrium?",
-      "options": [
-        "Zero (E = 0)",
-        "Non-zero and radial",
-        "Infinite",
-        "Undetermined"
-      ],
-      "correctOption": "A",
-      "points": 5,
-      "timeLimitSeconds": 30,
-      "status": "pending"
-    },
-    {
-      "id": "diag-q-3-1791219082476",
-      "questionId": "diag-q-3-1791219082476",
-      "quizId": "diag-quiz-1791219082471",
-      "order": 3,
-      "questionText": "Derive the commutation bracket [x, p] in one-dimensional wave mechanics.",
-      "options": [
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D"
       ],
       "correctOption": "A",
       "points": 10,

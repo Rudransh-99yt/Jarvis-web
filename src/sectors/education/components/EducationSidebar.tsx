@@ -6,7 +6,6 @@ import {
   BookOpen,
   FileCheck2,
   Calendar,
-  Flame,
   MessageSquare,
   FileText,
   Brain,
@@ -19,22 +18,17 @@ import {
   Sparkles,
   RefreshCw,
   X,
-  Plus,
-  User,
-  LogOut,
-  Settings,
-  ShieldCheck,
-  Timer,
   Users,
   Bookmark,
   Trophy,
   AlertTriangle,
   FileSpreadsheet,
   Heart,
-  Tv
+  Tv,
+  Timer
 } from 'lucide-react';
-
 import { can } from '../../../services/authClient.ts';
+import { Avatar } from '../../../components/ui/Avatar.tsx';
 
 export type EducationSidebarSection =
   | 'home'
@@ -124,22 +118,22 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
       <button
         key={id}
         onClick={() => handleNavClick(id)}
-        className={`w-full flex items-center justify-between px-3 py-2.5 min-h-[40px] rounded-xl text-xs font-mono transition-all text-left group cursor-pointer ${
+        className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-medium transition-all text-left group cursor-pointer focus-ring relative ${
           isActive
-            ? 'bg-slate-800/90 text-white font-semibold border border-cyan-500/40 shadow-sm'
-            : 'text-slate-400 hover:text-white hover:bg-slate-900/60 border border-transparent'
+            ? 'bg-slate-800/90 text-white font-semibold border border-cyan-500/30 shadow-sm nav-active-indicator pl-4'
+            : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.04] border border-transparent'
         }`}
       >
         <div className="flex items-center gap-2.5 truncate min-w-0">
           <Icon
             className={`w-4 h-4 shrink-0 transition-colors ${
-              isActive ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'
+              isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200'
             } ${isPulse ? 'animate-pulse text-emerald-400' : ''}`}
           />
           <span className="truncate">{label}</span>
         </div>
         {badge !== undefined && (
-          <span className="text-[10px] font-mono text-slate-500 shrink-0">
+          <span className="text-[11px] font-mono tabular-nums text-slate-400 shrink-0">
             {badge}
           </span>
         )}
@@ -148,19 +142,19 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-slate-950 border-r border-slate-800 text-slate-200 select-none">
-      {/* 1. Top-Left Profile & Identity Switcher */}
-      <div className="p-3.5 border-b border-slate-800 space-y-2.5">
+    <div className="flex flex-col h-full glass-level-1 border-r border-white/[0.08] text-slate-200 select-none">
+      {/* 1. Header: Academic Institution & Sync */}
+      <div className="p-3.5 border-b border-white/[0.08] space-y-2.5">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-7 w-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-sm">
               <Building2 className="w-3.5 h-3.5 text-cyan-400" />
             </div>
             <div className="min-w-0">
-              <div className="text-[11px] font-mono font-bold text-white truncate">
+              <div className="text-xs font-semibold text-slate-100 truncate">
                 {institution?.name || 'Stark Academy'}
               </div>
-              <div className="text-[9px] font-mono text-slate-400 truncate">
+              <div className="text-[11px] text-slate-400 truncate">
                 {institution?.currentAcademicYear || '2026–2027'} · Education OS
               </div>
             </div>
@@ -171,54 +165,52 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               onClick={onRefresh}
               disabled={isSyncing}
               title="Sync Academic State"
-              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-cyan-400' : ''}`} />
             </button>
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+              className="lg:hidden p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-slate-200 cursor-pointer focus-ring"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Polished User Profile & Role Dropdown Card */}
+        {/* User Persona & Role Selector */}
         <div className="relative">
           <button
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="w-full flex items-center justify-between p-2.5 min-h-[44px] rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900 transition-all text-left cursor-pointer"
+            className="w-full flex items-center justify-between p-2 rounded-lg border border-white/[0.08] bg-slate-900/60 hover:border-white/[0.15] hover:bg-slate-900/90 transition-all text-left cursor-pointer focus-ring"
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-cyan-300 text-xs shrink-0">
-                {currentRoleObj.name[0]}
-              </div>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Avatar name={currentRoleObj.name} size="sm" />
               <div className="min-w-0">
-                <div className="text-xs font-mono font-bold text-white truncate">
+                <div className="text-xs font-semibold text-slate-100 truncate">
                   {currentRoleObj.name}
                 </div>
-                <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5 truncate">
+                <div className="text-[10px] text-slate-400 flex items-center gap-1.5 truncate">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   <span>{currentRoleObj.label}</span>
                 </div>
               </div>
             </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-slate-500 shrink-0 ml-1 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 ml-1 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {profileDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl border border-cyan-500/30 bg-slate-950/98 backdrop-blur-xl shadow-2xl p-2 z-50 animate-fade-in space-y-2 text-xs font-mono">
-              <div className="p-2 rounded-lg bg-black/40 border border-cyan-500/10 space-y-0.5">
-                <div className="text-[10px] text-cyan-400/50 uppercase">Active School</div>
-                <div className="font-bold text-white">{institution?.name || 'Stark Academy'}</div>
-                <div className="text-[10px] text-cyan-300">{currentRoleObj.department}</div>
+            <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl glass-level-3 shadow-2xl p-2 z-50 animate-scale-in space-y-2 text-xs border border-cyan-500/25">
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-white/[0.06] space-y-0.5">
+                <div className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Active School</div>
+                <div className="font-semibold text-slate-100">{institution?.name || 'Stark Academy'}</div>
+                <div className="text-[11px] text-cyan-400">{currentRoleObj.department}</div>
               </div>
 
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-cyan-400/60 px-1">
-                  <span>Switch Persona</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">DEV ONLY</span>
+                <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider text-slate-400 px-1">
+                  <span>Switch Role</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-mono">RBAC</span>
                 </div>
                 {roles.map((r) => {
                   const Icon = r.icon;
@@ -230,28 +222,20 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
                         onChangeRole(r.id);
                         setProfileDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer ${
                         isCurrent
-                          ? 'bg-cyan-500/20 text-white font-bold border border-cyan-400/40'
-                          : 'text-cyan-300/80 hover:bg-white/5 hover:text-white'
+                          ? 'bg-slate-800 text-white font-semibold border border-white/[0.08]'
+                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
                       }`}
                     >
-                      <Icon className={`w-3.5 h-3.5 ${r.color}`} />
+                      <Icon className={`w-3.5 h-3.5 ${r.color} shrink-0`} />
                       <div className="min-w-0">
-                        <div className="font-bold text-xs truncate">{r.name}</div>
-                        <div className="text-[9px] text-cyan-400/60">{r.label}</div>
+                        <div className="font-semibold text-xs truncate">{r.name}</div>
+                        <div className="text-[10px] text-slate-400">{r.label}</div>
                       </div>
                     </button>
                   );
                 })}
-              </div>
-
-              <div className="pt-1 border-t border-cyan-500/15 flex items-center justify-between text-[11px] text-cyan-400/70 px-1">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  <span>Server Verified</span>
-                </span>
-                <span className="text-[10px] text-cyan-500">RBAC Claims</span>
               </div>
             </div>
           )}
@@ -300,7 +284,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               {renderNavButton('principal_overview', 'Executive Overview', ShieldAlert)}
               {renderNavButton('principal_grade', 'Grade Intelligence', Layers)}
               {renderNavButton('principal_teachers', 'Faculty Intelligence', Users)}
-              {renderNavButton('principal_audit', 'Interventions & Audit', ShieldCheck)}
+              {renderNavButton('principal_audit', 'Interventions & Audit', FileCheck2)}
               {renderNavButton('classes', 'All School Classes', BookOpen, classes.length)}
               {renderNavButton('calendar', 'Institutional Calendar', Calendar)}
             </>
@@ -340,12 +324,12 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           </div>
         )}
 
-        {/* KNOWLEDGE & SMART SURFACES Section — Only for Student & Teacher */}
+        {/* KNOWLEDGE & SMART SURFACES Section */}
         {(can('student.learning.view') || can('teacher.smartboard.control') || can('teacher.curriculum.manage')) &&
          !can('parent.family_intelligence.view') && !can('principal.institution.view') && (
           <div className="space-y-1">
             <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 font-semibold">
-              Knowledge & Smart Surfaces
+              Knowledge & Surfaces
             </div>
 
             {can('student.learning.view') && renderNavButton('notes', 'Notes & Formulas', Bookmark)}
@@ -358,13 +342,13 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           </div>
         )}
 
-        {/* Course Directory Quick Access — Scoped strictly to Students and Instructors */}
+        {/* Course Directory Quick Access */}
         {(can('student.learning.view') || can('teacher.classes.manage')) &&
          !can('parent.family_intelligence.view') && !can('principal.institution.view') && (
-          <div className="space-y-1 pt-1 border-t border-slate-800/80">
+          <div className="space-y-1 pt-2 border-t border-white/[0.06]">
             <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 mb-1.5 flex items-center justify-between font-semibold">
               <span>{can('teacher.classes.manage') ? 'Assigned Courses' : 'Enrolled Courses'}</span>
-              <span className="text-[9px] text-slate-500 font-mono">{classes.length}</span>
+              <span className="text-[10px] text-slate-400 font-mono tabular-nums">{classes.length}</span>
             </div>
 
             <div className="space-y-0.5">
@@ -374,17 +358,17 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
                   <button
                     key={cls.id}
                     onClick={() => handleCourseClick(cls.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-mono transition-all text-left group cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-mono transition-all text-left group cursor-pointer focus-ring ${
                       isSelectedCourse
-                        ? 'bg-slate-800 text-white font-bold border border-slate-700'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60 border border-transparent'
+                        ? 'bg-slate-800 text-cyan-300 font-semibold border border-white/[0.08]'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate min-w-0">
                       <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/80 group-hover:bg-cyan-300 shrink-0" />
                       <span className="truncate">{cls.code}</span>
                     </div>
-                    <span className="text-[10px] text-slate-500 font-mono shrink-0">
+                    <span className="text-[10px] text-slate-400 font-mono tabular-nums shrink-0">
                       {cls.units?.length || 0} units
                     </span>
                   </button>
@@ -408,7 +392,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
       {isOpenMobile && (
         <div
           onClick={onCloseMobile}
-          className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40 animate-fade-in"
+          className="lg:hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 animate-fade-in"
         />
       )}
 

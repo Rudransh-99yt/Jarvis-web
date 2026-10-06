@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { EducationRole, AcademicInstitution } from '../../../types/education.ts';
 import {
   Building2,
@@ -6,16 +6,16 @@ import {
   Sparkles,
   Radio,
   Video,
-  UserCheck,
-  RefreshCw,
-  Search,
   BookOpen,
   Layers,
   FileCheck2,
   Brain,
   ShieldAlert,
-  ChevronDown
+  ChevronDown,
+  RefreshCw,
+  Search
 } from 'lucide-react';
+import { Avatar } from '../../../components/ui/Avatar.tsx';
 
 export type EducationNavSection = 
   | 'home'
@@ -52,7 +52,7 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
   searchQuery,
   onSearchChange
 }) => {
-  const [roleDropdownOpen, setRoleDropdownOpen] = React.useState(false);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
   const roles: Array<{ id: EducationRole; label: string; name: string; icon: any; color: string }> = [
     { id: 'student', label: 'Student', name: 'Alex Chen', icon: GraduationCap, color: 'text-cyan-400' },
@@ -62,7 +62,6 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
 
   const currentRoleObj = roles.find((r) => r.id === currentRole) || roles[0];
 
-  // Role-specific primary tabs
   const getNavItems = (): Array<{ id: EducationNavSection; label: string; icon: any; pulse?: boolean }> => {
     if (currentRole === 'student') {
       return [
@@ -97,70 +96,71 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Top Academic Context & Role Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-cyan-950/40 via-blue-950/20 to-black/60 backdrop-blur-md">
-        {/* Left: Institution Context */}
+      {/* Top Academic Context & Action Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl glass-level-2 border border-white/[0.08]">
+        {/* Left: Institution Context (Clean typography, zero pill clutter) */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-lg border border-cyan-500/30 bg-cyan-950/60 p-2 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
-            <Building2 className="w-5 h-5 text-cyan-400" />
+          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-sm">
+            <Building2 className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-white truncate">
+              <span className="text-xs sm:text-sm font-semibold text-slate-100 truncate">
                 {institution?.name || 'Stark Academy of Science & Advanced Engineering'}
               </span>
-              <span className="hidden md:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 shrink-0">
+              <span className="text-xs text-slate-500 hidden sm:inline" aria-hidden="true">·</span>
+              <span className="hidden sm:inline text-xs font-mono text-cyan-400/80">
                 {institution?.currentAcademicYear || '2026–2027'}
               </span>
             </div>
-            <div className="text-[10px] font-mono text-cyan-400/60 truncate">
+            <div className="text-[11px] text-slate-400 truncate">
               {institution?.campus || 'Stark Industries R&D Campus • Sector 4'}
             </div>
           </div>
         </div>
 
-        {/* Right: Quick Search & Role Selector */}
+        {/* Right: Quick Search, Refresh & Persona */}
         <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
           {/* Search Box */}
-          <div className="relative hidden md:block w-48 lg:w-64">
-            <Search className="w-3.5 h-3.5 text-cyan-400/50 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative hidden md:block w-48 lg:w-60">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search subjects, topics, videos..."
+              placeholder="Search curriculum..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full bg-black/60 border border-cyan-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none focus:border-cyan-400/60 focus:ring-1 focus:ring-cyan-400/30 transition-all"
+              className="w-full bg-slate-900/60 border border-white/[0.08] focus:border-cyan-500/50 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus-ring transition-all"
             />
           </div>
 
-          {/* Refresh Button */}
+          {/* Sync Button */}
           <button
             onClick={onRefresh}
             disabled={isSyncing}
-            title="Refresh academic data from server"
-            className="p-2 rounded-lg border border-cyan-500/20 bg-black/40 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-200 transition-all cursor-pointer shrink-0"
+            title="Refresh academic data"
+            className="p-2 rounded-lg border border-white/[0.08] bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer focus-ring shrink-0"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-cyan-400' : ''}`} />
           </button>
 
           {/* Role Switcher Dropdown */}
           <div className="relative">
             <button
               onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-black/70 hover:border-cyan-400/60 text-xs font-mono text-cyan-200 transition-all cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-200 transition-all cursor-pointer focus-ring"
             >
-              <UserCheck className="w-3.5 h-3.5 text-cyan-400" />
+              <Avatar name={currentRoleObj.name} size="sm" />
               <div className="flex flex-col text-left">
-                <span className="text-[9px] text-cyan-400/60 uppercase leading-none">Role Mode</span>
-                <span className="text-cyan-300 font-bold leading-tight">{currentRoleObj.label}</span>
+                <span className="text-[10px] text-slate-400 leading-none">Role Mode</span>
+                <span className="text-slate-100 font-semibold leading-tight">{currentRoleObj.label}</span>
               </div>
-              <ChevronDown className="w-3 h-3 text-cyan-400/60" />
+              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {roleDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-cyan-500/30 bg-black/95 p-1.5 shadow-2xl z-50 space-y-1 font-mono text-xs animate-fade-in">
-                <div className="px-2.5 py-1 text-[10px] text-cyan-400/50 uppercase border-b border-cyan-500/15">
-                  Select Active Persona
+              <div className="absolute right-0 mt-2 w-52 rounded-xl glass-level-3 p-1.5 shadow-2xl z-50 space-y-1 text-xs border border-cyan-500/25 animate-scale-in">
+                <div className="px-2.5 py-1 text-[10px] font-mono text-slate-400 uppercase tracking-wider border-b border-white/[0.06]">
+                  Active Persona
                 </div>
                 {roles.map((r) => {
                   const Icon = r.icon;
@@ -173,17 +173,17 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
                         onChangeRole(r.id);
                         setRoleDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all cursor-pointer ${
+                      className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-400/40'
-                          : 'text-cyan-400/70 hover:bg-white/5 hover:text-cyan-200'
+                          ? 'bg-slate-800 text-white font-semibold border border-white/[0.08]'
+                          : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <Icon className={`w-3.5 h-3.5 ${r.color}`} />
                         <div>
-                          <div>{r.label}</div>
-                          <div className="text-[10px] text-cyan-400/50">{r.name}</div>
+                          <div className="font-medium">{r.label}</div>
+                          <div className="text-[10px] text-slate-400">{r.name}</div>
                         </div>
                       </div>
                       {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />}
@@ -196,8 +196,8 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
         </div>
       </div>
 
-      {/* Layer 2: Role-Tailored Section Navigation Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-cyan-500/15">
+      {/* Layer 2: Role-Tailored Section Navigation Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-white/[0.06] no-scrollbar">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -206,15 +206,15 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
             <button
               key={item.id}
               onClick={() => onSelectSection(item.id as EducationNavSection)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono tracking-wider transition-all shrink-0 cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer focus-ring ${
                 isActive
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 font-bold shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                  : 'text-cyan-400/60 hover:text-cyan-200 hover:bg-white/5 border border-transparent'
+                  ? 'bg-slate-800 text-cyan-300 font-semibold border border-white/[0.08] shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300' : 'text-cyan-400/60'} ${item.pulse ? 'animate-pulse text-cyan-400' : ''}`} />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
               <span>{item.label}</span>
-              {item.pulse && <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />}
+              {item.pulse && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
             </button>
           );
         })}
