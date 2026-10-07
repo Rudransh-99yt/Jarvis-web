@@ -89,11 +89,19 @@ export const AppShell: React.FC<AppShellProps> = ({
   const activeSectorDef = sectors.find((s) => s.id === currentSector) || sectors[0];
 
   return (
-    <div className={`h-screen h-[100dvh] ${glassTokens.level0} text-neutral-100 flex flex-col overflow-hidden selection:bg-white/20 selection:text-white`}>
-      {/* Level 0: Pure neutral subtle atmospheric ambient lighting */}
+    <div className={`h-screen h-[100dvh] ${glassTokens.level0} text-neutral-100 flex flex-col overflow-hidden selection:bg-cyan-500/20 selection:text-cyan-100`}>
+      {/* Level 0: Living atmospheric lighting environment behind the glass */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute top-[-10%] left-[30%] w-[40%] h-[30%] bg-white/[0.018] rounded-full blur-[160px]" />
-        <div className="absolute bottom-[-10%] right-[20%] w-[35%] h-[30%] bg-white/[0.012] rounded-full blur-[160px]" />
+        {/* Soft muted cyan field in the upper-left */}
+        <div className="absolute top-[-12%] left-[10%] w-[50%] h-[40%] bg-cyan-500/[0.035] rounded-full blur-[140px]" />
+        {/* Soft subtle violet field in the upper-right */}
+        <div className="absolute top-[5%] right-[-5%] w-[45%] h-[38%] bg-violet-500/[0.028] rounded-full blur-[150px]" />
+        {/* Soft deep teal field in the lower-center */}
+        <div className="absolute bottom-[-15%] left-[30%] w-[50%] h-[35%] bg-teal-500/[0.025] rounded-full blur-[160px]" />
+        {/* Extremely subtle warm neutral light field */}
+        <div className="absolute bottom-[10%] left-[-8%] w-[35%] h-[28%] bg-amber-500/[0.014] rounded-full blur-[140px]" />
+        {/* Gentle specular white diffusion */}
+        <div className="absolute top-[25%] left-[40%] w-[30%] h-[25%] bg-white/[0.012] rounded-full blur-[120px]" />
       </div>
 
       {/* Level 1: Primary Shell Top Navigation Bar */}

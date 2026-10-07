@@ -1531,6 +1531,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               classes={classes}
               currentRole={currentRole}
               initialClassId={academicContext.classId || activeCourseId}
+              initialTab="groups"
               onNavigateTab={(t, meta) => handleNavigateWithContext(t as DeepEducationView, meta)}
               onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
             />

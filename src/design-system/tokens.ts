@@ -18,16 +18,22 @@ export const glassTokens = {
   // Level 2: Content containers (Cards, Lists, Panels, Stats)
   level2: 'glass-level-2',
   level2Interactive: 'glass-level-2-interactive',
+  lessonCard: 'glass-lesson-card',
+  scheduleCard: 'glass-schedule-card',
   
   // Level 3: Elevated floating surfaces (Modals, Dropdowns, Flyouts, Popovers)
   level3: 'glass-level-3',
+
+  // Interactive Glass Buttons
+  btnPrimary: 'glass-btn-primary',
+  btnSecondary: 'glass-btn-secondary',
 } as const;
 
 export const colorTokens = {
   bg: {
-    base: '#09090b',
-    surface: '#121215',
-    elevated: '#18181c',
+    base: '#07090e',
+    surface: 'rgba(18, 22, 33, 0.48)',
+    elevated: 'rgba(25, 31, 46, 0.65)',
   },
   text: {
     primary: 'text-neutral-100',
@@ -41,6 +47,11 @@ export const colorTokens = {
     strong: 'border-white/[0.22]',
     accent: 'border-cyan-500/30',
     accentActive: 'border-cyan-400/60',
+  },
+  accent: {
+    cyan: '#06b6d4',
+    cyanGlow: 'rgba(6, 182, 212, 0.25)',
+    cyanSoft: 'rgba(6, 182, 212, 0.1)',
   },
   status: {
     success: {

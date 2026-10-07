@@ -166,3 +166,43 @@ export interface AcademicCommunity {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CommunityStudySpaceParticipant {
+  id: string;
+  name: string;
+  role: string;
+  isSpeaking?: boolean;
+  hasVideo?: boolean;
+  audioEnabled?: boolean;
+  videoEnabled?: boolean;
+  isHandRaised?: boolean;
+  joinedAt?: string;
+}
+
+export interface CommunityStudySpace {
+  id: string;
+  groupId: string;
+  studyGroupId?: string;
+  groupName: string;
+  schoolId?: string;
+  classId?: string;
+  courseCode: string;
+  title: string;
+  name?: string;
+  topic: string;
+  createdBy?: string;
+  createdById?: string;
+  activeCount: number;
+  participants: CommunityStudySpaceParticipant[];
+  participantUserIds?: string[];
+  voiceConnected: boolean;
+  videoEnabled: boolean;
+  sharedProblemContext: string;
+  formulaNotes: string;
+  status: 'ACTIVE_NOW' | 'UPCOMING' | 'CONCLUDED' | 'ACTIVE' | 'SCHEDULED';
+  startedAt?: string;
+  endedAt?: string;
+  discussionChannelId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

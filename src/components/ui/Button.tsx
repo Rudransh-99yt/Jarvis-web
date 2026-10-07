@@ -29,10 +29,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   }[size];
 
   const variantStyles = {
-    primary: 'bg-white/[0.12] hover:bg-white/[0.18] text-white font-medium shadow-sm border border-white/[0.2] active:scale-[0.98]',
-    secondary: 'bg-white/[0.05] hover:bg-white/[0.09] text-neutral-200 border border-white/[0.08] hover:border-white/[0.16] active:scale-[0.98]',
-    ghost: 'bg-transparent hover:bg-white/[0.05] text-neutral-300 hover:text-white border border-transparent active:scale-[0.98]',
-    glass: 'bg-white/[0.04] hover:bg-white/[0.08] text-neutral-200 hover:text-white border border-white/[0.08] hover:border-white/[0.16] backdrop-blur-md shadow-sm active:scale-[0.98]',
+    primary: 'glass-btn-primary active:scale-[0.98]',
+    secondary: 'glass-btn-secondary active:scale-[0.98]',
+    ghost: 'bg-transparent hover:bg-white/[0.06] text-neutral-300 hover:text-white border border-transparent active:scale-[0.98]',
+    glass: 'bg-white/[0.05] hover:bg-white/[0.1] text-neutral-200 hover:text-white border border-white/[0.09] hover:border-white/[0.18] backdrop-blur-md shadow-sm active:scale-[0.98]',
     danger: 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 hover:border-rose-500/50 active:scale-[0.98]',
   }[variant];
 
@@ -78,10 +78,10 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(({
   }[size];
 
   const variantStyles = {
-    primary: 'bg-white/[0.12] hover:bg-white/[0.18] text-white font-medium shadow-sm border border-white/[0.2] active:scale-[0.98]',
-    secondary: 'bg-white/[0.05] hover:bg-white/[0.09] text-neutral-200 border border-white/[0.08] active:scale-[0.98]',
-    ghost: 'bg-transparent hover:bg-white/[0.05] text-neutral-300 hover:text-white border border-transparent active:scale-[0.98]',
-    glass: 'bg-white/[0.04] hover:bg-white/[0.08] text-neutral-300 hover:text-white border border-white/[0.08] hover:border-white/[0.16] backdrop-blur-md active:scale-[0.98]',
+    primary: 'glass-btn-primary active:scale-[0.98]',
+    secondary: 'glass-btn-secondary active:scale-[0.98]',
+    ghost: 'bg-transparent hover:bg-white/[0.06] text-neutral-300 hover:text-white border border-transparent active:scale-[0.98]',
+    glass: 'bg-white/[0.05] hover:bg-white/[0.1] text-neutral-300 hover:text-white border border-white/[0.09] hover:border-white/[0.18] backdrop-blur-md active:scale-[0.98]',
     danger: 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 active:scale-[0.98]',
   }[variant];
 

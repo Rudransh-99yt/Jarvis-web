@@ -123,8 +123,8 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
         </p>
       </div>
 
-      {/* 2. TODAY: What matters to me right now? (Neutral Liquid Glass with subtle specular rim) */}
-      <GlassCard level="2" highlight className="p-6 border border-white/[0.12] space-y-4">
+      {/* 2. TODAY: What matters to me right now? (Apple Liquid Glass with subtle specular rim) */}
+      <GlassCard level="lesson" highlight className="p-6 rounded-2xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-neutral-300 text-xs font-medium">

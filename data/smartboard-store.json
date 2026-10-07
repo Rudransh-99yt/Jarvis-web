@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-06T16:52:18.677Z",
+  "updatedAt": "2026-10-06T19:59:42.573Z",
   "devices": [
     {
       "id": "board-phys-01",
@@ -21,7 +21,7 @@
       "pairingState": {
         "isPaired": false
       },
-      "lastSeen": "2026-10-06T16:52:18.310Z",
+      "lastSeen": "2026-10-06T19:59:42.170Z",
       "currentSessionId": null,
       "currentCourseCode": "PHYS-301",
       "currentTopic": "Electrostatics & Electric Fields",
@@ -48,7 +48,7 @@
       "pairingState": {
         "isPaired": false
       },
-      "lastSeen": "2026-10-06T16:52:18.310Z",
+      "lastSeen": "2026-10-06T19:59:42.170Z",
       "currentSessionId": null,
       "currentCourseCode": "CHEM-201",
       "currentTopic": "Organic Reaction Mechanisms",
@@ -75,7 +75,7 @@
       "pairingState": {
         "isPaired": false
       },
-      "lastSeen": "2026-10-06T16:52:18.310Z",
+      "lastSeen": "2026-10-06T19:59:42.170Z",
       "currentSessionId": null,
       "currentCourseCode": "MATH-201",
       "currentTopic": "Differential Equations",
@@ -188,7 +188,7 @@
             }
           ],
           "createdAt": "2026-10-02T16:00:00.000Z",
-          "updatedAt": "2026-10-06T16:52:18.673Z",
+          "updatedAt": "2026-10-06T19:59:42.568Z",
           "processingStatus": "INDEXED",
           "extractedEquations": [
             {
@@ -250,7 +250,7 @@
             }
           ],
           "createdAt": "2026-10-02T16:12:00.000Z",
-          "updatedAt": "2026-10-06T16:52:18.673Z",
+          "updatedAt": "2026-10-06T19:59:42.568Z",
           "processingStatus": "INDEXED",
           "extractedEquations": [
             {
@@ -270,8 +270,8 @@
       ],
       "timestamps": {
         "createdAt": "2026-10-02T16:00:00.000Z",
-        "updatedAt": "2026-10-06T16:52:18.677Z",
-        "lastAutosavedAt": "2026-10-06T16:52:18.677Z",
+        "updatedAt": "2026-10-06T19:59:42.573Z",
+        "lastAutosavedAt": "2026-10-06T19:59:42.573Z",
         "completedAt": "2026-10-02T16:45:00.000Z"
       },
       "ragIndexed": true,
@@ -349,11 +349,11 @@
           "Derivations",
           "ClassroomKnowledge"
         ],
-        "generatedAt": "2026-10-06T16:52:18.673Z",
+        "generatedAt": "2026-10-06T19:59:42.568Z",
         "aiEnriched": false
       },
-      "knowledgeSourceId": "src-muwx2fle-689w",
-      "releasedAt": "2026-10-06T16:52:18.672Z"
+      "knowledgeSourceId": "src-mux3rfft-95xo",
+      "releasedAt": "2026-10-06T19:59:42.568Z"
     }
   ]
 }

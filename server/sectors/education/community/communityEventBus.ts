@@ -16,7 +16,15 @@ export type CommunityEventType =
   | 'community.reaction.updated'
   | 'community.channel.updated'
   | 'community.announcement.created'
-  | 'community.read.updated';
+  | 'community.read.updated'
+  | 'study_group.member.joined'
+  | 'study_group.member.left'
+  | 'study_space.created'
+  | 'study_space.started'
+  | 'study_space.ended'
+  | 'study_space.member.joined'
+  | 'study_space.member.left'
+  | 'study_space.participant.updated';
 
 export interface CommunityRealtimeEvent {
   id: string;
@@ -128,6 +136,73 @@ export class CommunityEventBus extends EventEmitter {
       classId: thread.classId,
       channelId: thread.channelId,
       data: thread
+    });
+  }
+
+  publishStudyGroupMemberJoined(groupId: string, userId: string, memberUserIds: string[], schoolId: string, classId?: string): void {
+    this.publishEvent('study_group.member.joined', {
+      schoolId,
+      classId,
+      data: { groupId, userId, memberUserIds }
+    });
+  }
+
+  publishStudyGroupMemberLeft(groupId: string, userId: string, memberUserIds: string[], schoolId: string, classId?: string): void {
+    this.publishEvent('study_group.member.left', {
+      schoolId,
+      classId,
+      data: { groupId, userId, memberUserIds }
+    });
+  }
+
+  publishStudySpaceCreated(space: any): void {
+    this.publishEvent('study_space.created', {
+      schoolId: space.schoolId || 'inst-stark-academy',
+      classId: space.classId,
+      channelId: space.discussionChannelId,
+      data: space
+    });
+  }
+
+  publishStudySpaceStarted(space: any): void {
+    this.publishEvent('study_space.started', {
+      schoolId: space.schoolId || 'inst-stark-academy',
+      classId: space.classId,
+      channelId: space.discussionChannelId,
+      data: space
+    });
+  }
+
+  publishStudySpaceEnded(space: any): void {
+    this.publishEvent('study_space.ended', {
+      schoolId: space.schoolId || 'inst-stark-academy',
+      classId: space.classId,
+      channelId: space.discussionChannelId,
+      data: space
+    });
+  }
+
+  publishStudySpaceMemberJoined(spaceId: string, studyGroupId: string, userId: string, participantUserIds: string[], schoolId: string, classId?: string): void {
+    this.publishEvent('study_space.member.joined', {
+      schoolId,
+      classId,
+      data: { spaceId, studyGroupId, userId, participantUserIds }
+    });
+  }
+
+  publishStudySpaceMemberLeft(spaceId: string, studyGroupId: string, userId: string, participantUserIds: string[], schoolId: string, classId?: string): void {
+    this.publishEvent('study_space.member.left', {
+      schoolId,
+      classId,
+      data: { spaceId, studyGroupId, userId, participantUserIds }
+    });
+  }
+
+  publishStudySpaceParticipantUpdated(spaceId: string, userId: string, participant: any, schoolId: string, classId?: string): void {
+    this.publishEvent('study_space.participant.updated', {
+      schoolId,
+      classId,
+      data: { spaceId, userId, participant }
     });
   }
 }

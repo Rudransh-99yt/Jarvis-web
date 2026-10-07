@@ -1,6 +1,6 @@
 /** Deterministic HTTP harness: imports the production app without Vite or port 3000. */
 import type { Server } from 'node:http';
-import { AuthService } from '../server/auth/tokens.ts';
+import { signAuthPayload } from '../server/auth/tokens.ts';
 import { jarvisData } from '../server/data/index.ts';
 import { app } from '../server.ts';
 
@@ -20,7 +20,12 @@ export async function startHttpHarness(): Promise<{ baseUrl: string; close: () =
     tokenFor: async (userId) => {
       const user = await jarvisData.users.getById(userId);
       if (!user) throw new Error(`Unknown test actor ${userId}`);
-      return new AuthService().issueToken(user);
+      return signAuthPayload({
+        sub: user.id,
+        iat: Date.now(),
+        exp: Date.now() + 3600000,
+        jti: `test-jti-${Date.now()}`
+      });
     },
     close: () => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
   };

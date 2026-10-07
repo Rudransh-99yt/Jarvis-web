@@ -127,10 +127,10 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Priority 1: Continue Learning (Dominant Focal Anchor, Level 2 Glass with specular highlight) */}
-      <GlassCard level="2" highlight className="p-6 border border-white/[0.12] space-y-4">
+      {/* 2. Priority 1: Continue Learning (Dominant Focal Anchor, Lesson Glass with specular highlight) */}
+      <GlassCard level="lesson" highlight className="p-6 rounded-2xl space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between text-xs">
-          <Badge variant="neutral" label="Continue Learning" dot />
+          <Badge variant="cyan" label="Continue Learning" dot />
           <span className="text-neutral-400 text-xs font-mono">Active Track</span>
         </div>
 
@@ -172,7 +172,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
               variant="primary"
               size="md"
               onClick={() => onOpenLesson(physClass.id, physUnit.id, activeLesson.id)}
-              icon={<PlayCircle className="w-4 h-4 text-white" />}
+              icon={<PlayCircle className="w-4 h-4 text-cyan-300" />}
             >
               Continue Lesson
             </Button>
@@ -211,7 +211,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           {todayClasses.map((cls, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl glass-level-2 border border-white/[0.06] hover:border-white/[0.12] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="p-4 rounded-xl glass-schedule-card flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 text-xs">
@@ -268,7 +268,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           {pendingAssignments.slice(0, 2).map((asg) => (
             <div
               key={asg.id}
-              className="p-4 rounded-xl glass-level-2 border border-white/[0.06] hover:border-white/[0.12] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="p-4 rounded-xl glass-schedule-card flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 text-xs">
@@ -304,9 +304,9 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
       </div>
 
       {/* 5. Priority 4: Your Next Best Action */}
-      <GlassCard level="2" className="p-5 border border-white/[0.08] space-y-3">
-        <div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
-          <Sparkles className="w-4 h-4 text-neutral-300" />
+      <GlassCard level="2" className="p-5 border border-cyan-500/20 shadow-[0_4px_20px_-2px_rgba(6,182,212,0.06)] space-y-3 relative overflow-hidden">
+        <div className="flex items-center gap-2 text-xs text-cyan-300 font-medium">
+          <Sparkles className="w-4 h-4 text-cyan-400" />
           <span>Your Next Best Action</span>
         </div>
 

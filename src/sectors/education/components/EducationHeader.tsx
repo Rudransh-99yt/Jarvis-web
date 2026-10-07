@@ -208,11 +208,11 @@ export const EducationHeader: React.FC<EducationHeaderProps> = ({
               onClick={() => onSelectSection(item.id as EducationNavSection)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer focus-ring select-none ${
                 isActive
-                  ? 'bg-white/[0.09] text-white font-semibold border border-white/[0.14] shadow-sm'
+                  ? 'bg-gradient-to-r from-cyan-500/12 via-white/[0.08] to-white/[0.04] text-white font-semibold border border-cyan-500/35 shadow-[0_2px_12px_-2px_rgba(6,182,212,0.15)]'
                   : 'text-neutral-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300' : 'text-neutral-400'}`} />
               <span>{item.label}</span>
               {item.pulse && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
             </button>

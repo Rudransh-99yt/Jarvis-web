@@ -450,7 +450,195 @@ communityRouter.post('/study-groups/:id/join', async (req: Request, res: Respons
     const groupId = req.params.id as string;
 
     const group = await communityStore.joinStudyGroup(groupId, user.id);
+    communityEventBus.publishStudyGroupMemberJoined(group.id, user.id, group.memberUserIds, group.schoolId, group.classId);
+
     res.json({ studyGroup: group });
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14b. POST /api/education/community/study-groups/:id/leave - Leave study group
+communityRouter.post('/study-groups/:id/leave', async (req: Request, res: Response) => {
+  try {
+    const user = await resolveUser(req);
+    const groupId = req.params.id as string;
+
+    const group = await communityStore.leaveStudyGroup(groupId, user.id);
+    communityEventBus.publishStudyGroupMemberLeft(group.id, user.id, group.memberUserIds, group.schoolId, group.classId);
+
+    res.json({ studyGroup: group });
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14c. GET /api/education/community/study-spaces - List study spaces
+communityRouter.get('/study-spaces', async (req: Request, res: Response) => {
+  try {
+    const { classId, studyGroupId, status } = req.query;
+    const list = await communityStore.listStudySpaces('inst-stark-academy', {
+      classId: classId as string,
+      studyGroupId: studyGroupId as string,
+      status: status as string
+    });
+    res.json({ studySpaces: list });
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14d. GET /api/education/community/study-spaces/:id - Get single study space
+communityRouter.get('/study-spaces/:id', async (req: Request, res: Response) => {
+  try {
+    const spaceId = req.params.id as string;
+    const space = await communityStore.getStudySpace(spaceId);
+    if (!space) {
+      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Study space not found.' } });
+      return;
+    }
+    res.json({ studySpace: space });
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14e. POST /api/education/community/study-spaces - Create study space
+communityRouter.post('/study-spaces', async (req: Request, res: Response) => {
+  try {
+    const user = await resolveUser(req);
+    const { title, topic, studyGroupId, groupId, classId, courseCode, sharedProblemContext, formulaNotes } = req.body;
+
+    if (!title) {
+      res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'Space title is required.' } });
+      return;
+    }
+
+    const space = await communityStore.createStudySpace({
+      schoolId: 'inst-stark-academy',
+      studyGroupId: studyGroupId || groupId,
+      groupId: groupId || studyGroupId,
+      classId,
+      courseCode,
+      title,
+      name: title,
+      topic: topic || '',
+      createdById: user.id,
+      createdBy: user.displayName || 'Cadet',
+      status: 'ACTIVE_NOW',
+      participants: [
+        {
+          id: user.id,
+          name: user.displayName || 'Cadet',
+          role: user.role || 'student',
+          isSpeaking: false,
+          audioEnabled: true,
+          videoEnabled: false,
+          isHandRaised: false,
+          joinedAt: new Date().toISOString()
+        }
+      ],
+      participantUserIds: [user.id],
+      sharedProblemContext: sharedProblemContext || 'Self-organized peer collaboration workspace',
+      formulaNotes: formulaNotes || ''
+    });
+
+    communityEventBus.publishStudySpaceCreated(space);
+
+    res.status(201).json({ studySpace: space });
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14f. POST /api/education/community/study-spaces/:id/join - Join study space (registers presence)
+communityRouter.post('/study-spaces/:id/join', async (req: Request, res: Response) => {
+  try {
+    const user = await resolveUser(req);
+    const spaceId = req.params.id as string;
+
+    const space = await communityStore.joinStudySpace(spaceId, {
+      id: user.id,
+      displayName: user.displayName || 'Cadet',
+      role: user.role || 'student'
+    });
+
+    communityEventBus.publishStudySpaceMemberJoined(
+      space.id,
+      space.groupId,
+      user.id,
+      space.participantUserIds || [],
+      space.schoolId || 'inst-stark-academy',
+      space.classId
+    );
+
+    res.json({ studySpace: space });
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14g. POST /api/education/community/study-spaces/:id/leave - Leave study space (unregisters presence)
+communityRouter.post('/study-spaces/:id/leave', async (req: Request, res: Response) => {
+  try {
+    const user = await resolveUser(req);
+    const spaceId = req.params.id as string;
+
+    const space = await communityStore.leaveStudySpace(spaceId, user.id);
+
+    communityEventBus.publishStudySpaceMemberLeft(
+      space.id,
+      space.groupId,
+      user.id,
+      space.participantUserIds || [],
+      space.schoolId || 'inst-stark-academy',
+      space.classId
+    );
+
+    res.json({ studySpace: space });
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14h. POST /api/education/community/study-spaces/:id/participant-state - Update participant state
+communityRouter.post('/study-spaces/:id/participant-state', async (req: Request, res: Response) => {
+  try {
+    const user = await resolveUser(req);
+    const spaceId = req.params.id as string;
+    const { audioEnabled, videoEnabled, isSpeaking, isHandRaised } = req.body;
+
+    const result = await communityStore.updateParticipantState(spaceId, user.id, {
+      audioEnabled,
+      videoEnabled,
+      isSpeaking,
+      isHandRaised
+    });
+
+    communityEventBus.publishStudySpaceParticipantUpdated(
+      result.space.id,
+      user.id,
+      result.participant,
+      result.space.schoolId || 'inst-stark-academy',
+      result.space.classId
+    );
+
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+// 14i. POST /api/education/community/study-spaces/:id/end - End study space (host only)
+communityRouter.post('/study-spaces/:id/end', async (req: Request, res: Response) => {
+  try {
+    const user = await resolveUser(req);
+    const spaceId = req.params.id as string;
+
+    const space = await communityStore.endStudySpace(spaceId, user.id);
+    communityEventBus.publishStudySpaceEnded(space);
+
+    res.json({ studySpace: space });
   } catch (err: any) {
     res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
   }
