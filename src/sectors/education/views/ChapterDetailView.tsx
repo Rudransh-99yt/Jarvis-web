@@ -74,12 +74,14 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
       </GlassCard>
 
       {/* 3. Progressive Disclosure Tabs */}
-      <div className={`flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-white/[0.08] ${glassTokens.level2} font-mono text-xs`}>
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md text-xs font-sans">
         <button
           type="button"
           onClick={() => setActiveTab('lessons')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'lessons' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'lessons'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
@@ -89,8 +91,10 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('practice')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'practice' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'practice'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
@@ -100,8 +104,10 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'overview' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'overview'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -111,8 +117,10 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('resources')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'resources' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'resources'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -124,13 +132,13 @@ export const ChapterDetailView: React.FC<ChapterDetailViewProps> = ({
       {activeTab === 'lessons' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+            <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400">
               Curriculum Lessons ({totalCount})
             </h2>
-            <span className="text-xs font-mono text-slate-500">Click to enter Study Room</span>
+            <span className="text-xs font-mono text-neutral-500">Click to enter Study Room</span>
           </div>
 
-          <GlassCard className="divide-y divide-white/[0.06] p-0 overflow-hidden shadow-sm">
+          <GlassCard level="2" className="divide-y divide-white/[0.06] p-0 overflow-hidden shadow-sm">
             {unit.lessons?.map((lesson) => (
               <div
                 key={lesson.id}

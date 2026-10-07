@@ -60,6 +60,7 @@ import { EngagementActivityView } from './views/EngagementActivityView.tsx';
 import { LessonPracticeView } from './views/LessonPracticeView.tsx';
 import { SmartBoardWorkspace } from './smartboard/SmartBoardWorkspace.tsx';
 import { BoardHistoryView } from './smartboard/BoardHistoryView.tsx';
+import { JarvisOpeningExperience } from './components/JarvisOpeningExperience.tsx';
 
 import { Menu, Home, Layers, Flame, FileCheck2, Building2 } from 'lucide-react';
 
@@ -152,6 +153,14 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
   const [selectedGradingSub, setSelectedGradingSub] = useState<StudentSubmission | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Jarvis Opening & Milestone Experience State
+  const [isOpeningExperienceOpen, setIsOpeningExperienceOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem('jarvis_opening_seen');
+    }
+    return false;
+  });
 
   // Curriculum Modal State for Teachers
   const [curriculumModal, setCurriculumModal] = useState<{
@@ -1165,6 +1174,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onSelectCourse={(id) => handleSelectCourse(id)}
               onOpenLesson={(cId, uId, lId) => handleOpenLesson(cId, uId, lId)}
               onNavigateTab={(t) => setCurrentView(t as any)}
+              onOpenOpeningExperience={() => setIsOpeningExperienceOpen(true)}
             />
           )}
 
@@ -1660,6 +1670,25 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               console.warn('Unlock error:', err);
             }
           }
+        }}
+      />
+
+      {/* 7. Jarvis Opening & Milestone Experience */}
+      <JarvisOpeningExperience
+        isOpen={isOpeningExperienceOpen}
+        onDismiss={() => {
+          if (typeof window !== 'undefined') sessionStorage.setItem('jarvis_opening_seen', 'true');
+          setIsOpeningExperienceOpen(false);
+        }}
+        onPrimaryAction={() => {
+          if (typeof window !== 'undefined') sessionStorage.setItem('jarvis_opening_seen', 'true');
+          setIsOpeningExperienceOpen(false);
+          handleOpenLesson('class-phys-301', 'unit-phys-2', 'les-phys-202');
+        }}
+        onSecondaryAction={() => {
+          if (typeof window !== 'undefined') sessionStorage.setItem('jarvis_opening_seen', 'true');
+          setIsOpeningExperienceOpen(false);
+          setCurrentView('calendar');
         }}
       />
     </div>

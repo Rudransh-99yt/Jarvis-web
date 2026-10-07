@@ -48,11 +48,11 @@ export const Avatar: React.FC<AvatarProps> = ({
         <img
           src={src}
           alt={name}
-          className={`rounded-full object-cover border border-white/[0.12] ${sizeClasses}`}
+          className={`rounded-full object-cover border border-white/[0.14] shadow-[0_2px_8px_rgba(0,0,0,0.4)] ${sizeClasses}`}
         />
       ) : (
         <div
-          className={`rounded-full bg-white/[0.06] border border-white/[0.12] flex items-center justify-center font-mono font-medium text-neutral-200 ${sizeClasses}`}
+          className={`rounded-full bg-gradient-to-b from-white/[0.10] to-white/[0.03] backdrop-blur-md border border-white/[0.16] shadow-[inset_0_1px_1px_rgba(255,255,255,0.22),0_2px_8px_rgba(0,0,0,0.35)] flex items-center justify-center font-mono font-medium text-neutral-200 ${sizeClasses}`}
         >
           {initials}
         </div>

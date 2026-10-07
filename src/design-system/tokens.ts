@@ -12,21 +12,30 @@ export const glassTokens = {
   // Level 0: Atmospheric environment canvas
   level0: 'glass-level-0',
   
-  // Level 1: Primary shell chrome (Sidebar, Top Navigation)
+  // Level 1: Quiet ambient glass & primary shell chrome
+  ambient: 'glass-ambient',
   level1: 'glass-level-1',
   
   // Level 2: Content containers (Cards, Lists, Panels, Stats)
   level2: 'glass-level-2',
   level2Interactive: 'glass-level-2-interactive',
+  elevated: 'glass-elevated',
   lessonCard: 'glass-lesson-card',
   scheduleCard: 'glass-schedule-card',
   
   // Level 3: Elevated floating surfaces (Modals, Dropdowns, Flyouts, Popovers)
   level3: 'glass-level-3',
 
+  // Focus & Jarvis Intelligence Glass
+  intelligence: 'glass-intelligence',
+
   // Interactive Glass Buttons
   btnPrimary: 'glass-btn-primary',
   btnSecondary: 'glass-btn-secondary',
+
+  // Proximity Magnification Classes
+  dockMagnifiable: 'dock-magnifiable',
+  dockMagnifiableHorizontal: 'dock-magnifiable-horizontal',
 } as const;
 
 export const colorTokens = {

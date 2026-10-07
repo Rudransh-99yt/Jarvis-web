@@ -126,12 +126,14 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
       </GlassCard>
 
       {/* 3. Deep Progressive Disclosure Tab Bar */}
-      <div className={`flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-white/[0.08] ${glassTokens.level2} font-mono text-xs`}>
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md text-xs font-sans">
         <button
           type="button"
           onClick={() => setActiveTab('chapters')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'chapters' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'chapters'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -141,8 +143,10 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'overview' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'overview'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
@@ -152,8 +156,10 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('tests')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'tests' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'tests'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
@@ -163,8 +169,10 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('resources')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'resources' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'resources'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -174,8 +182,10 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('progress')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-            activeTab === 'progress' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer focus-ring select-none ${
+            activeTab === 'progress'
+              ? 'bg-white/[0.12] text-white font-semibold border-t border-t-white/[0.25] border-x border-x-white/[0.10] border-b border-b-white/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)]'
+              : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
@@ -188,15 +198,16 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         <div className="space-y-4">
           {/* Quick Resume Card for Next Lesson */}
           {nextLesson && currentChapter && (
-            <GlassCard className="p-5 border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 to-slate-900/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
-                  Recommended Next Lesson
+            <GlassCard level="lesson" highlight className="p-6 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  <span>Recommended Next Lesson</span>
                 </span>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                   Lesson {currentChapter.number}.{nextLesson.number}: {nextLesson.title}
                 </h3>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-neutral-300 font-sans">
                   Unit {currentChapter.number}: {currentChapter.title}
                 </p>
               </div>
@@ -204,9 +215,9 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenLesson(currentChapter.id, nextLesson.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-white text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shrink-0 focus-ring"
+                className="px-5 py-2.5 rounded-xl glass-btn-primary text-xs font-semibold tracking-wider transition-all cursor-pointer shrink-0 focus-ring flex items-center gap-2 shadow-[0_4px_18px_rgba(6,182,212,0.3)]"
               >
-                <PlayCircle className="w-4 h-4 text-cyan-300" />
+                <PlayCircle className="w-4 h-4 text-cyan-200" />
                 <span>Enter Study Room →</span>
               </button>
             </GlassCard>

@@ -32,7 +32,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     primary: 'glass-btn-primary active:scale-[0.98]',
     secondary: 'glass-btn-secondary active:scale-[0.98]',
     ghost: 'bg-transparent hover:bg-white/[0.06] text-neutral-300 hover:text-white border border-transparent active:scale-[0.98]',
-    glass: 'bg-white/[0.05] hover:bg-white/[0.1] text-neutral-200 hover:text-white border border-white/[0.09] hover:border-white/[0.18] backdrop-blur-md shadow-sm active:scale-[0.98]',
+    glass: 'bg-gradient-to-b from-white/[0.08] to-white/[0.03] hover:from-white/[0.12] hover:to-white/[0.05] text-neutral-200 hover:text-white border-t border-t-white/[0.22] border-x border-x-white/[0.09] border-b border-b-white/[0.04] hover:border-t-white/[0.35] hover:border-x-white/[0.15] backdrop-blur-md shadow-[0_4px_16px_-2px_rgba(0,0,0,0.36),inset_0_1px_0_0_rgba(255,255,255,0.22)] active:scale-[0.98]',
     danger: 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 hover:border-rose-500/50 active:scale-[0.98]',
   }[variant];
 
@@ -81,7 +81,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(({
     primary: 'glass-btn-primary active:scale-[0.98]',
     secondary: 'glass-btn-secondary active:scale-[0.98]',
     ghost: 'bg-transparent hover:bg-white/[0.06] text-neutral-300 hover:text-white border border-transparent active:scale-[0.98]',
-    glass: 'bg-white/[0.05] hover:bg-white/[0.1] text-neutral-300 hover:text-white border border-white/[0.09] hover:border-white/[0.18] backdrop-blur-md active:scale-[0.98]',
+    glass: 'bg-gradient-to-b from-white/[0.08] to-white/[0.03] hover:from-white/[0.12] hover:to-white/[0.05] text-neutral-200 hover:text-white border-t border-t-white/[0.22] border-x border-x-white/[0.09] border-b border-b-white/[0.04] hover:border-t-white/[0.35] hover:border-x-white/[0.15] backdrop-blur-md shadow-[0_2px_12px_-2px_rgba(0,0,0,0.32),inset_0_1px_0_0_rgba(255,255,255,0.22)] active:scale-[0.98]',
     danger: 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 active:scale-[0.98]',
   }[variant];
 

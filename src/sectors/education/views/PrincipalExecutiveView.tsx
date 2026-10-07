@@ -153,30 +153,30 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
           <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
           <span>Academic Leadership · Dean / Executive Intelligence OS</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-100 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-neutral-100 tracking-tight">
           {institution?.name || 'Stark Academy of Science & Advanced Engineering'}
         </h1>
-        <p className="text-xs sm:text-sm text-slate-400">
-          Dean Alistair Vance <span className="text-slate-500">·</span> Institutional Directorate <span className="text-slate-500">·</span> Oversight across Grades 11–12
+        <p className="text-xs sm:text-sm text-neutral-400">
+          Dean Alistair Vance <span className="text-neutral-500">·</span> Institutional Directorate <span className="text-neutral-500">·</span> Oversight across Grades 11–12
         </p>
       </div>
 
       {executionNotice && (
-        <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-emerald-300 text-xs font-mono flex items-center gap-2 animate-fade-in">
+        <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-emerald-300 text-xs font-mono flex items-center gap-2 animate-fade-in shadow-[0_2px_12px_rgba(16,185,129,0.2)]">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{executionNotice}</span>
         </div>
       )}
 
       {/* 2. TODAY: Real-Time Operational Pulse */}
-      <GlassCard className="p-6 space-y-4">
+      <GlassCard level="elevated" highlight className="p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
           <div>
             <div className="text-xs font-medium text-cyan-400 uppercase tracking-wider flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Today’s Operational Pulse</span>
             </div>
-            <div className="text-lg font-bold text-slate-100 mt-1">Campus Academic Velocity</div>
+            <div className="text-lg font-bold text-neutral-100 mt-1">Campus Academic Velocity</div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -192,19 +192,19 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
           <div>
-            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Scheduled Lectures</div>
-            <div className="text-slate-100 font-bold text-base mt-0.5 tabular-nums font-mono">{pulse.scheduledLecturesToday} Today</div>
+            <div className="text-[11px] text-neutral-400 uppercase tracking-wider">Scheduled Lectures</div>
+            <div className="text-neutral-100 font-bold text-base mt-0.5 tabular-nums font-mono">{pulse.scheduledLecturesToday} Today</div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Enrolled Cadets</div>
+            <div className="text-[11px] text-neutral-400 uppercase tracking-wider">Enrolled Cadets</div>
             <div className="text-cyan-300 font-bold text-base mt-0.5 tabular-nums font-mono">{pulse.totalStudentsEnrolled} Cadets</div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Faculty on Duty</div>
+            <div className="text-[11px] text-neutral-400 uppercase tracking-wider">Faculty on Duty</div>
             <div className="text-purple-300 font-bold text-base mt-0.5 tabular-nums font-mono">{pulse.facultyOnDuty} Professors</div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Overall Attendance</div>
+            <div className="text-[11px] text-neutral-400 uppercase tracking-wider">Overall Attendance</div>
             <div className="text-emerald-400 font-bold text-base mt-0.5 tabular-nums font-mono">
               {schoolData?.kpis.overallAttendancePercent || 92}% Verified
             </div>
@@ -213,7 +213,7 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
       </GlassCard>
 
       {/* 3. PRINCIPAL COMMAND INTERFACE: Controlled AI Diagnostic Generation */}
-      <GlassCard className="p-6 border-cyan-500/30 bg-gradient-to-r from-blue-950/40 via-cyan-950/20 to-slate-950 space-y-3">
+      <GlassCard level="intelligence" highlight className="p-6 space-y-3 relative overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-cyan-400" />
@@ -221,7 +221,7 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
               Principal Command Interface · Diagnostic Generation
             </h2>
           </div>
-          <span className="text-[11px] text-cyan-400/70 hidden sm:inline">Controlled Flow · Authorization Required</span>
+          <span className="text-[11px] text-cyan-400/70 hidden sm:inline font-mono">Controlled Flow · Authorization Required</span>
         </div>
 
         <form onSubmit={handleProposeCommand} className="flex flex-col sm:flex-row gap-2.5">
@@ -230,18 +230,18 @@ export const PrincipalExecutiveView: React.FC<PrincipalExecutiveViewProps> = ({
             value={commandInput}
             onChange={(e) => setCommandInput(e.target.value)}
             placeholder="e.g., Run a 15-minute diagnostic Physics quiz across all Grade 11 Physics classes based on everything taught so far..."
-            className="flex-1 bg-slate-900/80 border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus-ring focus:border-cyan-500/50"
+            className="flex-1 bg-neutral-900/80 border border-white/[0.10] rounded-xl px-4 py-2.5 text-xs text-neutral-100 placeholder-neutral-500 focus-ring focus:border-cyan-500/50"
           />
           <button
             type="submit"
             disabled={isProposing || !commandInput.trim()}
-            className="px-5 py-2.5 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 disabled:opacity-50 text-cyan-300 text-xs font-semibold tracking-wider transition-all shrink-0 cursor-pointer focus-ring"
+            className="px-5 py-2.5 rounded-xl glass-btn-primary disabled:opacity-40 text-xs font-semibold tracking-wider transition-all shrink-0 cursor-pointer focus-ring"
           >
             {isProposing ? 'Analyzing Scope...' : 'Propose Command'}
           </button>
         </form>
 
-        <p className="text-[11px] text-slate-400">
+        <p className="text-[11px] text-neutral-400">
           AI proposes grounded questions and target classes from verified curriculum. Explicit principal approval required before execution.
         </p>
       </GlassCard>

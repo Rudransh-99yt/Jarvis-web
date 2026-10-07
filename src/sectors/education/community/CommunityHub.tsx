@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { GlassCard, Button, Badge } from '../../../components/ui/index.ts';
 import { Avatar } from '../../../components/ui/Avatar.tsx';
+import { useMagnificationRail } from '../../../design-system/useMagnification.ts';
 
 // =========================================================================
 // PRE-SEEDED CANONICAL DATASETS (Guarantees zero-flicker instant rendering)
@@ -577,6 +578,21 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [activeLiveSpaceId, setActiveLiveSpaceId] = useState<string | null>(null);
   const [activeGroupSubTab, setActiveGroupSubTab] = useState<'discussion' | 'space' | 'resources' | 'members' | 'sessions'>('discussion');
+
+  // Proximity Magnification for Avatars & Media Controls
+  const {
+    containerRef: avatarsContainerRef,
+    registerItem: registerAvatarRef,
+    handlePointerMove: handleAvatarsPointerMove,
+    handlePointerLeave: handleAvatarsPointerLeave
+  } = useMagnificationRail('avatars');
+
+  const {
+    containerRef: spaceControlsContainerRef,
+    registerItem: registerSpaceControlRef,
+    handlePointerMove: handleSpaceControlsPointerMove,
+    handlePointerLeave: handleSpaceControlsPointerLeave
+  } = useMagnificationRail('controls');
 
   // Backend Data State (Pre-seeded with instant fallbacks)
   const [channels, setChannels] = useState<CommunityChannel[]>(SEEDED_CHANNELS);
@@ -1463,12 +1479,22 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   </span>
                 </div>
                 <span className="text-neutral-600 hidden sm:inline">·</span>
-                <div className="flex -space-x-1.5">
+                <div
+                  ref={avatarsContainerRef}
+                  onPointerMove={handleAvatarsPointerMove}
+                  onPointerLeave={handleAvatarsPointerLeave}
+                  className="flex -space-x-1.5 items-center py-1"
+                >
                   {activeLiveSpace.participants.map((p) => (
-                    <div key={p.id} className="relative" title={`${p.name} (${p.role})`}>
+                    <div
+                      key={p.id}
+                      ref={registerAvatarRef(`avatar-${p.id}`)}
+                      className="relative dock-magnifiable-horizontal transition-transform origin-center"
+                      title={`${p.name} (${p.role})`}
+                    >
                       <Avatar name={p.name} size="sm" />
                       {p.isSpeaking && (
-                        <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 border border-neutral-900 animate-pulse" />
+                        <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 border border-neutral-900 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
                       )}
                       {p.isHandRaised && (
                         <span className="absolute -top-1.5 -right-1.5 text-xs leading-none bg-neutral-900 rounded-full px-0.5 shadow-sm border border-amber-400/50" title="Hand Raised">
@@ -1484,63 +1510,80 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               </div>
 
               {/* Real-time Presence Controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleToggleMic}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                    isMicMuted
-                      ? 'bg-rose-500/15 border border-rose-500/30 text-rose-300'
-                      : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
-                  }`}
-                  title={isMicMuted ? 'Unmute Microphone' : 'Mute Microphone'}
-                >
-                  {isMicMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-                  <span>{isMicMuted ? 'Muted' : 'Voice Active'}</span>
-                </button>
+              <div
+                ref={spaceControlsContainerRef}
+                onPointerMove={handleSpaceControlsPointerMove}
+                onPointerLeave={handleSpaceControlsPointerLeave}
+                className="flex items-center gap-2"
+              >
+                <div ref={registerSpaceControlRef('ctl-mic')} className="dock-magnifiable-horizontal">
+                  <button
+                    onClick={handleToggleMic}
+                    className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                      isMicMuted
+                        ? 'bg-rose-500/15 border border-rose-500/30 text-rose-300 shadow-[0_2px_10px_rgba(244,63,94,0.15)]'
+                        : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[0_2px_10px_rgba(16,185,129,0.15)]'
+                    }`}
+                    title={isMicMuted ? 'Unmute Microphone' : 'Mute Microphone'}
+                  >
+                    <div className="dock-specular-sheen" aria-hidden="true" />
+                    {isMicMuted ? <MicOff className="w-3.5 h-3.5 shrink-0" /> : <Mic className="w-3.5 h-3.5 shrink-0" />}
+                    <span>{isMicMuted ? 'Muted' : 'Voice Active'}</span>
+                  </button>
+                </div>
 
-                <button
-                  onClick={handleToggleHandRaise}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                    isHandRaised
-                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-200'
-                      : 'bg-white/[0.05] border border-white/[0.1] text-neutral-300 hover:text-white'
-                  }`}
-                  title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
-                >
-                  <Hand className="w-3.5 h-3.5" />
-                  <span>{isHandRaised ? 'Hand Raised ✋' : 'Raise Hand'}</span>
-                </button>
+                <div ref={registerSpaceControlRef('ctl-hand')} className="dock-magnifiable-horizontal">
+                  <button
+                    onClick={handleToggleHandRaise}
+                    className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                      isHandRaised
+                        ? 'bg-amber-500/20 border border-amber-500/40 text-amber-200 shadow-[0_2px_10px_rgba(245,158,11,0.15)]'
+                        : 'glass-btn-secondary'
+                    }`}
+                    title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
+                  >
+                    <div className="dock-specular-sheen" aria-hidden="true" />
+                    <Hand className="w-3.5 h-3.5 shrink-0" />
+                    <span>{isHandRaised ? 'Hand Raised ✋' : 'Raise Hand'}</span>
+                  </button>
+                </div>
 
-                <button
-                  onClick={() => setIsVideoEnabled(!isVideoEnabled)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                    isVideoEnabled
-                      ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-200'
-                      : 'bg-white/[0.05] border border-white/[0.1] text-neutral-300 hover:text-white'
-                  }`}
-                  title={isVideoEnabled ? 'Disable Camera' : 'Enable Camera'}
-                >
-                  {isVideoEnabled ? <Video className="w-3.5 h-3.5" /> : <VideoOff className="w-3.5 h-3.5" />}
-                  <span>{isVideoEnabled ? 'Cam Live' : 'Cam Off'}</span>
-                </button>
+                <div ref={registerSpaceControlRef('ctl-video')} className="dock-magnifiable-horizontal">
+                  <button
+                    onClick={() => setIsVideoEnabled(!isVideoEnabled)}
+                    className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                      isVideoEnabled
+                        ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-200 shadow-[0_2px_10px_rgba(6,182,212,0.15)]'
+                        : 'glass-btn-secondary'
+                    }`}
+                    title={isVideoEnabled ? 'Disable Camera' : 'Enable Camera'}
+                  >
+                    <div className="dock-specular-sheen" aria-hidden="true" />
+                    {isVideoEnabled ? <Video className="w-3.5 h-3.5 shrink-0" /> : <VideoOff className="w-3.5 h-3.5 shrink-0" />}
+                    <span>{isVideoEnabled ? 'Cam Live' : 'Cam Off'}</span>
+                  </button>
+                </div>
 
-                <button
-                  onClick={() => setIsScreenSharing(!isScreenSharing)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                    isScreenSharing
-                      ? 'bg-purple-500/20 border border-purple-500/40 text-purple-200'
-                      : 'bg-white/[0.05] border border-white/[0.1] text-neutral-300 hover:text-white'
-                  }`}
-                  title="Share Screen"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Screen</span>
-                </button>
+                <div ref={registerSpaceControlRef('ctl-screen')} className="dock-magnifiable-horizontal">
+                  <button
+                    onClick={() => setIsScreenSharing(!isScreenSharing)}
+                    className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                      isScreenSharing
+                        ? 'bg-purple-500/20 border border-purple-500/40 text-purple-200 shadow-[0_2px_10px_rgba(168,85,247,0.15)]'
+                        : 'glass-btn-secondary'
+                    }`}
+                    title="Share Screen"
+                  >
+                    <div className="dock-specular-sheen" aria-hidden="true" />
+                    <Share2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="hidden sm:inline">Screen</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Collaborative Board & Problem Focus Canvas */}
-            <GlassCard level="lesson" highlight className="p-6 rounded-2xl space-y-4">
+            <GlassCard level="elevated" highlight className="p-6 rounded-2xl space-y-4">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-mono text-cyan-300 font-semibold uppercase tracking-wider">
                   Active Study Focus

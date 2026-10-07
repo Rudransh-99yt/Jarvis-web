@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import type { EducationRole, AcademicInstitution, EducationClass } from '../../../types/education.ts';
 import {
   Home,
@@ -28,6 +28,8 @@ import {
   Timer
 } from 'lucide-react';
 import { Avatar } from '../../../components/ui/Avatar.tsx';
+import { useMagnificationRail } from '../../../design-system/useMagnification.ts';
+import { JarvisMark } from '../../../components/brand/JarvisMark.tsx';
 
 export type EducationSidebarSection =
   | 'home'
@@ -86,10 +88,13 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
 }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // macOS Dock-style magnification tracking
-  const navContainerRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
-  const rafId = useRef<number | null>(null);
+  // Reusable Apple Dock-style magnification rail (Phase 4 & 6)
+  const {
+    containerRef: navContainerRef,
+    registerItem: registerItemRef,
+    handlePointerMove,
+    handlePointerLeave
+  } = useMagnificationRail('sidebar');
 
   const roles: Array<{ id: EducationRole; label: string; name: string; icon: any; color: string; department: string }> = [
     { id: 'student', label: 'Student', name: 'Alex Chen', icon: GraduationCap, color: 'text-neutral-200', department: 'Class 12 Physics' },
@@ -110,90 +115,6 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
     onCloseMobile();
   };
 
-  // Reset Dock magnification variables for all registered items
-  const resetDockMagnification = useCallback(() => {
-    itemRefs.current.forEach((el) => {
-      if (el) {
-        el.style.setProperty('--dock-scale', '1');
-        el.style.setProperty('--dock-translate-y', '0px');
-        el.style.setProperty('--dock-brightness', '1');
-        el.style.setProperty('--dock-specular', '0');
-      }
-    });
-  }, []);
-
-  // Pointer Move Handler for macOS Dock Spatial Curve
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'touch') return;
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current);
-    }
-
-    const pointerY = e.clientY;
-
-    rafId.current = requestAnimationFrame(() => {
-      const R = 120; // 120px influence radius for smooth proximity curve across 2-3 items
-
-      itemRefs.current.forEach((el) => {
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const itemCenterY = rect.top + rect.height / 2;
-        const dist = Math.abs(pointerY - itemCenterY);
-
-        if (dist < R) {
-          const t = 1 - dist / R;
-          // Smooth bell-curve factor
-          const factor = Math.pow(t, 1.8);
-          // Scale: 1.09 directly hovered (1.06–1.10 target), 1.04 neighbor (1.02–1.05 target)
-          const scale = 1.0 + 0.09 * factor;
-          // TranslateY: -3.5px directly hovered (-2px to -4px target), -1.7px neighbor
-          const translateY = -3.5 * factor;
-          // Noticeable brightness boost & specular refraction
-          const brightness = 1.0 + 0.16 * factor;
-          const specular = 0.35 * factor;
-
-          el.style.setProperty('--dock-scale', scale.toFixed(3));
-          el.style.setProperty('--dock-translate-y', `${translateY.toFixed(1)}px`);
-          el.style.setProperty('--dock-brightness', brightness.toFixed(3));
-          el.style.setProperty('--dock-specular', specular.toFixed(3));
-        } else {
-          el.style.setProperty('--dock-scale', '1');
-          el.style.setProperty('--dock-translate-y', '0px');
-          el.style.setProperty('--dock-brightness', '1');
-          el.style.setProperty('--dock-specular', '0');
-        }
-      });
-    });
-  };
-
-  const handlePointerLeave = () => {
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current);
-    }
-    resetDockMagnification();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (rafId.current) {
-        cancelAnimationFrame(rafId.current);
-      }
-    };
-  }, []);
-
-  const registerItemRef = (id: string) => (el: HTMLElement | null) => {
-    if (el) {
-      itemRefs.current.set(id, el);
-    } else {
-      itemRefs.current.delete(id);
-    }
-  };
-
   const renderSidebarContent = (isMobile: boolean) => {
     const renderNavButton = (
       id: EducationSidebarSection,
@@ -208,13 +129,13 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
           key={id}
           ref={!isMobile ? registerItemRef(`nav-${id}`) : undefined}
           className={`w-full relative select-none ${
-            !isMobile ? 'transition-[transform,filter] duration-75 ease-out origin-left' : 'transition-colors'
+            !isMobile ? 'dock-magnifiable origin-left' : 'transition-colors'
           }`}
           style={
             !isMobile
               ? {
-                  transform: 'translateY(var(--dock-translate-y, 0px)) scale(var(--dock-scale, 1))',
-                  filter: 'brightness(var(--dock-brightness, 1))',
+                  transform: 'translateY(var(--mag-lift, 0px)) scale(var(--mag-scale, 1))',
+                  filter: 'brightness(var(--mag-brightness, 1))',
                   transformOrigin: '20px center',
                   willChange: 'transform, filter'
                 }
@@ -223,9 +144,18 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         >
           <button
             onClick={() => handleNavClick(id)}
+            style={
+              !isMobile
+                ? {
+                    boxShadow: isActive
+                      ? '0 calc(4px + 8px * var(--mag-depth, 0)) calc(16px + 12px * var(--mag-depth, 0)) -2px rgba(6,182,212,0.22), inset 0 1px 0 0 rgba(255,255,255,calc(0.22 + 0.25 * var(--mag-depth, 0)))'
+                      : '0 calc(2px + 6px * var(--mag-depth, 0)) calc(8px + 10px * var(--mag-depth, 0)) -2px rgba(0,0,0,calc(0.25 + 0.25 * var(--mag-depth, 0))), inset 0 1px 0 0 rgba(255,255,255,calc(0.04 + 0.20 * var(--mag-depth, 0)))'
+                  }
+                : undefined
+            }
             className={`w-full flex items-center justify-between px-3 py-2 min-h-[38px] rounded-lg text-xs font-medium transition-colors text-left group cursor-pointer focus-ring relative select-none ${
               isActive
-                ? 'bg-gradient-to-r from-cyan-500/12 via-white/[0.08] to-white/[0.03] text-white font-semibold border border-cyan-500/35 shadow-[0_4px_16px_-2px_rgba(6,182,212,0.18),inset_0_1px_0_0_rgba(255,255,255,0.22)] backdrop-blur-md pl-4.5'
+                ? 'bg-gradient-to-r from-cyan-500/14 via-white/[0.08] to-white/[0.03] text-white font-semibold border-t border-t-cyan-400/50 border-x border-x-cyan-500/30 border-b border-b-cyan-500/20 backdrop-blur-md pl-4.5 shadow-[0_2px_12px_-2px_rgba(6,182,212,0.18)]'
                 : 'text-neutral-400 hover:text-neutral-100 hover:bg-white/[0.05] border border-transparent'
             }`}
           >
@@ -240,20 +170,21 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
             {/* Dynamic macOS Dock Specular Top-Edge Refraction & Cyan Energy (Desktop only) */}
             {!isMobile && (
               <div
-                className="absolute inset-0 rounded-lg pointer-events-none transition-opacity duration-100 overflow-hidden"
-                style={{
-                  opacity: 'var(--dock-specular, 0)'
-                }}
+                className="dock-specular-sheen"
                 aria-hidden="true"
-              >
-                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-cyan-500/[0.04] to-transparent" />
-                <div className="absolute inset-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_2px_12px_rgba(6,182,212,0.22)]" />
-              </div>
+              />
             )}
 
             <div className="flex items-center gap-2.5 truncate min-w-0">
               <Icon
+                style={
+                  !isMobile
+                    ? {
+                        transform: 'scale(calc(1 + 0.08 * var(--mag-depth, 0)))',
+                        transition: 'transform 0.14s ease'
+                      }
+                    : undefined
+                }
                 className={`w-4 h-4 shrink-0 transition-colors ${
                   isActive ? 'text-cyan-300 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]' : 'text-neutral-400 group-hover:text-neutral-200'
                 } ${isPulse ? 'animate-pulse text-emerald-400' : ''}`}
@@ -280,8 +211,8 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
         <div className="p-3.5 border-b border-white/[0.08] space-y-2.5 shrink-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-7 w-7 rounded-lg bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0 shadow-sm">
-                <Building2 className="w-3.5 h-3.5 text-neutral-200" />
+              <div className="h-7 w-7 rounded-lg bg-black/70 border border-white/[0.14] flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+                <JarvisMark size={18} variant="default" glow />
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-neutral-100 truncate">
@@ -494,13 +425,13 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
                       key={cls.id}
                       ref={!isMobile ? registerItemRef(`course-${cls.id}`) : undefined}
                       className={`w-full relative select-none ${
-                        !isMobile ? 'transition-[transform,filter] duration-75 ease-out origin-left' : 'transition-colors'
+                        !isMobile ? 'dock-magnifiable origin-left' : 'transition-colors'
                       }`}
                       style={
                         !isMobile
                           ? {
-                              transform: 'translateY(var(--dock-translate-y, 0px)) scale(var(--dock-scale, 1))',
-                              filter: 'brightness(var(--dock-brightness, 1))',
+                              transform: 'translateY(var(--mag-lift, 0px)) scale(var(--mag-scale, 1))',
+                              filter: 'brightness(var(--mag-brightness, 1))',
                               transformOrigin: '20px center',
                               willChange: 'transform, filter'
                             }
@@ -511,23 +442,16 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
                         onClick={() => handleCourseClick(cls.id)}
                         className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-mono transition-colors text-left group cursor-pointer focus-ring select-none relative ${
                           isSelectedCourse
-                            ? 'bg-gradient-to-r from-cyan-500/12 via-white/[0.08] to-white/[0.03] text-white font-semibold border border-cyan-500/35 shadow-[0_2px_12px_-2px_rgba(6,182,212,0.15),inset_0_1px_0_0_rgba(255,255,255,0.2)] pl-3.5'
+                            ? 'bg-gradient-to-r from-cyan-500/14 via-white/[0.08] to-white/[0.03] text-white font-semibold border-t border-t-cyan-400/50 border-x border-x-cyan-500/30 border-b border-b-cyan-500/20 shadow-[0_2px_12px_-2px_rgba(6,182,212,0.18),inset_0_1px_0_0_rgba(255,255,255,0.22)] pl-3.5'
                             : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04] border border-transparent'
                         }`}
                       >
                         {/* Dynamic macOS Dock Specular Top-Edge Refraction & Cyan Energy (Desktop only) */}
                         {!isMobile && (
                           <div
-                            className="absolute inset-0 rounded-lg pointer-events-none transition-opacity duration-100 overflow-hidden"
-                            style={{
-                              opacity: 'var(--dock-specular, 0)'
-                            }}
+                            className="dock-specular-sheen"
                             aria-hidden="true"
-                          >
-                            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-                            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-cyan-500/[0.04] to-transparent" />
-                            <div className="absolute inset-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_2px_12px_rgba(6,182,212,0.22)]" />
-                          </div>
+                          />
                         )}
 
                         <div className="flex items-center gap-2 truncate min-w-0">

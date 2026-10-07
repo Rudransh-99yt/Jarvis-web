@@ -10,6 +10,8 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { glassTokens } from '../../design-system/tokens.ts';
+import { JarvisMark } from '../brand/JarvisMark.tsx';
+import { JarvisCore } from '../brand/JarvisCore.tsx';
 
 interface AppShellProps {
   currentSector: SectorId;
@@ -29,6 +31,8 @@ export const AppShell: React.FC<AppShellProps> = ({
   isMuted: _isMuted,
   onToggleMute: _onToggleMute,
   isApiOnline = true,
+  educationRole,
+  onToggleEducationRole,
   children
 }) => {
   const [isSectorDropdownOpen, setIsSectorDropdownOpen] = useState(false);
@@ -110,8 +114,8 @@ export const AppShell: React.FC<AppShellProps> = ({
           <div className="flex h-full items-center justify-between gap-3 min-w-0">
             {/* Zone 1: Brand & Sector Context */}
             <div className="flex items-center gap-3 min-w-0 shrink">
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.12] shadow-sm shrink-0">
-                <Radio className="h-4 w-4 text-neutral-200" />
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 border border-white/[0.14] shadow-sm shrink-0 overflow-hidden">
+                <JarvisMark size={20} variant="default" glow />
               </div>
 
               <div className="flex items-center gap-2 min-w-0">
@@ -139,9 +143,9 @@ export const AppShell: React.FC<AppShellProps> = ({
                       if (!isPlanned) onSelectSector(sector.id);
                     }}
                     disabled={isPlanned}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none relative ${
                       isActive
-                        ? 'bg-white/[0.09] text-white font-semibold shadow-sm border border-white/[0.14]'
+                        ? 'bg-gradient-to-b from-white/[0.12] to-white/[0.06] text-white font-semibold shadow-[0_2px_10px_-2px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.25)] border border-white/[0.16]'
                         : 'text-neutral-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
                     }`}
                   >
@@ -208,10 +212,29 @@ export const AppShell: React.FC<AppShellProps> = ({
                 )}
               </div>
 
-              {/* Status Uplink Indicator */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/[0.06] bg-white/[0.03] text-xs text-neutral-300">
-                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isApiOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                <span className="text-[11px] font-mono text-neutral-400">{isApiOnline ? 'Online' : 'Auxiliary'}</span>
+              {/* User Role & Profile Switcher (Education Sector) */}
+              {currentSector === 'education' && educationRole && (
+                <button
+                  onClick={onToggleEducationRole}
+                  className="flex items-center gap-2 px-2.5 py-1 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs text-neutral-200 transition-colors cursor-pointer select-none focus-ring"
+                  title={`Current Role: ${educationRole.toUpperCase()} · Click to Switch Persona`}
+                >
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-cyan-500/30 to-indigo-500/30 border border-white/[0.2] flex items-center justify-center text-[10px] font-mono font-bold text-white shrink-0">
+                    {educationRole === 'student' ? 'A' : educationRole === 'teacher' ? 'T' : 'P'}
+                  </div>
+                  <span className="hidden sm:inline font-mono text-[11px] text-neutral-300">
+                    {educationRole === 'student' ? 'Alex Chen' : educationRole === 'teacher' ? 'Dr. Thorne' : 'Dean Vance'}
+                  </span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.08] text-cyan-300 uppercase font-semibold">
+                    {educationRole}
+                  </span>
+                </button>
+              )}
+
+              {/* Status Uplink Indicator with Living Jarvis Neural Core */}
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg border border-white/[0.08] bg-white/[0.03] text-xs text-neutral-300">
+                <JarvisCore size="xs" state={isApiOnline ? 'idle' : 'warning'} label={`Jarvis Neural Core: ${isApiOnline ? 'Active' : 'Auxiliary'}`} />
+                <span className="text-[11px] font-mono text-neutral-300 font-medium">{isApiOnline ? 'Core Online' : 'Auxiliary'}</span>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type GlassLevel = '1' | '2' | '3' | 'lesson' | 'schedule';
+export type GlassLevel = 'ambient' | '1' | '2' | '3' | 'elevated' | 'lesson' | 'schedule' | 'intelligence';
 
 export interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   level?: GlassLevel;
@@ -19,11 +19,14 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   ...props
 }) => {
   const levelClass = {
+    'ambient': 'glass-ambient',
     '1': 'glass-level-1',
     '2': interactive ? 'glass-level-2-interactive cursor-pointer' : 'glass-level-2',
     '3': 'glass-level-3',
+    'elevated': 'glass-elevated',
     'lesson': 'glass-lesson-card',
     'schedule': 'glass-schedule-card',
+    'intelligence': 'glass-intelligence',
   }[level];
 
   return (

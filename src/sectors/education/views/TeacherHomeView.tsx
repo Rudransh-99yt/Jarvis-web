@@ -151,16 +151,18 @@ export const TeacherHomeView: React.FC<TeacherHomeViewProps> = ({
             <button
               type="button"
               onClick={() => onNavigateTab('classroom')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-semibold tracking-wider transition-all cursor-pointer focus-ring"
+              className="relative overflow-hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-500/35 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-semibold tracking-wider transition-all cursor-pointer focus-ring shadow-[0_4px_16px_-2px_rgba(16,185,129,0.22),inset_0_1px_0_0_rgba(255,255,255,0.25)] active:scale-[0.98]"
             >
+              <div className="dock-specular-sheen" aria-hidden="true" />
               <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
               <span>Launch SmartBoard</span>
             </button>
             <button
               type="button"
               onClick={() => onNavigateTab('teacher_session_prep')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.1] bg-white/[0.05] hover:bg-white/[0.1] text-neutral-200 hover:text-white text-xs font-semibold tracking-wider transition-all cursor-pointer focus-ring"
+              className="relative overflow-hidden flex items-center gap-2 px-4 py-2.5 rounded-xl glass-btn-secondary text-xs font-semibold tracking-wider transition-all cursor-pointer focus-ring select-none active:scale-[0.98]"
             >
+              <div className="dock-specular-sheen" aria-hidden="true" />
               <Sparkles className="w-4 h-4 text-neutral-300" />
               <span>Session Plan</span>
             </button>
