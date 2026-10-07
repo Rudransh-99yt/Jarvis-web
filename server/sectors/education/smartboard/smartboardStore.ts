@@ -384,7 +384,7 @@ export class SmartBoardStore {
       ticketId,
       sessionId
     };
-    board.status = sessionId ? 'LIVE' : 'READY';
+    board.status = 'PAIRED';
     if (sessionId) {
       board.currentSessionId = sessionId;
     }
@@ -515,9 +515,14 @@ export class SmartBoardStore {
       throw conflictErr;
     }
 
+    const cleanUpdates: any = {};
+    for (const [k, v] of Object.entries(updates)) {
+      if (v !== undefined) cleanUpdates[k] = v;
+    }
+
     const updated: BoardDocument = {
       ...existing,
-      ...updates,
+      ...cleanUpdates,
       version: existing.version + 1,
       timestamps: {
         ...existing.timestamps,

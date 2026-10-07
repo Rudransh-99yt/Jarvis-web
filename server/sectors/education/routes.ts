@@ -16,6 +16,9 @@ import { liveClassroomRouter } from './live/liveClassroomRoutes.ts';
 import { classroomIntelligenceRouter } from './intelligence/classroomIntelligenceRoutes.ts';
 import { questionIntelligenceRouter } from './questionIntelligence/questionRoutes.ts';
 
+import { authenticateRequest } from '../../auth/index.ts';
+import { jarvisData } from '../../data/index.ts';
+
 export const educationRouter = Router();
 
 // Phase 2: Source + Question Intelligence Engine
@@ -152,14 +155,27 @@ educationRouter.post('/classes/:id/units/:unitId/lessons', (req: Request, res: R
 });
 
 // POST /api/education/classes/:id/units/:unitId/lessons/:lessonId/complete - Toggle lesson completion
-educationRouter.post('/classes/:id/units/:unitId/lessons/:lessonId/complete', (req: Request, res: Response) => {
-  const { isCompleted } = req.body;
-  const classId = req.params.id as string;
-  const unitId = req.params.unitId as string;
-  const lessonId = req.params.lessonId as string;
+educationRouter.post('/classes/:id/units/:unitId/lessons/:lessonId/complete', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+      const user = await authenticateRequest(req, jarvisData);
+      if (user.role !== 'student' && user.role !== 'admin' && user.role !== 'commander') {
+        return res.status(403).json({
+          error: { code: 'FORBIDDEN', message: `User '${user.id}' with role '${user.role}' cannot modify student lesson completion.` }
+        });
+      }
+    }
+    const { isCompleted } = req.body;
+    const classId = req.params.id as string;
+    const unitId = req.params.unitId as string;
+    const lessonId = req.params.lessonId as string;
 
-  const success = educationStore.toggleLessonCompletion(classId, unitId, lessonId, Boolean(isCompleted));
-  res.json({ success, isCompleted: Boolean(isCompleted) });
+    const success = educationStore.toggleLessonCompletion(classId, unitId, lessonId, Boolean(isCompleted));
+    res.json({ success, isCompleted: Boolean(isCompleted) });
+  } catch (err: any) {
+    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
+  }
 });
 
 // GET /api/education/assignments
@@ -205,25 +221,37 @@ educationRouter.get('/submissions', (req: Request, res: Response) => {
 });
 
 // POST /api/education/submissions - Student submits work
-educationRouter.post('/submissions', (req: Request, res: Response) => {
-  const { assignmentId, studentId, studentName, content, attachments } = req.body;
+educationRouter.post('/submissions', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+      const user = await authenticateRequest(req, jarvisData);
+      if (user.role !== 'student' && user.role !== 'admin' && user.role !== 'commander') {
+        return res.status(403).json({
+          error: { code: 'FORBIDDEN', message: `User '${user.id}' with role '${user.role}' cannot submit assignments.` }
+        });
+      }
+    }
+    const { assignmentId, studentId, studentName, content, attachments } = req.body;
 
-  if (!assignmentId || !studentId || !content) {
-    res.status(400).json({
-      error: { code: 'INVALID_INPUT', message: 'assignmentId, studentId, and content are required.' }
+    if (!assignmentId || !studentId || !content) {
+      return res.status(400).json({
+        error: { code: 'INVALID_INPUT', message: 'assignmentId, studentId, and content are required.' }
+      });
+    }
+
+    const submission = educationStore.createOrUpdateSubmission({
+      assignmentId,
+      studentId,
+      studentName,
+      content,
+      attachments
     });
-    return;
+
+    res.status(201).json({ submission });
+  } catch (err: any) {
+    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
   }
-
-  const submission = educationStore.createOrUpdateSubmission({
-    assignmentId,
-    studentId,
-    studentName,
-    content,
-    attachments
-  });
-
-  res.status(201).json({ submission });
 });
 
 // POST /api/education/submissions/:id/grade - Teacher grades submission

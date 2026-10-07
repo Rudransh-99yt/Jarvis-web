@@ -7,6 +7,7 @@ export type SmartBoardDeviceStatus =
   | 'PAIRING'
   | 'READY'
   | 'LIVE'
+  | 'PAIRED'
   | 'DISCONNECTED';
 
 export interface SmartBoardCapabilities {

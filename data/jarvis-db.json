@@ -63,6 +63,23 @@
       "department": "Family & Guardian Council",
       "institutionId": "inst-stark-academy",
       "createdAt": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "teacher-2",
+      "displayName": "Prof. Strange",
+      "email": "strange@stark.edu",
+      "role": "teacher",
+      "department": "Sorcery & Relativistic Physics",
+      "createdAt": "2026-10-07T09:08:38.915Z"
+    },
+    {
+      "id": "teacher-external-1",
+      "displayName": "Dr. Doom",
+      "email": "doom@latveria-academy.edu",
+      "role": "teacher",
+      "department": "Applied Robotics",
+      "institutionId": "inst-latveria-academy",
+      "createdAt": "2026-10-07T09:08:38.915Z"
     }
   ],
   "institutions": [
@@ -1089,20 +1106,6 @@
       "currentQuestionIndex": 0,
       "totalQuestions": 2,
       "createdAt": "2026-10-02T10:30:00.000Z"
-    },
-    {
-      "id": "diag-quiz-1791359062330",
-      "quizId": "diag-quiz-1791359062330",
-      "workspaceId": "ws-stark-core",
-      "classId": "class-phys-301",
-      "classroomSessionId": "session-phys-101",
-      "teacherId": "principal-1",
-      "title": "PHYS-301 Institutional Diagnostic: Grade 11 / Junior Level",
-      "description": "Comprehensive 15-minute diagnostic requested by Academic Leadership covering Electrostatics: Coulomb Law & Vector Superposition, Electric Flux & Cylindrical Gaussian Surfaces, Operator Commutation Relations in Energy Eigenstates.",
-      "status": "live",
-      "currentQuestionIndex": -1,
-      "totalQuestions": 3,
-      "createdAt": "2026-10-07T07:44:22.331Z"
     }
   ],
   "quizQuestions": [
@@ -1134,57 +1137,6 @@
         "B) Magnetic vector potential phase angle",
         "C) Quantum decoherence rate",
         "D) Relativistic mass dilation factor"
-      ],
-      "correctOption": "A",
-      "points": 10,
-      "timeLimitSeconds": 30,
-      "status": "pending"
-    },
-    {
-      "id": "diag-q-1-1791359062334",
-      "questionId": "diag-q-1-1791359062334",
-      "quizId": "diag-quiz-1791359062330",
-      "order": 1,
-      "questionText": "Calculate the total electric flux Φ_E through a cylindrical surface of length L enclosing line charge λ.",
-      "options": [
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D"
-      ],
-      "correctOption": "A",
-      "points": 10,
-      "timeLimitSeconds": 30,
-      "status": "pending"
-    },
-    {
-      "id": "diag-q-2-1791359062336",
-      "questionId": "diag-q-2-1791359062336",
-      "quizId": "diag-quiz-1791359062330",
-      "order": 2,
-      "questionText": "Which of the following describes the field inside an ideal spherical conductor in electrostatic equilibrium?",
-      "options": [
-        "Zero (E = 0)",
-        "Non-zero and radial",
-        "Infinite",
-        "Undetermined"
-      ],
-      "correctOption": "A",
-      "points": 5,
-      "timeLimitSeconds": 30,
-      "status": "pending"
-    },
-    {
-      "id": "diag-q-3-1791359062337",
-      "questionId": "diag-q-3-1791359062337",
-      "quizId": "diag-quiz-1791359062330",
-      "order": 3,
-      "questionText": "Derive the commutation bracket [x, p] in one-dimensional wave mechanics.",
-      "options": [
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D"
       ],
       "correctOption": "A",
       "points": 10,

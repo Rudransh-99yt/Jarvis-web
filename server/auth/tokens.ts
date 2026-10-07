@@ -47,15 +47,16 @@ export class AuthService {
   constructor(repo: IJarvisDataRepository = jarvisData) {
     this.repo = repo;
   }
+  issueToken(user: { id: string }, expiresInMs = 3600000): string {
+    const now = Date.now();
+    return signAuthPayload({
+      sub: user.id,
+      iat: now,
+      exp: now + expiresInMs,
+      jti: `jti-${now}-${Math.random().toString(36).substring(2, 8)}`
+    });
+  }
   async authenticateToken(token: string): Promise<User> {
-    if (token.startsWith('v1.')) {
-      const payload = verifyAuthToken(token);
-      const user = await this.repo.users.getById(payload.sub);
-      if (!user) throw new AuthenticationError('Unknown credential subject.', 401, 'INVALID_CREDENTIALS');
-      return user;
-    }
-    const directUser = await this.repo.users.getById(token);
-    if (directUser) return directUser;
     const payload = verifyAuthToken(token);
     const user = await this.repo.users.getById(payload.sub);
     if (!user) throw new AuthenticationError('Unknown credential subject.', 401, 'INVALID_CREDENTIALS');

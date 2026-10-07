@@ -3,11 +3,13 @@ import type { Request } from 'express';
 import type { User } from '../data/types.ts';
 import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
-import { AuthService, AuthenticationError } from './tokens.ts';
-export { AuthenticationError } from './tokens.ts';
+import { AuthService, AuthenticationError, authService } from './tokens.ts';
+export { AuthenticationError, AuthService, authService } from './tokens.ts';
 
 export * from './classroomPolicy.ts';
 export * from './tickets.ts';
+export * from './capabilities.ts';
+export * from './authRoutes.ts';
 
 /**
  * Extracts identity tokens / user identifiers from request headers.

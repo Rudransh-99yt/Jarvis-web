@@ -33,6 +33,17 @@ async function resolveUser(req: Request): Promise<User> {
   }
 }
 
+async function requireStudentUser(req: Request): Promise<User> {
+  const user = await resolveUser(req);
+  if (user.role !== 'student' && user.role !== 'admin' && user.role !== 'commander') {
+    const err: any = new Error(`Access Denied: User '${user.id}' with role '${user.role}' lacks student focus capabilities.`);
+    err.statusCode = 403;
+    err.code = 'FORBIDDEN';
+    throw err;
+  }
+  return user;
+}
+
 // 1. GET /api/education/focus/active - Get active session
 focusRouter.get('/active', async (req: Request, res: Response) => {
   try {
@@ -47,11 +58,11 @@ focusRouter.get('/active', async (req: Request, res: Response) => {
 // 2. POST /api/education/focus/sessions - Create/draft session
 focusRouter.post('/sessions', async (req: Request, res: Response) => {
   try {
-    const user = await resolveUser(req);
+    const user = await requireStudentUser(req);
     const session = await focusStore.createSession(req.body, user);
     res.status(201).json({ session });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
   }
 });
 

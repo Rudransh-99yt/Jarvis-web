@@ -118,13 +118,13 @@ export const CLIENT_ROLE_CAPABILITIES: Record<string, string[]> = {
 
 class AuthClient {
   private currentUser: AuthClientUser = {
-    id: 'user-tony',
-    displayName: 'Tony Stark',
-    email: 'tony@starkindustries.com',
-    role: 'commander',
-    department: 'Executive Engineering & Defense',
+    id: 'student-1',
+    displayName: 'Peter Parker (Spider-Man)',
+    email: 'peter.parker@stark.edu',
+    role: 'student',
+    department: 'Theoretical Physics & Applied Robotics',
     institutionId: 'inst-stark-academy',
-    capabilities: CLIENT_ROLE_CAPABILITIES.commander
+    capabilities: CLIENT_ROLE_CAPABILITIES.student
   };
 
   private listeners: Set<() => void> = new Set();

@@ -99,7 +99,7 @@ smartboardRouter.get('/devices/:id', async (req: Request, res: Response) => {
 smartboardRouter.post('/devices/:id/pair-code', async (req: Request, res: Response) => {
   try {
     const user = await authenticateRequest(req);
-    if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander' && user.role !== 'principal') {
+    if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander') {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Only faculty can generate board pair codes.' } });
       return;
     }

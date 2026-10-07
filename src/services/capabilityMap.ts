@@ -1,6 +1,6 @@
 // Centralized Capability & Information Architecture Mapping (Phase P0-5)
 import type { DeepEducationView } from '../sectors/education/EducationSector.tsx';
-import { can } from './authClient.ts';
+import { can, authClient } from './authClient.ts';
 
 export interface ViewCapabilityDefinition {
   requiredCapability: string | null;
@@ -223,6 +223,11 @@ export const VIEW_CAPABILITY_MAP: Record<DeepEducationView, ViewCapabilityDefini
  * Returns the canonical default home view for the authenticated user based on server-derived capabilities.
  */
 export function getDefaultHomeViewForUser(): DeepEducationView {
+  const role = authClient.getRole();
+  if (role === 'student') return 'student_home';
+  if (role === 'teacher') return 'teacher_home';
+  if (role === 'principal') return 'principal_home';
+  if (role === 'parent') return 'parent_home';
   if (can('principal.institution.view')) return 'principal_home';
   if (can('teacher.classes.manage')) return 'teacher_home';
   if (can('parent.family_intelligence.view')) return 'parent_home';

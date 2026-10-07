@@ -39,6 +39,43 @@ async function resolveUser(req: Request): Promise<User> {
 
 // 1. GET /api/education/community/events - Server-Sent Events (SSE) Real-Time Stream
 communityRouter.get('/events', async (req: Request, res: Response) => {
+  let user: User;
+  try {
+    user = await authenticateRequest(req, jarvisData);
+  } catch (err: any) {
+    return res.status(401).json({
+      error: {
+        code: 'UNAUTHENTICATED',
+        message: err?.message || 'Authentication required'
+      }
+    });
+  }
+
+  const { schoolId, classId } = req.query;
+
+  // School boundary check
+  if (schoolId && schoolId !== 'inst-stark-academy' && user.role !== 'admin' && user.role !== 'commander') {
+    return res.status(403).json({
+      error: {
+        code: 'FORBIDDEN',
+        message: `Access denied to institution '${schoolId}'.`
+      }
+    });
+  }
+
+  // Class boundary check
+  if (classId && typeof classId === 'string') {
+    const cls = await jarvisData.education.getClassById(classId);
+    if (cls && user.role === 'student' && !cls.studentIds.includes(user.id)) {
+      return res.status(403).json({
+        error: {
+          code: 'FORBIDDEN',
+          message: `Access denied: Student is not enrolled in class '${classId}'.`
+        }
+      });
+    }
+  }
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');

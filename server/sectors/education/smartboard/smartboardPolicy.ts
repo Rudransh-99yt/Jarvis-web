@@ -88,6 +88,14 @@ export class SmartBoardPolicy {
       return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
     }
 
+    if (doc.institutionId && doc.institutionId !== 'inst-stark-academy' && doc.institutionId !== (user.institutionId || 'inst-stark-academy') && user.role !== 'admin' && user.role !== 'commander') {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Cross-institution board document access is denied.' };
+    }
+
+    if (user.role === 'teacher' && !doc.isReleasedToStudents && doc.teacherId && doc.teacherId !== user.id) {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Unassigned teachers cannot access unreleased private drafts of other teachers.' };
+    }
+
     if (user.role === 'teacher' || user.role === 'admin' || user.role === 'commander' || user.role === 'principal') {
       return { allowed: true };
     }
@@ -99,6 +107,16 @@ export class SmartBoardPolicy {
           statusCode: 403,
           reason: 'Forbidden: This board document has not yet been released to students by the instructor.'
         };
+      }
+      if (doc.classId) {
+        const cls = await this.repo.education.getClassById(doc.classId);
+        if (cls && !cls.studentIds.includes(user.id)) {
+          return {
+            allowed: false,
+            statusCode: 403,
+            reason: `Forbidden: You are not enrolled in class '${cls.code || doc.classId}'.`
+          };
+        }
       }
       return { allowed: true };
     }
@@ -117,11 +135,11 @@ export class SmartBoardPolicy {
       return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
     }
 
-    if (user.role === 'student') {
-      return { allowed: false, statusCode: 403, reason: 'Forbidden: Students cannot modify board canvas documents.' };
+    if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander') {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Only verified instructional faculty or administrators can edit board documents.' };
     }
 
-    if (user.role === 'teacher' && doc.teacherId !== user.id && user.id !== 'teacher-1') {
+    if (user.role === 'teacher' && doc.teacherId && doc.teacherId !== user.id && user.id !== 'teacher-1') {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Only the assigned instructor may edit this board document.' };
     }
 
@@ -139,11 +157,11 @@ export class SmartBoardPolicy {
       return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
     }
 
-    if (user.role === 'student') {
-      return { allowed: false, statusCode: 403, reason: 'Forbidden: Students cannot release documents.' };
+    if (user.role !== 'teacher' && user.role !== 'admin' && user.role !== 'commander') {
+      return { allowed: false, statusCode: 403, reason: 'Forbidden: Only verified instructional faculty or administrators can release board documents.' };
     }
 
-    if (user.role === 'teacher' && doc.teacherId !== user.id && user.id !== 'teacher-1') {
+    if (user.role === 'teacher' && doc.teacherId && doc.teacherId !== user.id && user.id !== 'teacher-1') {
       return { allowed: false, statusCode: 403, reason: 'Forbidden: Only the assigned instructor may release this board document.' };
     }
 
@@ -155,10 +173,23 @@ export class SmartBoardPolicy {
    */
   async canViewBoardHistory(
     user: User,
-    _classId: string
+    classId: string
   ): Promise<SmartBoardPolicyResult> {
     if (!user || !user.id) {
       return { allowed: false, statusCode: 401, reason: 'Unauthenticated.' };
+    }
+
+    if (user.role === 'student') {
+      if (classId) {
+        const cls = await this.repo.education.getClassById(classId);
+        if (cls && !cls.studentIds.includes(user.id)) {
+          return {
+            allowed: false,
+            statusCode: 403,
+            reason: `Forbidden: You are not enrolled in class '${cls.code || classId}'.`
+          };
+        }
+      }
     }
 
     return { allowed: true };

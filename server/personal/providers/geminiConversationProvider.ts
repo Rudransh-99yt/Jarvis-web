@@ -124,18 +124,23 @@ Guidelines:
       }
     });
 
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Gemini API call timed out')), 5000)
-    );
+    let timeoutHandle: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => reject(new Error('Gemini API call timed out')), 5000);
+    });
 
-    const response = await Promise.race([apiCall, timeout]);
-    const reply = response.text || 'Directive acknowledged, sir.';
+    try {
+      const response = await Promise.race([apiCall, timeout]);
+      const reply = response.text || 'Directive acknowledged, sir.';
 
-    return {
-      reply,
-      providerId: this.id,
-      searchPerformed: Boolean(prompt.webSearchResults && prompt.webSearchResults.length > 0),
-      searchAttributions: prompt.webSearchResults
-    };
+      return {
+        reply,
+        providerId: this.id,
+        searchPerformed: Boolean(prompt.webSearchResults && prompt.webSearchResults.length > 0),
+        searchAttributions: prompt.webSearchResults
+      };
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+    }
   }
 }
