@@ -8,6 +8,7 @@ import { personalKnowledgeStore } from '../server/personal/knowledgeStore.ts';
 import { conversationProviderManager } from '../server/personal/providers/conversationProviderManager.ts';
 import { DeterministicMockConversationProvider } from '../server/personal/providers/mockConversationProvider.ts';
 import { startHttpHarness } from './httpHarness.ts';
+import { authService } from '../server/auth/tokens.ts';
 import type {
   UserContext,
   IConversationProvider,
@@ -313,6 +314,8 @@ async function runTestSuite() {
 
   const harness = await startHttpHarness();
   const baseUrl = harness.baseUrl;
+  const token = authService.issueToken({ id: 'student-1' });
+  const authHeaders = { Authorization: `Bearer ${token}` };
 
   try {
     await test('8.1 POST /api/personal/conversation/message executes full context-aware turn', async () => {
@@ -320,7 +323,7 @@ async function runTestSuite() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-jarvis-user-id': 'student-1'
+          ...authHeaders
         },
         body: JSON.stringify({
           message: 'How am I progressing in Vector Force Decomposition?',
@@ -338,9 +341,7 @@ async function runTestSuite() {
 
     await test('8.2 GET /api/personal/conversation/session/:id retrieves stored conversation history', async () => {
       const res = await fetch(`${baseUrl}/api/personal/conversation/session/http-sess-1`, {
-        headers: {
-          'x-jarvis-user-id': 'student-1'
-        }
+        headers: authHeaders
       });
 
       assert.strictEqual(res.status, 200);
@@ -355,7 +356,7 @@ async function runTestSuite() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-jarvis-user-id': 'student-1'
+          ...authHeaders
         },
         body: JSON.stringify({
           sessionId: 'http-sess-1',
@@ -373,9 +374,7 @@ async function runTestSuite() {
 
     await test('8.4 GET /api/personal/conversation/sessions lists user conversation sessions', async () => {
       const res = await fetch(`${baseUrl}/api/personal/conversation/sessions`, {
-        headers: {
-          'x-jarvis-user-id': 'student-1'
-        }
+        headers: authHeaders
       });
 
       assert.strictEqual(res.status, 200);
@@ -390,6 +389,7 @@ async function runTestSuite() {
   console.log(`\n==================================================`);
   console.log(`PHASE 4 TEST SUMMARY: ${passed}/${total} tests passed.`);
   console.log(`==================================================\n`);
+  process.exit(0);
 }
 
 runTestSuite().catch((err) => {

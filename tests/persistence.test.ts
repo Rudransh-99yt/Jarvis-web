@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { createRepository } from '../server/data/index.ts';
 import { jarvisData } from '../server/data/index.ts';
+import { authService } from '../server/auth/index.ts';
 
 function assert(condition: boolean, message: string, details?: any) {
   if (!condition) {
@@ -172,19 +173,22 @@ async function runPersistenceTests() {
   assert(recentAudit.some((e) => e.toolName === 'get_system_telemetry'), '23. Audit logging records tool execution events');
 
   // 11. REST API Endpoints Verification
+  const token = authService.issueToken({ id: 'user-tony' });
+  const authHeaders = { Authorization: `Bearer ${token}` };
+
   const healthRes = await fetch('http://localhost:3000/api/health');
   const healthData: any = await healthRes.json();
   assert(healthRes.ok && healthData.persistence?.persistent === true, '24. REST API GET /api/health reports active persistent storage');
 
-  const wsRes = await fetch('http://localhost:3000/api/workspaces');
+  const wsRes = await fetch('http://localhost:3000/api/workspaces', { headers: authHeaders });
   const wsData: any = await wsRes.json();
   assert(wsRes.ok && Array.isArray(wsData.workspaces) && wsData.workspaces.length >= 1, '25. REST API GET /api/workspaces');
 
-  const convsRes = await fetch('http://localhost:3000/api/conversations');
+  const convsRes = await fetch('http://localhost:3000/api/conversations', { headers: authHeaders });
   const convsData: any = await convsRes.json();
   assert(convsRes.ok && Array.isArray(convsData.conversations), '26. REST API GET /api/conversations');
 
-  const ksRes = await fetch('http://localhost:3000/api/knowledge-spaces');
+  const ksRes = await fetch('http://localhost:3000/api/knowledge-spaces', { headers: authHeaders });
   const ksData: any = await ksRes.json();
   assert(ksRes.ok && Array.isArray(ksData.knowledgeSpaces) && ksData.knowledgeSpaces.length >= 2, '27. REST API GET /api/knowledge-spaces');
 

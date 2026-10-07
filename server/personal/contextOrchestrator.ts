@@ -62,28 +62,42 @@ export class ContextOrchestrator {
 
     // 2. Score and rank memories by relevance to current conversation query
     const scored = visibleMemories.map((mem) => {
-      let score = 0.1; // Base score for visible memory
+      let score = 0;
+      let matched = false;
       const memValStr = typeof mem.value === 'string' ? mem.value.toLowerCase() : JSON.stringify(mem.value).toLowerCase();
       const memKeyStr = mem.key.toLowerCase();
 
       // Topic keywords
-      if (lowerQuery.includes('explain') || lowerQuery.includes('style') || lowerQuery.includes('teach') || lowerQuery.includes('way i like')) {
-        if (mem.category === 'UserPreference') score += 10.0;
-      }
-
-      if (lowerQuery.includes('goal') || lowerQuery.includes('exam') || lowerQuery.includes('target') || lowerQuery.includes('score') || lowerQuery.includes('aim')) {
-        if (mem.category === 'UserGoal') score += 10.0;
-      }
-
-      if (lowerQuery.includes('physics') || lowerQuery.includes('mechanics') || lowerQuery.includes('newton') || lowerQuery.includes('vector')) {
-        if (memValStr.includes('physics') || memValStr.includes('mechanics') || memValStr.includes('vector') || memKeyStr.includes('physics') || memKeyStr.includes('vector')) {
+      if (lowerQuery.includes('way i like') || lowerQuery.includes('my style') || lowerQuery.includes('my preference') || lowerQuery.includes('how i learn') || lowerQuery.includes('teach me like')) {
+        if (mem.category === 'UserPreference') {
+          score += 10.0;
+          matched = true;
+        }
+      } else if (lowerQuery.includes('explain') || lowerQuery.includes('teach') || lowerQuery.includes('style')) {
+        if (mem.category === 'UserPreference' && (memKeyStr.includes('style') || memKeyStr.includes('explain') || memKeyStr.includes('learn') || memKeyStr.includes('pedagogy') || memKeyStr.includes('preference'))) {
           score += 8.0;
+          matched = true;
+        }
+      }
+
+      if (lowerQuery.includes('goal') || lowerQuery.includes('exam') || lowerQuery.includes('target') || lowerQuery.includes('score') || lowerQuery.includes('aim') || lowerQuery.includes('plan')) {
+        if (mem.category === 'UserGoal') {
+          score += 10.0;
+          matched = true;
+        }
+      }
+
+      if (lowerQuery.includes('physics') || lowerQuery.includes('mechanics') || lowerQuery.includes('newton') || lowerQuery.includes('vector') || lowerQuery.includes('friction') || lowerQuery.includes('incline')) {
+        if (memValStr.includes('physics') || memValStr.includes('mechanics') || memValStr.includes('vector') || memValStr.includes('force') || memKeyStr.includes('physics') || memKeyStr.includes('vector')) {
+          score += 8.0;
+          matched = true;
         }
       }
 
       if (lowerQuery.includes('calculus') || lowerQuery.includes('math') || lowerQuery.includes('derivative')) {
-        if (memValStr.includes('calculus') || memValStr.includes('derivative') || memKeyStr.includes('calc')) {
+        if (memValStr.includes('calculus') || memValStr.includes('derivative') || memKeyStr.includes('calc') || memKeyStr.includes('math')) {
           score += 8.0;
+          matched = true;
         }
       }
 
@@ -91,19 +105,23 @@ export class ContextOrchestrator {
       const queryTokens = lowerQuery.split(/\s+/).filter((t) => t.length > 3);
       for (const token of queryTokens) {
         if (memValStr.includes(token) || memKeyStr.includes(token)) {
-          score += 2.0;
+          score += 3.0;
+          matched = true;
         }
       }
 
-      // Boost high confidence & verified sources
-      if (mem.source === 'USER_STATED' || mem.source === 'USER_CONFIRMED') score += 1.0;
-      if (mem.confidence) score += mem.confidence;
+      if (matched) {
+        // Boost high confidence & verified sources
+        if (mem.source === 'USER_STATED' || mem.source === 'USER_CONFIRMED') score += 1.0;
+        if (mem.confidence) score += mem.confidence;
+      }
 
-      return { mem, score };
+      return { mem, score, matched };
     });
 
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, limit).map((s) => s.mem);
+    const relevantOnly = scored.filter((s) => s.matched && s.score >= 2.0);
+    relevantOnly.sort((a, b) => b.score - a.score);
+    return relevantOnly.slice(0, limit).map((s) => s.mem);
   }
 
   /**
@@ -212,7 +230,16 @@ export class ContextOrchestrator {
       options.allowWebSearch
     );
 
-    const recentMessages = (options.recentMessages || []).slice(-6).map((m) => ({
+    // Exclude current turn from recentMessages if it was already appended to session.messages
+    let history = options.recentMessages || [];
+    if (history.length > 0) {
+      const lastMsg = history[history.length - 1];
+      if (lastMsg.role === 'user' && lastMsg.content === options.currentMessage) {
+        history = history.slice(0, -1);
+      }
+    }
+
+    const recentMessages = history.slice(-6).map((m) => ({
       role: m.role,
       content: m.content,
       timestamp: m.timestamp
@@ -262,6 +289,108 @@ export class ContextOrchestrator {
       explicitPermissions: activeContext.permissions,
       provenanceDirective: 'Preserve strict memory provenance. Never invent facts. Respect privacy boundaries.'
     };
+  }
+
+  /**
+   * Selectively extracts explicit user-stated preferences, goals, or interests for memory write-back.
+   * General questions (e.g. "What is 2+2?"), temporary chatter, and institutional data are strictly ignored.
+   */
+  extractExplicitMemories(userQuery: string): Array<{
+    category: import('./types.ts').MemoryCategory;
+    key: string;
+    value: string;
+    source: import('./types.ts').MemorySourceType;
+    confidence: number;
+    visibility: import('./types.ts').MemoryVisibility;
+    notes?: string;
+  }> | undefined {
+    const trimmed = userQuery.trim();
+    const lower = trimmed.toLowerCase();
+    const memoriesToWrite: Array<{
+      category: import('./types.ts').MemoryCategory;
+      key: string;
+      value: string;
+      source: import('./types.ts').MemorySourceType;
+      confidence: number;
+      visibility: import('./types.ts').MemoryVisibility;
+      notes?: string;
+    }> = [];
+
+    // 1. Explicit Preference ("I prefer ...", "I like ...", "Explain using ...", "Always explain ...")
+    if (
+      lower.startsWith('i prefer ') ||
+      lower.includes(' i prefer ') ||
+      lower.startsWith('i like ') ||
+      lower.includes(' i like ') ||
+      lower.startsWith('explain using ') ||
+      lower.startsWith('always explain ')
+    ) {
+      const match =
+        trimmed.match(/i prefer ([^.!?\n]+)/i) ||
+        trimmed.match(/i like ([^.!?\n]+)/i) ||
+        trimmed.match(/explain using ([^.!?\n]+)/i) ||
+        trimmed.match(/always explain ([^.!?\n]+)/i);
+      const prefText = match ? match[1].trim() : trimmed;
+      if (prefText.length > 2 && !lower.includes('2+2') && !lower.includes('what is') && !lower.includes('how to')) {
+        memoriesToWrite.push({
+          category: 'UserPreference',
+          key: 'user_stated_preference',
+          value: prefText,
+          source: 'USER_STATED',
+          confidence: 1.0,
+          visibility: 'PRIVATE_PERSONAL',
+          notes: `Explicit user preference: "${trimmed}"`
+        });
+      }
+    } else if (
+      lower.startsWith('my goal is ') ||
+      lower.includes(' my goal is ') ||
+      lower.includes('i want to score ') ||
+      lower.includes('i am aiming for ') ||
+      lower.startsWith('goal:')
+    ) {
+      const match =
+        trimmed.match(/my goal is ([^.!?\n]+)/i) ||
+        trimmed.match(/i want to score ([^.!?\n]+)/i) ||
+        trimmed.match(/i am aiming for ([^.!?\n]+)/i) ||
+        trimmed.match(/goal:\s*([^.!?\n]+)/i);
+      const goalText = match ? match[1].trim() : trimmed;
+      if (goalText.length > 2) {
+        memoriesToWrite.push({
+          category: 'UserGoal',
+          key: 'user_stated_goal',
+          value: goalText,
+          source: 'USER_STATED',
+          confidence: 1.0,
+          visibility: 'PRIVATE_PERSONAL',
+          notes: `Explicit user goal: "${trimmed}"`
+        });
+      }
+    } else if (
+      lower.startsWith('i am interested in ') ||
+      lower.includes(' i am interested in ') ||
+      lower.startsWith('i love studying ') ||
+      lower.includes('my interest is ')
+    ) {
+      const match =
+        trimmed.match(/i am interested in ([^.!?\n]+)/i) ||
+        trimmed.match(/i love studying ([^.!?\n]+)/i) ||
+        trimmed.match(/my interest is ([^.!?\n]+)/i);
+      const interestText = match ? match[1].trim() : trimmed;
+      if (interestText.length > 2) {
+        memoriesToWrite.push({
+          category: 'UserInterest',
+          key: 'user_stated_interest',
+          value: interestText,
+          source: 'USER_STATED',
+          confidence: 1.0,
+          visibility: 'PRIVATE_PERSONAL',
+          notes: `Explicit user interest: "${trimmed}"`
+        });
+      }
+    }
+
+    return memoriesToWrite.length > 0 ? memoriesToWrite : undefined;
   }
 }
 

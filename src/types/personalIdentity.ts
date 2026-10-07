@@ -45,7 +45,7 @@ export type MemoryCategory =
   | 'UserContextState';
 
 export interface MemoryProvenance {
-  sourceEntityType: 'chat' | 'practice' | 'quiz' | 'document' | 'onboarding' | 'settings' | 'manual';
+  sourceEntityType: 'chat' | 'practice' | 'quiz' | 'document' | 'onboarding' | 'settings' | 'manual' | 'tool';
   sourceEntityId?: string;
   timestamp: string;
   notes?: string;
@@ -295,6 +295,7 @@ export interface ConversationTurnResult {
   }>;
   searchPerformed?: boolean;
   searchAttributions?: WebSearchResult[];
+  toolCalls?: Array<{ name: string; args: Record<string, any> }>;
   providerId: string;
 }
 
@@ -303,6 +304,7 @@ export interface ConversationGenerationOptions {
   maxTokens?: number;
   allowWebSearch?: boolean;
   modelOverride?: string;
+  timeoutMs?: number;
 }
 
 export interface IConversationProvider {
@@ -365,3 +367,121 @@ export interface ProgressiveOnboardingPayload {
   interests?: string[];
   preferences?: Partial<PersonalPreferences>;
 }
+
+// ----------------------------------------------------------------------------
+// Phase 5: Personal Action & Tool Intelligence Contracts
+// ----------------------------------------------------------------------------
+
+export type ToolRiskLevel = 'READ_ONLY' | 'LOW_RISK_WRITE' | 'HIGH_RISK_WRITE' | 'EXTERNAL_ACTION';
+
+export type ToolCategory = 'knowledge' | 'notes' | 'study' | 'practice' | 'system' | 'external';
+
+export interface PersonalToolPropertySchema {
+  type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+  description: string;
+  required?: boolean;
+  enum?: string[];
+  default?: any;
+}
+
+export type PersonalToolInputSchema = Record<string, PersonalToolPropertySchema>;
+
+export interface PersonalToolExecutionContext {
+  userId: string;
+  contextId: string;
+  contextType: UserContextType;
+  permissions: Record<string, boolean>;
+  sessionId?: string;
+}
+
+export interface PersonalToolExecutionResult {
+  success: boolean;
+  toolId: string;
+  data?: any;
+  userMessage: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+  metadata?: Record<string, any>;
+  activityEvent?: {
+    type: string;
+    title: string;
+    metadata?: any;
+    provenance: string;
+  };
+}
+
+export interface PersonalTool {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly category: ToolCategory;
+  readonly riskLevel: ToolRiskLevel;
+  readonly inputSchema: PersonalToolInputSchema;
+  readonly requiredContextTypes?: UserContextType[];
+  readonly requiredPermissions?: string[];
+  execute(context: PersonalToolExecutionContext, args: Record<string, any>): Promise<PersonalToolExecutionResult>;
+  preview?(context: PersonalToolExecutionContext, args: Record<string, any>): Promise<{ summary: string; details?: any }>;
+}
+
+export interface ToolIntent {
+  toolId: string;
+  arguments: Record<string, any>;
+  confidence: number;
+  reason: string;
+  requestedByUser: boolean;
+  requiresConfirmation: boolean;
+  riskLevel: ToolRiskLevel;
+}
+
+export interface PendingConfirmationAction {
+  id: string;
+  toolId: string;
+  userId: string;
+  contextId: string;
+  arguments: Record<string, any>;
+  riskLevel: ToolRiskLevel;
+  previewSummary: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface PersonalStudyNote {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  subject?: string;
+  tags: string[];
+  conceptId?: string;
+  contextId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PersonalFlashcard {
+  id: string;
+  userId: string;
+  front: string;
+  back: string;
+  conceptId?: string;
+  subject?: string;
+  tags: string[];
+  reviewCount: number;
+  lastReviewed?: string;
+  createdAt: string;
+}
+
+export interface PersonalStudySessionPlan {
+  id: string;
+  userId: string;
+  title: string;
+  subject: string;
+  durationMinutes: number;
+  scheduledFor: string;
+  goals: string[];
+  status: 'planned' | 'in_progress' | 'completed';
+  createdAt: string;
+}
+

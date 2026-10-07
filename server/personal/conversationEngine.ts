@@ -3,6 +3,7 @@ import { contextEngine } from './contextEngine.ts';
 import { personalMemoryStore } from './memoryStore.ts';
 import { contextOrchestrator } from './contextOrchestrator.ts';
 import { conversationProviderManager } from './providers/conversationProviderManager.ts';
+import { personalToolRegistry, confirmationPolicy, intentDetector } from './tools/index.ts';
 import type {
   ConversationSession,
   SessionMessage,
@@ -10,7 +11,9 @@ import type {
   WakeState,
   ConversationTurnResult,
   ConversationGenerationOptions,
-  UserContextType
+  UserContextType,
+  PersonalToolExecutionContext,
+  PersonalToolExecutionResult
 } from './types.ts';
 
 export interface ProcessTurnInput {
@@ -117,7 +120,116 @@ export class ConversationEngine {
     session.messages.push(userMessage);
     session.recentTurnsCount++;
 
-    // 3. Build Bounded Context Prompt via Orchestrator
+    // 3. Resolve context and check Action / Tool Intelligence Intent
+    const identity = await personalIdentityStore.getIdentity(input.userId);
+    const activeContext = input.contextId
+      ? identity.contexts.find((c) => c.id === input.contextId) || (await contextEngine.getActiveContext(input.userId))
+      : await contextEngine.getActiveContext(input.userId);
+
+    const execContext: PersonalToolExecutionContext = {
+      userId: input.userId,
+      contextId: activeContext.id,
+      contextType: activeContext.type,
+      permissions: activeContext.permissions,
+      sessionId: session.sessionId
+    };
+
+    const detectedIntent = intentDetector.detectIntent(input.message, execContext);
+
+    if (detectedIntent) {
+      let toolResult: PersonalToolExecutionResult;
+
+      // Handle confirmed pending action
+      if (detectedIntent.arguments.__pendingActionId) {
+        const pendingId = detectedIntent.arguments.__pendingActionId;
+        const pendingAction = confirmationPolicy.consumePendingAction(pendingId, input.userId);
+        if (pendingAction) {
+          toolResult = await personalToolRegistry.executeTool(
+            pendingAction.toolId,
+            execContext,
+            pendingAction.arguments,
+            { bypassConfirmationCheck: true }
+          );
+        } else {
+          toolResult = {
+            success: false,
+            toolId: detectedIntent.toolId,
+            error: { code: 'PENDING_ACTION_EXPIRED', message: 'Pending action expired or not found.' },
+            userMessage: 'The pending confirmation request has expired or was already processed, sir.'
+          };
+        }
+      } else {
+        toolResult = await personalToolRegistry.executeTool(
+          detectedIntent.toolId,
+          execContext,
+          detectedIntent.arguments
+        );
+      }
+
+      session.assistantState = 'IDLE';
+
+      const reply = intentDetector.generateNaturalResponse(
+        detectedIntent.toolId,
+        toolResult,
+        identity.profile.preferredName
+      );
+
+      // Handle optional activity recording
+      let persistedMemoriesCount = 0;
+      if (toolResult.activityEvent && toolResult.activityEvent.provenance === 'USER_STATED') {
+        await personalMemoryStore.addMemory({
+          userId: input.userId,
+          category: 'UserPreference',
+          key: `activity_${toolResult.activityEvent.type}`,
+          value: toolResult.activityEvent.title,
+          source: 'USER_STATED',
+          confidence: 1.0,
+          contextId: session.activeContextId,
+          visibility: 'PRIVATE_PERSONAL',
+          provenance: {
+            sourceEntityType: 'tool',
+            sourceEntityId: toolResult.toolId,
+            timestamp: new Date().toISOString(),
+            notes: toolResult.activityEvent.title
+          }
+        });
+        persistedMemoriesCount++;
+      }
+
+      // Append Assistant Message
+      const assistantMsgId = `msg-a-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+      const assistantMessage: SessionMessage = {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: reply,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          toolExecution: {
+            toolId: detectedIntent.toolId,
+            success: toolResult.success,
+            data: toolResult.data,
+            confirmationRequired: toolResult.metadata?.confirmationRequired,
+            pendingActionId: toolResult.metadata?.pendingActionId
+          }
+        }
+      };
+      session.messages.push(assistantMessage);
+      session.updatedAt = new Date().toISOString();
+
+      return {
+        session,
+        reply,
+        suggestedNextActions: toolResult.metadata?.confirmationRequired
+          ? ['Confirm Action', 'Cancel']
+          : ['Ask another question', 'View personal notes'],
+        relevantMemoryIds: [],
+        relevantConceptIds: [],
+        persistedMemoriesCount,
+        providerId: 'personal-tool-engine'
+      };
+    }
+
+    // 4. Build Bounded Context Prompt via Orchestrator for Conversational Flow
     const boundedPrompt = await contextOrchestrator.buildBoundedPrompt({
       userId: input.userId,
       contextId: input.contextId || session.activeContextId,
@@ -131,7 +243,7 @@ export class ConversationEngine {
     session.relevantMemoryIds = Array.from(new Set([...session.relevantMemoryIds, ...relevantMemoryIds]));
     session.relevantKnowledgeConceptIds = Array.from(new Set([...session.relevantKnowledgeConceptIds, ...relevantConceptIds]));
 
-    // 4. Generate AI response via Provider Layer
+    // 5. Generate AI response via Provider Layer
     const { provider } = await conversationProviderManager.getActiveProvider();
     let turnResult: ConversationTurnResult;
     try {
@@ -142,10 +254,10 @@ export class ConversationEngine {
       turnResult = await fallback.generateConversationTurn(boundedPrompt, input.options);
     }
 
-    // 5. Transition state through SPEAKING to IDLE (voice-ready contract)
+    // 6. Transition state through SPEAKING to IDLE (voice-ready contract)
     session.assistantState = 'IDLE';
 
-    // 6. Memory Write-Back Evaluation
+    // 7. Memory Write-Back Evaluation
     let persistedMemoriesCount = 0;
     if (turnResult.memoriesToWrite && turnResult.memoriesToWrite.length > 0) {
       for (const m of turnResult.memoriesToWrite) {
@@ -169,7 +281,7 @@ export class ConversationEngine {
       }
     }
 
-    // 7. Append Assistant Message
+    // 8. Append Assistant Message
     const assistantMsgId = `msg-a-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
     const assistantMessage: SessionMessage = {
       id: assistantMsgId,

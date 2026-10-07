@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-07T09:08:39.094Z",
+  "updatedAt": "2026-10-07T10:56:05.227Z",
   "devices": [
     {
       "id": "board-phys-01",
@@ -9,7 +9,7 @@
       "classroomName": "Physics Lab Hall C-104",
       "displayName": "SmartBoard 01 — Physics Lab",
       "modelNumber": "Stark Surface-86X 4K HDR",
-      "status": "PAIRED",
+      "status": "AVAILABLE",
       "capabilities": {
         "touch": true,
         "pen": true,
@@ -19,15 +19,10 @@
         "camera": true
       },
       "pairingState": {
-        "isPaired": true,
-        "pairedTeacherId": "teacher-1",
-        "pairedTeacherName": "Dr. Sarah",
-        "pairedAt": "2026-10-07T09:08:39.036Z",
-        "ticketId": "eyJ0eXBlIjoic21hcnRib2FyZF9hdXRoIiwidGlja2V0SWQiOiJzYnQtNWY2YzRiYjMtOTAwOS00Yjk0LWJlMTMtNTg5ZWU2MzRkYTk5IiwiYm9hcmRJZCI6ImJvYXJkLXBoeXMtMDEiLCJ0ZWFjaGVySWQiOiJ0ZWFjaGVyLTEiLCJpbnN0aXR1dGlvbklkIjoiaW5zdC1zdGFyay1hY2FkZW15IiwiY2xhc3Nyb29tSWQiOiJjbGFzcy1waHlzLTMwMSIsImNsYXNzU2Vzc2lvbklkIjoic2Vzc2lvbi1waHlzLTEwMSIsImV4cGlyZXNBdCI6MTc5MTM2NzcxOTAzNX0.xcTKCCvJz7phTZk7_2KCxn4fkXevyCpUFXohtJCgPTA",
-        "sessionId": "session-phys-101"
+        "isPaired": false
       },
-      "lastSeen": "2026-10-07T09:08:39.036Z",
-      "currentSessionId": "session-phys-101",
+      "lastSeen": "2026-10-07T10:56:04.841Z",
+      "currentSessionId": null,
       "currentCourseCode": "PHYS-301",
       "currentTopic": "Electrostatics & Electric Fields",
       "ipAddress": "10.0.4.12",
@@ -53,7 +48,7 @@
       "pairingState": {
         "isPaired": false
       },
-      "lastSeen": "2026-10-07T09:08:38.803Z",
+      "lastSeen": "2026-10-07T10:56:04.841Z",
       "currentSessionId": null,
       "currentCourseCode": "CHEM-201",
       "currentTopic": "Organic Reaction Mechanisms",
@@ -80,37 +75,13 @@
       "pairingState": {
         "isPaired": false
       },
-      "lastSeen": "2026-10-07T09:08:38.803Z",
+      "lastSeen": "2026-10-07T10:56:04.841Z",
       "currentSessionId": null,
       "currentCourseCode": "MATH-201",
       "currentTopic": "Differential Equations",
       "ipAddress": "10.0.4.20",
       "firmwareVersion": "v4.2.0-stark-os",
       "location": "Building M, Room M-101"
-    },
-    {
-      "id": "board-external-01",
-      "institutionId": "inst-latveria-academy",
-      "classroomId": "class-latveria-101",
-      "classroomName": "Latveria Hall 1",
-      "displayName": "Latveria SmartBoard 1",
-      "modelNumber": "Doom Surface-9000",
-      "status": "AVAILABLE",
-      "capabilities": {
-        "touch": true,
-        "pen": true,
-        "multiTouch": true,
-        "maxResolution": "4K",
-        "audio": true,
-        "camera": true
-      },
-      "pairingState": {
-        "isPaired": false
-      },
-      "lastSeen": "2026-10-07T09:08:38.915Z",
-      "currentSessionId": null,
-      "currentCourseCode": "DOOM-101",
-      "currentTopic": "Doombot Neural Networks"
     }
   ],
   "documents": [
@@ -129,10 +100,10 @@
       "classSessionId": "session-phys-101",
       "teacherId": "teacher-1",
       "teacherName": "Dr. Helen Cho",
-      "title": "Electrostatics & Faraday-Gauss Updated",
-      "version": 2,
+      "title": "Electrostatics & Faraday-Gauss Board Notes",
+      "version": 4,
       "isReleasedToStudents": true,
-      "releasedAt": "2026-10-07T08:08:38.803Z",
+      "releasedAt": "2026-10-07T10:56:05.220Z",
       "activePageIndex": 0,
       "pages": [
         {
@@ -218,7 +189,28 @@
             }
           ],
           "createdAt": "2026-10-02T16:00:00.000Z",
-          "updatedAt": "2026-10-02T16:08:00.000Z"
+          "updatedAt": "2026-10-07T10:56:05.220Z",
+          "processingStatus": "INDEXED",
+          "extractedEquations": [
+            {
+              "expression": "Gauss’s Law: \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+              "confidence": 1,
+              "sourceElementId": "elem-t1"
+            },
+            {
+              "expression": "Key Intuition: Surface area of sphere = 4\\pi r^2 \\implies E(4\\pi r^2) = \\frac{q}{\\varepsilon_0} \\implies E = \\frac{q}{4\\pi\\varepsilon_0 r^2}",
+              "confidence": 1,
+              "sourceElementId": "elem-t2"
+            }
+          ],
+          "extractedText": [
+            {
+              "text": "[Shape: circle] Gaussian Sphere Radius r",
+              "confidence": 1,
+              "sourceElementId": "elem-s1"
+            }
+          ],
+          "pageSummary": "Page 1 (Gauss Law & Flux Geometry): Covers 2 mathematical relations and 0 diagrams. [Shape: circle] Gaussian Sphere Radius r"
         },
         {
           "pageId": "page-p1-2",
@@ -259,112 +251,109 @@
             }
           ],
           "createdAt": "2026-10-02T16:12:00.000Z",
-          "updatedAt": "2026-10-02T16:18:00.000Z"
+          "updatedAt": "2026-10-07T10:56:05.220Z",
+          "processingStatus": "INDEXED",
+          "extractedEquations": [
+            {
+              "expression": "Infinite Line Charge Linear Density \\lambda = \\frac{q}{L}",
+              "confidence": 1,
+              "sourceElementId": "elem-p2-t1"
+            },
+            {
+              "expression": "Result: E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r} (radial outwards)",
+              "confidence": 1,
+              "sourceElementId": "elem-p2-t2"
+            }
+          ],
+          "extractedText": [],
+          "pageSummary": "Page 2 (Cylindrical Symmetry Derivation): Covers 2 mathematical relations and 0 diagrams. "
         }
       ],
       "timestamps": {
         "createdAt": "2026-10-02T16:00:00.000Z",
-        "updatedAt": "2026-10-07T09:08:39.088Z",
-        "lastAutosavedAt": "2026-10-07T09:08:39.088Z",
+        "updatedAt": "2026-10-07T10:56:05.226Z",
+        "lastAutosavedAt": "2026-10-07T10:56:05.227Z",
         "completedAt": "2026-10-02T16:45:00.000Z"
       },
       "ragIndexed": true,
-      "ragSummary": "Board notes covering Gauss’s Law derivation for spherical and cylindrical Gaussian surfaces with Coulomb inverse-square relationship.",
-      "expectedVersion": 1
-    },
-    {
-      "id": "bdoc-external-101",
-      "institutionId": "inst-latveria-academy",
-      "classroomId": "class-latveria-101",
-      "classroomName": "Latveria Hall 1",
-      "classId": "class-latveria-101",
-      "courseCode": "DOOM-101",
-      "courseName": "Advanced Robotics",
-      "classSessionId": "session-doom-101",
-      "teacherId": "teacher-external-1",
-      "teacherName": "Dr. Doom",
-      "title": "Doombot Schematics",
-      "version": 1,
-      "isReleasedToStudents": true,
-      "activePageIndex": 0,
-      "pages": [
-        {
-          "pageId": "p1",
-          "pageIndex": 0,
-          "title": "Draft Page",
-          "background": "dark_grid",
-          "elements": []
-        }
-      ],
-      "timestamps": {
-        "createdAt": "2026-10-07T09:08:38.916Z",
-        "lastAutosavedAt": "2026-10-07T09:08:38.916Z"
-      }
-    },
-    {
-      "id": "bdoc-phys-draft-99",
-      "institutionId": "inst-stark-academy",
-      "classroomId": "class-phys-301",
-      "classroomName": "Physics Lab Hall C-104",
-      "classId": "class-phys-301",
-      "courseCode": "PHYS-301",
-      "courseName": "Advanced Quantum Mechanics",
-      "classSessionId": "session-phys-draft-99",
-      "teacherId": "teacher-1",
-      "teacherName": "Dr. Helen Cho",
-      "title": "Secret Exam Solutions & Draft Notes",
-      "version": 1,
-      "isReleasedToStudents": false,
-      "activePageIndex": 0,
-      "pages": [
-        {
-          "pageId": "p1",
-          "pageIndex": 0,
-          "title": "Exam Solutions",
-          "background": "dark_grid",
-          "elements": [
-            {
-              "id": "e1",
-              "type": "text",
-              "text": "ANSWER KEY: Q1 = 42"
-            }
-          ]
-        }
-      ],
-      "timestamps": {
-        "createdAt": "2026-10-07T09:08:38.916Z",
-        "lastAutosavedAt": "2026-10-07T09:08:38.916Z",
-        "updatedAt": "2026-10-07T09:08:39.094Z"
-      }
-    },
-    {
-      "id": "bdoc-cs-401",
-      "institutionId": "inst-stark-academy",
-      "classroomId": "class-cs-401",
-      "classroomName": "Turing Hall T-101",
-      "classId": "class-cs-401",
-      "courseCode": "CS-401",
-      "courseName": "Advanced Distributed Systems",
-      "classSessionId": "session-cs-401",
-      "teacherId": "teacher-cs-1",
-      "teacherName": "Prof. Turing",
-      "title": "Raft Consensus Protocol Notes",
-      "version": 1,
-      "isReleasedToStudents": true,
-      "activePageIndex": 0,
-      "pages": [
-        {
-          "pageId": "p1",
-          "pageIndex": 0,
-          "title": "Raft State Machine",
-          "background": "dark_grid",
-          "elements": []
-        }
-      ],
-      "timestamps": {
-        "createdAt": "2026-10-07T09:08:39.056Z",
-        "lastAutosavedAt": "2026-10-07T09:08:39.057Z"
-      }
+      "ragSummary": "Ingested 2 board pages into Knowledge Space 'Quantum Mechanics & Electrodynamics' with 2 semantic chunks.",
+      "lifecycle": "RELEASED",
+      "derivedKnowledge": {
+        "summary": "Structured academic board knowledge for PHYS-301: Electrostatics & Faraday-Gauss Board Notes. Comprises 2 interactive whiteboard pages with verified formulas and derivations.",
+        "keyConcepts": [
+          "PHYS-301 Theoretical Principles",
+          "Derivation Sequence & Symmetry Analysis",
+          "Worked Solutions & Physical Applications"
+        ],
+        "importantEquations": [
+          {
+            "expression": "Gauss’s Law: \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+            "latex": "\\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{\\text{enc}}}{\\varepsilon_0}",
+            "confidence": 1,
+            "sourceElementId": "elem-t1"
+          },
+          {
+            "expression": "Key Intuition: Surface area of sphere = 4\\pi r^2 \\implies E(4\\pi r^2) = \\frac{q}{\\varepsilon_0} \\implies E = \\frac{q}{4\\pi\\varepsilon_0 r^2}",
+            "latex": "E = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q}{r^2}",
+            "confidence": 1,
+            "sourceElementId": "elem-t2"
+          },
+          {
+            "expression": "Infinite Line Charge Linear Density \\lambda = \\frac{q}{L}",
+            "latex": "\\lambda = \\frac{q}{L}",
+            "confidence": 1,
+            "sourceElementId": "elem-p2-t1"
+          },
+          {
+            "expression": "Result: E = \\frac{\\lambda}{2\\pi \\varepsilon_0 r} (radial outwards)",
+            "latex": "E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r}",
+            "confidence": 1,
+            "sourceElementId": "elem-p2-t2"
+          }
+        ],
+        "definitions": [
+          {
+            "term": "Electric Flux",
+            "definition": "The measure of the distribution of the electric field through a given surface area."
+          },
+          {
+            "term": "Gaussian Surface",
+            "definition": "A closed three-dimensional surface in space through which the flux of a vector field is calculated."
+          }
+        ],
+        "misconceptions": [
+          {
+            "misconception": "Electric flux depends on the specific shape of the closed Gaussian surface.",
+            "correction": "Total flux depends strictly on the net enclosed charge Q_enc, regardless of surface shape."
+          }
+        ],
+        "revisionPoints": [
+          "Choose Gaussian surfaces matching the charge distribution symmetry (spherical, cylindrical, planar).",
+          "Ensure E is perpendicular or parallel to normal area vectors dA.",
+          "Verify conductor equipotential boundaries where internal E = 0."
+        ],
+        "practiceQuestions": [
+          {
+            "question": "Derive the electric field intensity at distance r from an infinitely long straight charged wire.",
+            "answer": "E = λ / (2 * π * ε₀ * r)",
+            "difficulty": "medium"
+          },
+          {
+            "question": "What is the net electric flux through a closed cube containing a dipole?",
+            "answer": "Zero, because net enclosed charge is zero.",
+            "difficulty": "easy"
+          }
+        ],
+        "suggestedTags": [
+          "PHYS-301",
+          "WhiteboardNotes",
+          "Derivations",
+          "ClassroomKnowledge"
+        ],
+        "generatedAt": "2026-10-07T10:56:05.220Z",
+        "aiEnriched": false
+      },
+      "knowledgeSourceId": "src-muxzs6ee-x0a0"
     }
   ]
 }

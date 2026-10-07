@@ -1,4 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
+import { contextOrchestrator } from '../contextOrchestrator.ts';
+import { personalToolRegistry } from '../tools/index.ts';
 import type {
   IConversationProvider,
   BoundedConversationPrompt,
@@ -15,6 +17,8 @@ export class GeminiConversationProvider implements IConversationProvider {
   readonly id = 'gemini';
   readonly name = 'Gemini 3.8 Flash (Neural Core)';
   private ai: GoogleGenAI | null = null;
+  private consecutiveFailures: number = 0;
+  private backoffUntil: number = 0;
 
   constructor() {
     this.initClient();
@@ -35,11 +39,14 @@ export class GeminiConversationProvider implements IConversationProvider {
   }
 
   async isAvailable(): Promise<boolean> {
+    if (Date.now() < this.backoffUntil) {
+      return false;
+    }
     if (!this.ai) {
       this.initClient();
     }
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'test' || process.env.NODE_ENV === 'test') {
+    if (!apiKey || apiKey.trim().length === 0) {
       return false;
     }
     return Boolean(this.ai);
@@ -113,32 +120,71 @@ Guidelines:
     });
 
     const modelName = options?.modelOverride || 'gemini-3.8-flash';
+    const timeoutMs = options?.timeoutMs || 8000;
     
-    // Execute with timeout guard
-    const apiCall = this.ai.models.generateContent({
-      model: modelName,
-      contents,
-      config: {
-        systemInstruction,
-        temperature: options?.temperature ?? 0.7
-      }
-    });
-
     let timeoutHandle: NodeJS.Timeout | undefined;
     const timeout = new Promise<never>((_, reject) => {
-      timeoutHandle = setTimeout(() => reject(new Error('Gemini API call timed out')), 5000);
+      timeoutHandle = setTimeout(() => reject(new Error(`Gemini API call timed out after ${timeoutMs}ms`)), timeoutMs);
     });
 
     try {
+      const toolDeclarations = personalToolRegistry.getFunctionDeclarations(prompt.activeContext.type);
+
+      const apiCall = this.ai.models.generateContent({
+        model: modelName,
+        contents,
+        config: {
+          systemInstruction,
+          temperature: options?.temperature ?? 0.7,
+          tools: toolDeclarations.length > 0 ? [{ functionDeclarations: toolDeclarations as any }] : undefined
+        }
+      });
+
       const response = await Promise.race([apiCall, timeout]);
       const reply = response.text || 'Directive acknowledged, sir.';
+
+      // Reset failure state on success
+      this.consecutiveFailures = 0;
+      this.backoffUntil = 0;
+
+      // Extract explicit memories for selective write-back
+      const memoriesToWrite = contextOrchestrator.extractExplicitMemories(prompt.currentMessage);
+
+      // Extract function call proposals from Gemini model
+      let toolCalls: Array<{ name: string; args: Record<string, any> }> | undefined;
+      const rawFunctionCalls = (response as any).functionCalls;
+      if (typeof rawFunctionCalls === 'function') {
+        const calls = rawFunctionCalls.call(response);
+        if (Array.isArray(calls) && calls.length > 0) {
+          toolCalls = calls.map((fc: any) => ({ name: fc.name, args: fc.args || {} }));
+        }
+      } else if (Array.isArray(rawFunctionCalls) && rawFunctionCalls.length > 0) {
+        toolCalls = rawFunctionCalls.map((fc: any) => ({ name: fc.name, args: fc.args || {} }));
+      }
+
+      // Extract suggested next actions
+      const suggestedNextActions: string[] = [];
+      if (prompt.nextBestAction) {
+        suggestedNextActions.push(prompt.nextBestAction.title);
+      }
 
       return {
         reply,
         providerId: this.id,
+        suggestedNextActions: suggestedNextActions.length > 0 ? suggestedNextActions : undefined,
+        memoriesToWrite,
+        toolCalls,
         searchPerformed: Boolean(prompt.webSearchResults && prompt.webSearchResults.length > 0),
         searchAttributions: prompt.webSearchResults
       };
+    } catch (err: any) {
+      this.consecutiveFailures++;
+      // Back off for 30 seconds if consecutive failures occur or rate limited
+      const isRateLimit = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429;
+      const backoffDuration = isRateLimit ? 60000 : 30000;
+      this.backoffUntil = Date.now() + backoffDuration;
+      console.warn(`[GeminiConversationProvider] Provider error (${err?.message || 'unknown'}). Backing off for ${backoffDuration / 1000}s.`);
+      throw err;
     } finally {
       if (timeoutHandle) clearTimeout(timeoutHandle);
     }

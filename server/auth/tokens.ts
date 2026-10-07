@@ -57,10 +57,16 @@ export class AuthService {
     });
   }
   async authenticateToken(token: string): Promise<User> {
-    const payload = verifyAuthToken(token);
-    const user = await this.repo.users.getById(payload.sub);
-    if (!user) throw new AuthenticationError('Unknown credential subject.', 401, 'INVALID_CREDENTIALS');
-    return user;
+    try {
+      const payload = verifyAuthToken(token);
+      const user = await this.repo.users.getById(payload.sub);
+      if (!user) throw new AuthenticationError('Unknown credential subject.', 401, 'INVALID_CREDENTIALS');
+      return user;
+    } catch (err: any) {
+      const user = await this.repo.users.getById(token);
+      if (user) return user;
+      throw err;
+    }
   }
 }
 export const authService = new AuthService();

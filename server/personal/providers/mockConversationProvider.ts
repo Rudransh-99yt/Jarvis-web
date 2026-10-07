@@ -1,10 +1,9 @@
+import { contextOrchestrator } from '../contextOrchestrator.ts';
 import type {
   IConversationProvider,
   BoundedConversationPrompt,
   ConversationGenerationOptions,
-  ConversationTurnResult,
-  MemoryCategory,
-  MemorySourceType
+  ConversationTurnResult
 } from '../types.ts';
 
 /**
@@ -33,46 +32,7 @@ export class DeterministicMockConversationProvider implements IConversationProvi
 
     let reply = '';
     const suggestedNextActions: string[] = [];
-    const memoriesToWrite: ConversationTurnResult['memoriesToWrite'] = [];
-
-    // 1. Detect Explicit Preference / Goal / Fact Statements for Memory Write-Back
-    if (lowerQuery.includes('i prefer ') || lowerQuery.includes('i like ') || lowerQuery.includes('explain using ') || lowerQuery.includes('always explain')) {
-      const match = userQuery.match(/i prefer ([^.]+)/i) || userQuery.match(/i like ([^.]+)/i) || userQuery.match(/explain using ([^.]+)/i);
-      const prefText = match ? match[1].trim() : userQuery;
-      memoriesToWrite.push({
-        category: 'UserPreference' as MemoryCategory,
-        key: 'explanation_preference',
-        value: prefText,
-        source: 'USER_STATED' as MemorySourceType,
-        confidence: 1.0,
-        visibility: 'PRIVATE_PERSONAL',
-        notes: `User explicitly stated preference during conversation: "${userQuery}"`
-      });
-    } else if (lowerQuery.includes('my goal is ') || lowerQuery.includes('i want to score ') || lowerQuery.includes('i am aiming for ')) {
-      const match = userQuery.match(/my goal is ([^.]+)/i) || userQuery.match(/i want to score ([^.]+)/i) || userQuery.match(/i am aiming for ([^.]+)/i);
-      const goalText = match ? match[1].trim() : userQuery;
-      memoriesToWrite.push({
-        category: 'UserGoal' as MemoryCategory,
-        key: 'academic_goal',
-        value: goalText,
-        source: 'USER_STATED' as MemorySourceType,
-        confidence: 1.0,
-        visibility: 'PRIVATE_PERSONAL',
-        notes: `User explicitly stated goal in conversation: "${userQuery}"`
-      });
-    } else if (lowerQuery.includes('i am interested in ') || lowerQuery.includes('i love studying ')) {
-      const match = userQuery.match(/i am interested in ([^.]+)/i) || userQuery.match(/i love studying ([^.]+)/i);
-      const interestText = match ? match[1].trim() : userQuery;
-      memoriesToWrite.push({
-        category: 'UserInterest' as MemoryCategory,
-        key: 'topic_interest',
-        value: interestText,
-        source: 'USER_STATED' as MemorySourceType,
-        confidence: 1.0,
-        visibility: 'PRIVATE_PERSONAL',
-        notes: `User stated interest: "${userQuery}"`
-      });
-    }
+    const memoriesToWrite = contextOrchestrator.extractExplicitMemories(userQuery) || [];
 
     // 2. Query Routing & Response Composition based on Context, Memory, and Knowledge
 

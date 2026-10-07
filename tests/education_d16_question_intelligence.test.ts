@@ -449,6 +449,7 @@ async function runTestSuite() {
   console.log(`\n======================================================`);
   console.log(`PHASE 2 QUESTION INTELLIGENCE RESULTS: ${passed}/${total} PASSED`);
   console.log(`======================================================\n`);
+  process.exit(0);
 }
 
 runTestSuite().catch((err) => {

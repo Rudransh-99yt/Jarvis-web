@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { requirePrincipal } from '../auth/principal.ts';
 import { personalIdentityStore } from './identityStore.ts';
 import { contextEngine } from './contextEngine.ts';
 import { personalMemoryStore } from './memoryStore.ts';
@@ -9,12 +10,15 @@ import type { ProgressiveOnboardingPayload } from './types.ts';
 
 export const personalRouter = Router();
 
-function getUserId(req: Request): string {
-  const user = (req as any).user;
-  if (user?.id) return user.id;
-  const headerUser = req.headers['x-jarvis-user-id'] || req.headers['x-user-id'];
-  if (typeof headerUser === 'string' && headerUser.trim()) return headerUser.trim();
-  return 'student-1'; // Default active persona
+// SECURITY HARDENING: Mount mandatory authenticated principal middleware on all personal endpoints
+personalRouter.use(requirePrincipal);
+
+function getUserId(_req: Request, res: Response): string {
+  const principal = res.locals.principal;
+  if (!principal || !principal.userId) {
+    throw new Error('UNAUTHENTICATED: Authenticated principal required.');
+  }
+  return principal.userId;
 }
 
 /**
@@ -23,7 +27,7 @@ function getUserId(req: Request): string {
  */
 personalRouter.get('/identity', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const identity = await personalIdentityStore.getIdentity(userId);
     res.json({
       success: true,
@@ -40,7 +44,7 @@ personalRouter.get('/identity', async (req: Request, res: Response) => {
  */
 personalRouter.put('/identity', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const updates = req.body || {};
     const updated = await personalIdentityStore.updateIdentity(userId, updates);
     res.json({
@@ -58,7 +62,7 @@ personalRouter.put('/identity', async (req: Request, res: Response) => {
  */
 personalRouter.post('/onboarding', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const payload: ProgressiveOnboardingPayload = {
       userId,
       name: req.body.name || 'Cadet',
@@ -87,7 +91,7 @@ personalRouter.post('/onboarding', async (req: Request, res: Response) => {
  */
 personalRouter.get('/contexts', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const contexts = await contextEngine.getContexts(userId);
     const activeContext = await contextEngine.getActiveContext(userId);
     res.json({
@@ -106,7 +110,7 @@ personalRouter.get('/contexts', async (req: Request, res: Response) => {
  */
 personalRouter.post('/contexts/switch', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const { contextId } = req.body || {};
     if (!contextId) {
       return res.status(400).json({ error: 'contextId is required' });
@@ -128,7 +132,7 @@ personalRouter.post('/contexts/switch', async (req: Request, res: Response) => {
  */
 personalRouter.get('/memories', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const category = typeof req.query.category === 'string' ? (req.query.category as any) : undefined;
     const contextId = typeof req.query.contextId === 'string' ? req.query.contextId : undefined;
     const visibility = typeof req.query.visibility === 'string' ? (req.query.visibility as any) : undefined;
@@ -155,7 +159,7 @@ personalRouter.get('/memories', async (req: Request, res: Response) => {
  */
 personalRouter.post('/memories', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const body = req.body || {};
 
     if (!body.category || !body.key || body.value === undefined) {
@@ -193,7 +197,7 @@ personalRouter.post('/memories', async (req: Request, res: Response) => {
  */
 personalRouter.post('/memories/:id/confirm', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const memoryId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const updated = await personalMemoryStore.confirmSystemMemory(memoryId, userId);
     if (!updated) {
@@ -211,7 +215,7 @@ personalRouter.post('/memories/:id/confirm', async (req: Request, res: Response)
  */
 personalRouter.get('/knowledge', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const knowledge = await personalKnowledgeStore.getKnowledge(userId);
     res.json({
       success: true,
@@ -228,7 +232,7 @@ personalRouter.get('/knowledge', async (req: Request, res: Response) => {
  */
 personalRouter.post('/knowledge/mastery', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const { conceptName, subject, masteryDelta, provenanceSource } = req.body || {};
 
     if (!conceptName) {
@@ -257,7 +261,7 @@ personalRouter.post('/knowledge/mastery', async (req: Request, res: Response) =>
  */
 personalRouter.get('/home', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const identity = await personalIdentityStore.getIdentity(userId);
     const activeContext = await contextEngine.getActiveContext(userId);
     const knowledge = await personalKnowledgeStore.getKnowledge(userId);
@@ -330,7 +334,7 @@ personalRouter.post('/search', async (req: Request, res: Response) => {
  */
 personalRouter.post('/conversation/message', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const { message, sessionId, contextId, source, options } = req.body || {};
 
     if (!message || typeof message !== 'string' || !message.trim()) {
@@ -372,7 +376,7 @@ personalRouter.post('/conversation/message', async (req: Request, res: Response)
  */
 personalRouter.get('/conversation/session/:sessionId', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const sessionId = Array.isArray(req.params.sessionId) ? req.params.sessionId[0] : req.params.sessionId;
     const session = await conversationEngine.getSession(sessionId);
 
@@ -395,7 +399,7 @@ personalRouter.get('/conversation/session/:sessionId', async (req: Request, res:
  */
 personalRouter.get('/conversation/sessions', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = getUserId(req, res);
     const sessions = await conversationEngine.getSessionsForUser(userId);
     res.json({
       success: true,
@@ -438,4 +442,255 @@ personalRouter.post('/conversation/state', async (req: Request, res: Response) =
     res.status(500).json({ error: 'Failed to update conversation state', details: err?.message });
   }
 });
+
+// ----------------------------------------------------------------------------
+// Phase 5: Personal Tool Intelligence REST Endpoints
+// ----------------------------------------------------------------------------
+
+/**
+ * GET /api/personal/tools
+ * Lists registered personal tools with schemas, risk levels, and descriptions
+ */
+personalRouter.get('/tools', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const activeContext = await contextEngine.getActiveContext(userId);
+    const { personalToolRegistry } = await import('./tools/index.ts');
+    const tools = personalToolRegistry.listTools(activeContext.type);
+
+    res.json({
+      success: true,
+      count: tools.length,
+      tools: tools.map((t) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        category: t.category,
+        riskLevel: t.riskLevel,
+        inputSchema: t.inputSchema,
+        requiredContextTypes: t.requiredContextTypes
+      }))
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to list personal tools', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/tools/execute
+ * Directly executes a personal tool with server-side validation and authorization
+ */
+personalRouter.post('/tools/execute', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { toolId, arguments: args, contextId } = req.body || {};
+
+    if (!toolId) {
+      return res.status(400).json({ error: 'toolId is required' });
+    }
+
+    const activeContext = contextId
+      ? (await contextEngine.getContexts(userId)).find((c) => c.id === contextId) || (await contextEngine.getActiveContext(userId))
+      : await contextEngine.getActiveContext(userId);
+
+    const execContext = {
+      userId,
+      contextId: activeContext.id,
+      contextType: activeContext.type,
+      permissions: activeContext.permissions
+    };
+
+    const { personalToolRegistry } = await import('./tools/index.ts');
+    const result = await personalToolRegistry.executeTool(toolId, execContext, args || {});
+
+    res.json({
+      success: result.success,
+      toolId: result.toolId,
+      result: result.data,
+      error: result.error,
+      userMessage: result.userMessage,
+      metadata: result.metadata
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to execute personal tool', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/tools/confirm
+ * Confirms and executes a pending confirmation action
+ */
+personalRouter.post('/tools/confirm', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { pendingActionId } = req.body || {};
+
+    if (!pendingActionId) {
+      return res.status(400).json({ error: 'pendingActionId is required' });
+    }
+
+    const { confirmationPolicy, personalToolRegistry } = await import('./tools/index.ts');
+    const pending = confirmationPolicy.consumePendingAction(pendingActionId, userId);
+
+    if (!pending) {
+      return res.status(404).json({ error: 'Pending action not found or expired' });
+    }
+
+    const activeContext = await contextEngine.getActiveContext(userId);
+    const execContext = {
+      userId,
+      contextId: activeContext.id,
+      contextType: activeContext.type,
+      permissions: activeContext.permissions
+    };
+
+    const result = await personalToolRegistry.executeTool(
+      pending.toolId,
+      execContext,
+      pending.arguments,
+      { bypassConfirmationCheck: true }
+    );
+
+    res.json({
+      success: result.success,
+      toolId: result.toolId,
+      result: result.data,
+      userMessage: result.userMessage,
+      error: result.error
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to confirm tool action', details: err?.message });
+  }
+});
+
+/**
+ * GET /api/personal/notes
+ * List user personal study notes
+ */
+personalRouter.get('/notes', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const query = typeof req.query.query === 'string' ? req.query.query : undefined;
+    const subject = typeof req.query.subject === 'string' ? req.query.subject : undefined;
+    const tag = typeof req.query.tag === 'string' ? req.query.tag : undefined;
+
+    const { personalNotesStore } = await import('./tools/index.ts');
+    const notes = await personalNotesStore.getNotes(userId, { query, subject, tag });
+
+    res.json({
+      success: true,
+      count: notes.length,
+      notes
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve notes', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/notes
+ * Create user personal study note
+ */
+personalRouter.post('/notes', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { title, content, subject, tags, conceptId } = req.body || {};
+
+    if (!title || !content) {
+      return res.status(400).json({ error: 'title and content are required' });
+    }
+
+    const { personalNotesStore } = await import('./tools/index.ts');
+    const note = await personalNotesStore.createNote(userId, {
+      title,
+      content,
+      subject,
+      tags,
+      conceptId
+    });
+
+    res.json({
+      success: true,
+      note
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to create note', details: err?.message });
+  }
+});
+
+/**
+ * DELETE /api/personal/notes/:id
+ * Delete user personal study note
+ */
+personalRouter.delete('/notes/:id', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    const { personalNotesStore } = await import('./tools/index.ts');
+    const deleted = await personalNotesStore.deleteNote(userId, noteId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    res.json({ success: true, deletedNoteId: noteId });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to delete note', details: err?.message });
+  }
+});
+
+/**
+ * GET /api/personal/flashcards
+ * List user personal flashcards
+ */
+personalRouter.get('/flashcards', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const subject = typeof req.query.subject === 'string' ? req.query.subject : undefined;
+
+    const { personalNotesStore } = await import('./tools/index.ts');
+    const flashcards = await personalNotesStore.getFlashcards(userId, subject);
+
+    res.json({
+      success: true,
+      count: flashcards.length,
+      flashcards
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve flashcards', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/flashcards
+ * Create user personal flashcard
+ */
+personalRouter.post('/flashcards', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { front, back, subject, conceptId, tags } = req.body || {};
+
+    if (!front || !back) {
+      return res.status(400).json({ error: 'front and back are required' });
+    }
+
+    const { personalNotesStore } = await import('./tools/index.ts');
+    const flashcard = await personalNotesStore.createFlashcard(userId, {
+      front,
+      back,
+      subject,
+      conceptId,
+      tags
+    });
+
+    res.json({
+      success: true,
+      flashcard
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to create flashcard', details: err?.message });
+  }
+});
+
 

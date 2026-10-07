@@ -6,6 +6,7 @@ import { personalKnowledgeStore } from '../server/personal/knowledgeStore.ts';
 import { webSearchProvider, CuratedWebSearchProvider, YouWebSearchProvider } from '../server/personal/webSearchProvider.ts';
 import { conversationEngine } from '../server/personal/conversationEngine.ts';
 import { startHttpHarness } from './httpHarness.ts';
+import { authService } from '../server/auth/tokens.ts';
 import type {
   PersonalJarvisIdentity,
   ProgressiveOnboardingPayload,
@@ -308,11 +309,13 @@ async function runTestSuite() {
 
   const harness = await startHttpHarness();
   const { baseUrl } = harness;
+  const token = authService.issueToken({ id: 'student-1' });
+  const authHeaders = { Authorization: `Bearer ${token}` };
 
   try {
     await test('10.1 GET /api/personal/identity returns PersonalJarvisIdentity', async () => {
       const res = await fetch(`${baseUrl}/api/personal/identity`, {
-        headers: { 'x-jarvis-user-id': 'student-1' }
+        headers: authHeaders
       });
       assert.strictEqual(res.status, 200);
       const data = await res.json();
@@ -322,7 +325,7 @@ async function runTestSuite() {
 
     await test('10.2 GET /api/personal/contexts returns user contexts and active context', async () => {
       const res = await fetch(`${baseUrl}/api/personal/contexts`, {
-        headers: { 'x-jarvis-user-id': 'student-1' }
+        headers: authHeaders
       });
       assert.strictEqual(res.status, 200);
       const data = await res.json();
@@ -336,7 +339,7 @@ async function runTestSuite() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-jarvis-user-id': 'student-1'
+          ...authHeaders
         },
         body: JSON.stringify({ contextId: 'ctx-student1-edu' })
       });
@@ -351,7 +354,7 @@ async function runTestSuite() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-jarvis-user-id': 'student-1'
+          ...authHeaders
         },
         body: JSON.stringify({
           category: 'UserFact',
@@ -369,7 +372,7 @@ async function runTestSuite() {
 
     await test('10.5 GET /api/personal/home returns complete My Jarvis Personal Home payload', async () => {
       const res = await fetch(`${baseUrl}/api/personal/home`, {
-        headers: { 'x-jarvis-user-id': 'student-1' }
+        headers: authHeaders
       });
       assert.strictEqual(res.status, 200);
       const data = await res.json();
@@ -382,7 +385,10 @@ async function runTestSuite() {
     await test('10.6 POST /api/personal/search executes attributed web intelligence search', async () => {
       const res = await fetch(`${baseUrl}/api/personal/search`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({ query: 'Schrodinger wave function MIT' })
       });
       assert.strictEqual(res.status, 200);
@@ -398,6 +404,7 @@ async function runTestSuite() {
   console.log(`\n======================================================`);
   console.log(`PHASE 3 PERSONAL IDENTITY RESULTS: ${passed}/${total} PASSED`);
   console.log(`======================================================\n`);
+  process.exit(0);
 }
 
 runTestSuite().catch((err) => {
