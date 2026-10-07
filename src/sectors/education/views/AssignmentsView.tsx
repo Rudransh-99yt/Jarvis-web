@@ -219,18 +219,18 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
     });
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto w-full pb-12">
-      {/* 1. Header Banner */}
-      <GlassCard className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
+    <div className="space-y-8 max-w-5xl mx-auto w-full font-sans pb-12">
+      {/* 1. Page Header & Actions (Editorial Unboxed Composition) */}
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pt-1">
         <div className="space-y-1">
-          <div className="text-xs font-mono text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="text-xs font-mono text-neutral-400 tracking-wider uppercase flex items-center gap-1.5 font-medium">
+            <FileText className="w-3.5 h-3.5 text-neutral-400" />
             <span>Academic Assessment Ledger</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Assignments & Coursework
           </h1>
-          <p className="text-xs text-slate-400 font-mono">
+          <p className="text-xs sm:text-sm text-neutral-400 font-sans max-w-xl">
             {currentRole === 'teacher'
               ? 'Review submissions, evaluate cadet responses, and distribute assessments.'
               : 'Track deadlines, complete problem sets, and enter focused study blocks.'}
@@ -242,10 +242,10 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl border border-cyan-400/40 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 text-xs font-mono font-bold tracking-wider transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.15)] focus-ring"
+              className="flex items-center gap-2 px-4 py-2 min-h-[38px] rounded-xl glass-btn-primary text-xs font-semibold tracking-wide transition-all cursor-pointer focus-ring"
             >
-              <PlusCircle className="w-4 h-4 text-cyan-300" />
-              <span>+ Create Assignment</span>
+              <PlusCircle className="w-4 h-4 text-cyan-200" />
+              <span>Create Assignment</span>
             </button>
           )}
 
@@ -253,14 +253,14 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
             <button
               type="button"
               onClick={() => setSelectedAsgId(null)}
-              className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl border border-white/[0.08] bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono transition-all cursor-pointer focus-ring"
+              className="flex items-center gap-1.5 px-3 py-2 min-h-[38px] rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-200 text-xs font-mono transition-all cursor-pointer focus-ring"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Ledger</span>
             </button>
           )}
         </div>
-      </GlassCard>
+      </div>
 
       {/* 2. Main Content Surface */}
       {selectedAsg ? (
@@ -270,11 +270,14 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-mono">
-                <span className="font-bold text-cyan-300">{selectedAsg.className.split(':')[0]}</span>
-                <span aria-hidden="true" className="text-slate-600">·</span>
-                <span className="text-slate-400">{selectedAsg.category}</span>
-                <span aria-hidden="true" className="text-slate-600">·</span>
-                <span className="text-amber-400">Due {selectedAsg.dueDate}</span>
+                <span className="font-semibold text-neutral-100">{selectedAsg.className.split(':')[0]}</span>
+                <span aria-hidden="true" className="text-neutral-700">·</span>
+                <span className="text-neutral-400">{selectedAsg.category}</span>
+                <span aria-hidden="true" className="text-neutral-700">·</span>
+                <span className="text-neutral-300 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" />
+                  <span>Due {selectedAsg.dueDate}</span>
+                </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                 {selectedAsg.title}
@@ -293,9 +296,9 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                     });
                   }
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-mono transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-200 hover:text-white text-xs font-mono transition-colors"
               >
-                <Timer className="w-3.5 h-3.5" />
+                <Timer className="w-3.5 h-3.5 text-neutral-400" />
                 <span>Start Focus (45m)</span>
               </button>
 
@@ -310,26 +313,26 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                       lessonId: selectedAsg.lessonId || 'les-phys-101'
                     });
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-200 hover:text-white text-xs font-mono transition-colors"
                 >
-                  <BookOpen className="w-3.5 h-3.5" />
+                  <BookOpen className="w-3.5 h-3.5 text-neutral-400" />
                   <span>Open Lesson</span>
                 </button>
               )}
 
               <div className="text-right font-mono shrink-0 pl-2">
-                <div className="text-sm font-bold text-cyan-300">{selectedAsg.maxScore} Max Points</div>
+                <div className="text-sm font-semibold text-neutral-200">{selectedAsg.maxScore} Max Points</div>
               </div>
             </div>
           </div>
 
           {/* Description & Problem Instructions */}
           <div className="space-y-4">
-            <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 space-y-2">
-              <div className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
+            <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] space-y-2">
+              <div className="text-xs font-mono text-neutral-400 font-semibold uppercase tracking-wider">
                 Problem Statement & Instructions
               </div>
-              <p className="text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-line">
+              <p className="text-sm text-neutral-200 leading-relaxed font-sans whitespace-pre-line">
                 {selectedAsg.instructions}
               </p>
             </div>
@@ -337,41 +340,42 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
 
           {/* Student Submission Card */}
           {currentRole === 'student' && (
-            <div className="p-5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-4">
+            <div className="p-5 rounded-xl border border-white/[0.08] bg-white/[0.02] space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
+                  <Award className="w-4 h-4 text-neutral-400" />
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-300">
                     Your Submission Status
                   </span>
                 </div>
 
                 {userSubmission ? (
-                  <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
+                  <span className={`px-2 py-0.5 rounded text-xs font-mono font-semibold ${
                     userSubmission.status === 'graded'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                      ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                      : 'bg-white/[0.08] text-neutral-200 border border-white/[0.12]'
                   }`}>
                     {userSubmission.status === 'graded' ? `Graded: ${userSubmission.grade} / ${selectedAsg.maxScore}` : 'Submitted'}
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded text-xs font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    Not Submitted
+                  <span className="px-2 py-0.5 rounded text-xs font-mono bg-white/[0.04] text-neutral-300 border border-white/[0.08] flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    <span>Not Submitted</span>
                   </span>
                 )}
               </div>
 
               {userSubmission ? (
                 <div className="space-y-3 pt-2 text-xs font-mono">
-                  <div className="p-3 rounded-lg border border-slate-800 bg-slate-900/60 space-y-1">
-                    <div className="text-slate-400">Response:</div>
+                  <div className="p-3 rounded-lg border border-white/[0.08] bg-white/[0.03] space-y-1">
+                    <div className="text-neutral-400">Response:</div>
                     <div className="text-white font-sans text-sm">{userSubmission.content}</div>
                   </div>
 
                   {userSubmission.feedback && (
-                    <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-950/30 space-y-1">
-                      <div className="text-emerald-400 font-bold">Faculty Feedback:</div>
-                      <div className="text-emerald-200 font-sans text-sm">{userSubmission.feedback}</div>
+                    <div className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-950/20 space-y-1">
+                      <div className="text-emerald-300 font-semibold">Faculty Feedback:</div>
+                      <div className="text-neutral-200 font-sans text-sm">{userSubmission.feedback}</div>
                     </div>
                   )}
                 </div>
@@ -431,13 +435,13 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
         /* ACADEMIC LEDGER TABULAR VIEW */
         <div className="space-y-4">
           {/* Controls Bar: Filters & Search */}
-          <div className={`flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border border-white/[0.08] ${glassTokens.level2}`}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02]">
             <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
               <button
                 type="button"
                 onClick={() => setFilterMode('all')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-                  filterMode === 'all' ? 'bg-slate-800 text-white font-bold border border-white/[0.08]' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'all' ? 'bg-white/[0.1] text-white font-semibold' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 All ({assignments.length})
@@ -445,8 +449,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterMode('pending')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-                  filterMode === 'pending' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'pending' ? 'bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/20' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 Pending
@@ -454,8 +458,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterMode('submitted')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-                  filterMode === 'submitted' ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'submitted' ? 'bg-cyan-500/15 text-cyan-300 font-semibold border border-cyan-500/20' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 Submitted
@@ -463,8 +467,8 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterMode('graded')}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer focus-ring ${
-                  filterMode === 'graded' ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer focus-ring ${
+                  filterMode === 'graded' ? 'bg-emerald-500/15 text-emerald-300 font-semibold border border-emerald-500/20' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 Graded
@@ -476,7 +480,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <select
                 value={courseFilter}
                 onChange={(e) => setCourseFilter(e.target.value)}
-                className="bg-slate-950/80 border border-white/[0.08] rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-300 focus-ring"
+                className="bg-neutral-900/90 border border-white/[0.08] rounded-lg px-2.5 py-1 text-xs font-mono text-neutral-300 focus-ring"
               >
                 <option value="all">All Courses</option>
                 {classes.map((c) => (
@@ -487,34 +491,34 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               </select>
 
               <div className="relative w-full sm:w-56">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Filter assignments..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs font-mono text-white placeholder-slate-500 focus-ring"
+                  className="w-full bg-neutral-900/90 border border-white/[0.08] focus:border-white/[0.2] rounded-lg pl-8 pr-3 py-1 text-xs font-mono text-white placeholder-neutral-500 focus-ring"
                 />
               </div>
             </div>
           </div>
 
           {/* Tabular Ledger */}
-          <div className={`rounded-2xl border border-white/[0.08] ${glassTokens.level2} overflow-hidden shadow-sm`}>
+          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden shadow-sm">
             {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/[0.08] bg-slate-950/70 text-[11px] font-mono uppercase tracking-wider text-slate-400">
+            <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/[0.07] bg-black/40 text-[11px] font-mono uppercase tracking-wider text-neutral-400">
               <button
                 type="button"
                 onClick={() => toggleSort('title')}
-                className="col-span-4 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+                className="col-span-4 text-left flex items-center gap-1 hover:text-white transition-colors"
               >
-                <span>Assignment & Category</span>
+                <span>Assignment & Topic</span>
                 <ArrowUpDown className="w-3 h-3" />
               </button>
               <button
                 type="button"
                 onClick={() => toggleSort('course')}
-                className="col-span-2 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+                className="col-span-2 text-left flex items-center gap-1 hover:text-white transition-colors"
               >
                 <span>Course</span>
                 <ArrowUpDown className="w-3 h-3" />
@@ -522,7 +526,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => toggleSort('dueDate')}
-                className="col-span-2 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+                className="col-span-2 text-left flex items-center gap-1 hover:text-white transition-colors"
               >
                 <span>Due Date</span>
                 <ArrowUpDown className="w-3 h-3" />
@@ -530,25 +534,25 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
               <button
                 type="button"
                 onClick={() => toggleSort('status')}
-                className="col-span-2 text-left flex items-center gap-1 hover:text-cyan-300 transition-colors"
+                className="col-span-2 text-left flex items-center gap-1 hover:text-white transition-colors"
               >
                 <span>Status & Points</span>
                 <ArrowUpDown className="w-3 h-3" />
               </button>
-              <div className="col-span-2 text-right">Context Actions</div>
+              <div className="col-span-2 text-right">Actions</div>
             </div>
 
             {/* Table Rows */}
             {filteredAssignments.length === 0 ? (
               <div className="p-12 text-center space-y-2">
-                <FileText className="w-8 h-8 text-slate-600 mx-auto" />
-                <div className="text-sm font-mono font-bold text-slate-300">No Assignments Match Filter</div>
-                <div className="text-xs text-slate-500 font-mono">
+                <FileText className="w-8 h-8 text-neutral-600 mx-auto" />
+                <div className="text-sm font-semibold text-neutral-300">No Assignments Match Filter</div>
+                <div className="text-xs text-neutral-500 font-mono">
                   {searchQuery ? `No results for "${searchQuery}".` : 'No assignments in this ledger view.'}
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-slate-800/80">
+              <div className="divide-y divide-white/[0.06]">
                 {filteredAssignments.map((asg) => {
                   const sub = submissions.find((s) => s.assignmentId === asg.id && s.studentId === 'student-1');
                   const linkedLesson = getLinkedLessonName(asg);
@@ -556,20 +560,17 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                   return (
                     <div
                       key={asg.id}
-                      className="p-4 sm:p-5 md:grid md:grid-cols-12 gap-3 items-center hover:bg-slate-800/30 transition-colors group"
+                      className="p-4 sm:p-5 md:grid md:grid-cols-12 gap-3 items-center hover:bg-white/[0.02] transition-colors group"
                     >
-                      {/* Column 1: Assignment Title & Category */}
+                      {/* Column 1: Assignment Title & Category (Clean unboxed metadata) */}
                       <div
                         onClick={() => setSelectedAsgId(asg.id)}
                         className="md:col-span-4 space-y-1 cursor-pointer"
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
-                            {asg.category}
-                          </span>
-                          <span className="text-xs text-slate-400 font-mono truncate">
-                            {linkedLesson}
-                          </span>
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-mono">
+                          <span className="text-neutral-300">{asg.category}</span>
+                          <span aria-hidden="true" className="text-neutral-600">·</span>
+                          <span className="truncate">{linkedLesson}</span>
                         </div>
                         <h3 className="text-sm font-semibold text-white group-hover:text-cyan-200 transition-colors truncate">
                           {asg.title}
@@ -577,14 +578,14 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                       </div>
 
                       {/* Column 2: Course */}
-                      <div className="md:col-span-2 text-xs font-mono text-slate-300 truncate">
-                        <span className="font-bold text-cyan-400">{asg.className.split(':')[0]}</span>
-                        <div className="text-[11px] text-slate-500 truncate">{asg.className.split(':')[1] || ''}</div>
+                      <div className="md:col-span-2 text-xs font-mono text-neutral-300 truncate">
+                        <span className="font-semibold text-neutral-200">{asg.className.split(':')[0]}</span>
+                        <div className="text-[11px] text-neutral-500 truncate">{asg.className.split(':')[1] || ''}</div>
                       </div>
 
                       {/* Column 3: Due Date */}
-                      <div className="md:col-span-2 text-xs font-mono text-amber-400/90 flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
+                      <div className="md:col-span-2 text-xs font-mono text-neutral-300 flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" />
                         <span>{asg.dueDate}</span>
                       </div>
 
@@ -593,27 +594,25 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                         {currentRole === 'student' ? (
                           sub ? (
                             <div className="space-y-0.5">
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ${
-                                sub.status === 'graded'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                  : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                              <span className={`inline-flex items-center gap-1.5 text-xs ${
+                                sub.status === 'graded' ? 'text-emerald-300' : 'text-neutral-300'
                               }`}>
-                                <CheckCircle2 className="w-3 h-3" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                                 <span>{sub.status === 'graded' ? `${sub.grade} / ${asg.maxScore} pts` : 'Submitted'}</span>
                               </span>
                             </div>
                           ) : (
                             <div className="space-y-0.5">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-slate-800 text-amber-300 border border-amber-500/30 font-medium">
-                                <Clock className="w-3 h-3" />
+                              <span className="inline-flex items-center gap-1.5 text-xs text-amber-300">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                                 <span>Pending · {asg.maxScore} pts</span>
                               </span>
                             </div>
                           )
                         ) : (
-                          <div className="text-slate-300">
-                            <span className="font-bold text-cyan-300">{asg.submittedCount || 0}</span>
-                            <span className="text-slate-500"> / {asg.totalEnrolled || 3} submitted</span>
+                          <div className="text-neutral-300 text-xs">
+                            <span className="font-semibold text-neutral-100">{asg.submittedCount || 0}</span>
+                            <span className="text-neutral-500"> / {asg.totalEnrolled || 3} submitted</span>
                           </div>
                         )}
                       </div>
@@ -632,7 +631,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                                 topic: asg.title
                               });
                             }}
-                            className="p-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-mono transition-colors"
+                            className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-400 hover:text-white text-xs font-mono transition-colors"
                           >
                             <Timer className="w-3.5 h-3.5" />
                           </button>
@@ -651,7 +650,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                                 lessonId: asg.lessonId || 'les-phys-101'
                               });
                             }}
-                            className="p-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono transition-colors"
+                            className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-400 hover:text-white text-xs font-mono transition-colors"
                           >
                             <BookOpen className="w-3.5 h-3.5" />
                           </button>
@@ -660,7 +659,7 @@ export const AssignmentsView: React.FC<AssignmentsViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setSelectedAsgId(asg.id)}
-                          className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-mono transition-colors"
+                          className="px-2.5 py-1 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-300 hover:text-white text-xs font-mono transition-colors"
                         >
                           View
                         </button>

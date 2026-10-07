@@ -26,7 +26,13 @@ function getArg(flag: string): string | undefined {
 }
 
 export const app = express();
-const PORT = parseInt(getArg('--port') || process.env.PORT || '3000', 10);
+// AI Studio dev environment requires port 3000. In production containers (e.g. Cloud Run), allow process.env.PORT.
+const PORT = parseInt(
+  getArg('--port') || 
+  (process.env.NODE_ENV === 'production' && process.env.PORT ? process.env.PORT : undefined) || 
+  '3000', 
+  10
+);
 const HOST = getArg('--host') || process.env.HOST || '0.0.0.0';
 const startTime = Date.now();
 

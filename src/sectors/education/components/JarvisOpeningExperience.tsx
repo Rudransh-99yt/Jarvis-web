@@ -75,13 +75,13 @@ export const JarvisOpeningExperience: React.FC<JarvisOpeningExperienceProps> = (
     >
       {/* 1. Volumetric Environmental Lighting Behind the Moment Surface */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute top-[25%] left-[20%] w-[55%] h-[45%] bg-cyan-500/[0.08] rounded-full blur-[140px]" />
-        <div className="absolute top-[35%] right-[25%] w-[45%] h-[40%] bg-violet-600/[0.06] rounded-full blur-[160px]" />
-        <div className="absolute bottom-[20%] left-[35%] w-[40%] h-[35%] bg-teal-500/[0.06] rounded-full blur-[130px]" />
+        <div className="absolute top-[25%] left-[20%] w-[55%] h-[45%] bg-cyan-500/[0.04] rounded-full blur-[160px]" />
+        <div className="absolute top-[35%] right-[25%] w-[45%] h-[40%] bg-violet-600/[0.03] rounded-full blur-[180px]" />
+        <div className="absolute bottom-[20%] left-[35%] w-[40%] h-[35%] bg-teal-500/[0.03] rounded-full blur-[160px]" />
       </div>
 
       {/* 2. Focused Liquid Glass Capsule (Level 5 Special Jarvis Moment) */}
-      <div className="relative w-full max-w-xl rounded-3xl glass-level-3 border-t border-t-white/[0.25] border-x border-x-white/[0.12] border-b border-b-white/[0.06] p-7 sm:p-10 shadow-[0_32px_96px_-12px_rgba(0,0,0,0.9),0_0_40px_rgba(6,182,212,0.12),inset_0_1px_0_0_rgba(255,255,255,0.35)] animate-scale-in text-center flex flex-col items-center space-y-6">
+      <div className="relative w-full max-w-xl rounded-3xl glass-level-3 border-t border-t-white/[0.22] border-x border-x-white/[0.10] border-b border-b-white/[0.05] p-7 sm:p-10 shadow-[0_32px_96px_-12px_rgba(0,0,0,0.9),0_0_32px_rgba(6,182,212,0.08),inset_0_1px_0_0_rgba(255,255,255,0.30)] animate-scale-in text-center flex flex-col items-center space-y-6">
         {/* Close / Dismiss Escape Hatch */}
         <button
           onClick={onDismiss}
@@ -101,13 +101,13 @@ export const JarvisOpeningExperience: React.FC<JarvisOpeningExperienceProps> = (
           </div>
         </div>
 
-        {/* Milestone Category Pill / Metadata */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.1] text-[11px] font-mono tracking-wider text-cyan-300 uppercase">
-          {moment.type === 'streak' && <Flame className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />}
-          {moment.type === 'mastery' && <Trophy className="w-3.5 h-3.5 text-amber-400" />}
-          {moment.type === 'breakthrough' && <Sparkles className="w-3.5 h-3.5 text-cyan-300" />}
-          {moment.type === 'readiness' && <Compass className="w-3.5 h-3.5 text-emerald-400" />}
-          <span className="font-semibold">{moment.badge}</span>
+        {/* Milestone Category & Protocol Metadata (Clean Unboxed Typography) */}
+        <div className="flex items-center gap-2 text-xs font-mono tracking-wider text-neutral-300 uppercase font-medium">
+          {moment.type === 'streak' && <Flame className="w-3.5 h-3.5 text-amber-400/90" />}
+          {moment.type === 'mastery' && <Trophy className="w-3.5 h-3.5 text-neutral-300" />}
+          {moment.type === 'breakthrough' && <Sparkles className="w-3.5 h-3.5 text-neutral-300" />}
+          {moment.type === 'readiness' && <Compass className="w-3.5 h-3.5 text-neutral-300" />}
+          <span>{moment.badge}</span>
         </div>
 
         {/* ONE MESSAGE: Strong, Confident, Large Typography */}
@@ -129,8 +129,8 @@ export const JarvisOpeningExperience: React.FC<JarvisOpeningExperienceProps> = (
         {moment.metricLabel && moment.metricValue && (
           <div className="flex items-center gap-4 py-2.5 px-5 rounded-2xl bg-white/[0.03] border border-white/[0.07] text-xs font-mono">
             <span className="text-neutral-400 uppercase tracking-wider">{moment.metricLabel}</span>
-            <span aria-hidden="true" className="text-neutral-600">·</span>
-            <span className="text-cyan-300 font-bold text-sm tabular-nums">{moment.metricValue}</span>
+            <span aria-hidden="true" className="text-neutral-700">·</span>
+            <span className="text-white font-semibold text-sm tabular-nums">{moment.metricValue}</span>
           </div>
         )}
 
@@ -138,7 +138,7 @@ export const JarvisOpeningExperience: React.FC<JarvisOpeningExperienceProps> = (
         <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <button
             onClick={onPrimaryAction}
-            className="w-full sm:w-auto min-w-[220px] px-6 py-3 rounded-xl glass-btn-primary font-semibold text-xs sm:text-sm tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_8px_28px_rgba(6,182,212,0.35)] focus-ring group"
+            className="w-full sm:w-auto min-w-[220px] px-6 py-3 rounded-xl glass-btn-primary font-semibold text-xs sm:text-sm tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(6,182,212,0.25)] focus-ring group"
           >
             <PlayCircle className="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform" />
             <span>{moment.primaryActionLabel}</span>

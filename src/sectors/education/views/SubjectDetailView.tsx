@@ -86,44 +86,44 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
         </div>
       )}
 
-      {/* 2. Course Header Banner */}
-      <GlassCard className="p-6 space-y-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="font-bold text-cyan-300">{course.code}</span>
-            <span aria-hidden="true" className="text-slate-600">·</span>
-            <span className="text-slate-400">{course.term}</span>
-            <span aria-hidden="true" className="text-slate-600">·</span>
-            <span className="text-slate-400">Lead Faculty: {course.instructorName}</span>
+      {/* 2. Course Header & Editorial Context (Unboxed Composition) */}
+      <div className="space-y-4 pt-1">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-400 font-medium">
+            <span className="font-bold text-white">{course.code}</span>
+            <span aria-hidden="true" className="text-neutral-700">·</span>
+            <span>{course.term}</span>
+            <span aria-hidden="true" className="text-neutral-700">·</span>
+            <span>Lead Faculty: {course.instructorName}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             {course.name}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed max-w-3xl">
             {course.description}
           </p>
         </div>
 
-        {/* Compact Metadata Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-white/[0.06] text-xs font-mono">
+        {/* Compact Metadata Strip (Unboxed) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-white/[0.07] text-xs font-mono">
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Syllabus Chapters</div>
-            <div className="text-white font-bold mt-0.5">{units.length} Units</div>
+            <div className="text-[10px] text-neutral-500 uppercase tracking-wider">Syllabus Chapters</div>
+            <div className="text-white font-semibold mt-0.5 tabular-nums">{units.length} Units</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Total Lessons</div>
-            <div className="text-cyan-300 font-bold mt-0.5">{totalLessons} Topics</div>
+            <div className="text-[10px] text-neutral-500 uppercase tracking-wider">Total Lessons</div>
+            <div className="text-neutral-200 font-semibold mt-0.5 tabular-nums">{totalLessons} Topics</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Curriculum Mastery</div>
-            <div className="text-emerald-400 font-bold mt-0.5">{progressPct}%</div>
+            <div className="text-[10px] text-neutral-500 uppercase tracking-wider">Curriculum Mastery</div>
+            <div className="text-white font-semibold mt-0.5 tabular-nums">{progressPct}%</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Cohort Schedule</div>
-            <div className="text-slate-300 font-bold truncate mt-0.5">{course.schedule.split(' ')[0]}</div>
+            <div className="text-[10px] text-neutral-500 uppercase tracking-wider">Cohort Schedule</div>
+            <div className="text-neutral-300 font-semibold truncate mt-0.5">{course.schedule.split(' ')[0]}</div>
           </div>
         </div>
-      </GlassCard>
+      </div>
 
       {/* 3. Deep Progressive Disclosure Tab Bar */}
       <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md text-xs font-sans">
@@ -136,7 +136,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <Layers className="w-3.5 h-3.5 text-cyan-400" />
+          <Layers className="w-3.5 h-3.5 text-neutral-400" />
           <span>Chapters ({units.length})</span>
         </button>
 
@@ -149,7 +149,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+          <BookOpen className="w-3.5 h-3.5 text-neutral-400" />
           <span>Course Overview</span>
         </button>
 
@@ -162,7 +162,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+          <HelpCircle className="w-3.5 h-3.5 text-neutral-400" />
           <span>Assignments & Tests ({courseAssignments.length})</span>
         </button>
 
@@ -175,7 +175,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <FileText className="w-3.5 h-3.5 text-cyan-400" />
+          <FileText className="w-3.5 h-3.5 text-neutral-400" />
           <span>Formulas & Handouts ({course.materials.length})</span>
         </button>
 
@@ -188,7 +188,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               : 'text-neutral-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-neutral-400" />
           <span>Mastery Progress</span>
         </button>
       </div>
@@ -200,8 +200,8 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
           {nextLesson && currentChapter && (
             <GlassCard level="lesson" highlight className="p-6 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-300 font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-neutral-400" />
                   <span>Recommended Next Lesson</span>
                 </span>
                 <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
@@ -215,7 +215,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenLesson(currentChapter.id, nextLesson.id)}
-                className="px-5 py-2.5 rounded-xl glass-btn-primary text-xs font-semibold tracking-wider transition-all cursor-pointer shrink-0 focus-ring flex items-center gap-2 shadow-[0_4px_18px_rgba(6,182,212,0.3)]"
+                className="px-5 py-2.5 rounded-xl glass-btn-primary text-xs font-semibold tracking-wider transition-all cursor-pointer shrink-0 focus-ring flex items-center gap-2 shadow-[0_4px_16px_rgba(6,182,212,0.2)]"
               >
                 <PlayCircle className="w-4 h-4 text-cyan-200" />
                 <span>Enter Study Room →</span>
@@ -225,7 +225,7 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
 
           {/* Chapters Directory */}
           <div className="space-y-3">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 px-1">
+            <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400 px-1">
               Curriculum Units ({units.length})
             </h2>
 
@@ -244,10 +244,10 @@ export const SubjectDetailView: React.FC<SubjectDetailViewProps> = ({
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs font-mono text-cyan-300">
-                          <span className="font-bold">Unit {unit.number}</span>
-                          <span aria-hidden="true" className="text-slate-600">·</span>
-                          <span className="text-slate-400">{uTotal} Lessons</span>
+                        <div className="flex items-center gap-2 text-xs font-mono text-neutral-200">
+                          <span className="font-semibold">Unit {unit.number}</span>
+                          <span aria-hidden="true" className="text-neutral-700">·</span>
+                          <span className="text-neutral-400">{uTotal} Lessons</span>
                           <span aria-hidden="true" className="text-slate-600">·</span>
                           <span className="text-slate-400">~{unit.estimatedHours}h study</span>
                         </div>
