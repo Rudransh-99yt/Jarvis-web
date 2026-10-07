@@ -14,8 +14,12 @@ import { visualizationRouter } from './visualization/visualizationRoutes.ts';
 import { copilotRouter } from './copilot/copilotRoutes.ts';
 import { liveClassroomRouter } from './live/liveClassroomRoutes.ts';
 import { classroomIntelligenceRouter } from './intelligence/classroomIntelligenceRoutes.ts';
+import { questionIntelligenceRouter } from './questionIntelligence/questionRoutes.ts';
 
 export const educationRouter = Router();
+
+// Phase 2: Source + Question Intelligence Engine
+educationRouter.use('/question-intelligence', questionIntelligenceRouter);
 
 // Phase D.15: Classroom Intelligence Engine
 educationRouter.use('/intelligence', classroomIntelligenceRouter);

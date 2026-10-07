@@ -16,6 +16,7 @@ import { classroomRouter } from './server/sectors/education/classroomRoutes.ts';
 import { quizRouter } from './server/sectors/education/quizRoutes.ts';
 import { storageManager } from './server/storage/index.ts';
 import { jarvisData } from './server/data/index.ts';
+import { personalRouter } from './server/personal/personalRoutes.ts';
 
 function getArg(flag: string): string | undefined {
   const idx = process.argv.indexOf(flag);
@@ -90,6 +91,7 @@ app.use('/api/classroom/sessions', classroomRouter);
 app.use('/api/classroom/quizzes', quizRouter);
 
 // Sector REST Routers
+app.use('/api/personal', personalRouter);
 app.use('/api/education', educationRouter);
 app.use('/api/research', researchRouter);
 

@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { CourseLesson, CourseUnit, EducationClass } from '../../../types/education.ts';
+import type {
+  PracticeSet,
+  SelectedQuestionItem,
+  QuestionSourceMode,
+  MasteryEvidence
+} from '../../../types/questionIntelligence.ts';
 import {
   CheckCircle2,
   XCircle,
-  HelpCircle,
   ArrowRight,
   RotateCcw,
   Sparkles,
   BookOpen,
-  Award
+  Award,
+  Globe,
+  Cpu,
+  HelpCircle,
+  Compass,
+  TrendingUp,
+  AlertTriangle,
+  Layers,
+  ChevronRight
 } from 'lucide-react';
 
 interface LessonPracticeViewProps {
@@ -26,66 +39,118 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
   onBackToLesson,
   onCompletePractice
 }) => {
-  // Fallback realistic practice questions if lesson does not define them
-  const questions = (lesson.practiceQuestions && lesson.practiceQuestions.length > 0)
-    ? lesson.practiceQuestions
-    : [
-        {
-          id: 'q1',
-          question: 'What is the physical interpretation of the square of the wave function |Ψ(x,t)|²?',
-          options: [
-            'Total relativistic kinetic energy of the particle',
-            'Probability density of locating the particle at position x at time t',
-            'Exact deterministic trajectory in phase space',
-            'Phase velocity of the electromagnetic vector potential'
-          ],
-          correctIndex: 1,
-          explanation: "According to the Born interpretation, |Ψ(x,t)|² dV represents the probability of locating the particle within volume element dV."
-        },
-        {
-          id: 'q2',
-          question: 'In the time-independent Schrödinger equation ĤΨ = EΨ, what mathematical entity is Ĥ?',
-          options: [
-            'Hermitian differential operator representing total energy (Hamiltonian)',
-            'Scalar potential barrier coefficient',
-            'Annihilation creation operator product without ground state offset',
-            'Relativistic covariant 4-vector'
-          ],
-          correctIndex: 0,
-          explanation: 'Ĥ is the Hamiltonian operator (kinetic + potential energy), which is Hermitian to guarantee real observable energy eigenvalues.'
-        },
-        {
-          id: 'q3',
-          question: 'What normalization condition must any physically admissible bound state wave function satisfy?',
-          options: [
-            '∫ |Ψ(x)|² dx = 0',
-            '∫ |Ψ(x)|² dx = 1 across all space',
-            'Ψ(x) → ∞ as x → ±∞',
-            'dΨ/dx = 0 everywhere'
-          ],
-          correctIndex: 1,
-          explanation: 'The particle must exist somewhere in the universe with 100% certainty, requiring the spatial integral of probability density to equal 1.'
-        }
-      ];
-
+  const [sourceMode, setSourceMode] = useState<QuestionSourceMode>('FULL_ADAPTIVE');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [practiceSet, setPracticeSet] = useState<PracticeSet | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+
+  // Per-question answering state
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, any>>({});
+  const [selectedConfidence, setSelectedConfidence] = useState<Record<number, number>>({});
+  const [evaluatedEvidence, setEvaluatedEvidence] = useState<Record<number, MasteryEvidence>>({});
+  const [evaluatingIndex, setEvaluatingIndex] = useState<number | null>(null);
+
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [pointsReward, setPointsReward] = useState<number | null>(null);
+  const [conceptMasteryScore, setConceptMasteryScore] = useState<number>(0.65);
 
-  const currentQ = questions[currentQuestionIndex];
-  const selectedOption = selectedAnswers[currentQuestionIndex];
+  // Fetch adaptive practice set whenever lesson or sourceMode changes
+  useEffect(() => {
+    let isMounted = true;
+    async function loadPracticeSet() {
+      setIsLoading(true);
+      try {
+        const res = await fetch('/api/education/question-intelligence/practice-set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject: course.department || course.name || 'Physics',
+            targetConcept: lesson.title || "Newton's Laws",
+            overallMastery: 0.65,
+            conceptMastery: { [lesson.title]: conceptMasteryScore },
+            prerequisiteMastery: {
+              'Mass and Inertia': 0.8,
+              'Vector Decomposition': 0.55
+            },
+            recentAccuracy: 0.72,
+            confidence: 0.75,
+            sourceMode,
+            targetCount: 8
+          })
+        });
 
-  const handleSelectOption = (optionIndex: number) => {
-    if (isSubmitted) return;
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [currentQuestionIndex]: optionIndex
-    }));
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.practiceSet) {
+            setPracticeSet(data.practiceSet);
+            setSelectedAnswers({});
+            setSelectedConfidence({});
+            setEvaluatedEvidence({});
+            setCurrentQuestionIndex(0);
+            setIsSubmitted(false);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load practice set:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadPracticeSet();
+    return () => {
+      isMounted = false;
+    };
+  }, [lesson.id, lesson.title, course.department, course.name, sourceMode]);
+
+  // Fallback questions if offline or initial load
+  const currentItems: SelectedQuestionItem[] = practiceSet?.questions || [];
+  const currentItem = currentItems[currentQuestionIndex];
+  const currentQ = currentItem?.question;
+
+  const currentAnswer = selectedAnswers[currentQuestionIndex];
+  const currentConfidenceLevel = selectedConfidence[currentQuestionIndex] ?? 0.7;
+  const currentEvidence = evaluatedEvidence[currentQuestionIndex];
+
+  // Evaluate current question answer on-the-fly to provide immediate mastery evidence
+  const handleCheckAnswer = async () => {
+    if (!currentQ || currentAnswer === undefined || currentEvidence) return;
+    setEvaluatingIndex(currentQuestionIndex);
+
+    try {
+      const res = await fetch('/api/education/question-intelligence/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId: currentQ.id,
+          learnerAnswer: currentAnswer,
+          timeSpentSeconds: 45,
+          learnerConfidence: currentConfidenceLevel,
+          currentConceptMastery: conceptMasteryScore
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.evidence) {
+          setEvaluatedEvidence((prev) => ({
+            ...prev,
+            [currentQuestionIndex]: data.evidence
+          }));
+          if (typeof data.evidence.updatedConceptMastery === 'number') {
+            setConceptMasteryScore(data.evidence.updatedConceptMastery);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error evaluating answer:', err);
+    } finally {
+      setEvaluatingIndex(null);
+    }
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
+    if (currentQuestionIndex < currentItems.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     }
   };
@@ -96,16 +161,16 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
     }
   };
 
-  const handleSubmitEvaluation = async () => {
+  const handleFinishPractice = async () => {
     setIsSubmitted(true);
     let correctCount = 0;
-    questions.forEach((q, idx) => {
-      if (selectedAnswers[idx] === q.correctIndex) {
+    currentItems.forEach((_, idx) => {
+      if (evaluatedEvidence[idx]?.isCorrect) {
         correctCount += 1;
       }
     });
 
-    onCompletePractice?.(correctCount, questions.length);
+    onCompletePractice?.(correctCount, currentItems.length);
 
     // Call server engagement API for verified +10 engagement points
     try {
@@ -114,8 +179,8 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'practice_completed',
-          title: `Practice Checkpoint: ${lesson.title}`,
-          description: `Scored ${correctCount}/${questions.length} on lesson practice questions.`,
+          title: `Jarvis Adaptive Practice: ${lesson.title}`,
+          description: `Scored ${correctCount}/${currentItems.length} on adaptive practice (${sourceMode} mode).`,
           sourceEntityType: 'practice',
           sourceEntityId: `${lesson.id}-practice`,
           classId: course.id,
@@ -124,7 +189,9 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
             unitId: unit.id,
             lessonId: lesson.id,
             score: correctCount,
-            total: questions.length
+            total: currentItems.length,
+            sourceMode,
+            finalConceptMastery: conceptMasteryScore
           }
         })
       });
@@ -139,32 +206,32 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
 
   const handleReset = () => {
     setSelectedAnswers({});
+    setSelectedConfidence({});
+    setEvaluatedEvidence({});
     setIsSubmitted(false);
     setCurrentQuestionIndex(0);
     setPointsReward(null);
   };
 
-  const correctAnswersCount = questions.reduce((acc, q, idx) => {
-    return acc + (selectedAnswers[idx] === q.correctIndex ? 1 : 0);
-  }, 0);
-
-  const scorePercentage = Math.round((correctAnswersCount / questions.length) * 100);
+  const totalAnswered = Object.keys(evaluatedEvidence).length;
+  const correctCount = Object.values(evaluatedEvidence).filter((e) => e.isCorrect).length;
+  const scorePercentage = currentItems.length > 0 ? Math.round((correctCount / currentItems.length) * 100) : 0;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto w-full">
-      {/* 2. Practice Hero & Progress Header */}
+      {/* 1. Header & Source Mode Controls */}
       <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Diagnostic Learning Checkpoint</span>
+              <span className="font-bold tracking-wider uppercase">J.A.R.V.I.S. Adaptive Practice</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              Practice: {lesson.title}
+              Based on your current understanding of {lesson.title}
             </h1>
             <p className="text-xs text-slate-400 font-mono">
-              Apply core derivations and verify conceptual understanding.
+              Calibrated practice set targeting source derivations, prerequisite gaps, and conceptual mastery.
             </p>
           </div>
 
@@ -175,79 +242,393 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
           </div>
         </div>
 
-        {/* Question Stepper Indicator */}
-        <div className="flex items-center justify-between gap-2 pt-1 font-mono text-xs">
-          <span className="text-slate-400">
-            Question <span className="text-white font-bold">{currentQuestionIndex + 1}</span> of {questions.length}
-          </span>
-          <div className="flex items-center gap-1.5">
-            {questions.map((_, idx) => {
-              const isAnswered = selectedAnswers[idx] !== undefined;
-              const isCurrent = idx === currentQuestionIndex;
-              return (
-                <button
-                  type="button"
-                  key={idx}
-                  onClick={() => setCurrentQuestionIndex(idx)}
-                  className={`w-7 h-7 rounded-lg text-xs font-mono font-bold flex items-center justify-center transition-all cursor-pointer ${
-                    isCurrent
-                      ? 'border border-cyan-400 bg-cyan-500/20 text-cyan-200'
-                      : isAnswered
-                      ? 'border border-slate-700 bg-slate-800 text-white'
-                      : 'border border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
+        {/* Source Mode Selector (Book-Only vs Adaptive) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950/70 border border-slate-800 text-xs font-mono">
+            <span className="px-2 text-slate-400 text-[11px] font-semibold uppercase">Source Mode:</span>
+            <button
+              type="button"
+              onClick={() => setSourceMode('SOURCE_ONLY')}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                sourceMode === 'SOURCE_ONLY'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Book-Only
+            </button>
+            <button
+              type="button"
+              onClick={() => setSourceMode('SOURCE_PLUS_JARVIS')}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                sourceMode === 'SOURCE_PLUS_JARVIS'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Source + Jarvis
+            </button>
+            <button
+              type="button"
+              onClick={() => setSourceMode('SOURCE_PLUS_WEB')}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                sourceMode === 'SOURCE_PLUS_WEB'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Source + Web
+            </button>
+            <button
+              type="button"
+              onClick={() => setSourceMode('FULL_ADAPTIVE')}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                sourceMode === 'FULL_ADAPTIVE'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Full Adaptive
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+            <span>Concept Mastery:</span>
+            <span className="text-cyan-400 font-bold">{Math.round(conceptMasteryScore * 100)}%</span>
           </div>
         </div>
-      </div>
 
-      {/* 3. Primary Question Body */}
-      {!isSubmitted ? (
-        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-6">
-          <div className="space-y-2">
-            <span className="text-xs font-mono text-cyan-400 font-semibold uppercase tracking-wider">
-              Concept Problem {currentQuestionIndex + 1}
-            </span>
-            <h2 className="text-base sm:text-lg font-bold text-white leading-relaxed font-sans">
-              {currentQ.question}
-            </h2>
+        {/* Explainable Selection Rationale Banner */}
+        {practiceSet && (
+          <div className="p-3.5 rounded-xl border border-cyan-500/20 bg-cyan-950/20 text-xs space-y-2">
+            <div className="flex items-center gap-2 text-cyan-300 font-mono font-semibold">
+              <Compass className="w-3.5 h-3.5" />
+              <span>Jarvis Selection Rationale</span>
+            </div>
+            <p className="text-slate-300 font-sans leading-relaxed">
+              {practiceSet.selectionRationale}
+            </p>
+
+            {/* Breakdown Badges */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px]">
+              <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-300">
+                {practiceSet.totalQuestions} questions total
+              </span>
+              {practiceSet.breakdown.sourceGroundedCount > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 flex items-center gap-1">
+                  <BookOpen className="w-3 h-3" />
+                  {practiceSet.breakdown.sourceGroundedCount} from your material
+                </span>
+              )}
+              {practiceSet.breakdown.prerequisiteCount > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-amber-950/50 border border-amber-500/30 text-amber-300 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {practiceSet.breakdown.prerequisiteCount} prerequisite diagnosis
+                </span>
+              )}
+              {practiceSet.breakdown.applicationCount > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-purple-950/50 border border-purple-500/30 text-purple-300 flex items-center gap-1">
+                  <Layers className="w-3 h-3" />
+                  {practiceSet.breakdown.applicationCount} application
+                </span>
+              )}
+              {practiceSet.breakdown.challengeCount > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-red-950/40 border border-red-500/30 text-red-300 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  {practiceSet.breakdown.challengeCount} challenge
+                </span>
+              )}
+            </div>
           </div>
+        )}
 
-          {/* Options */}
-          <div className="space-y-2.5">
-            {currentQ.options.map((option, optIdx) => {
-              const isSelected = selectedOption === optIdx;
-              return (
-                <button
-                  type="button"
-                  key={optIdx}
-                  onClick={() => handleSelectOption(optIdx)}
-                  className={`w-full p-4 rounded-xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
-                    isSelected
-                      ? 'border-cyan-400/80 bg-cyan-500/15 text-white shadow-[0_0_12px_rgba(6,182,212,0.15)]'
-                      : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:bg-slate-900/80'
-                  }`}
-                >
-                  <span
-                    className={`w-6 h-6 rounded-full border text-xs font-mono flex items-center justify-center shrink-0 mt-0.5 ${
-                      isSelected
-                        ? 'border-cyan-400 bg-cyan-400 text-slate-950 font-bold'
-                        : 'border-slate-700 bg-slate-800 text-slate-400'
+        {/* Question Stepper */}
+        {currentItems.length > 0 && (
+          <div className="flex items-center justify-between gap-2 pt-2 font-mono text-xs">
+            <span className="text-slate-400">
+              Question <span className="text-white font-bold">{currentQuestionIndex + 1}</span> of {currentItems.length}
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {currentItems.map((item, idx) => {
+                const evidence = evaluatedEvidence[idx];
+                const isCurrent = idx === currentQuestionIndex;
+                const isAnswered = selectedAnswers[idx] !== undefined;
+
+                return (
+                  <button
+                    type="button"
+                    key={item.question.id}
+                    onClick={() => setCurrentQuestionIndex(idx)}
+                    className={`w-7 h-7 rounded-lg text-xs font-mono font-bold flex items-center justify-center transition-all cursor-pointer ${
+                      isCurrent
+                        ? 'border border-cyan-400 bg-cyan-500/20 text-cyan-200'
+                        : evidence
+                        ? evidence.isCorrect
+                          ? 'border border-emerald-500/50 bg-emerald-500/20 text-emerald-300'
+                          : 'border border-red-500/50 bg-red-500/20 text-red-300'
+                        : isAnswered
+                        ? 'border border-slate-700 bg-slate-800 text-white'
+                        : 'border border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
                     }`}
                   >
-                    {String.fromCharCode(65 + optIdx)}
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Loading State */}
+      {isLoading && (
+        <div className="p-12 text-center rounded-2xl border border-slate-800 bg-slate-900/60 text-slate-400 font-mono text-xs">
+          <Sparkles className="w-5 h-5 mx-auto mb-2 text-cyan-400 animate-pulse" />
+          <span>Jarvis Question Engine calibrating adaptive practice set...</span>
+        </div>
+      )}
+
+      {/* 3. Primary Question Body */}
+      {!isLoading && !isSubmitted && currentQ && (
+        <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-6">
+          {/* Question Metadata & Attribution Badges */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
+            <div className="flex items-center gap-2">
+              {/* Origin Badge */}
+              {currentQ.source === 'SOURCE' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-xs font-mono">
+                  <BookOpen className="w-3 h-3 text-cyan-400" />
+                  <span>
+                    Source Document {currentQ.sourceReference?.pageNumber ? `• Page ${currentQ.sourceReference.pageNumber}` : ''}
                   </span>
-                  <span className="text-sm font-sans leading-relaxed">{option}</span>
-                </button>
-              );
-            })}
+                </span>
+              )}
+              {currentQ.source === 'JARVIS_GENERATED' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono">
+                  <Cpu className="w-3 h-3 text-cyan-400" />
+                  <span>Jarvis Generated</span>
+                </span>
+              )}
+              {currentQ.source === 'WEB_RETRIEVED' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-950/60 border border-indigo-500/40 text-indigo-300 text-xs font-mono">
+                  <Globe className="w-3 h-3 text-indigo-400" />
+                  <span>Web Context</span>
+                </span>
+              )}
+
+              {/* Type Badge */}
+              <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400 uppercase">
+                {currentQ.questionType.replace('_', ' ')}
+              </span>
+
+              {/* Difficulty Badge */}
+              <span className={`px-2 py-0.5 rounded text-[11px] font-mono uppercase ${
+                currentQ.difficulty === 'challenge'
+                  ? 'bg-red-950/40 border border-red-500/30 text-red-300'
+                  : currentQ.difficulty === 'advanced'
+                  ? 'bg-purple-950/40 border border-purple-500/30 text-purple-300'
+                  : currentQ.difficulty === 'intermediate'
+                  ? 'bg-cyan-950/40 border border-cyan-500/30 text-cyan-300'
+                  : 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-300'
+              }`}>
+                {currentQ.difficulty}
+              </span>
+            </div>
+
+            {/* Why Jarvis Selected This Question */}
+            {currentItem?.selectionReason && (
+              <span className="text-[11px] font-mono text-slate-400 italic">
+                {currentItem.selectionReason}
+              </span>
+            )}
           </div>
 
-          {/* Navigation & Submission Controls */}
+          {/* Prompt */}
+          <div className="space-y-2">
+            <h2 className="text-base sm:text-lg font-bold text-white leading-relaxed font-sans">
+              {currentQ.prompt}
+            </h2>
+            {currentQ.sourceReference?.snippet && (
+              <p className="text-xs font-mono text-slate-400 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
+                <span className="text-cyan-400 font-semibold">Excerpts from source:</span> &ldquo;{currentQ.sourceReference.snippet}&rdquo;
+              </p>
+            )}
+          </div>
+
+          {/* Answer Controls: Multiple Choice or Numerical */}
+          {currentQ.options && currentQ.options.length > 0 ? (
+            <div className="space-y-2.5">
+              {currentQ.options.map((option, optIdx) => {
+                const isSelected = currentAnswer === option || currentAnswer === optIdx;
+                const isLocked = Boolean(currentEvidence);
+
+                return (
+                  <button
+                    type="button"
+                    key={optIdx}
+                    disabled={isLocked}
+                    onClick={() => {
+                      if (!isLocked) {
+                        setSelectedAnswers((prev) => ({
+                          ...prev,
+                          [currentQuestionIndex]: option
+                        }));
+                      }
+                    }}
+                    className={`w-full p-4 rounded-xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-cyan-400/80 bg-cyan-500/15 text-white shadow-[0_0_12px_rgba(6,182,212,0.15)]'
+                        : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:bg-slate-900/80'
+                    } ${isLocked ? 'cursor-default' : ''}`}
+                  >
+                    <span
+                      className={`w-6 h-6 rounded-full border text-xs font-mono flex items-center justify-center shrink-0 mt-0.5 ${
+                        isSelected
+                          ? 'border-cyan-400 bg-cyan-400 text-slate-950 font-bold'
+                          : 'border-slate-700 bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {String.fromCharCode(65 + optIdx)}
+                    </span>
+                    <span className="text-sm font-sans leading-relaxed">{option}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            // Numerical / Short Answer Input
+            <div className="space-y-3">
+              <label className="block text-xs font-mono text-slate-400 uppercase">
+                Enter numerical or symbolic answer:
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  disabled={Boolean(currentEvidence)}
+                  value={currentAnswer ?? ''}
+                  onChange={(e) => {
+                    setSelectedAnswers((prev) => ({
+                      ...prev,
+                      [currentQuestionIndex]: e.target.value
+                    }));
+                  }}
+                  placeholder="e.g. 2.5 or F_net/m"
+                  className="flex-1 p-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono text-sm focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Metacognitive Confidence Selector */}
+          {!currentEvidence && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-mono">
+              <span className="text-slate-400 flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Metacognitive Confidence:</span>
+              </span>
+              <div className="flex items-center gap-2">
+                {[
+                  { label: 'Low', val: 0.35 },
+                  { label: 'Medium', val: 0.70 },
+                  { label: 'High', val: 0.95 }
+                ].map(({ label, val }) => (
+                  <button
+                    type="button"
+                    key={label}
+                    onClick={() => {
+                      setSelectedConfidence((prev) => ({
+                        ...prev,
+                        [currentQuestionIndex]: val
+                      }));
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer ${
+                      currentConfidenceLevel === val
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                        : 'border border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Evaluation Action Button */}
+          {!currentEvidence && currentAnswer !== undefined && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleCheckAnswer}
+                disabled={evaluatingIndex === currentQuestionIndex}
+                className="w-full py-3 rounded-xl border border-cyan-400/50 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 font-mono text-xs font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.15)] cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Verify Answer & Generate Mastery Evidence</span>
+              </button>
+            </div>
+          )}
+
+          {/* Instant Mastery Evidence Feedback Card */}
+          {currentEvidence && (
+            <div className={`p-4 rounded-xl border text-xs space-y-3 font-sans animate-fade-in ${
+              currentEvidence.isCorrect
+                ? 'border-emerald-500/40 bg-emerald-950/20'
+                : 'border-amber-500/40 bg-amber-950/20'
+            }`}>
+              <div className="flex items-center justify-between font-mono">
+                <div className="flex items-center gap-2">
+                  {currentEvidence.isCorrect ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-amber-400" />
+                  )}
+                  <span className={`font-bold ${currentEvidence.isCorrect ? 'text-emerald-300' : 'text-amber-300'}`}>
+                    {currentEvidence.feedback.title}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">
+                    Mastery: {currentEvidence.masteryDelta >= 0 ? `+${currentEvidence.masteryDelta}` : currentEvidence.masteryDelta}
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300">
+                    {currentEvidence.confidenceAlignment.replace('_', ' ')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Misconception Analysis (if diagnosed) */}
+              {currentEvidence.feedback.misconceptionAnalysis && (
+                <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs">
+                  <div className="font-mono font-bold text-[11px] text-amber-400 uppercase tracking-wider mb-0.5">
+                    Diagnosed Misconception:
+                  </div>
+                  <p>{currentEvidence.feedback.misconceptionAnalysis}</p>
+                </div>
+              )}
+
+              {/* Explanation */}
+              <div className="text-slate-300 space-y-1">
+                <div className="font-mono font-semibold text-[11px] text-cyan-400 uppercase tracking-wider">
+                  Pedagogical Derivation
+                </div>
+                <p className="leading-relaxed">{currentEvidence.feedback.explanation}</p>
+              </div>
+
+              {/* Next Recommended Action */}
+              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800 space-y-1 text-xs">
+                <div className="flex items-center gap-1.5 font-mono text-[11px] text-purple-300 font-bold">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  <span>Next Recommended Action: {currentEvidence.feedback.nextRecommendedAction.action.replace('_', ' ')}</span>
+                </div>
+                <p className="text-slate-400">
+                  {currentEvidence.feedback.nextRecommendedAction.reason}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Controls */}
           <div className="flex items-center justify-between pt-4 border-t border-slate-800/80">
             <button
               type="button"
@@ -258,7 +639,7 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
               Previous
             </button>
 
-            {currentQuestionIndex < questions.length - 1 ? (
+            {currentQuestionIndex < currentItems.length - 1 ? (
               <button
                 type="button"
                 onClick={handleNext}
@@ -270,18 +651,20 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
             ) : (
               <button
                 type="button"
-                onClick={handleSubmitEvaluation}
-                disabled={Object.keys(selectedAnswers).length === 0}
+                onClick={handleFinishPractice}
+                disabled={totalAnswered === 0}
                 className="flex items-center gap-1.5 px-5 py-2.5 min-h-[40px] rounded-xl border border-emerald-400/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold tracking-wider transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Submit & View Results</span>
+                <span>Complete Practice Set</span>
               </button>
             )}
           </div>
         </div>
-      ) : (
-        /* 4. Results & Conceptual Explanations */
+      )}
+
+      {/* 4. Results & Mastery Evidence Summary */}
+      {!isLoading && isSubmitted && (
         <div className="space-y-6 animate-fade-in">
           <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md text-center space-y-4">
             <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto text-emerald-300">
@@ -293,7 +676,10 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
                 Practice Completed!
               </h2>
               <p className="text-sm font-mono text-slate-300">
-                You scored <span className="text-emerald-400 font-bold">{correctAnswersCount}</span> / {questions.length} ({scorePercentage}%)
+                You verified <span className="text-emerald-400 font-bold">{correctCount}</span> / {currentItems.length} concepts ({scorePercentage}%)
+              </p>
+              <p className="text-xs font-mono text-cyan-400">
+                Updated Concept Mastery: {Math.round(conceptMasteryScore * 100)}%
               </p>
             </div>
 
@@ -330,20 +716,26 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
           {/* Detailed Question Review */}
           <div className="space-y-4">
             <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 px-1">
-              Detailed Conceptual Review & Explanations
+              Detailed Conceptual Review & Provenance
             </h3>
 
             <div className="space-y-3">
-              {questions.map((q, idx) => {
-                const userChoice = selectedAnswers[idx];
-                const isCorrect = userChoice === q.correctIndex;
+              {currentItems.map((item, idx) => {
+                const q = item.question;
+                const evidence = evaluatedEvidence[idx];
+                const isCorrect = evidence?.isCorrect ?? false;
+
                 return (
                   <div
-                    key={idx}
+                    key={q.id}
                     className="p-5 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-3"
                   >
                     <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="font-bold text-slate-400">Question {idx + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-400">Question {idx + 1}</span>
+                        <span className="text-slate-500">•</span>
+                        <span className="text-cyan-400">{q.source}</span>
+                      </div>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold ${
                         isCorrect
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
@@ -354,26 +746,18 @@ export const LessonPracticeView: React.FC<LessonPracticeViewProps> = ({
                       </span>
                     </div>
 
-                    <p className="text-sm font-semibold text-white font-sans">{q.question}</p>
-
-                    <div className="text-xs font-mono space-y-1">
-                      <div className="text-slate-400">
-                        Your answer: <span className={isCorrect ? 'text-emerald-300 font-bold' : 'text-red-300 font-bold'}>
-                          {userChoice !== undefined ? q.options[userChoice] : 'Not answered'}
-                        </span>
-                      </div>
-                      {!isCorrect && (
-                        <div className="text-emerald-300">
-                          Correct answer: <span className="font-bold">{q.options[q.correctIndex]}</span>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-sm font-semibold text-white font-sans">{q.prompt}</p>
 
                     <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/60 text-xs text-slate-300 space-y-1 font-sans">
                       <div className="text-[10px] font-mono font-bold uppercase text-cyan-400 tracking-wider">
                         Explanation
                       </div>
                       <p className="leading-relaxed">{q.explanation}</p>
+                      {q.citation && (
+                        <div className="text-[11px] font-mono text-slate-400 pt-1">
+                          Citation: {q.citation}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

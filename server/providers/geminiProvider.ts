@@ -105,19 +105,23 @@ export class GeminiProvider implements AiProvider {
         config.tools = [{ functionDeclarations: options.tools }];
       }
 
-      let timeoutHandle: NodeJS.Timeout;
+      let timeoutHandle: NodeJS.Timeout | undefined;
       const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutHandle = setTimeout(() => reject(new Error('Gemini API call timed out after 25000ms')), 25000);
+        timeoutHandle = setTimeout(() => reject(new Error('Gemini API call timed out after 8000ms')), 8000);
       });
 
-      const responsePromise = this.client.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents,
-        config
-      });
+      let response: any;
+      try {
+        const responsePromise = this.client.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents,
+          config
+        });
 
-      const response = await Promise.race([responsePromise, timeoutPromise]);
-      clearTimeout(timeoutHandle!);
+        response = await Promise.race([responsePromise, timeoutPromise]);
+      } finally {
+        if (timeoutHandle) clearTimeout(timeoutHandle);
+      }
 
       const toolCalls: ToolCall[] = [];
       if (response.functionCalls && response.functionCalls.length > 0) {
@@ -141,15 +145,15 @@ export class GeminiProvider implements AiProvider {
       if (errMsg.includes('API key not valid') || errMsg.includes('API_KEY_INVALID')) {
         GeminiProvider.isKeyInvalid = true;
       }
-      if (errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429')) {
-        let backoffMs = 15 * 60 * 1000; // 15 minutes default
+      if (errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429') || errMsg.includes('timed out')) {
+        let backoffMs = errMsg.includes('timed out') ? 60 * 1000 : 15 * 60 * 1000;
         const retryMatch = errMsg.match(/retryDelay["']?\s*:\s*["']?(\d+)s?/i);
         if (retryMatch && retryMatch[1]) {
           const secs = parseInt(retryMatch[1], 10);
           if (!isNaN(secs) && secs > 0) backoffMs = secs * 1000;
         }
         GeminiProvider.quotaExhaustedUntil = Date.now() + backoffMs;
-        console.warn(`[GeminiProvider] Quota reached (429 RESOURCE_EXHAUSTED). Activating auxiliary deterministic engine for next ${Math.round(backoffMs / 1000)}s.`);
+        console.warn(`[GeminiProvider] Network/Quota backoff activated. Activating auxiliary deterministic engine for next ${Math.round(backoffMs / 1000)}s.`);
       }
       const safeMessage = errMsg.replace(/key=[^&\s]+/gi, 'key=[REDACTED]') || 'Gemini inference failed';
       throw new Error(`Gemini Provider Error: ${safeMessage}`);
@@ -183,7 +187,7 @@ export class GeminiProvider implements AiProvider {
       const contents = this.formatContents(messages, options);
 
       const stream = await this.client.models.generateContentStream({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents,
         config: {
           systemInstruction: JARVIS_SYSTEM_INSTRUCTION,

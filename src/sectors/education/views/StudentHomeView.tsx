@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { EducationClass, Assignment, StudentSubmission } from '../../../types/education.ts';
+import type { NextBestAction, UserContext, PersonalKnowledgeSignal } from '../../../types/personalIdentity.ts';
 import {
   PlayCircle,
   Clock,
@@ -15,7 +16,11 @@ import {
   Brain,
   Radio,
   Users,
-  MessageSquare
+  MessageSquare,
+  Compass,
+  BookOpen,
+  Zap,
+  Globe
 } from 'lucide-react';
 import {
   GlassCard,
@@ -77,6 +82,34 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
   const submittedIds = new Set(submissions.map((s) => s.assignmentId));
   const pendingAssignments = assignments.filter((a) => !submittedIds.has(a.id));
 
+  // Personal Jarvis OS State
+  const [personalHome, setPersonalHome] = useState<{
+    greeting?: string;
+    activeContext?: UserContext;
+    contexts?: UserContext[];
+    nextBestAction?: NextBestAction;
+    recentSignals?: PersonalKnowledgeSignal[];
+  } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadPersonalHome() {
+      try {
+        const res = await fetch('/api/personal/home');
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted && data.home) {
+            setPersonalHome(data.home);
+          }
+        }
+      } catch {}
+    }
+    loadPersonalHome();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Canonical Current Learning Target (Course → Chapter/Unit → Lesson)
   const physClass = classes.find((c) => c.id === 'class-phys-301') || classes[0];
   const physUnit = physClass?.units?.find((u) => u.id === 'unit-phys-2') || physClass?.units?.[0];
@@ -105,12 +138,13 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
       {/* 1. Page Header & Atmospheric Context (Editorial Unboxed Composition) */}
       <div className="space-y-3 pt-1">
         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-          <div>
-            <div className="text-xs font-mono text-neutral-400 tracking-wider uppercase font-medium">
-              Cadet Alex Chen <span className="text-neutral-600">·</span> Grade 12 Advanced Physics
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 tracking-wider uppercase font-semibold">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>MY JARVIS · {personalHome?.activeContext?.title || 'Class 11 Physics & JEE Prep'}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
-              Good morning, Alex
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              {personalHome?.greeting || 'Good morning, Alex'}
             </h1>
           </div>
 
@@ -141,6 +175,35 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Next Best Action Card (Deterministic Pedagogical Guidance) */}
+        {personalHome?.nextBestAction && (
+          <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/20 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-sans">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-mono text-cyan-300 font-bold">
+                <Compass className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="uppercase tracking-wider">Next Best Action:</span>
+                <span className="text-white font-sans font-semibold">{personalHome.nextBestAction.title}</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {personalHome.nextBestAction.rationale}
+              </p>
+            </div>
+
+            <div className="shrink-0">
+              {activeLesson && physUnit && physClass && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => onOpenLesson(physClass.id, physUnit.id, activeLesson.id)}
+                  icon={<Zap className="w-3.5 h-3.5 text-cyan-200" />}
+                >
+                  Start Action
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl leading-relaxed">
           Here is your curated academic focus and active learning track for today.
