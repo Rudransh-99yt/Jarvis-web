@@ -3,6 +3,8 @@
 // Types, Domain Models, and Provider Contracts
 // ============================================================================
 
+import type { QuestionNoveltyMode } from './questionExposure.ts';
+
 /**
  * Explicit question origin categories.
  * Strict hierarchy:
@@ -140,6 +142,7 @@ export interface LearnerMasteryContext {
   learningObjective?: string;
   sourceMode: QuestionSourceMode;
   targetCount?: number; // target count (default 10)
+  noveltyMode?: QuestionNoveltyMode; // 'NEW' | 'MORE' | 'REVIEW' | 'WEAKNESS_PRACTICE' | 'MIXED'
 }
 
 export interface PracticeSetBreakdown {
@@ -229,6 +232,8 @@ export interface QuestionEvaluationRequest {
   timeSpentSeconds: number;
   learnerConfidence?: number; // 0.0 - 1.0 or 1 - 5
   previousAttempts?: number;
+  learnerId?: string;
+  contextId?: string;
 }
 
 export type ConfidenceAlignment =

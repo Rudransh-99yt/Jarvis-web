@@ -91,6 +91,42 @@ export class DeterministicQuestionGenerator implements IQuestionGenerationProvid
           generationTimestamp: new Date().toISOString()
         }
       });
+    } else if (spec.concept.toLowerCase().includes('quadratic')) {
+      for (let i = 0; i < count; i++) {
+        const root1 = 2 + (i % 6);
+        const root2 = 3 + Math.floor(i / 6);
+        const b = -(root1 + root2);
+        const c = root1 * root2;
+        questions.push({
+          id: `gen-quad-${Date.now()}-${i + 1}`,
+          subject: spec.subject || 'Mathematics',
+          concept: spec.concept,
+          prerequisiteConcepts: ['Factoring', 'Polynomials'],
+          difficulty: spec.difficulty || 'intermediate',
+          questionType: 'multiple_choice',
+          source: 'JARVIS_GENERATED',
+          learningObjective: 'Solve quadratic equations by algebraic factoring and root verification.',
+          masteryContribution: 0.05,
+          estimatedTime: 90,
+          prompt: `Quadratic Item ${i + 1}: Solve for x: x^2 ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}x + ${c} = 0.`,
+          options: [`x = ${root1}, ${root2}`, `x = -${root1}, ${root2}`, `x = 0, ${root1 + root2}`, 'No real roots'],
+          answer: `x = ${root1}, ${root2}`,
+          distractors: [`x = -${root1}, ${root2}`, `x = 0, ${root1 + root2}`, 'No real roots'],
+          explanation: `Factoring yields (x - ${root1})(x - ${root2}) = 0, so the roots are x = ${root1} and x = ${root2}.`,
+          hints: ['Find two numbers that multiply to give the constant term and sum to the middle coefficient.'],
+          expectedReasoningLevel: 'conceptual',
+          generatedBy: 'Jarvis Quadratic Curriculum Generator',
+          qualityMetadata: {
+            accuracyRating: 1.0,
+            clarityScore: 0.98,
+            pedagogicalValue: 0.96,
+            verifiedGrounded: true,
+            rubricCriteria: ['factorization', 'roots_verification'],
+            generatedByEngine: this.id,
+            generationTimestamp: new Date().toISOString()
+          }
+        });
+      }
     } else {
       // General Fallback Generator for other concepts
       for (let i = 0; i < count; i++) {
@@ -155,6 +191,10 @@ export class GeneratedQuestionProvider implements IQuestionProvider {
 
   async isAvailable(): Promise<boolean> {
     return true;
+  }
+
+  async generateQuestions(spec: import('../types.ts').QuestionGenerationSpec): Promise<Question[]> {
+    return this.generator.generateQuestions(spec);
   }
 
   async getQuestions(query: QuestionQuery): Promise<Question[]> {

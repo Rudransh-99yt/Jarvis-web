@@ -20,7 +20,11 @@ import {
   Compass,
   BookOpen,
   Zap,
-  Globe
+  Globe,
+  FileText,
+  Download,
+  ShieldCheck,
+  ChevronRight
 } from 'lucide-react';
 import {
   GlassCard,
@@ -30,6 +34,9 @@ import {
 } from '../../../components/ui/index.ts';
 import { JarvisCore } from '../../../components/brand/JarvisCore.tsx';
 import { useMagnificationRail } from '../../../design-system/useMagnification.ts';
+import { knowledgeAssetClient } from '../../../services/knowledgeAssetClient.ts';
+import { ActionActivityTimeline } from '../../../components/actionExperience/ActionActivityTimeline.tsx';
+import type { KnowledgeAsset } from '../../../types/knowledgeAsset.ts';
 
 interface StudentHomeViewProps {
   classes: EducationClass[];
@@ -45,6 +52,7 @@ interface StudentHomeViewProps {
       | 'videos'
       | 'assignments'
       | 'knowledge'
+      | 'knowledge_assets'
       | 'calendar'
       | 'focus'
       | 'workspace'
@@ -91,6 +99,8 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
     recentSignals?: PersonalKnowledgeSignal[];
   } | null>(null);
 
+  const [recentAssets, setRecentAssets] = useState<KnowledgeAsset[]>([]);
+
   useEffect(() => {
     let mounted = true;
     async function loadPersonalHome() {
@@ -104,7 +114,18 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
         }
       } catch {}
     }
+
+    async function loadRecentKnowledge() {
+      try {
+        const list = await knowledgeAssetClient.searchAssets();
+        if (mounted) {
+          setRecentAssets(list.slice(0, 3));
+        }
+      } catch {}
+    }
+
     loadPersonalHome();
+    loadRecentKnowledge();
     return () => {
       mounted = false;
     };
@@ -428,6 +449,17 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             </button>
           </div>
 
+          <div ref={registerQuickActionRef('qa-knowledge-assets')} className="dock-magnifiable-horizontal shrink-0">
+            <button
+              onClick={() => onNavigateTab('knowledge_assets')}
+              className="relative flex items-center gap-2 px-3.5 py-2 rounded-xl glass-btn-secondary text-xs font-medium cursor-pointer overflow-hidden group select-none text-neutral-300 hover:text-white"
+            >
+              <div className="dock-specular-sheen" aria-hidden="true" />
+              <Layers className="w-3.5 h-3.5 text-cyan-400 group-hover:text-cyan-300 shrink-0" />
+              <span>Knowledge Assets</span>
+            </button>
+          </div>
+
           <div ref={registerQuickActionRef('qa-knowledge')} className="dock-magnifiable-horizontal shrink-0">
             <button
               onClick={() => onNavigateTab('knowledge')}
@@ -616,7 +648,77 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
         </div>
       </div>
 
-      {/* 5. Section: Knowledge & Media Library (Clean Minimalist Tiles) */}
+      {/* 5. Section: YOUR KNOWLEDGE (Verified Persistent Memory) */}
+      {recentAssets.length > 0 && (
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between px-0.5">
+            <div className="flex items-center gap-2">
+              <Layers className="w-3.5 h-3.5 text-cyan-400" />
+              <h2 className="text-xs font-semibold text-neutral-200 uppercase tracking-wider font-mono">
+                Your Knowledge · Reusable Assets ({recentAssets.length})
+              </h2>
+            </div>
+            <button
+              onClick={() => onNavigateTab('knowledge_assets')}
+              className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer font-mono"
+            >
+              <span>View All</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            {recentAssets.map((asset) => (
+              <div
+                key={asset.id}
+                className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:border-cyan-500/30 hover:bg-white/[0.04] transition-all flex flex-col justify-between space-y-3 group"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono uppercase font-bold text-cyan-300">
+                      {asset.assetType === 'QUESTION_SET'
+                        ? 'Question Bank'
+                        : asset.assetType === 'PDF'
+                        ? 'Study PDF'
+                        : asset.assetType === 'NOTES'
+                        ? 'Formula Notes'
+                        : 'Flashcards'}
+                    </span>
+                    {asset.validation.status === 'VALIDATED' && (
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400">
+                        <ShieldCheck className="w-3 h-3" />
+                        <span>Verified</span>
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-neutral-100 group-hover:text-white line-clamp-2">
+                    {asset.title}
+                  </h3>
+                  <p className="text-[11px] font-mono text-neutral-400">
+                    {asset.educationLevel} · {asset.topic}
+                    {asset.questionCount !== undefined ? ` · ${asset.questionCount} Qs` : ''}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+                  <span className="text-[10px] font-mono text-neutral-500">
+                    {asset.reusable ? 'Reusable' : 'Personal'}
+                  </span>
+                  <button
+                    onClick={() => onNavigateTab('knowledge_assets')}
+                    className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Open</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 6. Section: Knowledge & Media Library (Clean Minimalist Tiles) */}
       <div className="space-y-3 pt-2">
         <div className="text-xs font-semibold text-neutral-400 px-0.5 uppercase tracking-wider font-mono">
           Knowledge & Media Library
@@ -672,6 +774,11 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             </button>
           </div>
         </div>
+      </div>
+
+      {/* 7. Section: Action Activity Timeline */}
+      <div className="pt-2">
+        <ActionActivityTimeline contextType="EDUCATION" />
       </div>
     </div>
   );

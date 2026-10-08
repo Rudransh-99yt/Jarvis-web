@@ -88,6 +88,19 @@ export class ConfirmationPolicy {
     return action;
   }
 
+  cancelPendingAction(id: string, userId: string): boolean {
+    this.cleanupExpired();
+    const action = this.pendingActions.get(id);
+    if (!action) return false;
+
+    if (action.userId !== userId) {
+      throw new Error('SECURITY_VIOLATION: Pending action does not belong to this authenticated user.');
+    }
+
+    this.pendingActions.delete(id);
+    return true;
+  }
+
   findPendingActionForUser(userId: string): PendingConfirmationAction | null {
     this.cleanupExpired();
     for (const action of this.pendingActions.values()) {

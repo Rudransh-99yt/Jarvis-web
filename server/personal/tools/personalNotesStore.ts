@@ -244,6 +244,23 @@ export class PersonalNotesStore {
     this.studyPlans.set(userId, list);
     return plan;
   }
+
+  async deleteStudyPlan(userId: string, planId: string): Promise<boolean> {
+    const list = this.studyPlans.get(userId) || [];
+    const initialLen = list.length;
+    const remaining = list.filter((p) => p.id !== planId);
+    this.studyPlans.set(userId, remaining);
+    return remaining.length < initialLen;
+  }
+
+  async deleteFlashcard(userId: string, cardId: string): Promise<boolean> {
+    const list = this.flashcards.get(userId) || [];
+    const initialLen = list.length;
+    const remaining = list.filter((c) => c.id !== cardId);
+    this.flashcards.set(userId, remaining);
+    return remaining.length < initialLen;
+  }
 }
+
 
 export const personalNotesStore = new PersonalNotesStore();

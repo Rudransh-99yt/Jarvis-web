@@ -44,6 +44,7 @@ export type EducationSidebarSection =
   | 'study_groups'
   | 'notes'
   | 'knowledge'
+  | 'knowledge_assets'
   | 'videos'
   | 'classroom'
   | 'smartboard_os'
@@ -404,6 +405,7 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
               {currentRole === 'teacher' && renderNavButton('smartboard_os', 'SmartBoard OS', Tv)}
               {currentRole === 'teacher' && renderNavButton('board_history', 'Board Archive', FileCheck2)}
               {renderNavButton('knowledge', 'Knowledge Spaces', Brain)}
+              {renderNavButton('knowledge_assets', 'Knowledge Assets', Layers)}
               {renderNavButton('videos', 'Video Library', Video)}
               {renderNavButton('classroom', currentRole === 'teacher' ? 'Smart Classroom' : 'Live Classroom', Radio)}
             </div>

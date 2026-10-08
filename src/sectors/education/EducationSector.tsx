@@ -53,6 +53,7 @@ import { VideoLibraryView } from './views/VideoLibraryView.tsx';
 import { ClassesView } from './views/ClassesView.tsx';
 import { AssignmentsView } from './views/AssignmentsView.tsx';
 import { KnowledgeWorkspaceView } from './views/KnowledgeWorkspaceView.tsx';
+import { KnowledgeAssetsView } from './views/KnowledgeAssetsView.tsx';
 import { StudyAssistantView } from './views/StudyAssistantView.tsx';
 import { StudentPersonalNotesView } from './views/StudentPersonalNotesView.tsx';
 import { EngagementLeaderboardView } from './views/EngagementLeaderboardView.tsx';
@@ -103,6 +104,7 @@ export type DeepEducationView =
   | 'study_groups'
   | 'notes'
   | 'knowledge'
+  | 'knowledge_assets'
   | 'study';
 
 export const EducationSector: React.FC<EducationSectorProps> = ({
@@ -806,6 +808,7 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
     if (currentView === 'study_groups') return 'study_groups';
     if (currentView === 'notes') return 'notes';
     if (currentView === 'knowledge') return 'knowledge';
+    if (currentView === 'knowledge_assets') return 'knowledge_assets';
     if (currentView === 'videos') return 'videos';
     if (currentView === 'classroom') return 'classroom';
     if (currentView === 'smartboard_os') return 'smartboard_os';
@@ -882,6 +885,9 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
         break;
       case 'knowledge':
         handleSafeNavigate('knowledge');
+        break;
+      case 'knowledge_assets':
+        handleSafeNavigate('knowledge_assets');
         break;
       case 'videos':
         handleSafeNavigate('videos');
@@ -1027,6 +1033,11 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
 
     if (currentView === 'knowledge') {
       items.push({ id: 'knowledge', label: 'Knowledge Spaces', type: 'section' });
+      return items;
+    }
+
+    if (currentView === 'knowledge_assets') {
+      items.push({ id: 'knowledge_assets', label: 'Knowledge Assets & Reuse', type: 'section' });
       return items;
     }
 
@@ -1526,6 +1537,16 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
             />
           )}
 
+          {currentView === 'knowledge_assets' && (
+            <KnowledgeAssetsView
+              onBackToHome={() => setCurrentView(currentRole === 'student' ? 'student_home' : 'teacher_home')}
+              onOpenPracticeWithAsset={(asset) => {
+                // If question set has questions, user can launch practice or review
+                showNotification(`Opened Knowledge Asset: ${asset.title}`);
+              }}
+            />
+          )}
+
           {currentView === 'community' && (
             <EducationCommunityView
               classes={classes}
@@ -1562,6 +1583,8 @@ export const EducationSector: React.FC<EducationSectorProps> = ({
               onSendMessage={(msg) =>
                 onSendChatMessage(msg, { sector: 'education', role: currentRole, activeSpaceId: selectedSpaceId })
               }
+              onNavigateToKnowledgeAssets={() => handleSafeNavigate('knowledge_assets')}
+              onStartPractice={() => handleSafeNavigate('lesson_practice')}
             />
           )}
         </div>

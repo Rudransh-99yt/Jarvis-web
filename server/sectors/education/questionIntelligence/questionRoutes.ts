@@ -1,8 +1,27 @@
 import { Router, type Request, type Response } from 'express';
 import { questionEngine } from './questionEngine.ts';
+import { learnerExposureStore } from './learnerExposureStore.ts';
+import { authenticateRequest } from '../../../auth/index.ts';
+import type { AuthenticatedPrincipal } from '../../../auth/principal.ts';
 import type { LearnerMasteryContext, QuestionEvaluationRequest } from './types.ts';
+import type { QuestionNoveltyMode } from '../../../../src/types/questionExposure.ts';
 
 export const questionIntelligenceRouter = Router();
+
+async function getPrincipal(req: Request, res: Response): Promise<AuthenticatedPrincipal> {
+  if (res.locals.principal) return res.locals.principal;
+  const user = await authenticateRequest(req);
+  const principal: AuthenticatedPrincipal = {
+    userId: user.id,
+    role: user.role,
+    institutionId: user.institutionId,
+    workspaceId: user.workspaceId,
+    provenance: 'signed-hmac'
+  };
+  res.locals.principal = principal;
+  return principal;
+}
+
 
 /**
  * POST /api/education/question-intelligence/practice-set
@@ -49,12 +68,23 @@ questionIntelligenceRouter.post('/evaluate', async (req: Request, res: Response)
       return res.status(400).json({ error: 'questionId is required' });
     }
 
+    let learnerId = body.learnerId;
+    if (!learnerId && req.headers.authorization) {
+      try {
+        const principal = await getPrincipal(req, res);
+        learnerId = principal.userId;
+      } catch {}
+    }
+
+
     const request: QuestionEvaluationRequest = {
       questionId: body.questionId,
       learnerAnswer: body.learnerAnswer,
       timeSpentSeconds: typeof body.timeSpentSeconds === 'number' ? body.timeSpentSeconds : 30,
       learnerConfidence: typeof body.learnerConfidence === 'number' ? body.learnerConfidence : 0.7,
-      previousAttempts: typeof body.previousAttempts === 'number' ? body.previousAttempts : 0
+      previousAttempts: typeof body.previousAttempts === 'number' ? body.previousAttempts : 0,
+      learnerId,
+      contextId: body.contextId
     };
 
     const currentMastery = typeof body.currentConceptMastery === 'number' ? body.currentConceptMastery : 0.5;
@@ -125,3 +155,207 @@ questionIntelligenceRouter.get('/source-modes', (_req: Request, res: Response) =
     sourceModes: questionEngine.getSourceModes()
   });
 });
+
+/**
+ * POST /api/education/question-intelligence/novel-practice-set
+ * Generates an adaptive practice set respecting individual learner exposure history,
+ * novelty modes (NEW, MORE, REVIEW, WEAKNESS_PRACTICE, MIXED), and verified Knowledge Asset reuse.
+ */
+questionIntelligenceRouter.post('/novel-practice-set', async (req: Request, res: Response) => {
+  try {
+    const principal = await getPrincipal(req, res);
+    const body = req.body || {};
+
+    const subject = body.subject || 'Mathematics';
+    const topic = body.topic || 'Quadratic Equations';
+    const educationLevel = body.educationLevel || 'Class 10';
+    const difficulty = body.difficulty || 'intermediate';
+    const questionCount = typeof body.questionCount === 'number' ? body.questionCount : 10;
+    const contextId = body.contextId || 'ctx-default';
+    const noveltyMode: QuestionNoveltyMode = body.noveltyMode || 'NEW';
+    const conceptMasteries = body.conceptMasteries;
+    const weaknessConcepts = Array.isArray(body.weaknessConcepts) ? body.weaknessConcepts : undefined;
+    const generatePdf = body.generatePdf === true;
+    const sharedWithInstitution = body.sharedWithInstitution === true;
+
+    const result = await questionEngine.getNovelPracticeSetWithReuse(
+      {
+        subject,
+        topic,
+        educationLevel,
+        difficulty,
+        questionCount,
+        contextId,
+        noveltyMode,
+        conceptMasteries,
+        weaknessConcepts,
+        generatePdf,
+        sharedWithInstitution
+      },
+      principal
+    );
+
+    res.json({
+      success: true,
+      decision: result.decision,
+      noveltyResult: result.noveltyResult,
+      questions: result.questions,
+      practiceSet: result.practiceSet,
+      pdfStorageKey: result.pdfStorageKey,
+      reusedExistingAsset: result.reusedExistingAsset,
+      exposureSummary: result.exposureSummary
+    });
+  } catch (err: any) {
+    console.error('[QuestionIntelligence] Error generating novel practice set:', err);
+    res.status(500).json({ error: 'Failed to generate novel practice set', details: err?.message });
+  }
+});
+
+/**
+ * GET /api/education/question-intelligence/exposure-summary
+ * Returns aggregated exposure stats and weakness concepts for the authenticated learner.
+ */
+questionIntelligenceRouter.get('/exposure-summary', async (req: Request, res: Response) => {
+  try {
+    const principal = await getPrincipal(req, res);
+    const contextId = typeof req.query.contextId === 'string' ? req.query.contextId : undefined;
+    const topic = typeof req.query.topic === 'string' ? req.query.topic : undefined;
+
+    const summary = await learnerExposureStore.getSummary(principal.userId, contextId, topic);
+
+    res.json({
+      success: true,
+      summary
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve exposure summary', details: err?.message });
+  }
+});
+
+/**
+ * GET /api/education/question-intelligence/exposure-history
+ * Returns detailed question exposure logs for the authenticated learner.
+ */
+questionIntelligenceRouter.get('/exposure-history', async (req: Request, res: Response) => {
+  try {
+    const principal = await getPrincipal(req, res);
+    const contextId = typeof req.query.contextId === 'string' ? req.query.contextId : undefined;
+    const topic = typeof req.query.topic === 'string' ? req.query.topic : undefined;
+    const subject = typeof req.query.subject === 'string' ? req.query.subject : undefined;
+
+    const exposures = await learnerExposureStore.getExposures(principal.userId, contextId, {
+      topic,
+      subject
+    });
+
+    res.json({
+      success: true,
+      count: exposures.length,
+      exposures
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve exposure history', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/education/question-intelligence/record-exposure
+ * Records batch or single question exposure for the authenticated learner.
+ */
+questionIntelligenceRouter.post('/record-exposure', async (req: Request, res: Response) => {
+  try {
+    const principal = await getPrincipal(req, res);
+    const body = req.body || {};
+    const questions = Array.isArray(body.questions) ? body.questions : [];
+    const contextId = body.contextId || 'ctx-default';
+    const status = body.status || 'SEEN';
+    const assetId = body.assetId;
+    const subject = body.subject;
+    const topic = body.topic;
+
+    await learnerExposureStore.recordExposures({
+      userId: principal.userId,
+      contextId,
+      questions,
+      status,
+      assetId,
+      subject,
+      topic
+    });
+
+    res.json({
+      success: true,
+      recordedCount: questions.length
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to record question exposure', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/education/question-intelligence/record-attempt
+ * Records learner attempt and correctness evaluation for a question.
+ */
+questionIntelligenceRouter.post('/record-attempt', async (req: Request, res: Response) => {
+  try {
+    const principal = await getPrincipal(req, res);
+    const body = req.body || {};
+
+    if (!body.questionId) {
+      return res.status(400).json({ error: 'questionId is required' });
+    }
+
+    const exposure = await learnerExposureStore.recordAttempt({
+      userId: principal.userId,
+      contextId: body.contextId || 'ctx-default',
+      questionId: body.questionId,
+      isCorrect: !!body.isCorrect,
+      score: typeof body.score === 'number' ? body.score : (body.isCorrect ? 1.0 : 0.0),
+      concept: body.concept,
+      subject: body.subject,
+      topic: body.topic,
+      assetId: body.assetId
+    });
+
+    res.json({
+      success: true,
+      exposure
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to record attempt', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/education/question-intelligence/record-skip
+ * Records that a learner explicitly skipped a question.
+ */
+questionIntelligenceRouter.post('/record-skip', async (req: Request, res: Response) => {
+  try {
+    const principal = await getPrincipal(req, res);
+    const body = req.body || {};
+
+    if (!body.questionId) {
+      return res.status(400).json({ error: 'questionId is required' });
+    }
+
+    const exposure = await learnerExposureStore.recordSkip({
+      userId: principal.userId,
+      contextId: body.contextId || 'ctx-default',
+      questionId: body.questionId,
+      concept: body.concept,
+      subject: body.subject,
+      topic: body.topic,
+      assetId: body.assetId
+    });
+
+    res.json({
+      success: true,
+      exposure
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to record skip', details: err?.message });
+  }
+});
+
+

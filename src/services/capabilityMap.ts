@@ -216,6 +216,12 @@ export const VIEW_CAPABILITY_MAP: Record<DeepEducationView, ViewCapabilityDefini
     name: 'Knowledge Spaces',
     category: 'shared',
     defaultFallbackView: 'student_home'
+  },
+  knowledge_assets: {
+    requiredCapability: null,
+    name: 'Knowledge Assets & Reuse',
+    category: 'shared',
+    defaultFallbackView: 'student_home'
   }
 };
 

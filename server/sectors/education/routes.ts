@@ -15,11 +15,20 @@ import { copilotRouter } from './copilot/copilotRoutes.ts';
 import { liveClassroomRouter } from './live/liveClassroomRoutes.ts';
 import { classroomIntelligenceRouter } from './intelligence/classroomIntelligenceRoutes.ts';
 import { questionIntelligenceRouter } from './questionIntelligence/questionRoutes.ts';
+import { knowledgeAssetRouter } from './knowledgeAssets/knowledgeAssetRoutes.ts';
+import { classroomResponseRouter } from './classroomResponse/classroomResponseRoutes.ts';
 
 import { authenticateRequest } from '../../auth/index.ts';
 import { jarvisData } from '../../data/index.ts';
 
 export const educationRouter = Router();
+
+// Phase 6.5: Provider-Neutral Classroom Response Session Foundation
+educationRouter.use('/classroom', classroomResponseRouter);
+educationRouter.use('/classroom-response', classroomResponseRouter);
+
+// Phase 6: Knowledge Assets & Reuse Intelligence
+educationRouter.use('/knowledge-assets', knowledgeAssetRouter);
 
 // Phase 2: Source + Question Intelligence Engine
 educationRouter.use('/question-intelligence', questionIntelligenceRouter);

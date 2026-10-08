@@ -1091,8 +1091,8 @@
       "createdAt": "2026-10-02T10:30:00.000Z"
     },
     {
-      "id": "diag-quiz-1791370558176",
-      "quizId": "diag-quiz-1791370558176",
+      "id": "diag-quiz-1791447350247",
+      "quizId": "diag-quiz-1791447350247",
       "workspaceId": "ws-stark-core",
       "classId": "class-phys-301",
       "classroomSessionId": "session-phys-101",
@@ -1102,7 +1102,7 @@
       "status": "live",
       "currentQuestionIndex": -1,
       "totalQuestions": 3,
-      "createdAt": "2026-10-07T10:55:58.176Z"
+      "createdAt": "2026-10-08T08:15:50.247Z"
     }
   ],
   "quizQuestions": [
@@ -1141,9 +1141,9 @@
       "status": "pending"
     },
     {
-      "id": "diag-q-1-1791370558179",
-      "questionId": "diag-q-1-1791370558179",
-      "quizId": "diag-quiz-1791370558176",
+      "id": "diag-q-1-1791447350250",
+      "questionId": "diag-q-1-1791447350250",
+      "quizId": "diag-quiz-1791447350247",
       "order": 1,
       "questionText": "Calculate the total electric flux Φ_E through a cylindrical surface of length L enclosing line charge λ.",
       "options": [
@@ -1158,9 +1158,9 @@
       "status": "pending"
     },
     {
-      "id": "diag-q-2-1791370558181",
-      "questionId": "diag-q-2-1791370558181",
-      "quizId": "diag-quiz-1791370558176",
+      "id": "diag-q-2-1791447350251",
+      "questionId": "diag-q-2-1791447350251",
+      "quizId": "diag-quiz-1791447350247",
       "order": 2,
       "questionText": "Which of the following describes the field inside an ideal spherical conductor in electrostatic equilibrium?",
       "options": [
@@ -1175,9 +1175,9 @@
       "status": "pending"
     },
     {
-      "id": "diag-q-3-1791370558182",
-      "questionId": "diag-q-3-1791370558182",
-      "quizId": "diag-quiz-1791370558176",
+      "id": "diag-q-3-1791447350252",
+      "questionId": "diag-q-3-1791447350252",
+      "quizId": "diag-quiz-1791447350247",
       "order": 3,
       "questionText": "Derive the commutation bracket [x, p] in one-dimensional wave mechanics.",
       "options": [

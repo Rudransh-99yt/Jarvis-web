@@ -6,6 +6,7 @@ import { personalMemoryStore } from './memoryStore.ts';
 import { personalKnowledgeStore } from './knowledgeStore.ts';
 import { webSearchProvider } from './webSearchProvider.ts';
 import { conversationEngine } from './conversationEngine.ts';
+import { activityTimelineStore } from './activityTimelineStore.ts';
 import type { ProgressiveOnboardingPayload } from './types.ts';
 
 export const personalRouter = Router();
@@ -564,6 +565,40 @@ personalRouter.post('/tools/confirm', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/personal/tools/cancel
+ * Cancels a pending confirmation action deterministically
+ */
+personalRouter.post('/tools/cancel', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { pendingActionId } = req.body || {};
+
+    if (!pendingActionId) {
+      return res.status(400).json({ error: 'pendingActionId is required' });
+    }
+
+    const { confirmationPolicy } = await import('./tools/index.ts');
+    const cancelled = confirmationPolicy.cancelPendingAction(pendingActionId, userId);
+
+    if (!cancelled) {
+      return res.status(404).json({ error: 'Pending action not found or already processed' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Pending action has been cancelled.',
+      pendingActionId
+    });
+  } catch (err: any) {
+    if (err?.message?.includes('SECURITY_VIOLATION')) {
+      return res.status(403).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Failed to cancel tool action', details: err?.message });
+  }
+});
+
+
+/**
  * GET /api/personal/notes
  * List user personal study notes
  */
@@ -692,5 +727,112 @@ personalRouter.post('/flashcards', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to create flashcard', details: err?.message });
   }
 });
+
+/**
+ * GET /api/personal/activity-timeline
+ * Returns user action activity history with context isolation
+ */
+personalRouter.get('/activity-timeline', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const contextId = typeof req.query.contextId === 'string' ? req.query.contextId : undefined;
+    const contextType = typeof req.query.contextType === 'string' ? req.query.contextType : undefined;
+    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : undefined;
+
+    const items = await activityTimelineStore.getActivity(userId, { contextId, contextType, limit });
+    res.json({
+      success: true,
+      count: items.length,
+      items
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve activity timeline', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/activity-timeline
+ * Records an action activity event for the authenticated user and context
+ */
+personalRouter.post('/activity-timeline', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const {
+      contextId,
+      contextType,
+      title,
+      category,
+      sourceTitle,
+      assetId,
+      reusedCount,
+      generatedCount,
+      totalCount,
+      canUndo,
+      reversibleAction
+    } = req.body || {};
+
+    if (!title) {
+      return res.status(400).json({ error: 'title is required' });
+    }
+
+    const activeContext = await contextEngine.getActiveContext(userId);
+    const resolvedContextId = contextId || activeContext.id;
+    const resolvedContextType = contextType || activeContext.type;
+
+    const item = await activityTimelineStore.recordActivity(userId, {
+      contextId: resolvedContextId,
+      contextType: resolvedContextType,
+      title,
+      category: category || 'practice',
+      sourceTitle,
+      assetId,
+      reusedCount,
+      generatedCount,
+      totalCount,
+      canUndo: Boolean(canUndo),
+      undone: false,
+      reversibleAction
+    });
+
+    res.json({
+      success: true,
+      item
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to record activity', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/activity-timeline/:id/undo
+ * Safely rolls back an action if and ONLY if it is safely reversible
+ */
+personalRouter.post('/activity-timeline/:id/undo', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const activityId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!activityId) {
+      return res.status(400).json({ error: 'activityId is required' });
+    }
+
+    const result = await activityTimelineStore.undoActivity(userId, activityId);
+    if (!result.ok) {
+      const statusCode = result.error === 'NOT_FOUND' ? 404 : 400;
+      return res.status(statusCode).json({ error: result.error, message: result.message });
+    }
+
+    res.json({
+      success: true,
+      message: result.message,
+      activityId
+    });
+  } catch (err: any) {
+    if (err?.message?.includes('SECURITY_VIOLATION')) {
+      return res.status(403).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Failed to undo activity', details: err?.message });
+  }
+});
+
 
 
