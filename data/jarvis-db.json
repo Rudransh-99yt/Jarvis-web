@@ -198,46 +198,6 @@
       "createdAt": "2026-10-02T09:00:00.000Z",
       "updatedAt": "2026-10-02T09:30:00.000Z",
       "messageCount": 3
-    },
-    {
-      "id": "session-1791465577871-q8ytv",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "What is the system health?",
-      "sector": "command",
-      "createdAt": "2026-10-08T13:19:37.871Z",
-      "updatedAt": "2026-10-08T13:19:45.876Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791465585893-7stod",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "Activate defense matrix protocol",
-      "sector": "command",
-      "createdAt": "2026-10-08T13:19:45.893Z",
-      "updatedAt": "2026-10-08T13:19:45.894Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791465585899-xabzd",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "Run a system health check.",
-      "sector": "command",
-      "createdAt": "2026-10-08T13:19:45.899Z",
-      "updatedAt": "2026-10-08T13:19:45.900Z",
-      "messageCount": 0
-    },
-    {
-      "id": "session-1791465586071-qyxif",
-      "workspaceId": "ws-stark-core",
-      "userId": "user-tony",
-      "title": "Hello Jarvis",
-      "sector": "command",
-      "createdAt": "2026-10-08T13:19:46.071Z",
-      "updatedAt": "2026-10-08T13:19:46.072Z",
-      "messageCount": 0
     }
   ],
   "messages": [
@@ -310,62 +270,6 @@
       "readBy": [
         "teacher-1"
       ]
-    },
-    {
-      "id": "msg-1791465577871-60su4",
-      "role": "user",
-      "content": "What is the system health?",
-      "timestamp": "2026-10-08T13:19:37.871Z",
-      "conversationId": "session-1791465577871-q8ytv"
-    },
-    {
-      "id": "msg-1791465585876-up72j",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 99s, and internal diagnostic buses remain nominal, sir.",
-      "timestamp": "2026-10-08T13:19:45.876Z",
-      "conversationId": "session-1791465577871-q8ytv"
-    },
-    {
-      "id": "msg-1791465585893-q6x15",
-      "role": "user",
-      "content": "Activate defense matrix protocol",
-      "timestamp": "2026-10-08T13:19:45.893Z",
-      "conversationId": "session-1791465585893-7stod"
-    },
-    {
-      "id": "msg-1791465585894-ygxgd",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive executed: Protocol [Defense Matrix] has been successfully ENGAGED. Subsystem harmonics updated, sir.",
-      "timestamp": "2026-10-08T13:19:45.894Z",
-      "conversationId": "session-1791465585893-7stod"
-    },
-    {
-      "id": "msg-1791465585899-ssrp8",
-      "role": "user",
-      "content": "Run a system health check.",
-      "timestamp": "2026-10-08T13:19:45.899Z",
-      "conversationId": "session-1791465585899-xabzd"
-    },
-    {
-      "id": "msg-1791465585900-0p16u",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Health telemetry confirmed: All monitored subsystems are reporting HEALTHY status. Server uptime is 99s, and internal diagnostic buses remain nominal, sir.",
-      "timestamp": "2026-10-08T13:19:45.900Z",
-      "conversationId": "session-1791465585899-xabzd"
-    },
-    {
-      "id": "msg-1791465586071-nfu44",
-      "role": "user",
-      "content": "Hello Jarvis",
-      "timestamp": "2026-10-08T13:19:46.071Z",
-      "conversationId": "session-1791465586071-qyxif"
-    },
-    {
-      "id": "msg-1791465586072-7ekk8",
-      "role": "assistant",
-      "content": "[Auxiliary Core] Directive acknowledged: \"Hello Jarvis\". Primary Gemini satellite link is currently awaiting configuration. Auxiliary telemetry routines remain fully operational, sir.",
-      "timestamp": "2026-10-08T13:19:46.072Z",
-      "conversationId": "session-1791465586071-qyxif"
     }
   ],
   "knowledgeSpaces": [
@@ -820,44 +724,7 @@
     }
   ],
   "studyArtifacts": [],
-  "auditEvents": [
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "session-1791465577871-q8ytv",
-      "toolName": "get_system_health",
-      "sector": "command",
-      "args": {},
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791465585876-ja8j",
-      "timestamp": "2026-10-08T13:19:45.876Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "session-1791465585893-7stod",
-      "toolName": "set_protocol",
-      "sector": "command",
-      "args": {
-        "protocolId": "defense_matrix",
-        "active": true
-      },
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791465585894-nwhj",
-      "timestamp": "2026-10-08T13:19:45.894Z"
-    },
-    {
-      "workspaceId": "ws-stark-core",
-      "sessionId": "session-1791465585899-xabzd",
-      "toolName": "get_system_health",
-      "sector": "command",
-      "args": {},
-      "ok": true,
-      "executionTimeMs": 1,
-      "id": "audit-1791465585900-gpp6",
-      "timestamp": "2026-10-08T13:19:45.900Z"
-    }
-  ],
+  "auditEvents": [],
   "researchProjects": [
     {
       "id": "proj-arc-stabilization",
@@ -1224,8 +1091,8 @@
       "createdAt": "2026-10-02T10:30:00.000Z"
     },
     {
-      "id": "diag-quiz-1791447350247",
-      "quizId": "diag-quiz-1791447350247",
+      "id": "diag-quiz-1791473603825",
+      "quizId": "diag-quiz-1791473603825",
       "workspaceId": "ws-stark-core",
       "classId": "class-phys-301",
       "classroomSessionId": "session-phys-101",
@@ -1235,7 +1102,7 @@
       "status": "live",
       "currentQuestionIndex": -1,
       "totalQuestions": 3,
-      "createdAt": "2026-10-08T08:15:50.247Z"
+      "createdAt": "2026-10-08T15:33:23.825Z"
     }
   ],
   "quizQuestions": [
@@ -1274,9 +1141,9 @@
       "status": "pending"
     },
     {
-      "id": "diag-q-1-1791447350250",
-      "questionId": "diag-q-1-1791447350250",
-      "quizId": "diag-quiz-1791447350247",
+      "id": "diag-q-1-1791473603828",
+      "questionId": "diag-q-1-1791473603828",
+      "quizId": "diag-quiz-1791473603825",
       "order": 1,
       "questionText": "Calculate the total electric flux Φ_E through a cylindrical surface of length L enclosing line charge λ.",
       "options": [
@@ -1291,9 +1158,9 @@
       "status": "pending"
     },
     {
-      "id": "diag-q-2-1791447350251",
-      "questionId": "diag-q-2-1791447350251",
-      "quizId": "diag-quiz-1791447350247",
+      "id": "diag-q-2-1791473603830",
+      "questionId": "diag-q-2-1791473603830",
+      "quizId": "diag-quiz-1791473603825",
       "order": 2,
       "questionText": "Which of the following describes the field inside an ideal spherical conductor in electrostatic equilibrium?",
       "options": [
@@ -1308,9 +1175,9 @@
       "status": "pending"
     },
     {
-      "id": "diag-q-3-1791447350252",
-      "questionId": "diag-q-3-1791447350252",
-      "quizId": "diag-quiz-1791447350247",
+      "id": "diag-q-3-1791473603833",
+      "questionId": "diag-q-3-1791473603833",
+      "quizId": "diag-quiz-1791473603825",
       "order": 3,
       "questionText": "Derive the commutation bracket [x, p] in one-dimensional wave mechanics.",
       "options": [

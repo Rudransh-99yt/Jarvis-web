@@ -18,6 +18,10 @@ import { storageManager } from './server/storage/index.ts';
 import { jarvisData } from './server/data/index.ts';
 import { personalRouter } from './server/personal/personalRoutes.ts';
 import { authRouter } from './server/auth/index.ts';
+import { correlationMiddleware } from './server/logging/logger.ts';
+import { corsAndSecurityHeaders } from './server/security/corsAndHeaders.ts';
+import { getProductionDiagnostics } from './server/diagnostics/productionHealth.ts';
+import { productionErrorHandler } from './server/middleware/errorHandler.ts';
 
 function getArg(flag: string): string | undefined {
   const idx = process.argv.indexOf(flag);
@@ -38,48 +42,21 @@ const PORT = parseInt(
 const HOST = getArg('--host') || process.env.HOST || '0.0.0.0';
 const startTime = Date.now();
 
+// 1. Production Correlation & Logging Middleware
+app.use(correlationMiddleware);
+
+// 2. Production Security Headers & CORS Policy
+app.use(corsAndSecurityHeaders);
+
 // Server-side parsing with support for large file payloads (Milestone 10)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.raw({ limit: '50mb', type: ['application/octet-stream', 'application/pdf', 'image/*'] }));
 
-// Health Check Endpoint
-app.get(['/api/health', '/api/system/health'], (_req: Request, res: Response) => {
-  const uptimeSeconds = Math.floor((Date.now() - startTime) / 1000);
-  const { provider, isFallback } = providerManager.getActiveProvider();
-
-  const healthData: HealthResponse & {
-    tools: { count: number; registered: string[] };
-    persistence: { driver: string; persistent: boolean; path?: string };
-    storage?: { provider: string; ready: boolean };
-  } = {
-    status: 'healthy',
-    version: '1.5.0',
-    service: 'web-jarvis-api',
-    uptimeSeconds,
-    timestamp: new Date().toISOString(),
-    provider: {
-      name: provider.name,
-      available: !isFallback
-    },
-    sectors: {
-      active: ['command', 'education', 'research'],
-      available: ['command', 'education', 'research', 'finance', 'home']
-    },
-    tools: {
-      count: toolRegistry.list().length,
-      registered: toolRegistry.list().map((t) => t.name)
-    },
-    persistence: {
-      driver: 'json-file-store',
-      persistent: jarvisData.isPersistent,
-      path: jarvisData.storagePath
-    },
-    storage: {
-      provider: storageManager.getProvider().name,
-      ready: true
-    }
-  };
-  res.json(healthData);
+// Production Health & Diagnostics Endpoint
+app.get(['/api/health', '/api/system/health'], async (_req: Request, res: Response) => {
+  const diagnostics = await getProductionDiagnostics(startTime);
+  const httpCode = diagnostics.status === 'unhealthy' ? 503 : 200;
+  res.status(httpCode).json(diagnostics);
 });
 
 // Core Platform REST Routes
@@ -126,6 +103,9 @@ app.get('/api/tools', (req: Request, res: Response) => {
 
 // Primary Chat Route (Streaming SSE or Unary JSON with Tool Loop)
 app.post('/api/chat', ...authenticatedChatRoute);
+
+// 3. Centralized Production Error Handling for API routes
+app.use(productionErrorHandler);
 
 // Frontend Vite Integration: Middleware mode in development, static bundle in production
 async function startServer() {

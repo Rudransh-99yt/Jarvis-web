@@ -4,7 +4,9 @@ import type { User } from '../data/types.ts';
 import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
 import { AuthService, AuthenticationError, authService } from './tokens.ts';
+import { checkPrivateAlphaAccess, getAlphaAllowlistConfig } from './alphaAllowlist.ts';
 export { AuthenticationError, AuthService, authService } from './tokens.ts';
+export { checkPrivateAlphaAccess, getAlphaAllowlistConfig } from './alphaAllowlist.ts';
 
 export * from './classroomPolicy.ts';
 export * from './tickets.ts';
@@ -60,5 +62,17 @@ export async function authenticateRequest(
 
   // Token payload identity is verified cryptographically and attributes are then
   // reloaded from the repository; client headers never establish authority.
-  return new AuthService(repo).authenticateToken(token);
+  const user = await new AuthService(repo).authenticateToken(token);
+
+  // Private Alpha access enforcement: if allowlist is active, reject unlisted accounts
+  const alphaCheck = checkPrivateAlphaAccess(user);
+  if (!alphaCheck.allowed) {
+    throw new AuthenticationError(
+      alphaCheck.reason || `Access denied: Account '${user.email || user.id}' is not authorized for this Private Alpha environment.`,
+      403,
+      'PRIVATE_ALPHA_RESTRICTED'
+    );
+  }
+
+  return user;
 }

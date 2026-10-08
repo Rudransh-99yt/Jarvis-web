@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { ClassMessagingDeck } from './ClassMessagingDeck.tsx';
 import { FileUploadModal } from '../../../components/files/FileUploadModal.tsx';
+import { ClassroomResponseSessionView } from '../components/ClassroomResponseSessionView.tsx';
 import type { FileRecord } from '../../../types/storage.ts';
 
 interface TeacherClassDetailViewProps {
@@ -54,7 +55,8 @@ export type ClassIntelligenceTab =
   | 'community'
   | 'knowledge'
   | 'history'
-  | 'intelligence';
+  | 'intelligence'
+  | 'responses';
 
 export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
   course,
@@ -200,6 +202,7 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
           { id: 'students', label: `Cadets (${course.studentCount})`, icon: Users },
           { id: 'assignments', label: `Assignments (${courseAssignments.length})`, icon: FileSpreadsheet },
           { id: 'assessments', label: 'Assessments', icon: HelpCircle },
+          { id: 'responses', label: 'Responses', icon: Radio },
           { id: 'intelligence', label: 'Intelligence', icon: Brain },
           { id: 'community', label: 'Comm Link', icon: MessageSquare },
           { id: 'knowledge', label: `Materials (${course.materials?.length || 0})`, icon: FileText },
@@ -911,6 +914,11 @@ export const TeacherClassDetailView: React.FC<TeacherClassDetailViewProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* TAB: RESPONSES (Phase 6.5 Classroom Response Sessions) */}
+      {activeTab === 'responses' && (
+        <ClassroomResponseSessionView course={course} />
       )}
 
       {/* Upload Modal */}
