@@ -1,6 +1,6 @@
 /**
  * JARVIS-WEB — Design System Tokens & Semantic Utilities
- * 
+ *
  * Provides consistent tokens for:
  * - Neutral Liquid-Glass Material Levels (Level 0 Environment -> Level 3 Floating)
  * - Semantic Neutral Palette (Background, Surface, Border, Text, Accent, Status)
@@ -11,18 +11,19 @@
 export const glassTokens = {
   // Level 0: Atmospheric environment canvas
   level0: 'glass-level-0',
-  
+
   // Level 1: Quiet ambient glass & primary shell chrome
   ambient: 'glass-ambient',
   level1: 'glass-level-1',
-  
+  liquidBar: 'glass-liquid-bar',
+
   // Level 2: Content containers (Cards, Lists, Panels, Stats)
   level2: 'glass-level-2',
   level2Interactive: 'glass-level-2-interactive',
   elevated: 'glass-elevated',
   lessonCard: 'glass-lesson-card',
   scheduleCard: 'glass-schedule-card',
-  
+
   // Level 3: Elevated floating surfaces (Modals, Dropdowns, Flyouts, Popovers)
   level3: 'glass-level-3',
 
@@ -36,6 +37,10 @@ export const glassTokens = {
   // Proximity Magnification Classes
   dockMagnifiable: 'dock-magnifiable',
   dockMagnifiableHorizontal: 'dock-magnifiable-horizontal',
+
+  // Two-State Navigation Tokens
+  navEngravedText: 'nav-engraved-text',
+  navSuspensionCable: 'nav-suspension-cable',
 } as const;
 
 export const colorTokens = {
@@ -108,4 +113,20 @@ export const radiusTokens = {
   card: 'rounded-xl',           // 12px
   panel: 'rounded-2xl',         // 16px
   full: 'rounded-full',
+} as const;
+
+export const motionTokens = {
+  easeOutExpo: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  easeInOutSmooth: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  durationFast: '150ms',
+  durationNormal: '200ms',
+  durationGentle: '300ms',
+  revealSoft: 'animate-reveal-soft',
+  slideDown: 'animate-slide-down',
+  jarvisBreathe: 'animate-jarvis-breathe',
+  jarvisSingularity: 'animate-jarvis-singularity',
+  stagger1: 'stagger-1',
+  stagger2: 'stagger-2',
+  stagger3: 'stagger-3',
+  stagger4: 'stagger-4',
 } as const;

@@ -1,8 +1,11 @@
 // JARVIS-WEB — P0-5 SERVER-DERIVED ROLE CAPABILITIES + ROLE-SPECIFIC IA TEST SUITE
 import assert from 'node:assert';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 import express from 'express';
 import type { Server } from 'node:http';
-import { jarvisData } from '../server/data/index.ts';
+import { jarvisData, DiskJarvisDataRepository, setActiveRepository, resetActiveRepository } from '../server/data/index.ts';
 import { authRouter } from '../server/auth/authRoutes.ts';
 import { educationRouter } from '../server/sectors/education/routes.ts';
 import { authService, resolveCapabilities, hasCapability } from '../server/auth/index.ts';
@@ -15,6 +18,16 @@ import { knowledgeRouter } from '../server/routes/knowledgeRoutes.ts';
 console.log('=== [JARVIS-WEB] P0-5 SERVER-DERIVED ROLE CAPABILITIES & IA TEST SUITE ===');
 
 async function runServerRoleCapabilitiesTests() {
+  const defaultDbPath = path.resolve(process.cwd(), 'data', 'jarvis-db.json');
+  const isolatedDir = path.resolve(process.cwd(), 'tmp', `p05-test-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`);
+  fs.mkdirSync(isolatedDir, { recursive: true });
+  const isolatedDbPath = path.join(isolatedDir, 'jarvis-db.json');
+  if (fs.existsSync(defaultDbPath)) {
+    fs.copyFileSync(defaultDbPath, isolatedDbPath);
+  }
+  const isolatedRepo = new DiskJarvisDataRepository(isolatedDbPath);
+  setActiveRepository(isolatedRepo);
+  await jarvisData.init();
   await jarvisData.seed();
   const repo = jarvisData;
 
@@ -463,6 +476,10 @@ async function runServerRoleCapabilitiesTests() {
       (server as any).closeAllConnections?.();
     } catch {}
     server.close();
+    resetActiveRepository();
+    try {
+      fs.rmSync(isolatedDir, { recursive: true, force: true });
+    } catch {}
   }
 }
 

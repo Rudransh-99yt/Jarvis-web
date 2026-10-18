@@ -3,7 +3,7 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import { jarvisData, setActiveRepository } from '../server/data/index.ts';
+import { jarvisData, setActiveRepository, resetActiveRepository } from '../server/data/index.ts';
 import { DiskJarvisDataRepository } from '../server/data/diskRepository.ts';
 import { academicIntegrationService } from '../server/sectors/education/academicIntegrationService.ts';
 import { classSessionStore } from '../server/sectors/education/classSessions/classSessionStore.ts';
@@ -43,7 +43,13 @@ async function runAcademicIntegrationTestSuite() {
   await testRepo.seed();
   setActiveRepository(testRepo);
 
-  const teacherUser: User = {
+  const tmpSessionsPath = path.join(testDbDir, `integration-sessions-${Date.now()}.json`);
+  const tmpAcademicPath = path.join(testDbDir, `integration-academic-${Date.now()}.json`);
+  classSessionStore.setStoragePath(tmpSessionsPath);
+  academicIntegrationService.setStoragePath(tmpAcademicPath);
+
+  try {
+    const teacherUser: User = {
     id: 'teacher-1',
     displayName: 'Dr. Sarah Connor',
     email: 'sarah@stark.local',
@@ -463,6 +469,15 @@ async function runAcademicIntegrationTestSuite() {
   console.log('\n================================================================');
   console.log(`=== AUDIT COMPLETE: ${passed}/${total} ASSERTIONS PASSED ===`);
   console.log('================================================================\n');
+  } finally {
+    await testRepo.close();
+    resetActiveRepository();
+    classSessionStore.setStoragePath();
+    academicIntegrationService.setStoragePath();
+    try { if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath); } catch {}
+    try { if (fs.existsSync(tmpSessionsPath)) fs.unlinkSync(tmpSessionsPath); } catch {}
+    try { if (fs.existsSync(tmpAcademicPath)) fs.unlinkSync(tmpAcademicPath); } catch {}
+  }
 }
 
 runAcademicIntegrationTestSuite()

@@ -4,6 +4,7 @@ import type { ClassSession } from '../../../types/classSession.ts';
 import type { SmartBoardDevice, BoardDocument, SmartBoardSurfaceTab } from '../../../types/smartboard.ts';
 import { SmartBoardCanvas } from './SmartBoardCanvas.tsx';
 import type { Quiz, QuizQuestion, QuestionAggregate } from '../../../types/quiz.ts';
+import { authClient } from '../../../services/authClient.ts';
 import {
   Tv,
   Presentation,
@@ -227,9 +228,14 @@ export const SmartBoardWorkspace: React.FC<SmartBoardWorkspaceProps> = ({
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authClient.getAuthHeaders()
+        },
         body: JSON.stringify({
+          message: p,
           messages: [{ role: 'user', content: p }],
+          sessionId: session?.id,
           context: {
             activeSector: 'education',
             topic: session?.topic,

@@ -437,6 +437,236 @@ Web Jarvis is an intelligent multi-sector AI operating platform and cybernetic a
   - Strict privacy & RBAC boundaries across Student, Teacher, Parent/Family, and Principal/Executive views with IDOR protection.
   - Automated test suite (`tests/education_d15_classroom_intelligence.test.ts`): 100% PASS (22/22 assertions).
 
+- **Stage 4: Progressive Onboarding, Sovereign Identity & Workspace Context (Completed)**:
+  - Fundamental Principle Enforced: One persistent personal identity. Multiple contexts. Zero forced institutional dependency.
+  - Progressive Onboarding flow with age-appropriate and role-aware profile calibration (Personal vs Institutional pathways).
+  - Isolated sovereign personal workspace (`ws-pers-${userId}`) provisioned with every individual account with `institutionId: undefined`.
+  - Secure Institution Invitation Code subsystem (`IInstitutionRepository` on `diskRepository` and `memoryRepository`):
+    - Real-time validation endpoint (`POST /api/auth/invitation/validate`) verifying status, expiration, and capacity limits without credential leakage.
+    - Authenticated redemption endpoint (`POST /api/auth/invitation/join`) and registration redemption with anti-privilege escalation (authorized role enforced server-side).
+  - Personal vs Institutional workspace boundary enforcement on all workspace endpoints (`GET /api/workspaces/my`, `POST /api/workspaces/switch`, `GET /api/workspaces/:id`).
+  - First-class UI Workspace Switcher in AppShell with instant switching, clear badges (`SOVEREIGN` vs `INSTITUTION`), and an in-app dialog to link institutions with invitation codes.
+  - Dedicated `/app/personal` sector view rendering sovereign memory vault, personal learning goals, and multi-context switcher.
+  - Automated test suite (`tests/stage4_progressive_onboarding_workspace.test.ts`): 100% PASS.
+
+- **Stage 6.4.1: Canonical Repository Contract & Schema Expansion (Completed)**:
+  - Canonical database schema version incremented to 2 (`CURRENT_DATABASE_SCHEMA_VERSION = 2`) with backwards-compatible schema metadata (`compatibilityLevel: backwards_compatible`).
+  - Strict type contracts defined on `IJarvisDataRepository` across disk and memory implementations: `personalIdentities`, `personalMemories`, `personalKnowledge`, `personalStudy`, `activityTimeline`, `diagnosticSessions`, `knowledgeAssets`, and `learnerExposures`.
+  - Automated test suite (`tests/stage6_4_1_repository_contract.test.ts`): 100% PASS.
+
+- **Stage 6.4.2: Personal Core Store Repository Integration (Completed)**:
+  - Migrated `personalIdentityStore`, `personalMemoryStore`, and `personalKnowledgeStore` from process-volatile Maps to the unified `IJarvisDataRepository` contract.
+  - Personal profiles, preferences, learning goals, sovereign memory items with explicit provenance, and concept mastery state persist across process restarts with `DiskJarvisDataRepository`.
+  - Automated test suite (`tests/stage6_4_2_personal_store_repository_integration.test.ts`): 100% PASS.
+
+- **Stage 6.4.3: Remaining Personal-Store Persistence (Completed)**:
+  - Migrated `PersonalNotesStore` (study notes, flashcards, session plans) and `ActivityTimelineStore` from in-memory Maps to `IPersonalStudyRepository` and `IActivityTimelineRepository`.
+  - Study notes, flashcards, and study plans survive cold process restarts with authenticated user and context isolation.
+  - Action activity history and safe undo state (`undone: true`, deleted target artifact) survive process restarts while preventing cross-user rollback or leaks.
+  - Integrated `DiagnosticService` with `IDiagnosticSessionRepository`: diagnostic session records, action retry index, and checkpoint evaluations persist truthfully while keeping in-flight concurrency locks in memory.
+  - Preserved backward compatibility with version 1 database snapshots and full compatibility with `MemoryJarvisDataRepository`.
+  - Automated test suite (`tests/stage6_4_3_remaining_personal_store_persistence.test.ts`): 100% PASS (5/5 suites).
+
+- **Stage 6.4.4: Atomic Multi-Store Updates and Consistency Audit (Completed)**:
+  - Audited multi-store mutations across personal identity, memory vault, knowledge mastery, study notes, diagnostic sessions, and activity timeline.
+  - Implemented bounded Unit-of-Work / atomic transaction pattern (`runTransaction`) on `IJarvisDataRepository`, supported across both `DiskJarvisDataRepository` and `MemoryJarvisDataRepository`.
+  - Staging & Snapshot Rollback for JSON Storage: Staged in-memory during active transactions, suppressing intermediate disk flushes until commit; on rollback, pre-transaction state snapshot is immediately restored and disk remains completely untouched; on commit, flushed atomically via temporary file and rename (`rename(2)`).
+  - Integrated process-local concurrency control: Transient FIFO mutex (`AsyncMutex`) with timeout support and nested savepoints via `AsyncLocalStorage`.
+  - Wrapped multi-store operations in atomic transactions:
+    - Diagnostic checkpoint submission (`DiagnosticService.evaluateCheckpoint`): coordinates `personalKnowledge`, `personalIdentities`, `diagnosticSessions`, and `activityTimeline`.
+    - Activity timeline reversible rollback (`ActivityTimelineStore.undoActivity`): coordinates target artifact deletion and timeline item `undone: true`.
+    - Personal goal activation (`POST /api/personal/goals`): coordinates `personalIdentities.goals`, `personalMemories`, and `activityTimeline`.
+    - Note creation actions (`POST /api/personal/actions/execute`): coordinates `personalStudy`, `personalIdentities` study minutes, and `activityTimeline`.
+  - Parity & Failure Boundaries: 100% behavioral parity between disk and memory repositories under commit, injected fault rollback, duplicate submissions, and concurrency.
+  - Automated test suite (`tests/stage6_4_4_atomic_multi_store_consistency.test.ts`): 100% PASS (8/8 suites).
+
+- **Stage 6.4.4.16: Repository Boundary Cleanup and Secure Export Architecture (Completed & Verified)**:
+  - Repository Boundary Hardening:
+    - Zero direct store bypasses (`.store`, `(jarvisData as any)['store']`, `getState()`, `mutate()`) across all application domain callers.
+    - Verified all 5 prior callers (`sessionStore`, `educationStore`, `liveClassroomRoutes`, `academicIntegrationService`, `diagnostics.ts`) cleanly interact through typed repository interfaces (`jarvisData.conversations`, `jarvisData.education`, `jarvisData.institutions`, etc.).
+  - Secure Internal Migration Export Routes (`server/export/exportRoutes.ts` & `exportService.ts`):
+    - Multi-layer operator protection: mounted on `/api/internal/export/*`, requires authenticated principal with `admin` or `commander` role and explicit capability check `admin.system.manage`.
+    - Dedicated operator secret gate: constant-time (`crypto.timingSafeEqual`) matching on `X-Operator-Secret` / `X-Internal-Export-Secret` with >= 32 char enforcement and fail-closed semantics. Zero secrets logged.
+    - Complete 45-collection schema coverage: machine-checkable enumeration of all collections in `DatabaseSchema`, per-collection record counts, SHA-256 collection checksums, and top-level overall payload checksum.
+    - Storage object manifest & binary streaming: scans `data/storage/objects/` with SHA-256 hashes and sizes; streams binary files with path traversal prevention (`..` and directory escaping blocked).
+
+- **Stage 6.4.4.17: Independent Verification and Export Safety Hardening (Verified & Closed)**:
+  - Independent Code & Execution Audit:
+    - All tests, type checking, and production builds were executed and verified independently (not relying on prior unverified claims).
+    - `npm run lint` (`tsc --noEmit`): 0 errors.
+    - `npm run build`: Succeeded.
+    - Boundary Regression Suite (`tests/stage6_4_4_16_repository_boundary_regression.test.ts`): 5/5 PASS.
+    - Secure Export & Integrity Suite (`tests/stage6_4_4_16_secure_export.test.ts`): 7/7 PASS (covering unauthenticated 401, expired tokens 401, corrupted signatures 401, unauthorized role 403, missing/invalid operator secret 403, 45 collections verification, binary streaming, path traversal rejection 400, non-existent key 404).
+  - Snapshot Consistency Hardening:
+    - Traced `DiskJarvisDataRepository.runTransaction()` and `AsyncMutex`. Verified process-local scoping: transactions isolate working state in `transactionStates` on the current `AsyncLocalStorage` context.
+    - Verified that concurrent in-flight transactions are isolated from external export streams: external export HTTP requests run in independent async contexts and see only committed state; uncommitted mutations are never observed by external exports.
+    - Verified snapshot immutability via `structuredClone()`; concurrent repository mutations after snapshot capture do not mutate or tear the export snapshot.
+    - Verified rollback and nested transaction savepoint isolation: rolled-back mutations never enter committed snapshots.
+  - Export Safety & Memory Boundedness Hardening:
+    - Replaced `fs.promises.readFile` buffer loading in `generateStorageManifest` and `getStorageObjectStream` with constant-memory streaming SHA-256 hashing (`computeFileSha256`), guaranteeing safe processing of multi-megabyte and multi-gigabyte binary assets without V8 heap exhaustion.
+    - Added disconnect and stream abort detection in `writeWithDrain` and `streamDatabaseExport`: premature client closures and destroyed streams cleanly reject without hanging or leaking event listeners.
+    - Hardened incomplete export detection: exports aborted by payload limit ceiling (`MAX_EXPORT_BYTES`) terminate abruptly without valid JSON envelope, without `overallChecksum`, and without `collectionChecksums`, making it impossible for clients to mistake truncated exports for valid backups.
+    - Added explicit `hasCapability(actor, 'admin.system.manage')` verification in `requireOperatorAuth` in addition to role verification.
+  - Stage Closeout Decision: **STAGE 6.4.4.16 AND STAGE 6.4.4.17 OFFICIALLY CLOSED AND VERIFIED.**
+
+- **Stage 6.4.4.18: Production Persistence and Recovery Readiness Audit (Completed)**:
+  - Runtime Persistence Architecture Audit:
+    - Verified runtime storage selections: DiskRepository (`data/jarvis-db.json`) and DiskFileStore (`data/storage/objects/`) operate as local file-system stores.
+    - Cloud Run instance replacement risk identified: Cloud Run container instances operate on ephemeral file systems; restarts or re-deployments discard local disk changes unless external persistent volume (e.g. Cloud Storage / Cloud SQL) is configured.
+    - Export artifact boundary: Database export (`/api/internal/export/stream`) and binary manifest (`/api/internal/export/storage-manifest`) provide raw export primitives but lacked offline bundled packaging and automated validation tooling.
+  - Recovery Prerequisite: Built offline bundling tool and strict restore validator with dry-run capabilities prior to any schema or database migration.
+
+- **Stage 6.4.4.19: Offline Backup Bundle, Restore Validation, and Recovery Proof (Completed & Verified)**:
+  - Backup Bundling Tool (`scripts/backup_bundle.ts`):
+    - Implemented CLI and programmatic bundler combining complete 45-collection database export (`database_export.json`) and physical binary storage objects (`objects/*`).
+    - Emits self-authenticating `bundle_manifest.json` (Format Version 1) with per-object byte sizes, relative paths, mime types, FileRecord IDs, and SHA-256 digests.
+    - Streams binary assets via bounded-memory file pipeline hashing (`streamCopyAndHash`); database JSON parsed in-memory (bounded by V8 heap, recommended limit ~100MB / ~200,000 records).
+    - Guards against path traversal (`assertSafeStorageKey`), symlink escapes, duplicate storage keys, missing files, and active directory overwrites. Employs atomic rename from staging directory.
+  - Restore Validation & Safe Restore Tool (`scripts/restore.ts`):
+    - Comprehensive offline validator (`validateBackupBundle`) verifying manifest self-checksum, schema versions, all 45 collections, per-collection counts, collection SHA-256 hashes, overall checksum, and physical binary asset digests.
+    - Strict restore engine (`restoreBackupBundle`) with mandatory dry-run default, path-traversal prevention, canonical `realpath` symlink alias defenses, explicit destination directory requirements, and active database safeguards (`data/jarvis-db.json` and `data/storage/objects` overwrite refused).
+    - Preserves all primary identifiers, timestamps, relationships, and audit history across all 45 collections without data reseeding.
+  - Deterministic Recovery Test Suite (`tests/stage6_4_4_19_recovery.test.ts`):
+    - Verified all 8 test scenarios passing: (1) valid bundle creation & restore into temp directory, (2) missing and corrupted binary object detection, (3) collection & overall checksum tamper detection, (4) format and schema version checks, (5) directory traversal and key sanitization, (6) interrupted staging cleanup, (7) large binary streaming copy, (8) active database, symlink alias, and destination overwrite protection.
+
+- **Stage 6.4 Final Closeout Audit & Repair (Completed & Verified)**:
+  - Tracked Database Cleanup (`data/jarvis-db.json`):
+    - Identified and removed 14 synthetic test user records (`user-mv24jqwy-phk9`, `user-mv24jrn9-fgne`, `user-mv24jrnu-mleu`, `user-mv24jsfd-f4ti`, `user-mv24jsfz-1dbm`, `user-concurrent-*`, `user-tx-uncommitted-*`, `user-nested-outer-*`) and their associated test records in `personalIdentities` (5), `personalMemories` (1), `personalKnowledgeStates` (4), `personalStudyNotes` (2), `activityTimeline` (16), and `diagnosticSessions` (4).
+    - Preserved legitimate seed records (`user-tony`, `teacher-1`, `student-1`, `student-2`, `principal-1`, `parent-1`, `parent-2`) and user account (`user-mv26vh89-dczd` / RANJAN SAHU).
+  - Test Isolation Hardening:
+    - Updated `server/data/fileStore.ts` to respect `process.env.JARVIS_DB_PATH`.
+    - Hardened `tests/httpHarness.ts` to automatically isolate `jarvisData` to a temporary repository whenever called, guaranteeing tests never mutate tracked durable database file.
+  - Recovery Test Integration in Standard Suite (`package.json`):
+    - Added `tests/stage6_4_4_19_recovery.test.ts` to standard `npm test` workflow with top-level `await` to ensure process execution waits for completion and propagates non-zero exit codes.
+  - Memory Characteristics Clarified:
+
+- **Formation #03: Quantum Atomic Orbitals Implementation (Completed & Verified)**:
+  - Architecture: Dedicated high-density Canvas 2D volumetric layer (`src/components/landing/formations/atomicOrbitalsDetailRenderer.ts`).
+  - Quantum Mechanical Topology: Central nucleus cluster with subatomic binding glow, isotropic s-orbital probability clouds (1s/2s), dumbbell-shaped pz (vertical) and px (horizontal) probability lobes, diagonal hybridized dxy cloverleaf lobes, and equatorial dz^2 toroidal nodal ring with opposite wave-function phase sign coloring (+ψ vs -ψ).
+  - 100% Determinism: Zero `Math.random()` calls in renderer or coordinate generation.
+  - Coordinate Lockstep: Constellation anchor nodes (52 nodes) in `computeSynchronizedFormationTarget` share exact 3D Larmor quantum precession and inclination tilt transformations with volumetric detail points without planar drift.
+  - Verification: Dedicated test suite `tests/formation03_atomic_orbitals.test.ts` passed (100%), multi-formation audit `tests/final_formation_audit.test.ts` passed (100%), `lint_applet` and `compile_applet` succeeded with 0 errors.
+
+- **Formation #04: Relativistic Black-Hole Vortex Implementation (Completed & Verified)**:
+  - Architecture: Dedicated high-density Canvas 2D volumetric layer (`src/components/landing/formations/blackHoleVortexDetailRenderer.ts`).
+  - Astrophysical Relativistic Topology: Central dark Schwarzschild event horizon void ($r < 0.052$), brilliant photon sphere boundary ring, gravitationally lensed Einstein light arches, differential relativistic Keplerian accretion disk with Doppler beaming asymmetry, and collimated polar relativistic plasma jets with synchrotron emission knots.
+  - 100% Determinism: Zero `Math.random()` calls across detail renderer, coordinate generation, and transform calculation.
+  - Coordinate Lockstep: Constellation anchor nodes (54 nodes) in `computeSynchronizedFormationTarget` share exact 3D relativistic disk tilt and precession transformations with volumetric detail points without planar drift.
+  - Verification: Dedicated test suite `tests/formation04_black_hole_vortex.test.ts` passed (100%), multi-formation audit `tests/final_formation_audit.test.ts` passed (100%), regression suites passed, `lint_applet` and `compile_applet` succeeded with 0 errors.
+
+- **Formation #05: Connected Knowledge Constellation Implementation (Completed & Verified)**:
+  - Architecture: Dedicated high-density Canvas 2D volumetric layer (`src/components/landing/formations/knowledgeConstellationDetailRenderer.ts`).
+  - Connected Intelligence Topology: 5 Hierarchical Primary Knowledge Hubs (Central Synthesis Nexus, Empirical Observatory Spire in NE, Theoretical Archive Bastion in SW, Systems Architecture Pivot in SE, Speculative Frontier Beacon in NW), concentric harmonic resonance wave rings, arterial knowledge highways linking the central nexus to regional hubs, circumferential bridging arches, and propagating data packets/photon pulses streaming along conduits.
+  - Volumetric Detail: ~3,444 deterministic micro-knowledge stars partitioned across the 5 knowledge clusters, highway streamers, and celestial framing field (exceeds >= 2,500 requirement).
+  - 100% Determinism: Zero `Math.random()` calls across detail renderer, coordinate generator (`generateKnowledgeConstellationCoords`), and transformation pipeline.
+  - Coordinate Lockstep: 54 anchor nodes in `computeSynchronizedFormationTarget` share exact 3D celestial inclination (0.22 rad) and slow equatorial drift transformations with volumetric detail points without planar drift.
+  - Inactive Envelope: Strictly 0 draw calls when `progress <= 0.02`.
+  - Sequential Registry: Registered as Formation #05 (index 4) immediately after `black_hole_vortex` in `MILESTONE1_FORMATIONS`.
+  - Protection Guarantees: Protected 48-node Signature J, ambient particle counts (190 mobile / 360 desktop), and 10.5s lifecycle cycle timings 100% preserved.
+  - Verification: Dedicated test suite `tests/formation05_knowledge_constellation.test.ts` passed (100%), multi-formation audit `tests/final_formation_audit.test.ts` passed (100%), regression suites passed, `lint_applet` and `compile_applet` succeeded with 0 errors.
+
+- **Formation #06: Celestial Planetary Orbital System Implementation (Completed & Verified)**:
+  - Architecture: Dedicated high-density Canvas 2D volumetric layer (`src/components/landing/formations/orbitalSystemDetailRenderer.ts`).
+  - Celestial Planetary Topology: Brilliant Central Star (photosphere, chromosphere, extended radiant corona with solar prominence flares), 5 distinct Keplerian elliptical orbital tracks with spatial depth and system inclination tilt (0.38 rad), varied orbital velocities obeying Kepler's laws, Planet II with orbiting satellite moon, Planet III with multi-strand Saturnian equatorial ring system, and dense Main Asteroid Belt corridor ($r \sim 0.185$).
+  - Volumetric Detail: ~3,475 deterministic micro-points partitioned across solar corona flares, asteroid belt debris, Saturnian planetary rings, orbital resonance tracks, and outer zodiacal dust cloud (exceeds >= 2,500 requirement).
+  - 100% Determinism: Zero `Math.random()` calls across detail renderer, coordinate generator (`generateOrbitalSystemCoords`), and transformation pipeline.
+  - Coordinate Lockstep: 54 anchor nodes in `computeSynchronizedFormationTarget` share exact 3D celestial inclination tilt (0.38 rad), slow orbital precession, and Keplerian planetary motion with volumetric detail points without planar drift.
+  - Inactive Envelope: Strictly 0 draw calls when `progress <= 0.02`.
+  - Sequential Registry: Registered as Formation #06 (index 5) immediately after `knowledge_constellation` in `MILESTONE1_FORMATIONS`.
+  - Protection Guarantees: Protected 48-node Signature J, ambient particle counts (190 mobile / 360 desktop), and 10.5s lifecycle cycle timings 100% preserved.
+  - Verification: Dedicated test suite `tests/formation06_orbital_system.test.ts` passed (100%), multi-formation audit `tests/final_formation_audit.test.ts` passed (100%), regression suites passed, `lint_applet` and `compile_applet` succeeded with 0 errors.
+
+- **Formation #08: Computational Neural Network Separation (Completed & Verified)**:
+  - Architecture: Dedicated high-density Canvas 2D volumetric layer (`src/components/landing/formations/neuralNetworkDetailRenderer.ts`).
+  - Computational Intelligence Topology: Clean 4-layer feedforward AI architecture (8 input nodes at $x = -0.35$, 12 feature/hidden nodes at $x = -0.15$, 16 latent bottleneck/nucleus nodes at $x = 0.08$, 10 decision/output nodes at $x = 0.32$, plus 4 modulatory bias nodes = 50 nodes).
+  - Clean Separation: Removed microscopic biological vesicles, neurotransmitter clouds, and glial sheaths; replaced with ~1,280 activation stream packets along weight channels, ~1,120 latent-space manifold/embedding points, and ~750 output decision wavefronts (total 3,312 volumetric micro-points).
+  - Backward Compatibility: Full dual-dispatch for `'neural_network'` and `'neural_synapse'` preserved across `formationDetailEngine.ts` and `formationRegistry.ts`.
+  - Verification: Dedicated test suite `tests/formation08_neural_network.test.ts` passed (100%), updated `tests/deterministic_formations_milestone1.test.ts` passed (100%), master audit `tests/final_formation_audit.test.ts` passed (100%), regression suites passed, `lint_applet` and `compile_applet` succeeded with 0 errors.
+
+- **Formation #10: Multipolar Single Neuron Implementation (Completed & Verified)**:
+  - Architecture: Dedicated high-density Canvas 2D volumetric layer (`src/components/landing/formations/singleNeuronDetailRenderer.ts`).
+  - Biological Single-Cell Topology: Prominent central soma with luminous nucleus and rough ER Nissl bodies, multipolar dendritic arbor with secondary/tertiary bifurcations and visible spines, tapered axon hillock initial segment trigger zone, segmented myelinated axon with 4 myelin sheaths and uninsulated Nodes of Ranvier gaps exhibiting saltatory conduction, and branching telodendria with 6 terminal boutons.
+  - Volumetric Detail: 3,430 deterministic micro-points and 93 structural filaments (exceeds >= 2,500 requirement).
+  - 100% Determinism: Zero `Math.random()` calls across detail renderer, coordinate generator (`generateSingleNeuronCoords`), and transformation pipeline.
+  - Coordinate Lockstep: 52 anchor nodes in `computeSynchronizedFormationTarget` share exact bio-electric wave dynamics without planar drift or NaN.
+  - Inactive Envelope: Strictly 0 draw calls when `progress <= 0.02`.
+  - Sequential Registry: Registered as Formation #10 (index 9) immediately after `neural_synapse` in `MILESTONE1_FORMATIONS`.
+  - Verification: Dedicated test suite `tests/formation10_single_neuron.test.ts` passed (100%), regression test suites passed, `lint_applet` and `compile_applet` succeeded with 0 errors.
+
+- **Formation #11: Biological Synaptic Web Implementation (Completed & Verified)**:
+  - Architecture: Dedicated high-density Canvas 2D volumetric layer (`src/components/landing/formations/synapticWebDetailRenderer.ts`).
+  - Biological Synaptic Microcircuit Topology: Multi-neuronal microcircuit featuring presynaptic axonal feeders and terminal boutons (16 nodes), 3 active synaptic clefts with quantal active zones and intercellular 20nm cleft boundaries (12 nodes), and postsynaptic density with mushroom/thin dendritic spines and receptive arbors (24 nodes = 52 total).
+  - Distinct Visual Identity: Distinguished clearly from #08 (purely computational feedforward weight matrix) and #10 (single isolated cell body) by depicting a multi-neuronal microcircuit with presynaptic bouton envelopes, docked vesicle clusters (50nm spheres), quantum neurotransmitter diffusion clouds in the cleft, and thickened postsynaptic densities.
+  - Volumetric Detail: 3,501 deterministic micro-points and 12 structural filaments (exceeds >= 2,500 requirement).
+  - 100% Determinism: Zero `Math.random()` calls across detail renderer, coordinate generator (`generateSynapticWebCoords`), and transformation pipeline.
+  - Coordinate Lockstep: 52 anchor nodes in `computeSynchronizedFormationTarget` share exact bio-electric depolarization wave, transmitter exocytosis bursts, and postsynaptic EPSP propagation without planar drift or NaN.
+  - Inactive Envelope: Strictly 0 draw calls when `progress <= 0.02`.
+  - Sequential Registry: Registered as Formation #11 (index 10) in `MILESTONE1_FORMATIONS`, reached via automatic cycle progression with seamless wraparound back to `galaxy_spiral`.
+  - Verification: Dedicated test suite `tests/formation11_synaptic_web.test.ts` passed (100%), all regression suites passed, `npm run lint` and `npm run build` succeeded with exit code 0.
+
+- **Stage 6.4 Security & Test Suite Remediation (Completed & Verified)**:
+  - Critical Classroom SSE Stream Security Fix (`server/sectors/education/classroomRoutes.ts`):
+    - Completely removed the unauthenticated `req.query.userId` bypass on `/stream` endpoints.
+    - Enforced cryptographically verified, short-lived SSE tickets (`ticketService.verifySSETicket`) or signed Bearer tokens (`requirePrincipal`) for all classroom SSE streams.
+    - Added `POST /api/classroom/sessions/:id/ticket` endpoint allowing authenticated instructional users/students to request session-scoped SSE connection tickets.
+  - Tracked Data Verification & Note Preservation (`data/jarvis-db.json`):
+    - Verified `note-phys-1` in `personalStudyNotes` matching canonical `seedData.ts` definition.
+    - Confirmed JSON validity and verified pre-test and post-test SHA-256 hash immutability (`c69972f14510170ccc45953d1ec05e18c6cdd86a537bcd585f4beac678618390`).
+  - Test Suite Isolation & Registration (`package.json` & `tests/`):
+    - Hardened `tests/p0_5_server_role_capabilities.test.ts` and `tests/milestone14_2_security.test.ts` with isolated temporary disk repositories to prevent tracked database mutation.
+    - Explicitly set and restored `process.env.ALLOW_DEV_AUTH` in `milestone14_2_security.test.ts`.
+    - Enhanced `tests/persistence.test.ts` to seamlessly fallback to `startHttpHarness` when port 3000 is not running.
+    - Registered 100% of test suites on disk (70/70 suites) into `package.json`'s `test` script.
+    - Added Section 5 to `tests/http_classroom_boundary.test.ts` verifying raw `?userId` rejection, ticket channel mismatch (403), expired tickets (401), forged tickets (403), and valid SSE stream connections.
+  - Verification & Closeout Status:
+    - `npm run lint` (`tsc --noEmit`): 0 errors.
+    - `npm run build`: Succeeded (1706 modules transformed).
+    - All targeted security, classroom boundary, role capability, persistence, recovery, and transaction suites passed (exit code 0).
+    - **STAGE 6.4 OFFICIALLY CLOSED AND VERIFIED.**
+
+  - Particle Formation Milestone 12 — Knowledge Graph:
+    - Implemented Formation #12: Interconnected Knowledge Graph (`knowledge_graph`).
+    - Dedicated Canvas 2D detail renderer: `src/components/landing/formations/knowledgeGraphDetailRenderer.ts`.
+    - Generates 54 deterministic anchor nodes partitioned into 3 major conceptual hub nuclei (12 nodes: Alpha, Beta, Gamma), intermediate entity clusters (18 nodes), and peripheral fact leaves / trans-domain query loops (24 nodes) with 81 relational edges.
+    - Volumetric detail layer renders ~3,554 micro-points (hub kernels, entity clusters, relational pulse conduits, and fact leaves) with 14 structural filaments and gradient glows.
+    - Zero draw calls when inactive (`progress <= 0.02`), 100% deterministic (zero `Math.random()`), and seamless single-hue / multicolor theme adaptability.
+    - Synchronized lockstep anchor transforms with epistemic resonance waves via `computeSynchronizedFormationTarget` and `renderFormationDetailEngine`.
+    - Fully registered in `MILESTONE1_FORMATIONS` appended at index 11 after Formation #11 (`synaptic_web`).
+    - Verified via dedicated suite `tests/formation12_knowledge_graph.test.ts` and all regression suites.
+
+  - Particle Formation Milestone 13 — Infinity Loop:
+    - Implemented Formation #13: Harmonic 3D Infinity Loop (`infinity_loop`).
+    - Dedicated Canvas 2D detail renderer: `src/components/landing/formations/infinityLoopDetailRenderer.ts`.
+    - Generates 52 deterministic anchor nodes partitioned into a primary 3D lemniscate backbone (32 nodes), inner braided counter-stream & secondary harmonic loop (12 nodes), and central energy crossover junction (8 nodes) with 66 relational edges.
+    - Volumetric detail layer renders ~3,361 micro-points across 4 partitions (primary braided stream, retrograde stream core, luminous central crossover junction flux, outer lobe halos & nested orbital resonances) plus 6 structural filaments and 8 propagating activation wavefronts.
+    - Zero draw calls when inactive (`progress <= 0.02`), 100% deterministic (zero `Math.random()`), and full color theme support.
+    - Synchronized lockstep anchor transforms with dynamic lemniscate circulation and junction breathing waves via `computeSynchronizedFormationTarget` and `renderFormationDetailEngine`.
+    - Registered in `MILESTONE1_FORMATIONS` appended at index 12 after Formation #12 (`knowledge_graph`).
+    - Verified via dedicated suite `tests/formation13_infinity_loop.test.ts` and all regression suites.
+
+  - Particle Formation Milestone 14 — Intelligence Crystal:
+    - Implemented Formation #14: Structured Intelligence Crystal (`intelligence_crystal`).
+    - Dedicated Canvas 2D detail renderer: `src/components/landing/formations/intelligenceCrystalDetailRenderer.ts`.
+    - Generates 54 deterministic anchor nodes partitioned into an outer crystalline shell (20 nodes: top/bottom polar apexes, upper, equatorial, and lower hexagonal girdle rings), an inner core lattice & octahedral seed (14 nodes), and optical refraction ridge midpoints & resonance hubs (20 nodes) with 122 structural facet/lattice edges.
+    - Volumetric detail layer renders 3,250 micro-points across 4 partitions (outer facet ridgelines, planar face surface sheen with angle-dependent specular glints, inner octahedral lattice core, and propagating energy pulse channels & prismatic refraction sparks) plus 5 structural filaments.
+    - Zero draw calls when inactive (`progress <= 0.02`), 100% deterministic (zero `Math.random()`), and full color theme support across single-hue and multicolor palettes.
+    - Synchronized lockstep anchor transforms with facet breathing tension and quantum nucleus vibration via `computeSynchronizedFormationTarget` and `renderFormationDetailEngine`.
+    - Registered in `MILESTONE1_FORMATIONS` appended at index 13 after Formation #13 (`infinity_loop`).
+    - Verified via dedicated suite `tests/formation14_intelligence_crystal.test.ts`, `tests/final_formation_audit.test.ts`, and all regression suites.
+
+  - Particle Formation Milestone 16 — Geometric Mandala:
+    - Implemented Formation #16: Ordered Geometric Mandala (`geometric_mandala`).
+    - Note on Sequence Architecture: Preserves logical identity as Formation #16 while Formation #15 Tesseract remains intentionally postponed. Appended sequentially in `MILESTONE1_FORMATIONS` at index 14 directly following Formation #14 (`intelligence_crystal`) without reordering existing entries.
+    - Dedicated Canvas 2D detail renderer: `src/components/landing/formations/geometricMandalaDetailRenderer.ts`.
+    - Generates 54 deterministic anchor nodes partitioned across 4 concentric sacred geometry tiers: Tier 1 Inner Bindu Seed Core (6 nodes, $r = 0.052, z = +0.060$), Tier 2 Interlocking 12-Star & Hexagram (12 nodes, $r = 0.115-0.145, z = +0.035$), Tier 3 Intermediate 18-Petal Scalloped Lotus Ring (18 nodes, $r = 0.220-0.245, z = 0.000$), and Tier 4 Outer Cosmic Perimeter & 18 Gate Crenellations (18 nodes, $r = 0.335-0.365, z = -0.035$) with 99 structural edges.
+    - Volumetric detail layer renders 3,355 deterministic micro-points across 4 partitions (Part A Inner Bindu Seed & Star Geometry, Part B Intermediate 18-Petal Lotus Arc Streams, Part C Outer Perimeter Ring & Gate Trusses, Part D 12 Arterial Radial Spoke Streamers & Traveling Pulse Packets) plus 13 structural filaments and 12 propagating photon wavefronts.
+    - Multi-speed differential rotation (core forward, mid-ring counter-phase, outer ring forward) with 3D perspective pitch/yaw and Z-elevation parallax.
+    - Zero draw calls when inactive (`progress <= 0.02`), 100% deterministic (zero `Math.random()`), and full color theme support across single-hue and multicolor modes.
+    - Synchronized lockstep anchor transforms with radial breathing and petal waves via `computeSynchronizedFormationTarget` and `renderFormationDetailEngine`.
+    - Dispatched in `CinematicParticleField.tsx` and registered in `MILESTONE1_FORMATIONS`.
+    - Verified via dedicated suite `tests/formation16_geometric_mandala.test.ts` (100%), `tests/final_formation_audit.test.ts` (100%), all regression suites, `npm run lint`, and `npm run build`.
+
+
 ---
 
 ## 6. Current Constraints & Active Invariants

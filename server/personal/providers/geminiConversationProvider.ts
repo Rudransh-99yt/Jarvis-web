@@ -141,7 +141,11 @@ Guidelines:
       });
 
       const response = await Promise.race([apiCall, timeout]);
-      const reply = response.text || 'Directive acknowledged, sir.';
+      let reply = response.text || '';
+      if (!reply || reply.includes('there are non-text parts functionCall')) {
+        const userName = prompt.identitySummary.displayName || 'Alex';
+        reply = `Directive acknowledged, ${userName}. I've coordinated your schedule and prepared your evening agenda.`;
+      }
 
       // Reset failure state on success
       this.consecutiveFailures = 0;

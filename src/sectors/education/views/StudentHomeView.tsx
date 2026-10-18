@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authClient } from '../../../services/authClient.ts';
 import type { EducationClass, Assignment, StudentSubmission } from '../../../types/education.ts';
 import type { NextBestAction, UserContext, PersonalKnowledgeSignal } from '../../../types/personalIdentity.ts';
 import {
@@ -105,7 +106,9 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
     let mounted = true;
     async function loadPersonalHome() {
       try {
-        const res = await fetch('/api/personal/home');
+        const res = await fetch('/api/personal/home', {
+          headers: authClient.getAuthHeaders()
+        });
         if (res.ok) {
           const data = await res.json();
           if (mounted && data.home) {
@@ -197,42 +200,13 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           </div>
         </div>
 
-        {/* Next Best Action Card (Deterministic Pedagogical Guidance) */}
-        {personalHome?.nextBestAction && (
-          <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/20 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-sans">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs font-mono text-cyan-300 font-bold">
-                <Compass className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="uppercase tracking-wider">Next Best Action:</span>
-                <span className="text-white font-sans font-semibold">{personalHome.nextBestAction.title}</span>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {personalHome.nextBestAction.rationale}
-              </p>
-            </div>
-
-            <div className="shrink-0">
-              {activeLesson && physUnit && physClass && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => onOpenLesson(physClass.id, physUnit.id, activeLesson.id)}
-                  icon={<Zap className="w-3.5 h-3.5 text-cyan-200" />}
-                >
-                  Start Action
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-
         <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl leading-relaxed">
           Here is your curated academic focus and active learning track for today.
         </p>
       </div>
 
       {/* 2. Priority 1: CURRENT MISSION (Dominant Focal Anchor — Heroic Educational Media Object) */}
-      <GlassCard level="lesson" highlight className="p-6 sm:p-7 rounded-2xl relative overflow-hidden space-y-5 border-t border-t-white/[0.18] border-x border-x-white/[0.08] border-b border-b-white/[0.04]">
+      <GlassCard level="lesson" highlight className="p-6 sm:p-7 rounded-2xl relative overflow-hidden space-y-5 border-t border-t-white/[0.18] border-x border-x-white/[0.08] border-b border-b-white/[0.04] animate-reveal-soft stagger-1">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <Badge variant="cyan" label="Current Mission" dot />
@@ -276,10 +250,10 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400">
                 <span>Lesson Progress: 18m 10s of 28m 40s</span>
-                <span className="text-neutral-200 font-semibold">64%</span>
+                <span className="text-cyan-300 font-semibold">64%</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
-                <div className="h-full rounded-full bg-cyan-400/90 w-[64%]" />
+                <div className="h-full rounded-full bg-cyan-400/90 w-[64%] shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
               </div>
             </div>
 
@@ -318,61 +292,71 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           {/* Right Column: Visual Learning Media Object */}
           <div
             onClick={() => activeLesson && physUnit && physClass && onOpenLesson(physClass.id, physUnit.id, activeLesson.id)}
-            className="md:col-span-5 relative rounded-xl overflow-hidden border border-white/[0.12] bg-neutral-950/80 shadow-lg group cursor-pointer aspect-video sm:aspect-[4/3] flex flex-col justify-between p-3.5 select-none"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                activeLesson && physUnit && physClass && onOpenLesson(physClass.id, physUnit.id, activeLesson.id);
+              }
+            }}
+            aria-label="Resume Quantum Harmonic Oscillator lecture at 18:10"
+            className="md:col-span-5 relative rounded-xl overflow-hidden border border-white/[0.14] bg-neutral-950/80 shadow-lg group cursor-pointer aspect-video sm:aspect-[4/3] flex flex-col justify-between p-3.5 select-none focus-ring hover:border-cyan-500/40 transition-all duration-200"
           >
             {/* Background Quantum Harmonic Oscillator Graphic Pattern */}
-            <div className="absolute inset-0 pointer-events-none opacity-25 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.18)_0%,transparent_70%)]" />
-            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" viewBox="0 0 200 120" preserveAspectRatio="none">
+            <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.22)_0%,transparent_70%)]" />
+            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" viewBox="0 0 200 120" preserveAspectRatio="none">
               <path d="M 0 60 Q 30 10, 60 60 T 120 60 T 180 60 T 240 60" fill="none" stroke="#38bdf8" strokeWidth="1.2" />
               <path d="M 0 60 Q 40 20, 80 60 T 160 60 T 240 60" fill="none" stroke="#94a3b8" strokeWidth="0.8" strokeDasharray="3 3" />
               <circle cx="100" cy="60" r="14" fill="none" stroke="#22d3ee" strokeWidth="0.75" />
             </svg>
 
             <div className="relative z-10 flex items-center justify-between">
-              <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/[0.12] text-[10px] font-mono text-neutral-300 uppercase tracking-wider backdrop-blur-md">
+              <span className="px-2 py-0.5 rounded-md bg-black/70 border border-white/[0.12] text-[10px] font-mono text-cyan-200 uppercase tracking-wider backdrop-blur-md">
                 Harmonic Oscillator
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/[0.12] text-[10px] font-mono text-neutral-400 tabular-nums backdrop-blur-md">
+              <span className="px-2 py-0.5 rounded-md bg-black/70 border border-white/[0.12] text-[10px] font-mono text-neutral-300 tabular-nums backdrop-blur-md">
                 28:40 HD
               </span>
             </div>
 
             <div className="relative z-10 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-white/[0.08] border border-white/[0.2] backdrop-blur-md flex items-center justify-center text-white group-hover:scale-105 group-hover:bg-white/[0.14] transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                <PlayCircle className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-full bg-cyan-500/15 border border-cyan-400/40 backdrop-blur-md flex items-center justify-center text-cyan-100 group-hover:scale-105 group-hover:bg-cyan-500/25 group-hover:border-cyan-300/60 group-active:scale-95 transition-all shadow-[0_4px_20px_rgba(6,182,212,0.25)]">
+                <PlayCircle className="w-6 h-6 text-cyan-200" />
               </div>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between text-[11px] font-mono text-neutral-300 bg-black/60 p-1.5 rounded-lg border border-white/[0.08] backdrop-blur-md">
-              <span className="truncate text-neutral-300">[a, a†] = 1 Derivation</span>
-              <span className="text-neutral-400 group-hover:text-white shrink-0 font-medium transition-colors">Resume →</span>
+            <div className="relative z-10 flex items-center justify-between text-[11px] font-mono text-neutral-200 bg-black/70 p-2 rounded-lg border border-white/[0.10] backdrop-blur-md">
+              <span className="truncate text-neutral-200 font-medium">[a, a†] = 1 Derivation</span>
+              <span className="text-cyan-300 group-hover:text-white shrink-0 font-medium transition-colors">Resume →</span>
             </div>
           </div>
         </div>
       </GlassCard>
 
       {/* 3. Priority 2: NEXT BEST ACTION (Jarvis Intelligence — Confident, Contextual Assistant) */}
-      <div className="p-4 sm:p-5 rounded-2xl glass-intelligence border border-cyan-500/20 space-y-3 relative overflow-hidden">
+      <div className="p-4 sm:p-5 rounded-2xl glass-intelligence border border-cyan-500/25 space-y-3 relative overflow-hidden animate-reveal-soft stagger-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <JarvisCore size="xs" state="idle" label="Jarvis Academic Assistant" />
-            <span className="text-xs font-mono font-bold tracking-wider text-neutral-200 uppercase">
+            <span className="text-xs font-mono font-bold tracking-wider text-cyan-300 uppercase">
               Next Best Action
             </span>
           </div>
-          <span className="text-[11px] font-mono text-neutral-500 hidden sm:inline">Priority 1 · High Impact</span>
+          <span className="text-[11px] font-mono text-neutral-400 hidden sm:inline">Priority 1 · High Impact</span>
         </div>
 
         <div className="space-y-1">
           <h3 className="text-sm sm:text-base font-semibold text-white">
-            Master Commutation Relations Problem Set [a, a†] = 1
+            {personalHome?.nextBestAction?.title || 'Calibrating Academic Recommendation...'}
           </h3>
-          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed font-sans">
-            You are already 78% through Chapter 2. Finishing this 15-minute diagnostic checkpoint unlocks Unit 3: Angular Momentum before Friday's lab session.
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-sans">
+            {personalHome?.nextBestAction?.rationale ||
+              "Jarvis is analyzing your active course checkpoints and syllabus to determine your next highest impact academic action."}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 pt-1">
+        <div className="flex items-center gap-2.5 pt-1 flex-wrap">
           <Button
             size="sm"
             variant="primary"
@@ -385,7 +369,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             size="sm"
             variant="ghost"
             onClick={() => onNavigateTab('notes')}
-            className="text-neutral-400 hover:text-white"
+            className="text-neutral-300 hover:text-white"
           >
             Review Derivation Notes
           </Button>
@@ -493,11 +477,11 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             </button>
           </div>
 
-          <div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+          <div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-sm">
             {todayClasses.map((cls, idx) => (
               <div
                 key={idx}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.02] transition-colors"
+                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.04] transition-colors"
               >
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 text-xs">
@@ -514,7 +498,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
                     size="sm"
                     variant="glass"
                     onClick={() => onNavigateTab('classroom')}
-                    icon={<Radio className="w-3 h-3 text-neutral-300" />}
+                    icon={<Radio className="w-3 h-3 text-cyan-300" />}
                     className="text-neutral-200 hover:text-white text-xs"
                   >
                     Join
@@ -551,11 +535,11 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             </button>
           </div>
 
-          <div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+          <div className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-sm">
             {pendingAssignments.slice(0, 2).map((asg) => (
               <div
                 key={asg.id}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.02] transition-colors"
+                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.04] transition-colors"
               >
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 text-xs">
@@ -585,7 +569,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
 
             {pendingAssignments.length === 0 && (
               <div className="p-6 text-center space-y-1">
-                <CheckCircle2 className="w-4 h-4 text-neutral-400 mx-auto" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 mx-auto" />
                 <div className="text-xs font-semibold text-neutral-200">All Caught Up</div>
                 <div className="text-[11px] text-neutral-500">No coursework due in the next 48 hours.</div>
               </div>
@@ -626,13 +610,21 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
               <div
                 key={cls.id}
                 onClick={() => onSelectCourse(cls.id)}
-                className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all cursor-pointer group space-y-2.5"
+                className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.14] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer group space-y-2.5 focus-ring"
+                tabIndex={0}
+                role="button"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectCourse(cls.id);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between gap-1">
                   <div className="flex items-center gap-2 text-xs min-w-0">
-                    <span className="font-mono text-neutral-200 font-semibold">{cls.code}</span>
+                    <span className="font-mono text-cyan-300 font-semibold">{cls.code}</span>
                     <span aria-hidden="true" className="text-neutral-700">·</span>
-                    <span className="text-neutral-300 font-medium truncate">{cls.name}</span>
+                    <span className="text-neutral-200 font-medium truncate">{cls.name}</span>
                   </div>
                   <div className="text-xs text-neutral-400 shrink-0 font-mono tabular-nums">
                     <span className="text-neutral-200 font-semibold">{progressPct}%</span>
@@ -640,7 +632,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
                 </div>
 
                 <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full bg-white/70" style={{ width: `${progressPct}%` }} />
+                  <div className="h-full rounded-full bg-cyan-400/80 transition-all duration-500" style={{ width: `${progressPct}%` }} />
                 </div>
               </div>
             );
@@ -671,7 +663,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
             {recentAssets.map((asset) => (
               <div
                 key={asset.id}
-                className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:border-cyan-500/30 hover:bg-white/[0.04] transition-all flex flex-col justify-between space-y-3 group"
+                className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:border-cyan-500/30 hover:bg-white/[0.04] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex flex-col justify-between space-y-3 group shadow-sm"
               >
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
@@ -706,7 +698,7 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
                   </span>
                   <button
                     onClick={() => onNavigateTab('knowledge_assets')}
-                    className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer focus-ring rounded"
                   >
                     <span>Open</span>
                     <ChevronRight className="w-3 h-3" />
@@ -735,10 +727,10 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           >
             <button
               onClick={() => onNavigateTab('notes')}
-              className="relative w-full h-full p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12] text-left transition-all cursor-pointer group shadow-sm overflow-hidden"
+              className="relative w-full h-full p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.14] hover:-translate-y-0.5 active:translate-y-0 text-left transition-all duration-200 cursor-pointer group shadow-sm overflow-hidden focus-ring"
             >
               <div className="dock-specular-sheen" aria-hidden="true" />
-              <Bookmark className="w-4 h-4 text-neutral-400 group-hover:text-neutral-200 mb-2 transition-transform group-hover:scale-105" />
+              <Bookmark className="w-4 h-4 text-neutral-400 group-hover:text-cyan-300 mb-2 transition-transform group-hover:scale-105" />
               <div className="font-semibold text-neutral-100 group-hover:text-white">Study Notes & Formulas</div>
               <div className="text-[11px] text-neutral-400 mt-0.5">Quick formula reference sheet</div>
             </button>
@@ -750,10 +742,10 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           >
             <button
               onClick={() => onNavigateTab('knowledge')}
-              className="relative w-full h-full p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12] text-left transition-all cursor-pointer group shadow-sm overflow-hidden"
+              className="relative w-full h-full p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.14] hover:-translate-y-0.5 active:translate-y-0 text-left transition-all duration-200 cursor-pointer group shadow-sm overflow-hidden focus-ring"
             >
               <div className="dock-specular-sheen" aria-hidden="true" />
-              <Brain className="w-4 h-4 text-neutral-400 group-hover:text-neutral-200 mb-2 transition-transform group-hover:scale-105" />
+              <Brain className="w-4 h-4 text-neutral-400 group-hover:text-cyan-300 mb-2 transition-transform group-hover:scale-105" />
               <div className="font-semibold text-neutral-100 group-hover:text-white">Knowledge Spaces</div>
               <div className="text-[11px] text-neutral-400 mt-0.5">Verified textbooks & RAG index</div>
             </button>
@@ -765,10 +757,10 @@ export const StudentHomeView: React.FC<StudentHomeViewProps> = ({
           >
             <button
               onClick={() => onNavigateTab('videos')}
-              className="relative w-full h-full p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12] text-left transition-all cursor-pointer group shadow-sm overflow-hidden"
+              className="relative w-full h-full p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.14] hover:-translate-y-0.5 active:translate-y-0 text-left transition-all duration-200 cursor-pointer group shadow-sm overflow-hidden focus-ring"
             >
               <div className="dock-specular-sheen" aria-hidden="true" />
-              <Video className="w-4 h-4 text-neutral-400 group-hover:text-neutral-200 mb-2 transition-transform group-hover:scale-105" />
+              <Video className="w-4 h-4 text-neutral-400 group-hover:text-cyan-300 mb-2 transition-transform group-hover:scale-105" />
               <div className="font-semibold text-neutral-100 group-hover:text-white">Video Library</div>
               <div className="text-[11px] text-neutral-400 mt-0.5">Transcript-grounded Q&A</div>
             </button>

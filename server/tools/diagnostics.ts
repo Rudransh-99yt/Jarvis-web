@@ -33,7 +33,7 @@ export const getSystemHealthTool: ToolDefinition<{}> = {
         timestamp: context.timestamp,
         nodeEnvironment: process.env.NODE_ENV || 'development',
         nodeVersion: process.version,
-        activeSessions: (sessionStore as any).sessions?.size ?? 1,
+        activeSessions: sessionStore.getActiveSessionCount(),
         satelliteProvider: {
           name: provider.name,
           online: !isFallback,

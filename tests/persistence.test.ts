@@ -176,21 +176,38 @@ async function runPersistenceTests() {
   const token = authService.issueToken({ id: 'user-tony' });
   const authHeaders = { Authorization: `Bearer ${token}` };
 
-  const healthRes = await fetch('http://localhost:3000/api/health');
-  const healthData: any = await healthRes.json();
-  assert(healthRes.ok && healthData.persistence?.persistent === true, '24. REST API GET /api/health reports active persistent storage');
+  let targetUrl = 'http://localhost:3000';
+  let harness: any = null;
+  try {
+    const probe = await fetch('http://localhost:3000/api/health', { signal: AbortSignal.timeout(1000) });
+    if (!probe.ok) throw new Error('Dev server not available');
+  } catch {
+    const { startHttpHarness } = await import('./httpHarness.ts');
+    harness = await startHttpHarness();
+    targetUrl = harness.baseUrl;
+  }
 
-  const wsRes = await fetch('http://localhost:3000/api/workspaces', { headers: authHeaders });
-  const wsData: any = await wsRes.json();
-  assert(wsRes.ok && Array.isArray(wsData.workspaces) && wsData.workspaces.length >= 1, '25. REST API GET /api/workspaces');
+  try {
+    const healthRes = await fetch(`${targetUrl}/api/health`);
+    const healthData: any = await healthRes.json();
+    assert(healthRes.ok && healthData.persistence?.persistent === true, '24. REST API GET /api/health reports active persistent storage');
 
-  const convsRes = await fetch('http://localhost:3000/api/conversations', { headers: authHeaders });
-  const convsData: any = await convsRes.json();
-  assert(convsRes.ok && Array.isArray(convsData.conversations), '26. REST API GET /api/conversations');
+    const wsRes = await fetch(`${targetUrl}/api/workspaces`, { headers: authHeaders });
+    const wsData: any = await wsRes.json();
+    assert(wsRes.ok && Array.isArray(wsData.workspaces) && wsData.workspaces.length >= 1, '25. REST API GET /api/workspaces');
 
-  const ksRes = await fetch('http://localhost:3000/api/knowledge-spaces', { headers: authHeaders });
-  const ksData: any = await ksRes.json();
-  assert(ksRes.ok && Array.isArray(ksData.knowledgeSpaces) && ksData.knowledgeSpaces.length >= 2, '27. REST API GET /api/knowledge-spaces');
+    const convsRes = await fetch(`${targetUrl}/api/conversations`, { headers: authHeaders });
+    const convsData: any = await convsRes.json();
+    assert(convsRes.ok && Array.isArray(convsData.conversations), '26. REST API GET /api/conversations');
+
+    const ksRes = await fetch(`${targetUrl}/api/knowledge-spaces`, { headers: authHeaders });
+    const ksData: any = await ksRes.json();
+    assert(ksRes.ok && Array.isArray(ksData.knowledgeSpaces) && ksData.knowledgeSpaces.length >= 2, '27. REST API GET /api/knowledge-spaces');
+  } finally {
+    if (harness) {
+      await harness.close();
+    }
+  }
 
   // Clean up temp test database file
   try {

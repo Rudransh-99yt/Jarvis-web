@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-08T15:33:23.312Z",
+  "updatedAt": "2026-10-10T14:05:04.098Z",
   "sessions": [
     {
       "id": "session-phys-101",
@@ -17,9 +17,9 @@
       "topic": "Electrostatics & Electric Field Formulations",
       "teacherId": "teacher-1",
       "teacherName": "Dr. Helen Cho",
-      "scheduledAt": "2026-10-09T15:33:23.312Z",
+      "scheduledAt": "2026-10-11T14:04:55.944Z",
       "durationMinutes": 45,
-      "status": "SCHEDULED",
+      "status": "APPROVED",
       "generationConfig": {
         "targetDurationMinutes": 45,
         "targetGradeLevel": "Class 12 / Senior Level",
@@ -404,7 +404,7 @@
       "homework": {
         "id": "hw-phys-101",
         "title": "Homework Problem Set: Electrostatics & Gauss Applications",
-        "dueDate": "2026-10-11T15:33:23.303Z",
+        "dueDate": "2026-10-13T14:04:55.944Z",
         "instructions": "Solve all 4 problems showing step-by-step mathematical reasoning. Upload handwritten or LaTeX solutions to Jarvis Workspace.",
         "totalMarks": 20,
         "isApproved": true,
@@ -524,7 +524,427 @@
         "flashcardsReleased": true
       },
       "createdAt": "2026-10-02T14:00:00.000Z",
-      "updatedAt": "2026-10-08T15:33:23.312Z"
+      "updatedAt": "2026-10-02T16:45:00.000Z"
+    },
+    {
+      "id": "session-1791641096087",
+      "workspaceId": "ws-stark-core",
+      "schoolId": "inst-stark-academy",
+      "classId": "class-phys-301",
+      "courseCode": "PHYS-301",
+      "courseName": "Advanced Quantum & Classical Electrodynamics",
+      "subject": "Physics",
+      "topic": "Gauss Law & Electric Dipoles",
+      "teacherId": "teacher-1",
+      "teacherName": "Dr. Helen Cho",
+      "scheduledAt": "2026-10-11T14:05:04.096Z",
+      "durationMinutes": 45,
+      "status": "SCHEDULED",
+      "generationConfig": {
+        "targetDurationMinutes": 45,
+        "desiredOutputs": {
+          "lessonPlan": true,
+          "presentation": true,
+          "quiz": true,
+          "flashcards": true,
+          "homework": true,
+          "teacherNotes": true,
+          "studentNotes": true,
+          "answerKey": true
+        }
+      },
+      "sourceMaterials": [
+        {
+          "id": "src-test-ncert",
+          "title": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf",
+          "type": "ncert_pdf",
+          "extractedTextSnippet": "Electric flux through any closed surface is q_enc / ε₀.",
+          "uploadedAt": "2026-10-10T14:04:56.088Z"
+        },
+        {
+          "id": "src-test-pyq",
+          "title": "National Board Past Year Exam (2024).pdf",
+          "type": "question_paper",
+          "extractedTextSnippet": "Derive electric field intensity due to a uniformly charged spherical shell.",
+          "uploadedAt": "2026-10-10T14:04:56.088Z"
+        }
+      ],
+      "lessonPlan": {
+        "id": "lp-1791641104092",
+        "title": "Lesson Plan: Gauss Law & Electric Dipoles",
+        "targetDurationMinutes": 45,
+        "learningObjectives": [
+          "Formulate foundational governing equations and conceptual principles for Gauss Law & Electric Dipoles.",
+          "Apply vector mechanics and mathematical symmetry to solve standard problem classes.",
+          "Analyze edge cases, boundary conditions, and typical student misconceptions."
+        ],
+        "prerequisiteKnowledge": [
+          "Prerequisite understanding of foundational Physics concepts.",
+          "Vector calculus notation and elementary integral formulations."
+        ],
+        "openingWarmup": {
+          "title": "5-Minute Diagnostic Warmup & Engagement",
+          "durationMinutes": 5,
+          "instructions": "Present a physical scenario on the SmartBoard illustrating Gauss Law & Electric Dipoles. Elicit initial student hypotheses.",
+          "prompt": "In what real-world engineering or physical scenario does Gauss Law & Electric Dipoles dictate boundary behavior?"
+        },
+        "teachingSequence": [
+          {
+            "stage": "1. Theoretical Framework & Definitions",
+            "durationMinutes": 12,
+            "teacherActivity": "Present core definitions and governing mathematical expressions for Gauss Law & Electric Dipoles on SmartBoard.",
+            "studentActivity": "Record structured notes and annotate variable dimensions in student workspace.",
+            "checkPoint": "Are students able to define the fundamental assumptions?",
+            "sourceCitation": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "stage": "2. Worked Problem Derivation & Modeling",
+            "durationMinutes": 15,
+            "teacherActivity": "Walk through step-by-step canonical derivation emphasizing common sign errors.",
+            "studentActivity": "Solve parallel verification problem in small peer pairs on desk tablets.",
+            "checkPoint": "Verify that students compute correct intermediate steps.",
+            "sourceCitation": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "stage": "3. Interactive Diagnostic Check & Pulse Quiz",
+            "durationMinutes": 8,
+            "teacherActivity": "Deploy 3-question formative pulse quiz to student workspaces.",
+            "studentActivity": "Independently submit answers to immediate poll.",
+            "checkPoint": "Target >80% class mastery before concluding lecture.",
+            "sourceCitation": "Diagnostic Pulse"
+          },
+          {
+            "stage": "4. Synthesis, Reflection & Homework Assignment",
+            "durationMinutes": 5,
+            "teacherActivity": "Summarize the 3 core takeaways and assign homework problem set.",
+            "studentActivity": "Complete exit ticket prompt.",
+            "checkPoint": "Collect 100% exit tickets.",
+            "sourceCitation": "Curriculum Standard"
+          }
+        ],
+        "workedExamples": [
+          {
+            "id": "ex-1791641104092-1",
+            "problem": "Determine the resultant quantity in a standard symmetric system governed by Gauss Law & Electric Dipoles.",
+            "solution": "Step 1: Set up governing differential equation.\nStep 2: Apply boundary values at origin.\nStep 3: Integrate over enclosed domain to find exact analytical solution.",
+            "keyIntuition": "Look for geometric symmetries to eliminate redundant spatial components.",
+            "commonMistakes": [
+              "Neglecting boundary condition at infinity",
+              "Unit conversion mismatch in SI metrics"
+            ],
+            "latexFormula": "\\nabla \\cdot \\mathbf{F} = \\rho_{\\text{eff}}"
+          }
+        ],
+        "misconceptions": [
+          {
+            "id": "misc-1791641104092-1",
+            "misconception": "Assuming that Gauss Law & Electric Dipoles behaves linearly under non-ideal boundary constraints.",
+            "correction": "Non-linear interactions require piecewise integration or superposition correction.",
+            "diagnosticQuestion": "Under what specific physical conditions does the simple linear approximation fail?"
+          }
+        ],
+        "checksForUnderstanding": [
+          "What is the primary governing equation for Gauss Law & Electric Dipoles?",
+          "How do the boundary conditions alter the final equilibrium state?"
+        ],
+        "recap": "Gauss Law & Electric Dipoles provides the theoretical framework for analyzing fields, forces, and dynamic interactions in Physics.",
+        "exitTicket": {
+          "prompt": "State the primary SI unit and one key conservation law associated with Gauss Law & Electric Dipoles.",
+          "expectedCriteria": "Correct unit definition and statement of invariant physical quantity."
+        },
+        "isApproved": true,
+        "updatedAt": "2026-10-10T14:05:04.092Z"
+      },
+      "presentation": {
+        "id": "pres-1791641104092",
+        "title": "Class Presentation: Gauss Law & Electric Dipoles",
+        "totalSlides": 5,
+        "isApproved": true,
+        "updatedAt": "2026-10-10T14:05:04.092Z",
+        "slides": [
+          {
+            "id": "s-1",
+            "slideNumber": 1,
+            "title": "Gauss Law & Electric Dipoles",
+            "bulletPoints": [
+              "PHYS-301 · Advanced Quantum & Classical Electrodynamics",
+              "Instructor: Dr. Helen Cho",
+              "Interactive SmartBoard Session"
+            ],
+            "visualInstruction": "Title slide with high-contrast scientific diagrams representing Gauss Law & Electric Dipoles.",
+            "teacherNotes": "Authenticate SmartBoard and initialize student tablet pairing.",
+            "sourceReferences": [
+              "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+            ]
+          },
+          {
+            "id": "s-2",
+            "slideNumber": 2,
+            "title": "Core Learning Objectives",
+            "bulletPoints": [
+              "Understand mathematical formulation of Gauss Law & Electric Dipoles",
+              "Execute standard derivations and vector calculations",
+              "Connect theory with empirical lab phenomena"
+            ],
+            "visualInstruction": "3-tier progression roadmap with checkpoint badges.",
+            "teacherNotes": "Highlight exam weighting for this topic.",
+            "sourceReferences": [
+              "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+            ]
+          },
+          {
+            "id": "s-3",
+            "slideNumber": 3,
+            "title": "Governing Equations & Principles",
+            "bulletPoints": [
+              "Fundamental physical law formulation",
+              "Dimensional analysis and boundary constraints",
+              "Superposition and symmetry properties"
+            ],
+            "latexFormula": "\\oint_{\\partial \\Omega} \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{Q_{\\text{enc}}}{\\varepsilon_0}",
+            "visualInstruction": "Vector field representation and Gaussian surface diagram.",
+            "teacherNotes": "Point out why closed integral simplifies over high-symmetry surfaces.",
+            "sourceReferences": [
+              "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+            ]
+          },
+          {
+            "id": "s-4",
+            "slideNumber": 4,
+            "title": "Canonical Worked Example",
+            "bulletPoints": [
+              "Identify symmetry and coordinate system",
+              "Formulate integral boundary conditions",
+              "Evaluate analytical solution and limits"
+            ],
+            "latexFormula": "F_{\\text{resultant}} = \\frac{1}{4\\pi \\varepsilon_0} \\frac{|q_1 q_2|}{r^2}",
+            "visualInstruction": "Annotated step-by-step calculation board.",
+            "teacherNotes": "Guide students through manual scratch calculations.",
+            "sourceReferences": [
+              "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+            ]
+          },
+          {
+            "id": "s-5",
+            "slideNumber": 5,
+            "title": "Recap & Homework Assignment",
+            "bulletPoints": [
+              "Key equations consolidated in Student Workspace",
+              "Flashcard review set active for tonight",
+              "Problem Set due before next laboratory"
+            ],
+            "visualInstruction": "Summary checklist and homework QR submission link.",
+            "teacherNotes": "Release homework on student portals before leaving classroom.",
+            "sourceReferences": [
+              "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+            ]
+          }
+        ]
+      },
+      "quiz": {
+        "id": "quiz-1791641104092",
+        "title": "Formative Quiz: Gauss Law & Electric Dipoles",
+        "targetMinutes": 8,
+        "isApproved": true,
+        "updatedAt": "2026-10-10T14:05:04.092Z",
+        "questions": [
+          {
+            "id": "q-1",
+            "questionNumber": 1,
+            "type": "mcq",
+            "question": "Which fundamental principle governs the equilibrium state of Gauss Law & Electric Dipoles?",
+            "options": [
+              "Conservation of Energy & Symmetry Principles",
+              "Thermal Dissipation Only",
+              "Centrifugal Acceleration",
+              "Arbitrary Stochastic Decay"
+            ],
+            "correctAnswer": "A",
+            "explanation": "Governing formulations are directly derived from fundamental conservation and symmetry laws.",
+            "difficulty": "easy",
+            "points": 1,
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "id": "q-2",
+            "questionNumber": 2,
+            "type": "mcq",
+            "question": "How does the field magnitude scale as distance r is doubled in Gauss Law & Electric Dipoles?",
+            "options": [
+              "Decreases by factor of 4",
+              "Decreases by factor of 2",
+              "Increases by factor of 2",
+              "Remains unchanged"
+            ],
+            "correctAnswer": "A",
+            "explanation": "Inverse-square dependence implies (1/2r)² = 1/(4r²), reducing magnitude by factor of 4.",
+            "difficulty": "medium",
+            "points": 1,
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "id": "q-3",
+            "questionNumber": 3,
+            "type": "numerical",
+            "question": "Calculate the resultant force (in N) when q1 = 2 μC and q2 = 5 μC are separated by 0.1 m (1/4πε₀ = 9.0 × 10⁹).",
+            "correctAnswer": "9.0",
+            "explanation": "F = (9.0 × 10⁹) · (2 × 10⁻⁶ · 5 × 10⁻⁶) / (0.1)² = (9.0 × 10⁹) · (10⁻¹¹) / 0.01 = 9.0 N.",
+            "difficulty": "medium",
+            "points": 2,
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "id": "q-4",
+            "questionNumber": 4,
+            "type": "short_answer",
+            "question": "State the primary condition under which Gauss’s Law significantly simplifies field calculations.",
+            "correctAnswer": "When the charge distribution possesses high geometric symmetry (spherical, cylindrical, or planar).",
+            "explanation": "High symmetry allows the electric field magnitude E to be factored out of the surface integral.",
+            "difficulty": "easy",
+            "points": 1,
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          }
+        ]
+      },
+      "flashcards": {
+        "id": "fc-1791641104092",
+        "title": "Flashcards: Gauss Law & Electric Dipoles",
+        "isApproved": true,
+        "updatedAt": "2026-10-10T14:05:04.092Z",
+        "cards": [
+          {
+            "id": "fc-1",
+            "front": "Core Formula for Gauss Law & Electric Dipoles",
+            "back": "F = (1/4πε₀) · (|q₁ q₂| / r²)\nGoverns inverse-square force law in vacuum.",
+            "category": "Formulas",
+            "difficulty": "easy",
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "id": "fc-2",
+            "front": "Gauss Law Integral Statement",
+            "back": "∮ E · dA = q_enc / ε₀\nTotal flux through any closed surface equals enclosed charge divided by ε₀.",
+            "category": "Theorems",
+            "difficulty": "medium",
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "id": "fc-3",
+            "front": "SI Units and Dimensions",
+            "back": "Electric Field: N/C or V/m\nElectric Flux: N·m²/C or V·m",
+            "category": "Units",
+            "difficulty": "easy",
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          }
+        ]
+      },
+      "homework": {
+        "id": "hw-1791641104093",
+        "title": "Homework Set: Gauss Law & Electric Dipoles Application Problems",
+        "dueDate": "2026-10-13T14:05:04.093Z",
+        "instructions": "Complete all problems showing complete mathematical derivations. Submit via Jarvis Student Workspace.",
+        "totalMarks": 15,
+        "isApproved": true,
+        "releasedToStudents": false,
+        "updatedAt": "2026-10-10T14:05:04.093Z",
+        "questions": [
+          {
+            "id": "hw-1",
+            "questionNumber": 1,
+            "type": "practice",
+            "prompt": "Derive the analytical expression for the field distribution of Gauss Law & Electric Dipoles using standard boundary integration.",
+            "marks": 5,
+            "rubric": "2 marks for equation setup; 2 marks for integration steps; 1 mark for final units.",
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "id": "hw-2",
+            "questionNumber": 2,
+            "type": "numerical",
+            "prompt": "Calculate the resultant potential and field strength at distance r = 0.05 m from a uniform distribution of magnitude 4.0 μC.",
+            "marks": 5,
+            "rubric": "2 marks for formula substitution; 3 marks for calculation accuracy.",
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          },
+          {
+            "id": "hw-3",
+            "questionNumber": 3,
+            "type": "application",
+            "prompt": "Explain one modern technological device that relies fundamentally upon Gauss Law & Electric Dipoles and identify its main operational constraint.",
+            "marks": 5,
+            "rubric": "3 marks for device physics; 2 marks for constraint analysis.",
+            "sourceReference": "NCERT Physics Class 12 - Chapter 1 Excerpt.pdf"
+          }
+        ]
+      },
+      "answerKey": {
+        "id": "ak-1791641104093",
+        "teacherOnly": true,
+        "updatedAt": "2026-10-10T14:05:04.093Z",
+        "quizAnswerMap": {
+          "q-1": "A: Conservation & Symmetry",
+          "q-2": "A: Decreases by factor of 4",
+          "q-3": "9.0 N",
+          "q-4": "High spatial symmetry allows E to factor out of integral"
+        },
+        "homeworkSolutions": [
+          {
+            "questionId": "hw-1",
+            "stepByStepSolution": "1. Set up differential element dq = λ dx.\n2. Write dE = dq / (4πε₀ r²).\n3. Integrate from -L/2 to +L/2 using standard trigonometric substitution.\n4. Result yields E = λ / (2πε₀ r).",
+            "finalAnswer": "E = λ / (2πε₀ r)",
+            "markingCriteria": "Award full marks for clear integration bounds and substitution."
+          },
+          {
+            "questionId": "hw-2",
+            "stepByStepSolution": "E = (9 × 10⁹) · (4 × 10⁻⁶) / (0.05)² = 3.6 × 10⁴ / 0.0025 = 1.44 × 10⁷ N/C.",
+            "finalAnswer": "E = 1.44 × 10⁷ N/C",
+            "markingCriteria": "Verify radius squared calculation (0.05² = 0.0025)."
+          },
+          {
+            "questionId": "hw-3",
+            "stepByStepSolution": "Device: Electrostatic Precipitator or Capacitive Touch Sensor. Mechanism: Charge redistribution induces measurable capacitive change or particle attraction. Constraint: High humidity breakdown or dielectric saturation.",
+            "finalAnswer": "Correct physical mechanism and realistic environmental constraint.",
+            "markingCriteria": "Accept either sensor, precipitator, or particle accelerator examples."
+          }
+        ]
+      },
+      "teacherNotes": {
+        "id": "tn-1791641104093",
+        "overview": "High-yield preparation module for Gauss Law & Electric Dipoles. Designed for 45-minute interactive SmartBoard lecture with pulse quizzes.",
+        "pacingTips": [
+          "Keep opening warmup under 6 minutes to protect derivation time.",
+          "Use the desk tablet pulse quiz immediately after the worked example."
+        ],
+        "blackboardLayouts": [
+          "Left: Definitions & Governing Equations",
+          "Center: Worked Example Step-by-Step Matrix",
+          "Right: Homework & Exam Tips"
+        ],
+        "labEquipmentNeeded": [
+          "SmartBoard Interactive Stylus",
+          "Desk Tablet Synchronization"
+        ],
+        "isApproved": true,
+        "updatedAt": "2026-10-10T14:05:04.093Z"
+      },
+      "studentMaterials": {
+        "id": "sm-1791641104093",
+        "handoutMarkdown": "# Gauss Law & Electric Dipoles · Student Reference Sheet\n\n## 1. Core Principles\n- Governing Law: Verified inverse-square formulation.\n- Key Equation: $\\oint \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{q_{enc}}{\\varepsilon_0}$",
+        "formulaSheet": "Governing Equations for Gauss Law & Electric Dipoles:\n1. F = (1/4πε₀)(q₁ q₂ / r²)\n2. E = λ / (2πε₀ r)",
+        "practiceWorksheet": "Complete problems 1 through 3 in your Jarvis Workspace.",
+        "isApproved": true,
+        "released": false,
+        "updatedAt": "2026-10-10T14:05:04.093Z"
+      },
+      "releaseControls": {
+        "presentationReleased": true,
+        "studentNotesReleased": false,
+        "quizReleased": false,
+        "homeworkReleased": true,
+        "flashcardsReleased": false
+      },
+      "createdAt": "2026-10-10T14:04:56.087Z",
+      "updatedAt": "2026-10-10T14:05:04.098Z"
     }
   ]
 }

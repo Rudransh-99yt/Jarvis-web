@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import crypto from 'node:crypto';
 import { startHttpHarness } from './httpHarness.ts';
 import { signAuthPayload } from '../server/auth/tokens.ts';
+import { ticketService } from '../server/auth/tickets.ts';
 import { jarvisData } from '../server/data/index.ts';
 
 console.log('=== [WEB JARVIS] HTTP CLASSROOM & LIVE BOUNDARY TEST SUITE ===');
@@ -152,6 +153,7 @@ async function runTests() {
     assert.strictEqual(res.status, 403, '10. Foreign teacher gets 403');
 
     // 11. Missing institution metadata on unmapped class (class-cs-420) fails closed -> 403
+    await jarvisData.education.updateClass('class-cs-420', { institutionId: undefined });
     res = await fetch(`${baseUrl}/api/classroom/sessions/active?classId=class-cs-420`, {
       headers: { 'Authorization': `Bearer ${tokenStudent1}` }
     });
@@ -237,6 +239,90 @@ async function runTests() {
     assert.strictEqual(res.status, 200, '17. Enrolled student can submit quiz');
     const quizResult = await res.json();
     assert.strictEqual(quizResult.studentId, student1Id, 'Quiz submission must be recorded under principal ID');
+
+    // ==========================================
+    // SECTION 5: SSE STREAM TICKET & RAW USER ID REJECTION TESTS
+    // ==========================================
+
+    // 18. Raw userId in query param without token on /stream -> strictly 401
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/stream?userId=${student1Id}`);
+    assert.strictEqual(res.status, 401, '18. Raw ?userId query param on /stream must return 401');
+
+    // 19. Raw userId in query param with spoofed headers -> 401
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/stream?userId=${teacher1Id}`, {
+      headers: { 'x-user-id': teacher1Id }
+    });
+    assert.strictEqual(res.status, 401, '19. Query param userId with x-user-id must return 401');
+
+    // 20. Malformed ticket -> 401
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/stream?ticket=malformed-no-dot`);
+    assert.strictEqual(res.status, 401, '20. Malformed ticket on /stream must return 401');
+
+    // 21. Forged ticket signature -> 403
+    const validTicketData = ticketService.createSSETicket({
+      userId: student1Id,
+      workspaceId: 'ws-stark-core',
+      sessionId: 'session-seed-phys-1',
+      classId: 'class-phys-301'
+    });
+    const forgedTicket = `${validTicketData.ticket.split('.')[0]}.tampered_signature_xyz`;
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/stream?ticket=${forgedTicket}`);
+    assert.strictEqual(res.status, 403, '21. Forged ticket signature on /stream must return 403');
+
+    // 22. Expired ticket -> 401
+    const expiredTicketData = ticketService.createSSETicket({
+      userId: student1Id,
+      workspaceId: 'ws-stark-core',
+      sessionId: 'session-seed-phys-1',
+      classId: 'class-phys-301',
+      ttlSeconds: -10
+    });
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/stream?ticket=${expiredTicketData.ticket}`);
+    assert.strictEqual(res.status, 401, '22. Expired ticket on /stream must return 401');
+
+    // 23. Cross-session ticket reuse (ticket for session A on session B stream) -> 403
+    const wrongSessionTicket = ticketService.createSSETicket({
+      userId: student1Id,
+      workspaceId: 'ws-stark-core',
+      sessionId: 'session-other-999',
+      classId: 'class-phys-301'
+    });
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/stream?ticket=${wrongSessionTicket.ticket}`);
+    assert.strictEqual(res.status, 403, '23. Ticket scoped to different session must be rejected with 403');
+
+    // 24. Valid session ticket on stream -> 200 text/event-stream
+    const streamController = new AbortController();
+    try {
+      const streamRes = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/stream?ticket=${validTicketData.ticket}`, {
+        signal: streamController.signal
+      });
+      assert.strictEqual(streamRes.status, 200, '24. Valid ticket connects to stream with 200');
+      assert.ok(streamRes.headers.get('content-type')?.includes('text/event-stream'), 'Content-Type must be text/event-stream');
+    } finally {
+      streamController.abort();
+    }
+
+    // 25. POST /:id/ticket endpoint issues valid ticket for authorized user
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/ticket`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenStudent1}`
+      }
+    });
+    assert.strictEqual(res.status, 200, '25. Authorized student can request stream ticket');
+    const ticketBody = await res.json();
+    assert.ok(ticketBody.ok && ticketBody.ticket, 'Response must contain ticket');
+
+    // 26. Foreign student cannot obtain ticket for un-enrolled session -> 403
+    res = await fetch(`${baseUrl}/api/classroom/sessions/session-seed-phys-1/ticket`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenForeignStudent}`
+      }
+    });
+    assert.strictEqual(res.status, 403, '26. Foreign student cannot obtain ticket for session');
 
     console.log('[TEST] All HTTP Classroom & Live Boundary integration tests PASSED.');
   } finally {

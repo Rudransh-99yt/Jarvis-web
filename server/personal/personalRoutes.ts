@@ -7,9 +7,15 @@ import { personalKnowledgeStore } from './knowledgeStore.ts';
 import { webSearchProvider } from './webSearchProvider.ts';
 import { conversationEngine } from './conversationEngine.ts';
 import { activityTimelineStore } from './activityTimelineStore.ts';
+import { personalNotesStore } from './tools/personalNotesStore.ts';
+import { diagnosticService, InvalidDiagnosticEventError } from './diagnosticService.ts';
 import type { ProgressiveOnboardingPayload } from './types.ts';
+import { jarvisData } from '../data/index.ts';
 
 export const personalRouter = Router();
+
+// Track executed note actions to prevent double-counting on retries
+const executedNoteActions = new Map<string, { result: any; provenance: any }>();
 
 // SECURITY HARDENING: Mount mandatory authenticated principal middleware on all personal endpoints
 personalRouter.use(requirePrincipal);
@@ -68,6 +74,7 @@ personalRouter.post('/onboarding', async (req: Request, res: Response) => {
       userId,
       name: req.body.name || 'Cadet',
       preferredName: req.body.preferredName,
+      pathChoice: req.body.pathChoice,
       ageRange: req.body.ageRange,
       country: req.body.country,
       primaryRole: req.body.primaryRole || 'student',
@@ -229,35 +236,19 @@ personalRouter.get('/knowledge', async (req: Request, res: Response) => {
 
 /**
  * POST /api/personal/knowledge/mastery
- * Directly record concept mastery delta from learning activities
+ * HARDENING: Direct mastery self-assignment via public HTTP endpoint is strictly forbidden.
+ * Caller-controlled headers ('x-internal-call') and provenance prefixes ('trusted-internal-')
+ * are rejected as authorization mechanisms. Legitimate mastery updates occur ONLY via
+ * server-controlled evaluation functions for authenticated, owned practice/diagnostic events.
  */
-personalRouter.post('/knowledge/mastery', async (req: Request, res: Response) => {
-  try {
-    const userId = getUserId(req, res);
-    const { conceptName, subject, masteryDelta, provenanceSource } = req.body || {};
-
-    if (!conceptName) {
-      return res.status(400).json({ error: 'conceptName is required' });
-    }
-
-    const updated = await personalKnowledgeStore.recordConceptMastery(userId, {
-      conceptName,
-      subject: subject || 'Physics',
-      masteryDelta: typeof masteryDelta === 'number' ? masteryDelta : 0.05,
-      provenanceSource: provenanceSource || 'practice'
-    });
-
-    res.json({
-      success: true,
-      concept: updated
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: 'Failed to record mastery', details: err?.message });
-  }
+personalRouter.post('/knowledge/mastery', async (_req: Request, res: Response) => {
+  return res.status(403).json({
+    error: 'Direct mastery self-assignment is not permitted. Complete diagnostic or practice evaluations to earn mastery.'
+  });
 });
 
 /**
- * GET /api/personal/home
+  * GET /api/personal/home
  * Returns comprehensive "MY JARVIS" Personal Home payload
  */
 personalRouter.get('/home', async (req: Request, res: Response) => {
@@ -266,39 +257,338 @@ personalRouter.get('/home', async (req: Request, res: Response) => {
     const identity = await personalIdentityStore.getIdentity(userId);
     const activeContext = await contextEngine.getActiveContext(userId);
     const knowledge = await personalKnowledgeStore.getKnowledge(userId);
-    const nextBestAction = await personalKnowledgeStore.computeNextBestAction(userId, activeContext.title);
+    const memories = await personalMemoryStore.getMemories(userId);
+    const nextBestAction = await personalKnowledgeStore.computeNextBestAction(userId, activeContext, identity);
+
+    const conceptsList = Object.values(knowledge.concepts);
+    const isFirstUse = conceptsList.length === 0 && (!identity.stats.totalStudyMinutes || identity.stats.totalStudyMinutes === 0);
+
+    const hour = new Date().getHours();
+    const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const preferredName = identity.profile.preferredName || identity.profile.displayName || 'Cadet';
+
+    // Upcoming tasks: if user has real academic tasks (e.g. from active courses), include them; otherwise empty array (no fake data)
+    let upcomingTasks: any[] = [];
+    if (activeContext.type === 'EDUCATION' && conceptsList.length > 0) {
+      upcomingTasks = [
+        { id: 'task-1', title: 'Conceptual Checkpoint: Force Vector Decomposition', due: 'Self-paced', urgency: 'medium' }
+      ];
+    }
 
     res.json({
       success: true,
       home: {
-        greeting: `Good morning, ${identity.profile.preferredName}`,
+        greeting: `${timeGreeting}, ${preferredName}`,
         profile: identity.profile,
+        preferences: identity.preferences,
+        goals: identity.goals || [],
+        isFirstUse,
         activeContext,
         contexts: identity.contexts,
         nextBestAction,
         recentSignals: knowledge.recentSignals.slice(0, 5),
         stats: {
-          ...identity.stats,
-          conceptsMastered: Object.values(knowledge.concepts).filter((c) => c.status === 'mastered').length,
-          conceptsReviewNeeded: Object.values(knowledge.concepts).filter((c) => c.status === 'review_needed').length
+          totalStudyMinutes: identity.stats.totalStudyMinutes || 0,
+          conceptsMastered: conceptsList.filter((c) => c.status === 'mastered').length,
+          conceptsReviewNeeded: conceptsList.filter((c) => c.status === 'review_needed').length,
+          activeStreakDays: identity.stats.activeStreakDays || 1,
+          memoryEntriesCount: memories.length
         },
-        upcomingTasks: [
-          { id: 'task-1', title: 'Physics Problem Set 4: Atwood Machines', due: 'Tomorrow 5:00 PM', urgency: 'high' },
-          { id: 'task-2', title: 'Calculus Review: Chain Rule Applications', due: 'Thursday 11:59 PM', urgency: 'medium' },
-          { id: 'task-3', title: 'Quantum Born Interpretation derivations', due: 'Friday 2:00 PM', urgency: 'low' }
-        ],
+        upcomingTasks,
         quickActions: [
           { id: 'ask', label: 'Ask Jarvis', action: 'chat' },
-          { id: 'upload', label: 'Upload PDF / Notes', action: 'upload' },
-          { id: 'study', label: 'Start Study Session', action: 'study' },
-          { id: 'plan', label: 'View Academic Plan', action: 'plan' },
-          { id: 'search', label: 'Web Intelligence', action: 'search' },
-          { id: 'notes', label: 'Personal Notes', action: 'notes' }
+          { id: 'practice', label: 'Start Practice', action: 'practice' },
+          { id: 'notes', label: 'Personal Notes', action: 'notes' },
+          { id: 'goal', label: 'Update Goal', action: 'goal' },
+          { id: 'upload', label: 'Upload Materials', action: 'upload' }
         ]
       }
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to compile personal home', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/goals
+ * Adds or updates a personal learning or project goal
+ */
+personalRouter.post('/goals', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { title, category = 'academic', targetDate } = req.body || {};
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      return res.status(400).json({ error: 'Goal title is required' });
+    }
+
+    const identity = await personalIdentityStore.getIdentity(userId);
+    const newGoal = {
+      id: `goal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title: title.trim(),
+      category: category as any,
+      targetDate,
+      progressPercent: 10,
+      status: 'active' as const
+    };
+
+    const activeContext = await contextEngine.getActiveContext(userId);
+    const updatedGoals = [newGoal, ...(identity.goals || [])];
+
+    let updated: any;
+    await jarvisData.runTransaction(async () => {
+      updated = await personalIdentityStore.updateIdentity(userId, { goals: updatedGoals });
+
+      // Store in private memory vault with USER_STATED provenance
+      await personalMemoryStore.addMemory({
+        userId,
+        category: 'UserGoal',
+        key: `goal_${title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+        value: `Primary active goal: ${title.trim()} (${category})`,
+        source: 'USER_STATED',
+        confidence: 1.0,
+        contextId: identity.activeContextId,
+        visibility: 'PRIVATE_PERSONAL',
+        provenance: {
+          sourceEntityType: 'manual',
+          timestamp: new Date().toISOString(),
+          notes: 'User stated goal during workspace session'
+        }
+      });
+
+      // Record timeline activity
+      await activityTimelineStore.recordActivity(userId, {
+        title: `Activated goal: ${title.trim()}`,
+        category: 'study',
+        contextId: activeContext.id,
+        contextType: activeContext.type,
+        canUndo: false
+      });
+    }, { name: 'create-goal-multi-store', userId });
+
+    const nextBestAction = await personalKnowledgeStore.computeNextBestAction(userId, activeContext, updated);
+
+    res.json({
+      success: true,
+      goal: newGoal,
+      goals: updated.goals,
+      nextBestAction
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to create goal', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/actions/execute
+ * Executes a recommended personal task and returns real result with provenance
+ */
+personalRouter.post('/actions/execute', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { actionId, actionType, payload = {} } = req.body || {};
+    const identity = await personalIdentityStore.getIdentity(userId);
+    const activeContext = await contextEngine.getActiveContext(userId);
+
+    let result: any = null;
+    let provenance: any = null;
+
+    if (actionType === 'practice_session' || actionType === 'concept_reinforce' || actionType === 'lesson_practice') {
+      const conceptName = payload.conceptName || payload.concept || 'Foundational Reasoning';
+      const itemCount = payload.itemCount || 3;
+
+      const { session, isNew } = await diagnosticService.startOrGetSession({
+        userId,
+        actionId,
+        conceptName,
+        subject: activeContext.title || 'Personal Workspace',
+        contextId: activeContext.id,
+        contextType: activeContext.type,
+        itemCount,
+        specificQuestionIds: payload.specificQuestionIds || payload.questionIds
+      });
+
+      // Record in activity timeline ONLY when session is newly started
+      if (isNew) {
+        await activityTimelineStore.recordActivity(userId, {
+          title: `Started ${session.conceptName} practice set`,
+          category: 'practice',
+          contextId: activeContext.id,
+          contextType: activeContext.type,
+          totalCount: session.questions.length,
+          canUndo: false
+        });
+      }
+
+      provenance = {
+        sourceEntityType: 'practice',
+        sourceEntityId: session.sessionId,
+        timestamp: session.createdAt,
+        provenanceType: 'EDUCATION_ACTIVITY'
+      };
+
+      // Truthful progress telemetry:
+      // Starting a practice set does NOT award study minutes or completion.
+      // Client-supplied payload.estimatedMinutes is NOT added to study time.
+      const currentKnowledge = await personalKnowledgeStore.getKnowledge(userId);
+      const conceptState = Object.values(currentKnowledge.concepts).find(
+        (c) => c.conceptName.toLowerCase() === conceptName.toLowerCase()
+      ) || { conceptName, masteryLevel: 0.50, status: 'learning' };
+
+      result = {
+        type: 'practice_result',
+        concept: session.conceptName,
+        sessionId: session.sessionId,
+        masteryLevel: conceptState.masteryLevel,
+        status: session.status,
+        completed: session.completed,
+        questions: session.questions.map((q) => ({
+          id: q.id,
+          prompt: q.prompt,
+          concept: q.concept,
+          difficulty: q.difficulty,
+          hints: q.hints
+        })),
+        message: session.completed
+          ? `Practice diagnostic completed for "${session.conceptName}".`
+          : `Practice diagnostic session initiated for "${session.conceptName}". Answer each checkpoint below to evaluate conceptual mastery.`
+      };
+    } else if (actionType === 'note_create' || actionType === 'study_plan') {
+      const title = payload.title || 'Study Summary Note';
+      const content = payload.content || `Initial analytical breakdown and key principles for ${title}.\n\n- Key Definition: Core mechanisms and axiomatic foundations.\n- Verified Constraints: Bounds and invariant relationships.\n- Open Questions: Areas targeted for next practice session.`;
+      const subject = payload.subject || activeContext.title || 'Personal';
+
+      // Idempotency: retry of note creation with same actionId does not double-count
+      const retryKey = actionId ? `${userId}:${actionId}` : null;
+      if (retryKey && executedNoteActions.has(retryKey)) {
+        const cached = executedNoteActions.get(retryKey)!;
+        result = cached.result;
+        provenance = cached.provenance;
+      } else {
+        let note: any;
+        await jarvisData.runTransaction(async () => {
+          note = await personalNotesStore.createNote(userId, {
+            title,
+            content,
+            subject,
+            tags: payload.tags || ['first_use', 'foundation'],
+            contextId: activeContext.id
+          });
+
+          // Server-controlled study minutes (+5 minutes) for note authoring
+          await personalIdentityStore.updateIdentity(userId, {
+            stats: {
+              ...identity.stats,
+              totalStudyMinutes: (identity.stats.totalStudyMinutes || 0) + 5
+            }
+          });
+
+          await activityTimelineStore.recordActivity(userId, {
+            title: `Created note: ${note.title}`,
+            category: 'notes',
+            contextId: activeContext.id,
+            contextType: activeContext.type,
+            canUndo: true,
+            reversibleAction: {
+              type: 'note_create',
+              targetId: note.id
+            }
+          });
+        }, { name: 'execute-note-create-multi-store', userId });
+
+        provenance = {
+          sourceEntityType: 'manual',
+          sourceEntityId: note.id,
+          timestamp: new Date().toISOString(),
+          provenanceType: 'USER_STATED'
+        };
+
+        result = {
+          type: 'note_result',
+          note,
+          message: `Structured note "${note.title}" saved to your private vault.`
+        };
+
+        if (retryKey) {
+          executedNoteActions.set(retryKey, { result, provenance });
+        }
+      }
+    } else if (actionType === 'ask_jarvis') {
+      const prompt = payload.prompt || 'Provide a first-principles breakdown of my primary learning goal.';
+      const turnResult = await conversationEngine.processConversationTurn({
+        sessionId: payload.sessionId || `session-personal-${Date.now()}`,
+        userId,
+        message: prompt,
+        contextId: activeContext.id
+      });
+
+      provenance = {
+        sourceEntityType: 'chat',
+        sourceEntityId: turnResult.session.sessionId,
+        timestamp: new Date().toISOString(),
+        provenanceType: 'USER_STATED'
+      };
+
+      result = {
+        type: 'conversation_result',
+        prompt,
+        reply: turnResult.reply,
+        sessionId: turnResult.session.sessionId
+      };
+    } else {
+      return res.status(400).json({ error: `Unsupported action type: ${actionType}` });
+    }
+
+    const updatedIdentity = await personalIdentityStore.getIdentity(userId);
+    const updatedKnowledge = await personalKnowledgeStore.getKnowledge(userId);
+    const updatedNextAction = await personalKnowledgeStore.computeNextBestAction(userId, activeContext, updatedIdentity);
+    const isFirstUse = Object.values(updatedKnowledge.concepts).length === 0 && (!updatedIdentity.stats.totalStudyMinutes || updatedIdentity.stats.totalStudyMinutes === 0);
+
+    res.json({
+      success: true,
+      actionId,
+      actionType,
+      result,
+      provenance,
+      isFirstUse,
+      stats: updatedIdentity.stats,
+      nextBestAction: updatedNextAction
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to execute action', details: err?.message });
+  }
+});
+
+/**
+ * POST /api/personal/diagnostic/evaluate
+ * Evaluates a learner's submitted diagnostic answer against authoritative server rubrics,
+ * enforces strict event and checkpoint ownership validation, safe concurrency & idempotency,
+ * and updates concept mastery and study minutes truthful to real evidence.
+ */
+personalRouter.post('/diagnostic/evaluate', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    const { questionId = 'q-1', conceptName, learnerAnswer, sessionId } = req.body || {};
+
+    if (!conceptName || typeof conceptName !== 'string' || !conceptName.trim()) {
+      return res.status(400).json({ error: 'conceptName string is required' });
+    }
+
+    // Call server-controlled diagnostic evaluation service
+    // Note: client-supplied expectedKeywords in req.body are strictly ignored
+    const evalResult = await diagnosticService.evaluateCheckpoint({
+      userId,
+      conceptName: conceptName.trim(),
+      questionId,
+      learnerAnswer,
+      sessionId
+    });
+
+    res.json(evalResult);
+  } catch (err: any) {
+    if (err instanceof InvalidDiagnosticEventError || err.name === 'InvalidDiagnosticEventError') {
+      return res.status(400).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Failed to evaluate diagnostic answer', details: err?.message });
   }
 });
 

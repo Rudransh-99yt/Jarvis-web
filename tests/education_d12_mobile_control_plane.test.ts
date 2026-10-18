@@ -48,7 +48,10 @@ async function runD12ControlPlaneTests() {
   const durableDbPath = path.resolve(process.cwd(), 'data', 'jarvis-db.json');
   const initialDbHash = getFileSha256(durableDbPath);
 
-  smartboardStore.resetToDefaults();
+  const testDbDir = path.resolve(process.cwd(), 'tests', '.tmp-db');
+  if (!fs.existsSync(testDbDir)) fs.mkdirSync(testDbDir, { recursive: true });
+  const tmpSmartboardPath = path.join(testDbDir, `d12-test-smartboard-${Date.now()}.json`);
+  smartboardStore.setStoragePath(tmpSmartboardPath);
 
   // --- SECTION 1: List Authorized SmartBoards ---
   console.log('--- SECTION 1: List Authorized SmartBoards ---');
@@ -160,6 +163,11 @@ async function runD12ControlPlaneTests() {
 
   // --- SECTION 7: Test Data Hygiene & Invariant Verification ---
   console.log('\n--- SECTION 7: Test Data Hygiene & Invariant Verification ---');
+
+  smartboardStore.setStoragePath();
+  try {
+    if (fs.existsSync(tmpSmartboardPath)) fs.unlinkSync(tmpSmartboardPath);
+  } catch {}
 
   const postTestDbHash = getFileSha256(durableDbPath);
   assert(

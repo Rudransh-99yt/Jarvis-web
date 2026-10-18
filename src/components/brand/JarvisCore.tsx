@@ -22,7 +22,7 @@ const SIZE_MAP: Record<JarvisCoreSize, { container: string; orb: string; rings: 
 
 /**
  * Jarvis Living Intelligence Core
- * 
+ *
  * A subtle, alive physical presence with breathing light, specular rim,
  * and contextual state reactivity (idle, thinking, speaking, listening, success, warning).
  */

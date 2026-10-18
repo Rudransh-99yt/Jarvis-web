@@ -4,7 +4,12 @@ import express from 'express';
 import type { Server } from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
-import { jarvisData, DiskJarvisDataRepository } from '../server/data/index.ts';
+import {
+  jarvisData,
+  DiskJarvisDataRepository,
+  setActiveRepository,
+  resetActiveRepository
+} from '../server/data/index.ts';
 import { smartboardRouter } from '../server/sectors/education/smartboard/smartboardRoutes.ts';
 import { smartboardStore } from '../server/sectors/education/smartboard/smartboardStore.ts';
 import { authService } from '../server/auth/index.ts';
@@ -13,9 +18,17 @@ import type { User } from '../server/data/types.ts';
 console.log('=== [JARVIS-WEB] P0-4 PERSISTENCE & CONCURRENCY HARDENING TEST SUITE ===');
 
 async function runPersistenceConcurrencyTests() {
-  await jarvisData.seed();
+  const tmpDir = path.resolve(process.cwd(), 'tmp', `p04-test-${Date.now()}`);
+  if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+  const tmpDbPath = path.join(tmpDir, 'jarvis-db.json');
+  const tmpSmartboardPath = path.join(tmpDir, 'smartboard-store.json');
+
+  const testRepo = new DiskJarvisDataRepository(tmpDbPath);
+  await testRepo.init();
+  await testRepo.seed();
+  setActiveRepository(testRepo);
+  smartboardStore.setStoragePath(tmpSmartboardPath);
   const repo = jarvisData;
-  smartboardStore.resetToDefaults();
 
   const app = express();
   app.use(express.json());
@@ -250,6 +263,14 @@ async function runPersistenceConcurrencyTests() {
     console.log('\n=== ALL P0-4 PERSISTENCE & CONCURRENCY TESTS PASSED (100%) ===\n');
   } finally {
     await new Promise((resolve) => server.close(resolve));
+    await testRepo.close();
+    resetActiveRepository();
+    smartboardStore.setStoragePath();
+    try {
+      if (fs.existsSync(tmpDir)) {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    } catch {}
   }
 }
 

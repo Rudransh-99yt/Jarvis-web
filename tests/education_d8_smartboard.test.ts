@@ -99,8 +99,8 @@ async function runD8SmartBoardTests() {
   await testRepo.init();
   await testRepo.seed();
   setActiveRepository(testRepo);
-
-  smartboardStore.resetToDefaults();
+  const tmpSmartboardPath = path.join(testDbDir, `d8-test-smartboard-${Date.now()}.json`);
+  smartboardStore.setStoragePath(tmpSmartboardPath);
 
   // --- SECTION 1: SmartBoard Device Registration & Discovery ---
   console.log('--- SECTION 1: SmartBoard Device Registration & Discovery ---');
@@ -448,9 +448,14 @@ async function runD8SmartBoardTests() {
   console.log('\n--- SECTION 10: Test Data Hygiene & Invariant Verification ---');
 
   // Clean up isolated test database
+  await testRepo.close();
   resetActiveRepository();
+  smartboardStore.setStoragePath();
   try {
     if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+  } catch {}
+  try {
+    if (fs.existsSync(tmpSmartboardPath)) fs.unlinkSync(tmpSmartboardPath);
   } catch {}
 
   const postTestDbHash = getFileSha256(durableDbPath);

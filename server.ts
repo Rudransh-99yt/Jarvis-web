@@ -1,13 +1,13 @@
-import express, { type Request, type Response } from "express";
-import type { Server } from "node:http";
-import path from "node:path";
-import fs from "node:fs";
-import { fileURLToPath } from "node:url";
+import express, { type Request, type Response } from 'express';
+import type { Server } from 'node:http';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 // Load local .env in non-production if present and not already loaded by CLI --env-file
-if (process.env.NODE_ENV !== "production" && typeof (process as any).loadEnvFile === "function") {
+if (process.env.NODE_ENV !== 'production' && typeof (process as any).loadEnvFile === 'function') {
   try {
-    const defaultEnvPath = path.resolve(process.cwd(), ".env");
+    const defaultEnvPath = path.resolve(process.cwd(), '.env');
     if (fs.existsSync(defaultEnvPath)) {
       (process as any).loadEnvFile(defaultEnvPath);
     }
@@ -32,6 +32,7 @@ import { storageManager } from './server/storage/index.ts';
 import { jarvisData } from './server/data/index.ts';
 import { personalRouter } from './server/personal/personalRoutes.ts';
 import { authRouter, resolveAuthSecret, validateProductionEmailConfig } from './server/auth/index.ts';
+import { exportRouter } from './server/export/exportRoutes.ts';
 import { correlationMiddleware } from './server/logging/logger.ts';
 import { corsAndSecurityHeaders, validateCorsConfiguration } from './server/security/corsAndHeaders.ts';
 import { getProductionDiagnostics } from './server/diagnostics/productionHealth.ts';
@@ -48,11 +49,10 @@ function getArg(flag: string): string | undefined {
 export const app = express();
 
 // 0. Production Secret Pre-flight Verification (Fail closed if secret missing or insecure)
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === 'production') {
   resolveAuthSecret();
 }
 validateCorsConfiguration();
-
 // AI Studio dev environment requires port 3000. In production containers (e.g. Cloud Run), allow process.env.PORT.
 const PORT = parseInt(
   getArg('--port') || 
@@ -94,6 +94,9 @@ app.use('/api/classroom/quizzes', quizRouter);
 app.use('/api/personal', personalRouter);
 app.use('/api/education', educationRouter);
 app.use('/api/research', researchRouter);
+
+// Operator Internal Export (Stage 6.4.4.16)
+app.use('/api/internal/export', exportRouter);
 
 // Server-authoritative Protocols Endpoint
 app.get('/api/protocols', (_req: Request, res: Response) => {
@@ -158,7 +161,7 @@ export async function startServer(port: number = PORT, host: string = HOST): Pro
     });
   }
 
-    // Validate production authentication secret and email configuration before opening network listener
+  // Validate production authentication secret and email configuration before opening network listener
   if (isProduction) {
     resolveAuthSecret();
     validateProductionEmailConfig();
@@ -169,7 +172,7 @@ export async function startServer(port: number = PORT, host: string = HOST): Pro
       console.log(`[Web Jarvis] Server listening on http://localhost:${port} (bound to ${host})`);
       resolve(server);
     });
-    server.once("error", reject);
+    server.once('error', reject);
   });
 }
 

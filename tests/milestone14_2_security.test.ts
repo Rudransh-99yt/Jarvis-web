@@ -1,6 +1,9 @@
 // Milestone 14.2: Comprehensive Security & Data-Hygiene Hardening Test Suite
 import assert from 'node:assert';
-import { jarvisData } from '../server/data/index.ts';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { jarvisData, DiskJarvisDataRepository, setActiveRepository, resetActiveRepository } from '../server/data/index.ts';
 import { smartVideoService } from '../server/sectors/education/videoService.ts';
 import { ticketService, TicketAuthenticationError } from '../server/auth/tickets.ts';
 import { authenticateRequest, extractAuthToken } from '../server/auth/index.ts';
@@ -10,8 +13,19 @@ import type { Request } from 'express';
 console.log('=== [WEB JARVIS] MILESTONE 14.2: SECURITY & DATA-HYGIENE TEST SUITE ===');
 
 async function runSecurityTests() {
+  const defaultDbPath = path.resolve(process.cwd(), 'data', 'jarvis-db.json');
+  const isolatedDir = path.resolve(process.cwd(), 'tmp', `sec-test-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`);
+  fs.mkdirSync(isolatedDir, { recursive: true });
+  const isolatedDbPath = path.join(isolatedDir, 'jarvis-db.json');
+  if (fs.existsSync(defaultDbPath)) {
+    fs.copyFileSync(defaultDbPath, isolatedDbPath);
+  }
+  const isolatedRepo = new DiskJarvisDataRepository(isolatedDbPath);
+  setActiveRepository(isolatedRepo);
+  await jarvisData.init();
   await jarvisData.seed();
   const repo = jarvisData;
+  try {
 
   const teacher = (await repo.users.getById('teacher-1'))!;
   const student = (await repo.users.getById('student-1'))!;
@@ -54,18 +68,25 @@ async function runSecurityTests() {
 
   // 3. Client-supplied role spoofing -> Overruled by database role
   console.log('[TEST] 3. Client-supplied role spoofing prevented');
-  const spoofRoleReq = {
-    headers: {
-      'x-user-id': 'student-1',
-      'x-user-role': 'commander' // student tries to claim commander role
-    },
-    query: {}
-  } as unknown as Request;
+  const prevDevAuth = process.env.ALLOW_DEV_AUTH;
+  process.env.ALLOW_DEV_AUTH = 'true';
+  try {
+    const spoofRoleReq = {
+      headers: {
+        'x-user-id': 'student-1',
+        'x-user-role': 'commander' // student tries to claim commander role
+      },
+      query: {}
+    } as unknown as Request;
 
-  const authenticatedStudent = await authenticateRequest(spoofRoleReq);
-  assert.strictEqual(authenticatedStudent.id, 'student-1');
-  assert.strictEqual(authenticatedStudent.role, 'student', 'Role must strictly come from database record, not client header');
-  console.log('[PASS] 3. Client-supplied role header is ignored; database role is authoritative');
+    const authenticatedStudent = await authenticateRequest(spoofRoleReq);
+    assert.strictEqual(authenticatedStudent.id, 'student-1');
+    assert.strictEqual(authenticatedStudent.role, 'student', 'Role must strictly come from database record, not client header');
+    console.log('[PASS] 3. Client-supplied role header is ignored; database role is authoritative');
+  } finally {
+    if (prevDevAuth !== undefined) process.env.ALLOW_DEV_AUTH = prevDevAuth;
+    else delete process.env.ALLOW_DEV_AUTH;
+  }
 
   // 4. Ticket issuance for authorized video
   console.log('[TEST] 4. Playback ticket generation');
@@ -225,6 +246,12 @@ async function runSecurityTests() {
   console.log('[PASS] 14. SSE ticket channel mismatch rejected with 403');
 
   console.log('\n=== ALL 14 MILESTONE 14.2 SECURITY & DATA-HYGIENE TESTS PASSED! ===\n');
+  } finally {
+    resetActiveRepository();
+    try {
+      fs.rmSync(isolatedDir, { recursive: true, force: true });
+    } catch {}
+  }
 }
 
 runSecurityTests()

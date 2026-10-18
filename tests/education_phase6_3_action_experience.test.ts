@@ -25,8 +25,13 @@ async function runActionExperienceTestSuite() {
     }
   }
 
-  // --- SECTION 1: Action Preview Creation & Breakdown ---
-  console.log('\n--- SECTION 1: Action Preview Creation & Risk Classification ---');
+  const harness = await startHttpHarness();
+  const token = await harness.tokenFor('student-1');
+  const token2 = await harness.tokenFor('student-2');
+
+  try {
+    // --- SECTION 1: Action Preview Creation & Breakdown ---
+    console.log('\n--- SECTION 1: Action Preview Creation & Risk Classification ---');
 
   await test('1.1 action preview creation correctly structures action, source, and plan', () => {
     const preview: ActionPreviewData = {
@@ -365,12 +370,7 @@ async function runActionExperienceTestSuite() {
   // --- SECTION 7: HTTP REST API Endpoints ---
   console.log('\n--- SECTION 7: HTTP REST API Endpoints ---');
 
-  const harness = await startHttpHarness();
-  const token = await harness.tokenFor('student-1');
-  const token2 = await harness.tokenFor('student-2');
-
-  try {
-    await test('7.1 GET /api/personal/activity-timeline requires valid authentication', async () => {
+  await test('7.1 GET /api/personal/activity-timeline requires valid authentication', async () => {
       const res = await fetch(`${harness.baseUrl}/api/personal/activity-timeline`);
       assert.strictEqual(res.status, 401, 'Unauthenticated request must be rejected');
     });

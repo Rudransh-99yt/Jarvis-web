@@ -3,11 +3,14 @@ import { AppShell } from './components/layout/AppShell.tsx';
 import { CommandDeckSector } from './sectors/command/CommandDeckSector.tsx';
 import { EducationSector } from './sectors/education/EducationSector.tsx';
 import { ResearchSector } from './sectors/research/ResearchSector.tsx';
+import { PersonalWorkspaceSector } from './sectors/personal/PersonalWorkspaceSector.tsx';
 import { soundEffects } from './services/soundEffects.ts';
 import { speechService } from './services/speechService.ts';
 import { processJarvisCommand } from './services/commandProcessor.ts';
 import { authClient, type AuthClientUser } from './services/authClient.ts';
 import { useRouter } from './services/router.ts';
+import { JarvisCore } from './components/brand/JarvisCore.tsx';
+import { PublicLandingView } from './components/landing/PublicLandingView.tsx';
 import { PublicRoutePortal } from './components/landing/PublicRoutePortal.tsx';
 import type {
   HudTheme,
@@ -154,36 +157,33 @@ const INITIAL_DIRECTIVES: StarkDirective[] = [
 ];
 
 export function App() {
+  const { path, navigate, isLanding, isExplore, isLogin, isSignup, isOnboarding, sectorFromPath } = useRouter();
 
-  const { path, navigate, isLogin, isSignup, isOnboarding, isExplore } = useRouter();
+  // Authentication & Session Guard State
   const [currentUser, setCurrentUser] = useState<AuthClientUser | null>(() => authClient.getCurrentUser());
+  const [isVerifyingSession, setIsVerifyingSession] = useState<boolean>(() => path.startsWith('/app') && !authClient.isAuthenticated());
 
-  useEffect(() => {
-    return authClient.subscribe(() => {
-      const u = authClient.getCurrentUser();
-      setCurrentUser(u);
-      if (u?.role && ["student", "teacher", "principal", "parent", "commander"].includes(u.role)) {
-        setEducationRole(u.role as EducationRole);
-      }
-    });
-  }, []);
-
-  const handleLogout = async () => {
-    await authClient.logout();
-    setCurrentUser(null);
-    navigate("/login");
-  };
-
-  // Sector Navigation State - Default to Education OS
+  // Sector Navigation State - Default to Education OS (or sector specified in URL)
   const [currentSector, setCurrentSector] = useState<SectorId>(() => {
+    if (sectorFromPath && (sectorFromPath === 'personal' || sectorFromPath === 'command' || sectorFromPath === 'education' || sectorFromPath === 'research')) {
+      return sectorFromPath;
+    }
     try {
       const saved = localStorage.getItem('jarvis_active_sector');
-      if (saved === 'command' || saved === 'education' || saved === 'research') {
+      if (saved === 'personal' || saved === 'command' || saved === 'education' || saved === 'research') {
         return saved as SectorId;
       }
     } catch {}
     return 'education';
   });
+
+  // Synchronize sector from URL if route updates to /app/personal, /app/command, /app/research, etc.
+  useEffect(() => {
+    if (sectorFromPath && (sectorFromPath === 'personal' || sectorFromPath === 'command' || sectorFromPath === 'education' || sectorFromPath === 'research')) {
+      setCurrentSector(sectorFromPath);
+    }
+  }, [sectorFromPath]);
+
   const [educationRole, setEducationRole] = useState<EducationRole>(() => {
     const active = authClient.getRole();
     if (active === 'student' || active === 'teacher' || active === 'principal' || active === 'parent') {
@@ -191,6 +191,48 @@ export function App() {
     }
     return 'student';
   });
+
+  // Keep auth state synchronized with authClient updates
+  useEffect(() => {
+    return authClient.subscribe(() => {
+      const u = authClient.getCurrentUser();
+      setCurrentUser(u);
+      if (u?.role && ['student', 'teacher', 'principal', 'parent', 'commander'].includes(u.role)) {
+        setEducationRole(u.role as EducationRole);
+      }
+    });
+  }, []);
+
+  // Protected Route Guard for /app/*
+  useEffect(() => {
+    if (path.startsWith('/app')) {
+      if (!authClient.isAuthenticated()) {
+        setIsVerifyingSession(true);
+        navigate(`/login?redirect=${encodeURIComponent(path)}`, { replace: true });
+      } else {
+        setIsVerifyingSession(false);
+        // Verify token validity against server
+        authClient.validateSession().then((verified) => {
+          if (!verified) {
+            navigate(`/login?redirect=${encodeURIComponent(path)}`, { replace: true });
+          } else {
+            setCurrentUser(verified);
+            if (verified.role && ['student', 'teacher', 'principal', 'parent', 'commander'].includes(verified.role)) {
+              setEducationRole(verified.role as EducationRole);
+            }
+          }
+        });
+      }
+    } else {
+      setIsVerifyingSession(false);
+    }
+  }, [path, navigate]);
+
+  const handleLogout = async () => {
+    await authClient.logout();
+    setCurrentUser(null);
+    navigate('/');
+  };
   const [isMuted, setIsMuted] = useState(false);
   const [apiProviderName, setApiProviderName] = useState('Google Gemini (gemini-3.8-flash)');
   const [isApiOnline, setIsApiOnline] = useState(true);
@@ -306,7 +348,10 @@ export function App() {
   const sendChatMessage = async (message: string, context?: any): Promise<string> => {
     const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
+      headers: {
+        'Content-Type': 'application/json',
+        ...authClient.getAuthHeaders()
+      },
       body: JSON.stringify({
         message,
         sessionId,
@@ -505,7 +550,10 @@ export function App() {
       // Sync with server tool state
       fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authClient.getAuthHeaders()
+        },
         body: JSON.stringify({
           message: `${next ? 'Enable' : 'Disable'} protocol ${id}`,
           sessionId,
@@ -580,32 +628,59 @@ export function App() {
     }
   };
 
+  // 1. Public Homepage at /
+  if (isLanding) {
+    return <PublicLandingView />;
+  }
 
-  // Public Route Portals: /explore, /login, /signup, /onboarding
-  if (isLogin || isSignup || isOnboarding || isExplore) {
+  // 2. Future Public Route Portals: /explore, /login, /signup, /onboarding
+  if (isExplore || isLogin || isSignup || isOnboarding) {
     return (
       <PublicRoutePortal
         onLoginSuccess={(role) => {
           setEducationRole(role);
           setCurrentUser(authClient.getCurrentUser());
-          navigate("/");
         }}
       />
     );
   }
 
+  // 3. Protected Route Gate for /app/*
+  if (path.startsWith('/app') && (!authClient.isAuthenticated() || isVerifyingSession)) {
+    return (
+      <div className="min-h-screen bg-[#06080e] flex flex-col items-center justify-center p-6 text-center select-none font-sans">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <div className="absolute top-[20%] left-[20%] w-[50%] h-[40%] bg-cyan-500/[0.04] rounded-full blur-[140px]" />
+        </div>
+        <div className="relative z-10 flex flex-col items-center">
+          <JarvisCore size="md" state="thinking" label="Sovereign Access Gate" />
+          <div className="mt-5 space-y-2 max-w-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-cyan-300 font-mono">
+              Protected Operating Sector
+            </h2>
+            <p className="text-xs text-neutral-400">
+              Cryptographic session verification required. Redirecting to sovereign login portal...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Authenticated Multi-Sector Application Shell (e.g. /app, /app/education, /app/command, /app/research)
   return (
     <AppShell
       currentSector={currentSector}
       currentUser={currentUser}
       onLogout={handleLogout}
-      onNavigateLogin={() => navigate("/login")}
       onSelectSector={(s) => {
         setCurrentSector(s);
+        navigate(`/app/${s}`, { scroll: false });
         try {
           localStorage.setItem('jarvis_active_sector', s);
         } catch {}
       }}
+      onNavigateHome={() => navigate('/')}
       isMuted={isMuted}
       onToggleMute={() => setIsMuted(!isMuted)}
       apiProviderName={apiProviderName}
@@ -617,6 +692,10 @@ export function App() {
         else setEducationRole('student');
       }}
     >
+      {currentSector === 'personal' && (
+        <PersonalWorkspaceSector />
+      )}
+
       {currentSector === 'command' && (
         <CommandDeckSector
           corePower={corePower}

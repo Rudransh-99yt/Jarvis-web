@@ -143,8 +143,62 @@ async function runTests() {
       body: JSON.stringify({ message: 'Hello from forged role', sessionId: sessionId3 })
     });
     assert.strictEqual(res.status, 200, 'Expected 200 for forged role request');
-    // The underlying authenticateRequest in index.ts ignores x-user-role and loads from DB.
-    // This is tested implicitly since the DB returns 'student'.
+
+    // 9. Raw user ID in Authorization Bearer disabled by default in non-production -> 401
+    const prevDevAuth = process.env.ALLOW_DEV_AUTH;
+    const prevNodeEnv = process.env.NODE_ENV;
+    delete process.env.ALLOW_DEV_AUTH;
+    res = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer student-1'
+      },
+      body: JSON.stringify({ message: 'Raw user id probe' })
+    });
+    assert.strictEqual(res.status, 401, 'Expected 401 for raw user-ID credential when ALLOW_DEV_AUTH is not enabled');
+
+    // 10. Raw x-user-id header without Authorization disabled by default -> 401
+    res = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': 'student-1'
+      },
+      body: JSON.stringify({ message: 'Raw x-user-id header probe' })
+    });
+    assert.strictEqual(res.status, 401, 'Expected 401 for x-user-id header when ALLOW_DEV_AUTH is not enabled');
+
+    // 11. Explicitly enabled dev credentials (ALLOW_DEV_AUTH === 'true' in development) -> 200
+    process.env.ALLOW_DEV_AUTH = 'true';
+    process.env.NODE_ENV = 'development';
+    res = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer student-1'
+      },
+      body: JSON.stringify({ message: 'Dev auth enabled probe' })
+    });
+    assert.strictEqual(res.status, 200, 'Expected 200 for raw user ID when ALLOW_DEV_AUTH is explicitly enabled in dev');
+
+    // 12. Dev credentials CANNOT override signed-token verification in production -> 401
+    process.env.NODE_ENV = 'production';
+    res = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer student-1'
+      },
+      body: JSON.stringify({ message: 'Dev auth in production probe' })
+    });
+    assert.strictEqual(res.status, 401, 'Expected 401 for raw user ID even with ALLOW_DEV_AUTH in production');
+
+    // Restore environment variables
+    if (prevDevAuth !== undefined) process.env.ALLOW_DEV_AUTH = prevDevAuth;
+    else delete process.env.ALLOW_DEV_AUTH;
+    if (prevNodeEnv !== undefined) process.env.NODE_ENV = prevNodeEnv;
+    else delete process.env.NODE_ENV;
     
     console.log('[TEST] All HTTP Auth Boundary tests PASSED.');
   } finally {

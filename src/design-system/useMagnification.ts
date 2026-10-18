@@ -93,10 +93,11 @@ export function useMagnificationRail(profileOrKey: MagnificationProfile | keyof 
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     // Touch devices and tablets use standard touch taps, not desktop dock proximity
-    if (e.pointerType === 'touch') return;
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') return;
 
     // Respect reduced-motion preferences
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      resetAll();
       return;
     }
 
@@ -118,12 +119,20 @@ export function useMagnificationRail(profileOrKey: MagnificationProfile | keyof 
         const pointerPos = isVertical ? pointerY : pointerX;
         const dist = Math.abs(pointerPos - center);
 
-        if (dist < radius) {
+        // Cross-axis boundary check to avoid accidental trigger from far away on perpendicular axis
+        const crossCenter = isVertical ? rect.left + rect.width / 2 : rect.top + rect.height / 2;
+        const crossPointerPos = isVertical ? pointerX : pointerY;
+        const crossDist = Math.abs(crossPointerPos - crossCenter);
+        const crossLimit = isVertical ? Math.max(rect.width * 1.6, 72) : Math.max(rect.height * 1.6, 54);
+
+        if (dist < radius && crossDist < crossLimit) {
+          // Normalize main distance and cross-axis decay factor
           const t = 1 - dist / radius;
-          // Smooth cosine bell-curve with 1.42 exponent for continuous, cohesive physical handover:
-          // Hovered: ~1.12 | Neighbor: ~1.066 | Next-neighbor: ~1.024
+          const crossDecay = Math.max(0, 1 - crossDist / crossLimit);
+
+          // Smooth cosine bell-curve with 1.42 exponent for continuous, cohesive physical handover
           const smoothT = 0.5 * (1 - Math.cos(Math.PI * t));
-          const factor = Math.pow(smoothT, 1.42);
+          const factor = Math.pow(smoothT, 1.42) * crossDecay;
           
           const scale = 1.0 + (maxScale - 1.0) * factor;
           const lift = -maxLift * factor;
@@ -150,7 +159,7 @@ export function useMagnificationRail(profileOrKey: MagnificationProfile | keyof 
         }
       });
     });
-  }, [profile]);
+  }, [profile, resetAll]);
 
   const handlePointerLeave = useCallback(() => {
     if (rafId.current) {

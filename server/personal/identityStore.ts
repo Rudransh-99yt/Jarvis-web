@@ -1,3 +1,4 @@
+import { jarvisData, type IJarvisDataRepository } from '../data/index.ts';
 import type {
   PersonalJarvisIdentity,
   ProgressiveOnboardingPayload,
@@ -9,17 +10,17 @@ import type {
 
 /**
  * PersonalIdentityStore
- * Manages persistent PersonalJarvisIdentity representations.
+ * Manages persistent PersonalJarvisIdentity representations backed by the core data repository.
  * Principle: The user is ONE person across multiple contexts and roles.
  */
 export class PersonalIdentityStore {
-  private identities: Map<string, PersonalJarvisIdentity> = new Map();
+  private repo: IJarvisDataRepository;
 
-  constructor() {
-    this.seedDefaultIdentities();
+  constructor(repo: IJarvisDataRepository = jarvisData) {
+    this.repo = repo;
   }
 
-  private seedDefaultIdentities(): void {
+  private createDefaultStudent1Identity(): PersonalJarvisIdentity {
     const student1Contexts: UserContext[] = [
       {
         id: 'ctx-student1-personal',
@@ -126,7 +127,7 @@ export class PersonalIdentityStore {
       }
     ];
 
-    this.identities.set('student-1', {
+    return {
       userId: 'student-1',
       profile: student1Profile,
       preferences: student1Preferences,
@@ -143,63 +144,70 @@ export class PersonalIdentityStore {
       },
       createdAt: '2026-09-01T00:00:00Z',
       updatedAt: new Date().toISOString()
-    });
+    };
+  }
+
+  private createDefaultCadetIdentity(userId: string): PersonalJarvisIdentity {
+    return {
+      userId,
+      profile: {
+        displayName: 'Jarvis Cadet',
+        preferredName: 'Cadet',
+        email: `${userId}@jarvis.os`,
+        avatarUrl: '',
+        timezone: 'UTC',
+        locale: 'en-US'
+      },
+      preferences: {
+        explanationStyle: 'concise_tactical',
+        tone: 'analytical_respectful',
+        communicationCadence: 'balanced',
+        hudTheme: 'cyan_tactical',
+        soundEnabled: true,
+        bookOnlyModeDefault: false
+      },
+      goals: [],
+      interests: ['Science', 'Technology'],
+      roles: ['student'],
+      activeContextId: `ctx-${userId}-personal`,
+      contexts: [
+        {
+          id: `ctx-${userId}-personal`,
+          type: 'PERSONAL',
+          title: 'Personal Workspace',
+          description: 'Default personal operating context',
+          isDefault: true,
+          isActive: true,
+          metadata: {},
+          permissions: {
+            canAccessInstitutionData: false,
+            sharePersonalMemory: false
+          },
+          createdAt: new Date().toISOString()
+        }
+      ],
+      stats: {
+        totalStudyMinutes: 0,
+        conceptsMastered: 0,
+        activeStreakDays: 1,
+        memoryEntriesCount: 0
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
   }
 
   async getIdentity(userId: string): Promise<PersonalJarvisIdentity> {
-    let identity = this.identities.get(userId);
+    let identity = await this.repo.personalIdentities.getById(userId);
     if (!identity) {
-      // Create a default baseline identity for unknown users
-      identity = {
-        userId,
-        profile: {
-          displayName: 'Jarvis Cadet',
-          preferredName: 'Cadet',
-          email: `${userId}@jarvis.os`,
-          avatarUrl: '',
-          timezone: 'UTC',
-          locale: 'en-US'
-        },
-        preferences: {
-          explanationStyle: 'concise_tactical',
-          tone: 'analytical_respectful',
-          communicationCadence: 'balanced',
-          hudTheme: 'cyan_tactical',
-          soundEnabled: true,
-          bookOnlyModeDefault: false
-        },
-        goals: [],
-        interests: ['Science', 'Technology'],
-        roles: ['student'],
-        activeContextId: `ctx-${userId}-personal`,
-        contexts: [
-          {
-            id: `ctx-${userId}-personal`,
-            type: 'PERSONAL',
-            title: 'Personal Workspace',
-            description: 'Default personal operating context',
-            isDefault: true,
-            isActive: true,
-            metadata: {},
-            permissions: {
-              canAccessInstitutionData: false,
-              sharePersonalMemory: false
-            },
-            createdAt: new Date().toISOString()
-          }
-        ],
-        stats: {
-          totalStudyMinutes: 0,
-          conceptsMastered: 0,
-          activeStreakDays: 1,
-          memoryEntriesCount: 0
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      this.identities.set(userId, identity);
+      if (userId === 'student-1') {
+        identity = this.createDefaultStudent1Identity();
+      } else {
+        identity = this.createDefaultCadetIdentity(userId);
+      }
+      await this.repo.personalIdentities.create(identity);
     }
-    return identity;
+    return JSON.parse(JSON.stringify(identity));
   }
 
   async updateIdentity(userId: string, updates: Partial<PersonalJarvisIdentity>): Promise<PersonalJarvisIdentity> {
@@ -207,11 +215,14 @@ export class PersonalIdentityStore {
     const updated: PersonalJarvisIdentity = {
       ...existing,
       ...updates,
+      profile: updates.profile ? { ...existing.profile, ...updates.profile } : existing.profile,
+      preferences: updates.preferences ? { ...existing.preferences, ...updates.preferences } : existing.preferences,
+      stats: updates.stats ? { ...existing.stats, ...updates.stats } : existing.stats,
       userId,
       updatedAt: new Date().toISOString()
     };
-    this.identities.set(userId, updated);
-    return updated;
+    await this.repo.personalIdentities.create(updated);
+    return JSON.parse(JSON.stringify(updated));
   }
 
   /**
@@ -220,15 +231,19 @@ export class PersonalIdentityStore {
   async processProgressiveOnboarding(payload: ProgressiveOnboardingPayload): Promise<PersonalJarvisIdentity> {
     const existing = await this.getIdentity(payload.userId);
 
+    const isPersonalChoice = payload.pathChoice === 'personal' || (!payload.pathChoice && payload.primaryRole !== 'student' && payload.primaryRole !== 'teacher');
+
     const contexts: UserContext[] = [
       {
         id: `ctx-${payload.userId}-personal`,
         type: 'PERSONAL',
         title: 'Personal & Lifelong Learning',
         description: 'Independent personal projects and self-directed inquiry',
-        isDefault: payload.primaryRole !== 'student' && payload.primaryRole !== 'teacher',
-        isActive: false,
-        metadata: {},
+        isDefault: isPersonalChoice,
+        isActive: isPersonalChoice,
+        metadata: {
+          tags: payload.educationInfo?.subjects || []
+        },
         permissions: {
           canAccessInstitutionData: false,
           sharePersonalMemory: false
@@ -243,13 +258,14 @@ export class PersonalIdentityStore {
         type: payload.primaryRole === 'teacher' ? 'TEACHER' : 'EDUCATION',
         title: payload.educationInfo?.curriculum || `${payload.educationInfo?.gradeLevel || 'Secondary'} Education`,
         description: `Active curriculum and academic preparation environment`,
-        isDefault: true,
-        isActive: true,
+        isDefault: !isPersonalChoice,
+        isActive: !isPersonalChoice,
         metadata: {
           gradeLevel: payload.educationInfo?.gradeLevel,
           curriculum: payload.educationInfo?.curriculum,
           targetExam: payload.educationInfo?.targetExam,
-          institutionName: payload.educationInfo?.institutionName
+          institutionName: payload.educationInfo?.institutionName,
+          tags: payload.educationInfo?.subjects || []
         },
         permissions: {
           canAccessInstitutionData: true,
@@ -295,8 +311,8 @@ export class PersonalIdentityStore {
       updatedAt: new Date().toISOString()
     };
 
-    this.identities.set(payload.userId, newIdentity);
-    return newIdentity;
+    await this.repo.personalIdentities.create(newIdentity);
+    return JSON.parse(JSON.stringify(newIdentity));
   }
 }
 

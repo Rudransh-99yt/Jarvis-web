@@ -1,6 +1,7 @@
 import { toolRegistry, toolExecutor, serverProtocolStore } from '../server/tools/index.ts';
 import type { ToolExecutionContext, ToolCall } from '../server/tools/types.ts';
 import { sessionStore } from '../server/session/sessionStore.ts';
+import { signAuthPayload, resolveAuthSecret } from '../server/auth/tokens.ts';
 
 async function runTestSuite() {
   console.log('=== [WEB JARVIS] MILESTONE 4 TEST SUITE ===\n');
@@ -70,10 +71,17 @@ async function runTestSuite() {
   const declarations = toolRegistry.getFunctionDeclarations();
   assert(Array.isArray(declarations) && declarations.length >= 6 && declarations.some(d => d.name === 'set_protocol'), '11. Gemini tool declaration generation');
 
+  const m4AuthToken = signAuthPayload({
+    sub: 'user-tony',
+    iat: Date.now(),
+    exp: Date.now() + 3600000,
+    jti: `test-m4-${Date.now()}`
+  }, resolveAuthSecret());
+
   // 12. Tool execution loop (calling chat route with tool query)
   const chatResponse = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${m4AuthToken}` },
     body: JSON.stringify({ message: 'What is the system health?', stream: false })
   });
   const chatData: any = await chatResponse.json();
@@ -82,7 +90,7 @@ async function runTestSuite() {
   // 13. Multiple tool rounds test (simulated via chat)
   const protoTest = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${m4AuthToken}` },
     body: JSON.stringify({ message: 'Activate defense matrix protocol', stream: false })
   });
   const protoData: any = await protoTest.json();
@@ -99,7 +107,7 @@ async function runTestSuite() {
   // 16 & 17. SSE tool_start and tool_result event streaming
   const sseResponse = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${m4AuthToken}` },
     body: JSON.stringify({ message: 'Run a system health check.', stream: true })
   });
   assert(sseResponse.ok && sseResponse.headers.get('content-type')?.includes('text/event-stream') === true, '16. SSE transport connection established');
@@ -138,7 +146,7 @@ async function runTestSuite() {
   // 18. Existing normal streaming still works
   const normalSse = await fetch('http://localhost:3000/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${m4AuthToken}` },
     body: JSON.stringify({ message: 'Hello Jarvis', stream: true })
   });
   assert(normalSse.ok, '18. Existing normal streaming still works');

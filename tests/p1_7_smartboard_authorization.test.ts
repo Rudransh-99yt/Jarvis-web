@@ -1,8 +1,15 @@
 // JARVIS-WEB — P1-7 SMARTBOARD AUTHORIZATION HARDENING TEST SUITE
 import assert from 'node:assert';
+import path from 'node:path';
+import fs from 'node:fs';
 import express from 'express';
 import type { Server } from 'node:http';
-import { jarvisData } from '../server/data/index.ts';
+import {
+  jarvisData,
+  DiskJarvisDataRepository,
+  setActiveRepository,
+  resetActiveRepository
+} from '../server/data/index.ts';
 import { authRouter } from '../server/auth/authRoutes.ts';
 import { smartboardRouter } from '../server/sectors/education/smartboard/smartboardRoutes.ts';
 import { smartboardStore } from '../server/sectors/education/smartboard/smartboardStore.ts';
@@ -15,8 +22,16 @@ import type { User } from '../server/data/types.ts';
 console.log('=== [JARVIS-WEB] P1-7 SMARTBOARD AUTHORIZATION HARDENING TEST SUITE ===');
 
 async function runSmartboardAuthorizationTests() {
-  await jarvisData.seed();
-  smartboardStore.resetToDefaults();
+  const tmpDir = path.resolve(process.cwd(), 'tmp', `p17-test-${Date.now()}`);
+  if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+  const tmpDbPath = path.join(tmpDir, 'jarvis-db.json');
+  const tmpSmartboardPath = path.join(tmpDir, 'smartboard-store.json');
+
+  const testRepo = new DiskJarvisDataRepository(tmpDbPath);
+  await testRepo.init();
+  await testRepo.seed();
+  setActiveRepository(testRepo);
+  smartboardStore.setStoragePath(tmpSmartboardPath);
 
   const app = express();
   app.use(express.json());
@@ -623,6 +638,14 @@ async function runSmartboardAuthorizationTests() {
       (server as any).closeAllConnections?.();
     } catch {}
     server.close();
+    await testRepo.close();
+    resetActiveRepository();
+    smartboardStore.setStoragePath();
+    try {
+      if (fs.existsSync(tmpDir)) {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    } catch {}
   }
 }
 

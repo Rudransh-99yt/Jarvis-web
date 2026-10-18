@@ -265,12 +265,18 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
             </button>
 
             {profileDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl glass-level-3 shadow-2xl p-2 z-50 animate-scale-in space-y-2 text-xs border border-white/[0.12]">
-                <div className="p-2 rounded-lg bg-white/[0.04] border border-white/[0.06] space-y-0.5">
-                  <div className="text-[10px] text-neutral-400 uppercase font-mono tracking-wider">Active School</div>
-                  <div className="font-semibold text-neutral-100">{institution?.name || 'Stark Academy'}</div>
-                  <div className="text-[11px] text-neutral-300">{currentRoleObj.department}</div>
-                </div>
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setProfileDropdownOpen(false)}
+                  aria-hidden="true"
+                />
+                <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl glass-level-3 shadow-2xl p-2 z-50 animate-slide-down space-y-2 text-xs border border-white/[0.12]">
+                  <div className="p-2 rounded-lg bg-white/[0.04] border border-white/[0.06] space-y-0.5">
+                    <div className="text-[10px] text-neutral-400 uppercase font-mono tracking-wider">Active School</div>
+                    <div className="font-semibold text-neutral-100">{institution?.name || 'Stark Academy'}</div>
+                    <div className="text-[11px] text-neutral-300">{currentRoleObj.department}</div>
+                  </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider text-neutral-400 px-1">
@@ -303,7 +309,8 @@ export const EducationSidebar: React.FC<EducationSidebarProps> = ({
                   })}
                 </div>
               </div>
-            )}
+            </>
+          )}
           </div>
         </div>
 

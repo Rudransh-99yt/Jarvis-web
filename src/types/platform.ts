@@ -1,6 +1,6 @@
 // Reusable Domain Models for Core Jarvis Platform
 
-export type SectorId = 'command' | 'education' | 'finance' | 'research' | 'home';
+export type SectorId = 'personal' | 'command' | 'education' | 'finance' | 'research' | 'home';
 
 export interface SectorDefinition {
   id: SectorId;

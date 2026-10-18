@@ -1,6 +1,8 @@
 // JARVIS EDUCATION OS — PHASE D.6: TEACHER OPERATING SYSTEM TEST SUITE
 // Verifies Action Queue, ClassSession Teaching Anchor, Evidence-Based Attention Signals, Post-Class Review, and Class Intelligence.
 
+import fs from 'node:fs';
+import path from 'node:path';
 import { teacherService } from '../server/sectors/education/teacher/teacherService.ts';
 import { classSessionStore } from '../server/sectors/education/classSessions/classSessionStore.ts';
 import { classSessionPolicy } from '../server/sectors/education/classSessions/classSessionPolicy.ts';
@@ -39,10 +41,14 @@ async function runTeacherOsTests() {
     createdAt: new Date().toISOString()
   };
 
-  classSessionStore.resetToDefaults();
+  const testDbDir = path.resolve(process.cwd(), 'tests', '.tmp-db');
+  if (!fs.existsSync(testDbDir)) fs.mkdirSync(testDbDir, { recursive: true });
+  const tmpSessionsPath = path.join(testDbDir, `d6-test-sessions-${Date.now()}.json`);
+  classSessionStore.setStoragePath(tmpSessionsPath);
 
-  // --- SECTION 1: Teacher Action Queue Derivation ---
-  console.log('\n--- SECTION 1: Teacher Action Queue Derivation ---');
+  try {
+    // --- SECTION 1: Teacher Action Queue Derivation ---
+    console.log('\n--- SECTION 1: Teacher Action Queue Derivation ---');
   const actionQueue = teacherService.getActionQueue(mockTeacher.id);
 
   assert(Array.isArray(actionQueue), '1.1 Action queue returns array of actionable items');
@@ -157,6 +163,12 @@ async function runTeacherOsTests() {
   console.log('\n===================================================================');
   console.log(` ALL PHASE D.6 TEACHER OS TESTS PASSED! (${passed}/${passed} ASSERTIONS)`);
   console.log('===================================================================');
+  } finally {
+    classSessionStore.setStoragePath();
+    try {
+      if (fs.existsSync(tmpSessionsPath)) fs.unlinkSync(tmpSessionsPath);
+    } catch {}
+  }
 }
 
 runTeacherOsTests().catch((err) => {
