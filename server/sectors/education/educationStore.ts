@@ -14,6 +14,7 @@ import type {
   PageBlock
 } from '../../../src/types/education.ts';
 import { jarvisData } from '../../data/index.ts';
+import { INITIAL_DATABASE_SCHEMA } from '../../data/seedData.ts';
 import { DEFAULT_COURSE_UNITS, DEFAULT_INSTITUTION } from './curriculumData.ts';
 import {
   INITIAL_WORKSPACE_PAGES,
@@ -21,24 +22,115 @@ import {
   DEFAULT_WORKSPACE_TEMPLATES
 } from './workspaceData.ts';
 
+/**
+ * Array subclass that implements PromiseLike, preserving Array.isArray(arr) === true
+ * while allowing callers to asynchronously await the updated repository result.
+ */
+export class AsyncArray<T> extends Array<T> implements PromiseLike<T[]> {
+  private _promise?: Promise<T[]>;
+  [Symbol.toStringTag] = 'Promise';
+
+  static get [Symbol.species]() {
+    return Array;
+  }
+
+  constructor(items?: T[] | number, promise?: Promise<T[]>) {
+    if (typeof items === 'number') {
+      super(items);
+    } else {
+      super(...(items || []));
+      this._promise = promise;
+    }
+  }
+
+  then<TResult1 = T[], TResult2 = never>(
+    onfulfilled?: ((value: T[]) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
+  ): Promise<TResult1 | TResult2> {
+    const p = this._promise || Promise.resolve(Array.from(this));
+    return p.then(onfulfilled, onrejected);
+  }
+
+  catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null): Promise<T[] | TResult> {
+    const p = this._promise || Promise.resolve(Array.from(this));
+    return p.catch(onrejected);
+  }
+
+  finally(onfinally?: (() => void) | null): Promise<T[]> {
+    const p = this._promise || Promise.resolve(Array.from(this));
+    return p.finally(onfinally);
+  }
+}
+
 export class EducationStore {
   getInstitution(): AcademicInstitution {
     return DEFAULT_INSTITUTION;
   }
 
-  // Synchronous cached accessors that read directly from current repository state
-  getClasses(): EducationClass[] {
-    const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-    if (state && Array.isArray(state.classes)) {
-      return state.classes.map((c: EducationClass) => {
-        const units = c.units && c.units.length > 0 ? c.units : (DEFAULT_COURSE_UNITS[c.id] || []);
-        return {
-          ...c,
-          units
-        };
-      });
+  // In-memory cache initialized from seed data for synchronous parity, backed by typed repository operations
+  private cachedClasses: EducationClass[] = (INITIAL_DATABASE_SCHEMA.classes || []).map((c) => ({
+    ...c,
+    units: c.units && c.units.length > 0 ? c.units : (DEFAULT_COURSE_UNITS[c.id] || [])
+  }));
+  private cachedAssignments: Assignment[] = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.assignments || []));
+  private cachedSubmissions: StudentSubmission[] = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.submissions || []));
+  private cachedSpaces: KnowledgeSpace[] = (INITIAL_DATABASE_SCHEMA.knowledgeSpaces || []).map((ks) => {
+    const spaceSources = (INITIAL_DATABASE_SCHEMA.knowledgeSources || []).filter((s) => s.knowledgeSpaceId === ks.id);
+    return {
+      id: ks.id,
+      title: ks.name,
+      description: ks.description,
+      category: ks.category,
+      ownerId: ks.ownerId,
+      classId: ks.classId,
+      sources: spaceSources.map((src) => ({
+        id: src.id,
+        spaceId: src.knowledgeSpaceId,
+        title: src.name,
+        type: src.type as any,
+        author: src.author,
+        dateAdded: src.createdAt ? src.createdAt.split('T')[0] : '2026-10-01',
+        summary: src.summary,
+        fullText: src.fullText,
+        tokenCount: src.tokenCount
+      })),
+      createdAt: ks.createdAt,
+      updatedAt: ks.updatedAt,
+      tags: ks.tags || [],
+      suggestedQuestions: ks.suggestedQuestions || []
+    };
+  });
+
+  private ensureSyncCaches(): void {
+    if (this.cachedClasses.length === 0) {
+      // Lazy populate from repository state or defaults
+      jarvisData.education.listClasses().then((clsList) => {
+        if (clsList && clsList.length > 0) {
+          this.cachedClasses = clsList.map((c) => ({
+            ...c,
+            units: c.units && c.units.length > 0 ? c.units : (DEFAULT_COURSE_UNITS[c.id] || [])
+          }));
+        }
+      }).catch(() => {});
     }
-    return [];
+  }
+
+  // Synchronous and asynchronous compatible accessors
+  getClasses(): EducationClass[] & Promise<EducationClass[]> {
+    this.ensureSyncCaches();
+    const promise = jarvisData.education.listClasses().then((classes) => {
+      if (classes && classes.length > 0) {
+        const mapped = classes.map((c) => ({
+          ...c,
+          units: c.units && c.units.length > 0 ? c.units : (DEFAULT_COURSE_UNITS[c.id] || [])
+        }));
+        this.cachedClasses = mapped;
+        return mapped;
+      }
+      return this.cachedClasses;
+    });
+
+    return new AsyncArray(this.cachedClasses, promise) as unknown as EducationClass[] & Promise<EducationClass[]>;
   }
 
   getClass(id: string): EducationClass | undefined {
@@ -62,33 +154,30 @@ export class EducationStore {
     return unit.lessons.find((l) => l.id === lessonId);
   }
 
-  toggleLessonCompletion(classId: string, unitId: string, lessonId: string, isCompleted: boolean): boolean {
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        const c = state.classes.find((item: any) => item.id === classId);
-        if (c) {
-          if (!c.units || c.units.length === 0) {
-            c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
-          }
-          const u = c.units.find((unit: any) => unit.id === unitId);
-          if (u) {
-            const l = u.lessons.find((les: any) => les.id === lessonId);
-            if (l) {
-              l.isCompleted = isCompleted;
-              // Recalculate unit mastery
-              const completedCount = u.lessons.filter((les: any) => les.isCompleted).length;
-              u.masteryPercent = Math.round((completedCount / u.lessons.length) * 100);
-              u.isCompleted = completedCount === u.lessons.length;
-            }
-          }
+  toggleLessonCompletion(classId: string, unitId: string, lessonId: string, isCompleted: boolean): boolean & Promise<boolean> {
+    const c = this.cachedClasses.find((item) => item.id === classId);
+    if (c) {
+      if (!c.units || c.units.length === 0) {
+        c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+      }
+      const units = c.units || [];
+      const u = units.find((unit) => unit.id === unitId);
+      if (u) {
+        const l = u.lessons.find((les) => les.id === lessonId);
+        if (l) {
+          l.isCompleted = isCompleted;
+          const completedCount = u.lessons.filter((les) => les.isCompleted).length;
+          u.masteryPercent = Math.round((completedCount / u.lessons.length) * 100);
+          u.isCompleted = completedCount === u.lessons.length;
         }
-      });
-      return true;
+      }
     }
-    return false;
+
+    const promise = jarvisData.education.toggleLessonCompletion(classId, unitId, lessonId, isCompleted);
+    return Object.assign(promise, { valueOf: () => true, [Symbol.toPrimitive]: () => true }) as any;
   }
 
-  addUnitToCourse(classId: string, unit: Omit<CourseUnit, 'id'>): CourseUnit {
+  addUnitToCourse(classId: string, unit: Omit<CourseUnit, 'id'>): CourseUnit & Promise<CourseUnit> {
     const newUnitId = `unit-${classId}-${Date.now().toString(36)}`;
     const newUnit: CourseUnit = {
       ...unit,
@@ -97,22 +186,21 @@ export class EducationStore {
       lessons: unit.lessons || []
     };
 
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        const c = state.classes.find((item: any) => item.id === classId);
-        if (c) {
-          if (!c.units || c.units.length === 0) {
-            c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
-          }
-          c.units.push(newUnit);
-        }
-      });
+    const c = this.cachedClasses.find((item) => item.id === classId);
+    if (c) {
+      if (!c.units || c.units.length === 0) {
+        c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+      }
+      const units = c.units || [];
+      units.push(newUnit);
+      c.units = units;
     }
 
-    return newUnit;
+    const promise = jarvisData.education.addUnitToCourse(classId, unit);
+    return Object.assign(promise, newUnit);
   }
 
-  addLessonToUnit(classId: string, unitId: string, lesson: Omit<CourseLesson, 'id' | 'unitId' | 'courseId'>): CourseLesson {
+  addLessonToUnit(classId: string, unitId: string, lesson: Omit<CourseLesson, 'id' | 'unitId' | 'courseId'>): CourseLesson & Promise<CourseLesson> {
     const newLessonId = `les-${unitId}-${Date.now().toString(36)}`;
     const newLesson: CourseLesson = {
       ...lesson,
@@ -121,32 +209,32 @@ export class EducationStore {
       courseId: classId
     };
 
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        const c = state.classes.find((item: any) => item.id === classId);
-        if (c) {
-          if (!c.units || c.units.length === 0) {
-            c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
-          }
-          const u = c.units.find((unit: any) => unit.id === unitId);
-          if (u) {
-            u.lessons.push(newLesson);
-          }
-        }
-      });
+    const c = this.cachedClasses.find((item) => item.id === classId);
+    if (c) {
+      if (!c.units || c.units.length === 0) {
+        c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+      }
+      const units = c.units || [];
+      const u = units.find((unit) => unit.id === unitId);
+      if (u) {
+        u.lessons.push(newLesson);
+      }
     }
 
-    return newLesson;
+    const promise = jarvisData.education.addLessonToUnit(classId, unitId, lesson);
+    return Object.assign(promise, newLesson);
   }
 
-  getAssignments(classId?: string): Assignment[] {
-    const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-    if (state && Array.isArray(state.assignments)) {
-      return state.assignments
-        .filter((a: Assignment) => !classId || a.classId === classId)
-        .map((a: Assignment) => ({ ...a }));
-    }
-    return [];
+  getAssignments(classId?: string): Assignment[] & Promise<Assignment[]> {
+    const promise = jarvisData.education.listAssignments(classId).then((asgs) => {
+      if (asgs && asgs.length > 0) {
+        this.cachedAssignments = asgs;
+      }
+      return asgs;
+    });
+
+    const result = this.cachedAssignments.filter((a) => !classId || a.classId === classId);
+    return new AsyncArray(result, promise) as unknown as Assignment[] & Promise<Assignment[]>;
   }
 
   getAssignment(id: string): Assignment | undefined {
@@ -162,7 +250,7 @@ export class EducationStore {
     maxScore: number;
     category?: 'Worksheet' | 'Lab Report' | 'Exam' | 'Project';
     teacherId?: string;
-  }): Assignment {
+  }): Assignment & Promise<Assignment> {
     const cls = this.getClass(data.classId);
     const id = `asg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const newAsg: Assignment = {
@@ -182,27 +270,34 @@ export class EducationStore {
       gradedCount: 0
     };
 
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        state.assignments.push(newAsg);
-        const c = state.classes.find((item: any) => item.id === data.classId);
-        if (c) {
-          c.assignmentsCount = (c.assignmentsCount || 0) + 1;
-        }
-      });
+    this.cachedAssignments.push(newAsg);
+    if (cls) {
+      cls.assignmentsCount = (cls.assignmentsCount || 0) + 1;
     }
 
-    return newAsg;
+    const promise = jarvisData.education.createAssignment({
+      ...data,
+      className: newAsg.className,
+      category: newAsg.category,
+      teacherId: newAsg.teacherId
+    }).then((created) => {
+      newAsg.id = created.id;
+      return created;
+    });
+
+    return Object.assign(promise, newAsg);
   }
 
-  getSubmissions(studentId?: string, assignmentId?: string): StudentSubmission[] {
-    const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-    if (state && Array.isArray(state.submissions)) {
-      return state.submissions
-        .filter((s: StudentSubmission) => (!studentId || s.studentId === studentId) && (!assignmentId || s.assignmentId === assignmentId))
-        .map((s: StudentSubmission) => ({ ...s }));
-    }
-    return [];
+  getSubmissions(studentId?: string, assignmentId?: string): StudentSubmission[] & Promise<StudentSubmission[]> {
+    const promise = jarvisData.education.listSubmissions(studentId, assignmentId).then((subs) => {
+      if (subs && subs.length > 0) {
+        this.cachedSubmissions = subs;
+      }
+      return subs;
+    });
+
+    const result = this.cachedSubmissions.filter((s) => (!studentId || s.studentId === studentId) && (!assignmentId || s.assignmentId === assignmentId));
+    return new AsyncArray(result, promise) as unknown as StudentSubmission[] & Promise<StudentSubmission[]>;
   }
 
   createOrUpdateSubmission(data: {
@@ -211,54 +306,28 @@ export class EducationStore {
     studentName?: string;
     content: string;
     attachments?: Array<{ name: string; size: string }>;
-  }): StudentSubmission {
+  }): StudentSubmission & Promise<StudentSubmission> {
     const asg = this.getAssignment(data.assignmentId);
     const now = new Date().toISOString();
-    let result: StudentSubmission;
 
-    if ((jarvisData as any)['store']) {
-      result = (jarvisData as any)['store'].mutate((state: any) => {
-        const existingIdx = state.submissions.findIndex(
-          (s: any) => s.assignmentId === data.assignmentId && s.studentId === data.studentId
-        );
+    const existingIdx = this.cachedSubmissions.findIndex(
+      (s) => s.assignmentId === data.assignmentId && s.studentId === data.studentId
+    );
 
-        if (existingIdx >= 0) {
-          state.submissions[existingIdx] = {
-            ...state.submissions[existingIdx],
-            content: data.content,
-            attachments: data.attachments || state.submissions[existingIdx].attachments,
-            submittedAt: now,
-            status: state.submissions[existingIdx].status === 'graded' ? 'graded' : 'submitted'
-          };
-          return { ...state.submissions[existingIdx] };
-        }
-
-        const submissionId = `sub-${data.studentId}-${data.assignmentId}-${Date.now().toString(36)}`;
-        const submission: StudentSubmission = {
-          id: submissionId,
-          assignmentId: data.assignmentId,
-          assignmentTitle: asg?.title || 'Assignment',
-          classId: asg?.classId || '',
-          className: asg?.className || '',
-          studentId: data.studentId,
-          studentName: data.studentName || 'Alex Chen',
-          status: 'submitted',
-          submittedAt: now,
-          content: data.content,
-          attachments: data.attachments || []
-        };
-
-        state.submissions.push(submission);
-        const a = state.assignments.find((item: any) => item.id === data.assignmentId);
-        if (a) {
-          a.submittedCount = (a.submittedCount || 0) + 1;
-        }
-
-        return { ...submission };
-      });
+    let submission: StudentSubmission;
+    if (existingIdx >= 0) {
+      this.cachedSubmissions[existingIdx] = {
+        ...this.cachedSubmissions[existingIdx],
+        content: data.content,
+        attachments: data.attachments || this.cachedSubmissions[existingIdx].attachments,
+        submittedAt: now,
+        status: this.cachedSubmissions[existingIdx].status === 'graded' ? 'graded' : 'submitted'
+      };
+      submission = { ...this.cachedSubmissions[existingIdx] };
     } else {
-      result = {
-        id: `sub-${data.studentId}-${data.assignmentId}`,
+      const submissionId = `sub-${data.studentId}-${data.assignmentId}-${Date.now().toString(36)}`;
+      submission = {
+        id: submissionId,
         assignmentId: data.assignmentId,
         assignmentTitle: asg?.title || 'Assignment',
         classId: asg?.classId || '',
@@ -270,69 +339,119 @@ export class EducationStore {
         content: data.content,
         attachments: data.attachments || []
       };
+      this.cachedSubmissions.push(submission);
+      if (asg) {
+        asg.submittedCount = (asg.submittedCount || 0) + 1;
+      }
     }
 
-    return result;
+    const promise = jarvisData.education.createOrUpdateSubmission({
+      assignmentId: data.assignmentId,
+      studentId: data.studentId,
+      studentName: data.studentName || 'Alex Chen',
+      content: data.content,
+      attachments: data.attachments
+    });
+
+    return Object.assign(promise, submission);
   }
 
-  gradeSubmission(submissionId: string, grade: number, feedback: string): StudentSubmission | null {
-    if (!(jarvisData as any)['store']) return null;
-
-    return (jarvisData as any)['store'].mutate((state: any) => {
-      const sub = state.submissions.find((s: any) => s.id === submissionId);
-      if (!sub) return null;
-
-      const previousStatus = sub.status;
+  gradeSubmission(submissionId: string, grade: number, feedback: string): (StudentSubmission | null) & Promise<StudentSubmission | null> {
+    const sub = this.cachedSubmissions.find((s) => s.id === submissionId);
+    if (sub) {
+      const wasGraded = sub.status === 'graded';
       sub.grade = grade;
       sub.feedback = feedback;
       sub.status = 'graded';
       sub.gradedAt = new Date().toISOString();
-
-      if (previousStatus !== 'graded') {
-        const asg = state.assignments.find((a: any) => a.id === sub.assignmentId);
-        if (asg) {
-          asg.gradedCount = (asg.gradedCount || 0) + 1;
-        }
+      if (!wasGraded) {
+        const asg = this.getAssignment(sub.assignmentId);
+        if (asg) asg.gradedCount = (asg.gradedCount || 0) + 1;
       }
+    }
 
-      return { ...sub };
-    });
+    const promise = jarvisData.education.gradeSubmission(submissionId, grade, feedback);
+    return Object.assign(promise, sub || null);
   }
 
   // --- Knowledge Spaces & Grounded Retrieval ---
-  getKnowledgeSpaces(): KnowledgeSpace[] {
-    const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-    if (!state || !Array.isArray(state.knowledgeSpaces)) return [];
-
-    return state.knowledgeSpaces.map((space: any) => {
-      const sources = (state.knowledgeSources || [])
-        .filter((src: any) => src.knowledgeSpaceId === space.id)
-        .map((src: any) => ({
-          id: src.id,
-          spaceId: src.knowledgeSpaceId,
-          title: src.name,
-          type: src.type,
-          author: src.author,
-          dateAdded: src.createdAt ? src.createdAt.split('T')[0] : '2026-10-01',
-          summary: src.summary,
-          fullText: src.fullText,
-          tokenCount: src.tokenCount
-        }));
-
-      return {
-        id: space.id,
-        title: space.name,
-        description: space.description,
-        category: space.category,
-        ownerId: space.ownerId,
-        classId: space.classId,
-        sources,
-        createdAt: space.createdAt,
-        updatedAt: space.updatedAt,
-        tags: space.tags || [],
-        suggestedQuestions: space.suggestedQuestions || []
-      };
+  getKnowledgeSpaces(): KnowledgeSpace[] & Promise<KnowledgeSpace[]> {
+    const promise = jarvisData.knowledge.listSpaces().then(async (spaces) => {
+      const populated: KnowledgeSpace[] = [];
+      for (const space of spaces) {
+        const sources = await jarvisData.knowledge.listSourcesForSpace(space.id, space.workspaceId);
+        populated.push({
+          id: space.id,
+          title: space.name,
+          description: space.description,
+          category: space.category,
+          ownerId: space.ownerId,
+          classId: space.classId,
+          sources: sources.map((src) => ({
+            id: src.id,
+            spaceId: src.knowledgeSpaceId,
+            title: src.name,
+            type: src.type as any,
+            author: src.author,
+            dateAdded: src.createdAt ? src.createdAt.split('T')[0] : '2026-10-01',
+            summary: src.summary,
+            fullText: src.fullText,
+            tokenCount: src.tokenCount
+          })),
+          createdAt: space.createdAt,
+          updatedAt: space.updatedAt,
+          tags: space.tags || [],
+          suggestedQuestions: space.suggestedQuestions || []
+        });
+      }
+      if (populated.length > 0) {
+        this.cachedSpaces = populated;
+      }
+      return populated;
     });
+
+    const result = this.cachedSpaces.length > 0 ? this.cachedSpaces : [
+      {
+        id: 'ks-quantum',
+        title: 'Quantum Mechanics & Wave Dynamics',
+        description: 'Wave equations, Hilbert spaces, operators, and quantum harmonic oscillators.',
+        category: 'Physics',
+        ownerId: 'teacher-1',
+        classId: 'class-phys-301',
+        sources: [
+          {
+            id: 'src-qm-notes',
+            spaceId: 'ks-quantum',
+            title: 'Foundations of Wave Mechanics (Lecture Notes)',
+            type: 'notes' as const,
+            author: 'Dr. Bruce Banner',
+            dateAdded: '2026-10-01',
+            summary: 'The Schrödinger equation describes the wave function evolution of a quantum system.',
+            fullText: 'The Schrödinger equation is a linear partial differential equation that governs the wave function of a quantum-mechanical system.',
+            tokenCount: 1200
+          }
+        ],
+        createdAt: '2026-10-01T08:00:00Z',
+        updatedAt: '2026-10-01T08:00:00Z',
+        tags: ['Physics', 'Quantum'],
+        suggestedQuestions: ['What is the Schrödinger equation?']
+      },
+      {
+        id: 'ks-general',
+        title: 'General Academic Knowledge',
+        description: 'Core concepts and curriculum reference documents.',
+        category: 'General',
+        ownerId: 'teacher-1',
+        classId: undefined,
+        sources: [],
+        createdAt: '2026-10-01T08:00:00Z',
+        updatedAt: '2026-10-01T08:00:00Z',
+        tags: ['General'],
+        suggestedQuestions: []
+      }
+    ];
+
+    return new AsyncArray(result, promise) as unknown as KnowledgeSpace[] & Promise<KnowledgeSpace[]>;
   }
 
   getKnowledgeSpace(id: string): KnowledgeSpace | undefined {
@@ -345,31 +464,11 @@ export class EducationStore {
     category?: string;
     tags?: string[];
     classId?: string;
-  }): KnowledgeSpace {
+  }): KnowledgeSpace & Promise<KnowledgeSpace> {
     const id = `ks-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
     const now = new Date().toISOString();
 
-    const newSpaceRecord = {
-      id,
-      workspaceId: 'ws-stark-core',
-      name: data.title,
-      description: data.description,
-      category: data.category || 'General',
-      ownerId: 'teacher-1',
-      classId: data.classId,
-      tags: data.tags || [],
-      suggestedQuestions: [],
-      createdAt: now,
-      updatedAt: now
-    };
-
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        state.knowledgeSpaces.push(newSpaceRecord);
-      });
-    }
-
-    return {
+    const newSpace: KnowledgeSpace = {
       id,
       title: data.title,
       description: data.description,
@@ -382,6 +481,21 @@ export class EducationStore {
       tags: data.tags || [],
       suggestedQuestions: []
     };
+    this.cachedSpaces.push(newSpace);
+
+    const promise = jarvisData.knowledge.createSpace({
+      id,
+      workspaceId: 'ws-stark-core',
+      name: data.title,
+      description: data.description,
+      category: data.category || 'General',
+      ownerId: 'teacher-1',
+      classId: data.classId,
+      tags: data.tags || [],
+      suggestedQuestions: []
+    }).then(() => newSpace);
+
+    return Object.assign(promise, newSpace);
   }
 
   addSourceToSpace(
@@ -394,14 +508,33 @@ export class EducationStore {
       fullText: string;
       tokenCount?: number;
     }
-  ): KnowledgeSource | null {
+  ): (KnowledgeSource | null) & Promise<KnowledgeSource | null> {
     const space = this.getKnowledgeSpace(spaceId);
-    if (!space) return null;
+    if (!space) {
+      const rejected = Promise.resolve(null);
+      return Object.assign(rejected, null);
+    }
 
     const id = `src-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
+    const tokenCount = data.tokenCount || Math.round(data.fullText.split(/\s+/).length * 1.3);
 
-    const newSourceRecord = {
+    const newSource: KnowledgeSource = {
+      id,
+      spaceId,
+      title: data.title,
+      type: data.type,
+      author: data.author || 'User',
+      dateAdded: now.split('T')[0],
+      summary: data.summary,
+      fullText: data.fullText,
+      tokenCount
+    };
+
+    space.sources.push(newSource);
+    space.updatedAt = now;
+
+    const promise = jarvisData.knowledge.createSource({
       id,
       workspaceId: 'ws-stark-core',
       knowledgeSpaceId: spaceId,
@@ -414,30 +547,10 @@ export class EducationStore {
       author: data.author || 'User',
       summary: data.summary,
       fullText: data.fullText,
-      tokenCount: data.tokenCount || Math.round(data.fullText.split(/\s+/).length * 1.3),
-      createdAt: now,
-      updatedAt: now
-    };
+      tokenCount
+    }).then(() => newSource);
 
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        state.knowledgeSources.push(newSourceRecord);
-        const s = state.knowledgeSpaces.find((item: any) => item.id === spaceId);
-        if (s) s.updatedAt = now;
-      });
-    }
-
-    return {
-      id,
-      spaceId,
-      title: data.title,
-      type: data.type,
-      author: data.author || 'User',
-      dateAdded: now.split('T')[0],
-      summary: data.summary,
-      fullText: data.fullText,
-      tokenCount: newSourceRecord.tokenCount
-    };
+    return Object.assign(promise, newSource);
   }
 
   queryGrounded(spaceId: string, query: string): GroundedQueryResponse {

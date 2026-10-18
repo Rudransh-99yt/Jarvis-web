@@ -75,34 +75,52 @@ export const JarvisCore: React.FC<JarvisCoreProps> = ({
     }
   }[state];
 
+  const stateAnimationClasses = {
+    idle: 'animate-jarvis-breathe',
+    thinking: 'animate-jarvis-thinking',
+    speaking: 'animate-jarvis-speaking',
+    listening: 'animate-jarvis-breathe',
+    success: 'animate-jarvis-breathe',
+    warning: 'animate-jarvis-breathe',
+  }[state];
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (interactive && onClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <div
+      role="img"
+      tabIndex={interactive ? 0 : undefined}
       onClick={interactive ? onClick : undefined}
+      onKeyDown={interactive ? handleKeyDown : undefined}
       className={`relative inline-flex items-center justify-center shrink-0 select-none ${config.container} ${
-        interactive ? 'cursor-pointer hover:scale-105 transition-transform' : ''
+        interactive ? 'cursor-pointer hover:scale-105 active:scale-95 transition-transform focus-ring rounded-full' : ''
       } ${className}`}
       title={label || `Jarvis Neural Core: ${state}`}
       aria-label={label || `Jarvis Neural Core: ${state}`}
     >
-      {/* 1. Deep Atmospheric Halos (Volumetric Light Bleed) */}
+      {/* 1. Deep Atmospheric Halos (Volumetric Light Aura) */}
       <div
-        className={`absolute inset-0 rounded-full blur-[10px] pointer-events-none transition-all ${stateColors.pulseSpeed} animate-pulse`}
+        className={`absolute inset-0 rounded-full blur-[9px] pointer-events-none transition-all duration-700 ${stateAnimationClasses}`}
         style={{ backgroundColor: stateColors.glow }}
         aria-hidden="true"
       />
 
-      {/* 2. Outer Specular Latitude Ring */}
+      {/* 2. Outer Specular Celestial Ring */}
       <div
         className={`absolute inset-0.5 rounded-full border border-dashed ${stateColors.rim} opacity-40 pointer-events-none ${
-          state === 'thinking' ? 'animate-spin' : ''
+          state === 'thinking' ? 'animate-jarvis-thinking' : 'animate-jarvis-orbit-slow'
         }`}
-        style={{ animationDuration: state === 'thinking' ? '6s' : undefined }}
         aria-hidden="true"
       />
 
-      {/* 3. Equatorial Orbital Ring with Hairline Gap */}
+      {/* 3. Equatorial Gyroscopic Orbital Ring with Hairline Gap */}
       <div
-        className={`absolute inset-1 rounded-full border ${stateColors.rim} opacity-60 pointer-events-none`}
+        className={`absolute inset-1 rounded-full border border-dotted ${stateColors.rim} opacity-50 pointer-events-none animate-jarvis-orbit-counter`}
         aria-hidden="true"
       />
 
@@ -110,7 +128,7 @@ export const JarvisCore: React.FC<JarvisCoreProps> = ({
       <div
         className={`relative rounded-full bg-gradient-to-tr ${stateColors.core} ${config.orb} shadow-inner overflow-hidden transition-all duration-500`}
       >
-        {/* Specular Glint (Top-left refraction highlight) */}
+        {/* Specular Glint (Top-left glass refraction highlight) */}
         <div
           className="absolute -top-[15%] -left-[15%] w-[65%] h-[65%] rounded-full bg-gradient-to-br from-white/90 via-white/40 to-transparent pointer-events-none"
           aria-hidden="true"
@@ -122,10 +140,9 @@ export const JarvisCore: React.FC<JarvisCoreProps> = ({
           aria-hidden="true"
         />
 
-        {/* Central Pulse Singularity */}
+        {/* Central Pulse Singularity (Living fluid nucleus) */}
         <div
-          className="absolute inset-[30%] rounded-full bg-white/60 blur-[1px] animate-ping pointer-events-none"
-          style={{ animationDuration: '3s' }}
+          className="absolute inset-[26%] rounded-full bg-white/70 blur-[1px] animate-jarvis-singularity pointer-events-none"
           aria-hidden="true"
         />
       </div>

@@ -44,6 +44,18 @@ class AcademicIntegrationService extends EventEmitter {
     }
   }
 
+  public getStoragePath(): string {
+    return this.storageFilePath;
+  }
+
+  public setStoragePath(customStoragePath?: string): void {
+    const defaultDir = path.resolve(process.cwd(), 'data');
+    this.storageFilePath = customStoragePath || process.env.ACADEMIC_INTEGRATION_STORE_FILE || path.join(defaultDir, 'academic-integration.json');
+    if (!this.loadFromDisk()) {
+      this.initDefaultLinks();
+    }
+  }
+
   private loadFromDisk(): boolean {
     try {
       if (fs.existsSync(this.storageFilePath)) {
@@ -406,15 +418,9 @@ class AcademicIntegrationService extends EventEmitter {
     this.inMemoryLinks.push(newLink);
 
     // Also persist into repository state if available
-    try {
-      const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-      if (state) {
-        if (!state.learningLinks) state.learningLinks = [];
-        state.learningLinks.push(newLink);
-      }
-    } catch {
+    jarvisData.education.createLearningLink(newLink).catch(() => {
       // Memory store is already updated
-    }
+    });
 
     return newLink;
   }
@@ -453,14 +459,9 @@ class AcademicIntegrationService extends EventEmitter {
       }
     }
     this.inMemoryLinks.splice(idx, 1);
-    try {
-      const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-      if (state && Array.isArray(state.learningLinks)) {
-        state.learningLinks = state.learningLinks.filter((l: any) => l.id !== linkId);
-      }
-    } catch {
+    jarvisData.education.deleteLearningLink(linkId).catch(() => {
       // Memory store updated
-    }
+    });
     return true;
   }
 

@@ -1,7 +1,7 @@
 // REST API Routes for Phase D.14: Student Live Classroom Surface
 import { Router, type Request, type Response } from 'express';
 import { liveClassroomService } from './liveClassroomService.ts';
-import { jarvisData, INITIAL_DATABASE_SCHEMA } from '../../../data/index.ts';
+import { jarvisData } from '../../../data/index.ts';
 import { requirePrincipal, type AuthenticatedPrincipal } from '../../../auth/principal.ts';
 import { authorizationPolicy } from '../../../auth/authorizationPolicy.ts';
 import type { InstitutionMembership } from '../../../data/types.ts';
@@ -10,8 +10,8 @@ export const liveClassroomRouter = Router();
 
 liveClassroomRouter.use(requirePrincipal);
 
-function getMemberships(): InstitutionMembership[] {
-  return (jarvisData as any).store?.state?.institutionMemberships || (INITIAL_DATABASE_SCHEMA.institutionMemberships || []);
+async function getMemberships(): Promise<InstitutionMembership[]> {
+  return jarvisData.institutions.listMemberships();
 }
 
 // 1. GET /api/education/live-classroom/:classId - Retrieve authoritative Live Classroom state
@@ -31,7 +31,7 @@ liveClassroomRouter.get('/:classId', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ ok: false, error: decision.reason });
@@ -66,7 +66,7 @@ liveClassroomRouter.post('/:classId/notes', async (req: Request, res: Response) 
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ ok: false, error: decision.reason });
@@ -108,7 +108,7 @@ liveClassroomRouter.post('/:classId/ask', async (req: Request, res: Response) =>
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ ok: false, error: decision.reason });
@@ -154,7 +154,7 @@ liveClassroomRouter.post('/:classId/quiz/submit', async (req: Request, res: Resp
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canWriteSubmission(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ ok: false, error: decision.reason });

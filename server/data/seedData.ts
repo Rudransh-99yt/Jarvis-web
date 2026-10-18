@@ -2,7 +2,53 @@
 import type { DatabaseSchema } from './types.ts';
 
 export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
-  version: 1,
+  version: 3,
+  meta: {
+    version: 3,
+    compatibilityLevel: 'backwards_compatible',
+    supportedDomains: [
+      'users',
+      'institutions',
+      'institutionMemberships',
+      'institutionInvitations',
+      'workspaces',
+      'memberships',
+      'conversations',
+      'messages',
+      'knowledgeSpaces',
+      'knowledgeSources',
+      'knowledgeChunks',
+      'classes',
+      'assignments',
+      'submissions',
+      'studyArtifacts',
+      'auditEvents',
+      'researchProjects',
+      'researchQuestions',
+      'evidenceRecords',
+      'researchNotes',
+      'researchReports',
+      'files',
+      'classroomSessions',
+      'classroomParticipants',
+      'quizzes',
+      'quizQuestions',
+      'quizResponses',
+      'quizParticipantStates',
+      'videos',
+      'personalIdentities',
+      'personalMemories',
+      'personalKnowledgeStates',
+      'personalStudyNotes',
+      'personalFlashcards',
+      'personalStudyPlans',
+      'activityTimeline',
+      'diagnosticSessions',
+      'knowledgeAssets',
+      'learnerExposures',
+      'authOtps'
+    ]
+  },
   
   // 1. Core Users
   users: [
@@ -78,6 +124,73 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
     { id: 'instmem-student-1', institutionId: 'inst-stark-academy', userId: 'student-1', role: 'student', joinedAt: '2026-09-01T08:00:00.000Z' },
     { id: 'instmem-student-2', institutionId: 'inst-stark-academy', userId: 'student-2', role: 'student', joinedAt: '2026-09-01T08:00:00.000Z' },
     { id: 'instmem-principal-1', institutionId: 'inst-stark-academy', userId: 'principal-1', role: 'principal', joinedAt: '2026-09-01T08:00:00.000Z' }
+  ],
+  institutionInvitations: [
+    {
+      id: 'inv-stark-student',
+      code: 'STARK-2026',
+      institutionId: 'inst-stark-academy',
+      institutionName: 'Stark Academy of Science & Technology',
+      role: 'student',
+      status: 'active',
+      maxUses: 100,
+      usedCount: 0,
+      expiresAt: '2030-01-01T00:00:00.000Z',
+      createdBy: 'principal-1',
+      createdAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'inv-stark-faculty',
+      code: 'STARK-FACULTY',
+      institutionId: 'inst-stark-academy',
+      institutionName: 'Stark Academy of Science & Technology',
+      role: 'teacher',
+      status: 'active',
+      maxUses: 25,
+      usedCount: 0,
+      expiresAt: '2030-01-01T00:00:00.000Z',
+      createdBy: 'principal-1',
+      createdAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'inv-expired',
+      code: 'EXPIRED-2024',
+      institutionId: 'inst-stark-academy',
+      institutionName: 'Stark Academy of Science & Technology',
+      role: 'student',
+      status: 'expired',
+      maxUses: 10,
+      usedCount: 0,
+      expiresAt: '2024-01-01T00:00:00.000Z',
+      createdBy: 'principal-1',
+      createdAt: '2023-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'inv-revoked',
+      code: 'REVOKED-CODE',
+      institutionId: 'inst-stark-academy',
+      institutionName: 'Stark Academy of Science & Technology',
+      role: 'student',
+      status: 'revoked',
+      maxUses: 10,
+      usedCount: 0,
+      expiresAt: '2030-01-01T00:00:00.000Z',
+      createdBy: 'principal-1',
+      createdAt: '2026-09-01T08:00:00.000Z'
+    },
+    {
+      id: 'inv-consumed',
+      code: 'MAXED-SINGLE-USE',
+      institutionId: 'inst-stark-academy',
+      institutionName: 'Stark Academy of Science & Technology',
+      role: 'student',
+      status: 'consumed',
+      maxUses: 1,
+      usedCount: 1,
+      expiresAt: '2030-01-01T00:00:00.000Z',
+      createdBy: 'principal-1',
+      createdAt: '2026-09-01T08:00:00.000Z'
+    }
   ],
 
   // 2. Workspaces
@@ -1143,5 +1256,411 @@ export const INITIAL_DATABASE_SCHEMA: DatabaseSchema = {
       createdAt: '2026-10-01T15:00:00.000Z',
       updatedAt: '2026-10-01T15:00:00.000Z'
     }
-  ]
+  ],
+
+  // Stage 6.4.1 Expanded Data Foundation Domains
+  personalIdentities: [
+    {
+      userId: 'student-1',
+      profile: {
+        displayName: 'Alex Stark',
+        preferredName: 'Alex',
+        email: 'alex.stark@stark-academy.edu',
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=128&fit=crop&crop=face',
+        timezone: 'America/New_York',
+        locale: 'en-US',
+        ageRange: '16-18',
+        country: 'United States',
+        bio: 'Cadet at Stark Academy focusing on Quantum Electrodynamics, Classical Mechanics, and Propulsion Systems.'
+      },
+      preferences: {
+        explanationStyle: 'first_principles',
+        tone: 'analytical_respectful',
+        communicationCadence: 'balanced',
+        hudTheme: 'cyan_tactical',
+        soundEnabled: true,
+        bookOnlyModeDefault: false
+      },
+      goals: [
+        {
+          id: 'goal-1',
+          title: 'Master Newton’s Laws & Classical Lagrangian Dynamics',
+          category: 'academic',
+          targetDate: '2026-11-15',
+          progressPercent: 78,
+          status: 'active'
+        },
+        {
+          id: 'goal-2',
+          title: 'Complete Quantum Infinite Well Derivations',
+          category: 'mastery',
+          targetDate: '2026-12-01',
+          progressPercent: 60,
+          status: 'active'
+        },
+        {
+          id: 'goal-3',
+          title: 'Submit Regional Physics Fair Research Abstract',
+          category: 'career',
+          targetDate: '2027-01-20',
+          progressPercent: 25,
+          status: 'active'
+        }
+      ],
+      interests: ['Quantum Mechanics', 'Classical Dynamics', 'Differential Topology', 'Aerodynamics'],
+      roles: ['student', 'researcher'],
+      activeContextId: 'ctx-student1-edu',
+      contexts: [
+        {
+          id: 'ctx-student1-personal',
+          type: 'PERSONAL',
+          title: 'Personal & Lifelong Learning',
+          description: 'Independent personal projects, habits, and self-directed curiosity',
+          isDefault: false,
+          isActive: false,
+          metadata: {
+            tags: ['personal', 'productivity']
+          },
+          permissions: {
+            canAccessInstitutionData: false,
+            sharePersonalMemory: false
+          },
+          createdAt: '2026-09-01T00:00:00Z'
+        },
+        {
+          id: 'ctx-student1-edu',
+          type: 'EDUCATION',
+          title: 'Class 11 Physics & JEE Prep',
+          description: 'Stark Academy Senior Physics and Competitive Entrance Preparation',
+          isDefault: true,
+          isActive: true,
+          metadata: {
+            institutionId: 'inst-stark-academy',
+            institutionName: 'Stark Academy of Science & Technology',
+            gradeLevel: 'Grade 11 / Senior Level',
+            curriculum: 'Advanced STEM / AP Physics C',
+            targetExam: 'JEE Advanced / National Olympiad',
+            courseIds: ['class-phys-301', 'class-math-240', 'class-cs-101'],
+            workspaceId: 'ws-stark-core'
+          },
+          permissions: {
+            canAccessInstitutionData: true,
+            sharePersonalMemory: false
+          },
+          createdAt: '2026-09-01T00:00:00Z'
+        },
+        {
+          id: 'ctx-student1-research',
+          type: 'RESEARCH',
+          title: 'Quantum Wave Packet Simulation',
+          description: 'Independent research project on computational Born interpretations',
+          isDefault: false,
+          isActive: false,
+          metadata: {
+            workspaceId: 'ws-quantum-sim',
+            tags: ['research', 'quantum', 'simulation']
+          },
+          permissions: {
+            canAccessInstitutionData: false,
+            sharePersonalMemory: false
+          },
+          createdAt: '2026-09-15T00:00:00Z'
+        }
+      ],
+      stats: {
+        totalStudyMinutes: 840,
+        conceptsMastered: 14,
+        activeStreakDays: 6,
+        memoryEntriesCount: 12
+      },
+      createdAt: '2026-09-01T00:00:00Z',
+      updatedAt: '2026-09-01T00:00:00Z'
+    }
+  ],
+  personalMemories: [
+    {
+      id: 'mem-1',
+      userId: 'student-1',
+      category: 'UserPreference',
+      key: 'explanation_style',
+      value: 'Prefers step-by-step mathematical derivations from first principles before heuristic shortcuts.',
+      source: 'USER_STATED',
+      confidence: 1.0,
+      contextId: 'ctx-student1-edu',
+      visibility: 'PRIVATE_PERSONAL',
+      provenance: {
+        sourceEntityType: 'settings',
+        timestamp: '2026-09-01T00:00:00Z',
+        notes: 'User explicitly selected First Principles explanation preference in Jarvis OS.'
+      },
+      createdAt: '2026-09-01T00:00:00Z',
+      updatedAt: '2026-09-01T00:00:00Z'
+    },
+    {
+      id: 'mem-2',
+      userId: 'student-1',
+      category: 'UserLearningState',
+      key: 'vector_decomposition_gap',
+      value: 'Needs occasional reinforcement on incline coordinate rotation and trigonometric force decomposition.',
+      source: 'EDUCATION_ACTIVITY',
+      confidence: 0.88,
+      contextId: 'ctx-student1-edu',
+      visibility: 'CONTEXT_BOUND',
+      provenance: {
+        sourceEntityType: 'practice',
+        sourceEntityId: 'les-phys-202-practice',
+        timestamp: '2026-09-20T14:30:00Z',
+        notes: 'Derived from prerequisite diagnostic item on normal force incline components.'
+      },
+      createdAt: '2026-09-20T14:30:00Z',
+      updatedAt: '2026-09-20T14:30:00Z'
+    },
+    {
+      id: 'mem-3',
+      userId: 'student-1',
+      category: 'UserGoal',
+      key: 'target_exam_goal',
+      value: 'Preparing for JEE Advanced Physics with focus on rotational mechanics and electrodynamics.',
+      source: 'USER_CONFIRMED',
+      confidence: 0.95,
+      contextId: 'ctx-student1-edu',
+      visibility: 'CONTEXT_BOUND',
+      provenance: {
+        sourceEntityType: 'onboarding',
+        timestamp: '2026-09-01T00:00:00Z',
+        notes: 'Confirmed during progressive onboarding.'
+      },
+      createdAt: '2026-09-01T00:00:00Z',
+      updatedAt: '2026-09-01T00:00:00Z'
+    }
+  ],
+  personalKnowledgeStates: [
+    {
+      userId: 'student-1',
+      concepts: {
+        'concept-newton-laws': {
+          conceptId: 'concept-newton-laws',
+          conceptName: "Newton's Laws of Motion",
+          subject: 'Physics',
+          masteryLevel: 0.85,
+          status: 'mastered',
+          evidenceCount: 6,
+          lastPracticed: '2026-10-06T20:30:00Z',
+          provenanceSources: ['src-phys-newton-1', 'src-phys-newton-2', 'det-newton-two-body-1']
+        },
+        'concept-vector-forces': {
+          conceptId: 'concept-vector-forces',
+          conceptName: 'Vector Force Decomposition',
+          subject: 'Physics',
+          masteryLevel: 0.62,
+          status: 'review_needed',
+          evidenceCount: 4,
+          lastPracticed: '2026-10-05T14:15:00Z',
+          provenanceSources: ['det-prereq-vectors-1']
+        },
+        'concept-wave-functions': {
+          conceptId: 'concept-wave-functions',
+          conceptName: 'Quantum Wave Functions & Born Interpretation',
+          subject: 'Physics',
+          masteryLevel: 0.72,
+          status: 'learning',
+          evidenceCount: 3,
+          lastPracticed: '2026-10-04T11:00:00Z',
+          provenanceSources: ['src-phys-quantum-1']
+        },
+        'concept-derivatives-chain': {
+          conceptId: 'concept-derivatives-chain',
+          conceptName: 'Chain Rule & Differential Calculus',
+          subject: 'Mathematics',
+          masteryLevel: 0.80,
+          status: 'mastered',
+          evidenceCount: 5,
+          lastPracticed: '2026-10-03T09:00:00Z',
+          provenanceSources: ['src-math-calc-1']
+        }
+      },
+      recentSignals: [
+        {
+          id: 'sig-1',
+          type: 'concept_mastered',
+          title: "Newton's Laws mastery reached 85%",
+          timestamp: '2026-10-06T20:30:00Z',
+          metadata: { concept: "Newton's Laws", delta: 0.08 }
+        },
+        {
+          id: 'sig-2',
+          type: 'document_ingested',
+          title: 'Halliday & Resnick Fundamentals of Physics PDF indexed into knowledge space',
+          timestamp: '2026-10-06T18:00:00Z',
+          metadata: { filename: 'Fundamentals_of_Physics_12th.pdf', pages: 114 }
+        },
+        {
+          id: 'sig-3',
+          type: 'concept_review_needed',
+          title: 'Trigonometric vector decomposition identified for 15-minute review',
+          timestamp: '2026-10-05T14:15:00Z',
+          metadata: { concept: 'Vector Force Decomposition' }
+        }
+      ],
+      updatedAt: '2026-10-06T20:30:00Z'
+    }
+  ],
+  personalStudyNotes: [
+    {
+      id: 'note-phys-1',
+      userId: 'student-1',
+      title: "Newton's Second Law & Momentum Derivation",
+      content: 'F_net is fundamentally defined as dp/dt = d(mv)/dt = m(dv/dt) = ma for constant mass. When applying to incline planes, decompose orthogonal components along the incline (mg sin θ) and normal to it (mg cos θ).',
+      subject: 'Physics',
+      tags: ['mechanics', "newton's laws", 'incline planes', 'forces'],
+      conceptId: 'concept-newton-laws',
+      contextId: 'ctx-student1-edu',
+      createdAt: '2026-10-05T10:00:00Z',
+      updatedAt: '2026-10-05T10:00:00Z'
+    },
+    {
+      id: 'note-math-1',
+      userId: 'student-1',
+      title: 'Chain Rule and Composite Function Derivatives',
+      content: 'If y = f(u) and u = g(x), then dy/dx = (dy/du) * (du/dx). In Leibniz notation, differentials chain seamlessly across intermediate coordinate variables.',
+      subject: 'Mathematics',
+      tags: ['calculus', 'derivatives', 'chain rule'],
+      conceptId: 'concept-derivatives-chain',
+      contextId: 'ctx-student1-edu',
+      createdAt: '2026-10-04T15:30:00Z',
+      updatedAt: '2026-10-04T15:30:00Z'
+    },
+    {
+      id: 'note-pers-1',
+      userId: 'student-1',
+      title: 'Personal Study Strategy & High-Focus Routine',
+      content: 'Allocate 45 minutes focused deep work blocks with 10-minute pauses. Prioritize first-principles proofs before doing calculation drills.',
+      subject: 'Productivity',
+      tags: ['strategy', 'focus', 'habits'],
+      contextId: 'ctx-student1-personal',
+      createdAt: '2026-10-03T19:00:00Z',
+      updatedAt: '2026-10-03T19:00:00Z'
+    }
+  ],
+  personalFlashcards: [
+    {
+      id: 'card-1',
+      userId: 'student-1',
+      front: "What is Newton's Second Law in fundamental differential form?",
+      back: 'F_net = dp/dt (rate of change of linear momentum)',
+      conceptId: 'concept-newton-laws',
+      subject: 'Physics',
+      tags: ['mechanics', 'newton'],
+      reviewCount: 3,
+      lastReviewed: '2026-10-06T18:00:00Z',
+      createdAt: '2026-10-05T10:30:00Z'
+    },
+    {
+      id: 'card-2',
+      userId: 'student-1',
+      front: 'What is the component of gravitational force parallel to an incline of angle θ?',
+      back: 'F_parallel = m * g * sin(θ)',
+      conceptId: 'concept-vector-forces',
+      subject: 'Physics',
+      tags: ['vectors', 'inclines'],
+      reviewCount: 2,
+      lastReviewed: '2026-10-05T12:00:00Z',
+      createdAt: '2026-10-05T10:30:00Z'
+    }
+  ],
+  personalStudyPlans: [
+    {
+      id: 'plan-1',
+      userId: 'student-1',
+      title: 'Evening Physics Mechanics Drill',
+      subject: 'Physics',
+      durationMinutes: 45,
+      scheduledFor: '2026-10-07T18:30:00Z',
+      goals: ["Complete 5 Newton's 2nd Law incline problems", 'Review vector decomposition notes'],
+      status: 'planned',
+      createdAt: '2026-10-06T20:00:00Z'
+    }
+  ],
+  activityTimeline: [
+    {
+      id: 'act-hist-1',
+      userId: 'student-1',
+      contextId: 'ctx-student1-edu',
+      contextType: 'EDUCATION',
+      title: 'Downloaded practice PDF: Class 10 Quadratic Equations',
+      category: 'practice',
+      timestamp: '2026-10-07T19:00:00Z',
+      sourceTitle: 'Class 10 Quadratic Equations Question Bank',
+      assetId: 'ka-math-quad-10',
+      totalCount: 20,
+      reusedCount: 20,
+      generatedCount: 0,
+      canUndo: false
+    },
+    {
+      id: 'act-hist-2',
+      userId: 'student-1',
+      contextId: 'ctx-student1-edu',
+      contextType: 'EDUCATION',
+      title: 'Reused 20 verified questions for Quadratic Equations practice',
+      category: 'practice',
+      timestamp: '2026-10-07T18:00:00Z',
+      sourceTitle: 'Class 10 Quadratic Equations Question Bank',
+      assetId: 'ka-math-quad-10',
+      totalCount: 20,
+      reusedCount: 20,
+      generatedCount: 0,
+      canUndo: true,
+      undone: false,
+      reversibleAction: {
+        type: 'practice_draft',
+        targetId: 'ka-math-quad-10'
+      }
+    },
+    {
+      id: 'act-hist-3',
+      userId: 'student-1',
+      contextId: 'ctx-student1-edu',
+      contextType: 'EDUCATION',
+      title: 'Created Quadratic Equations practice set',
+      category: 'practice',
+      timestamp: '2026-10-07T18:00:00Z',
+      sourceTitle: 'Class 10 Quadratic Equations Question Bank',
+      assetId: 'ka-math-quad-10',
+      totalCount: 20,
+      reusedCount: 15,
+      generatedCount: 5,
+      canUndo: true,
+      undone: false,
+      reversibleAction: {
+        type: 'practice_draft',
+        targetId: 'ka-math-quad-10'
+      }
+    },
+    {
+      id: 'act-hist-4',
+      userId: 'student-1',
+      contextId: 'ctx-student1-personal',
+      contextType: 'PERSONAL',
+      title: 'Created personal study note: Personal Study Strategy & High-Focus Routine',
+      category: 'notes',
+      timestamp: '2026-10-06T19:00:00Z',
+      canUndo: true,
+      undone: false,
+      reversibleAction: {
+        type: 'note_create',
+        targetId: 'note-pers-1'
+      }
+    }
+  ],
+  diagnosticSessions: [],
+  knowledgeAssets: [],
+  learnerExposures: [],
+  learningLinks: [],
+  academicEvents: [],
+  academicNotifications: [],
+  quizResults: [],
+  smartboardDevices: [],
+  boardDocuments: [],
+  authOtps: []
 };

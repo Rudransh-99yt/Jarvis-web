@@ -16,12 +16,16 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   highlight = false,
   children,
   className = '',
+  onClick,
+  onKeyDown,
+  role,
+  tabIndex,
   ...props
 }) => {
   const levelClass = {
     'ambient': 'glass-ambient',
     '1': 'glass-level-1',
-    '2': interactive ? 'glass-level-2-interactive cursor-pointer' : 'glass-level-2',
+    '2': interactive ? 'glass-level-2-interactive' : 'glass-level-2',
     '3': 'glass-level-3',
     'elevated': 'glass-elevated',
     'lesson': 'glass-lesson-card',
@@ -29,9 +33,30 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     'intelligence': 'glass-intelligence',
   }[level];
 
+  const isInteractive = interactive || Boolean(onClick);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (onKeyDown) {
+      onKeyDown(e);
+      return;
+    }
+    if (isInteractive && onClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick(e as any);
+    }
+  };
+
   return (
     <div
-      className={`rounded-xl ${levelClass} ${highlight ? 'glass-highlight' : ''} ${className}`}
+      role={isInteractive && !role ? 'button' : role}
+      tabIndex={isInteractive && tabIndex === undefined ? 0 : tabIndex}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      className={`rounded-xl ${levelClass} ${highlight ? 'glass-highlight' : ''} ${
+        isInteractive
+          ? 'cursor-pointer hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 focus-ring select-none'
+          : ''
+      } ${className}`}
       {...props}
     >
       {children}

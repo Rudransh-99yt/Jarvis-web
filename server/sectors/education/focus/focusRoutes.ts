@@ -9,28 +9,15 @@ import type { User, UserRole } from '../../../data/types.ts';
 export const focusRouter = Router();
 
 async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'student';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'student' ? 'student-1' : 'teacher-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
+  return authenticateRequest(req, jarvisData);
+}
 
-    const validRole: UserRole = (['admin', 'commander', 'teacher', 'student', 'guest'].includes(roleHeader)
-      ? roleHeader
-      : 'student') as UserRole;
-
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: validRole,
-      department: 'Physics',
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString()
-    };
-  }
+function handleFocusError(err: any, res: Response, fallback = 'SERVER_ERROR') {
+  const isUnauth = err.statusCode === 401 || err.code === 'UNAUTHENTICATED' || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
+  const isForbidden = err.statusCode === 403 || err.code === 'FORBIDDEN' || err.message?.includes('Forbidden') || err.message?.includes('Access Denied');
+  const isNotFound = err.statusCode === 404 || err.message?.includes('not found');
+  const status = isUnauth ? 401 : isForbidden ? 403 : isNotFound ? 404 : (err.statusCode || (fallback === 'ACTION_FAILED' ? 400 : 500));
+  res.status(status).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : (err.code || fallback), message: err.message } });
 }
 
 async function requireStudentUser(req: Request): Promise<User> {
@@ -51,7 +38,7 @@ focusRouter.get('/active', async (req: Request, res: Response) => {
     const session = await focusStore.getActiveSession(user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleFocusError(err, res, 'SERVER_ERROR');
   }
 });
 
@@ -62,7 +49,7 @@ focusRouter.post('/sessions', async (req: Request, res: Response) => {
     const session = await focusStore.createSession(req.body, user);
     res.status(201).json({ session });
   } catch (err: any) {
-    res.status(err.statusCode || 500).json({ error: { code: err.code || 'SERVER_ERROR', message: err.message } });
+    handleFocusError(err, res, 'SERVER_ERROR');
   }
 });
 
@@ -73,7 +60,7 @@ focusRouter.post('/sessions/:id/start', async (req: Request, res: Response) => {
     const session = await focusStore.startSession(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -84,7 +71,7 @@ focusRouter.post('/sessions/:id/pause', async (req: Request, res: Response) => {
     const session = await focusStore.pauseSession(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -107,7 +94,7 @@ focusRouter.post('/sessions/:id/break', async (req: Request, res: Response) => {
     const session = await focusStore.startBreak(req.params.id as string, breakType || 'short', user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -118,7 +105,7 @@ focusRouter.post('/sessions/:id/skip-break', async (req: Request, res: Response)
     const session = await focusStore.skipBreak(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -129,7 +116,7 @@ focusRouter.post('/sessions/:id/complete', async (req: Request, res: Response) =
     const session = await focusStore.completeSession(req.params.id as string, user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -141,7 +128,7 @@ focusRouter.post('/sessions/:id/cancel', async (req: Request, res: Response) => 
     const session = await focusStore.cancelSession(req.params.id as string, reason || 'User requested exit', user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -153,7 +140,7 @@ focusRouter.post('/sessions/:id/notes', async (req: Request, res: Response) => {
     const session = await focusStore.updateNotes(req.params.id as string, notes || '', user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -165,7 +152,7 @@ focusRouter.post('/sessions/:id/tasks', async (req: Request, res: Response) => {
     const session = await focusStore.updateTasks(req.params.id as string, tasks || [], user.id);
     res.json({ session });
   } catch (err: any) {
-    res.status(400).json({ error: { code: 'ACTION_FAILED', message: err.message } });
+    handleFocusError(err, res, 'ACTION_FAILED');
   }
 });
 
@@ -192,7 +179,7 @@ focusRouter.post('/sessions/:id/evaluate-navigation', async (req: Request, res: 
 
     res.json(evalResult);
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleFocusError(err, res, 'SERVER_ERROR');
   }
 });
 
@@ -203,7 +190,7 @@ focusRouter.get('/statistics', async (req: Request, res: Response) => {
     const stats = await focusStore.getStatistics(user.id);
     res.json({ statistics: stats });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleFocusError(err, res, 'SERVER_ERROR');
   }
 });
 
@@ -215,6 +202,6 @@ focusRouter.get('/events', async (req: Request, res: Response) => {
     const events = await focusStore.getEvents(user.id, sessionId as string);
     res.json({ events });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleFocusError(err, res, 'SERVER_ERROR');
   }
 });

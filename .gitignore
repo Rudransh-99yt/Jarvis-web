@@ -22,6 +22,8 @@ data/storage/objects/*
 data/jarvis-db.json.tmp.*
 tests/.tmp-db/
 tests/.tmp-storage/
+tmp/
+*.lock
 
 # OS / Editor files
 .DS_Store

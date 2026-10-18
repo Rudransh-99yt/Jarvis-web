@@ -6,7 +6,9 @@ import { ResearchSector } from './sectors/research/ResearchSector.tsx';
 import { soundEffects } from './services/soundEffects.ts';
 import { speechService } from './services/speechService.ts';
 import { processJarvisCommand } from './services/commandProcessor.ts';
-import { authClient } from './services/authClient.ts';
+import { authClient, type AuthClientUser } from './services/authClient.ts';
+import { useRouter } from './services/router.ts';
+import { PublicRoutePortal } from './components/landing/PublicRoutePortal.tsx';
 import type {
   HudTheme,
   StarkProtocol,
@@ -152,6 +154,26 @@ const INITIAL_DIRECTIVES: StarkDirective[] = [
 ];
 
 export function App() {
+
+  const { path, navigate, isLogin, isSignup, isOnboarding, isExplore } = useRouter();
+  const [currentUser, setCurrentUser] = useState<AuthClientUser | null>(() => authClient.getCurrentUser());
+
+  useEffect(() => {
+    return authClient.subscribe(() => {
+      const u = authClient.getCurrentUser();
+      setCurrentUser(u);
+      if (u?.role && ["student", "teacher", "principal", "parent", "commander"].includes(u.role)) {
+        setEducationRole(u.role as EducationRole);
+      }
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    await authClient.logout();
+    setCurrentUser(null);
+    navigate("/login");
+  };
+
   // Sector Navigation State - Default to Education OS
   const [currentSector, setCurrentSector] = useState<SectorId>(() => {
     try {
@@ -284,7 +306,7 @@ export function App() {
   const sendChatMessage = async (message: string, context?: any): Promise<string> => {
     const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authClient.getAuthHeaders() },
       body: JSON.stringify({
         message,
         sessionId,
@@ -351,7 +373,8 @@ export function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'text/event-stream'
+          'Accept': 'text/event-stream',
+          ...authClient.getAuthHeaders()
         },
         body: JSON.stringify({
           message: cmdText,
@@ -557,9 +580,26 @@ export function App() {
     }
   };
 
+
+  // Public Route Portals: /explore, /login, /signup, /onboarding
+  if (isLogin || isSignup || isOnboarding || isExplore) {
+    return (
+      <PublicRoutePortal
+        onLoginSuccess={(role) => {
+          setEducationRole(role);
+          setCurrentUser(authClient.getCurrentUser());
+          navigate("/");
+        }}
+      />
+    );
+  }
+
   return (
     <AppShell
       currentSector={currentSector}
+      currentUser={currentUser}
+      onLogout={handleLogout}
+      onNavigateLogin={() => navigate("/login")}
       onSelectSector={(s) => {
         setCurrentSector(s);
         try {

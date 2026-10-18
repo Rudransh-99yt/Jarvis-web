@@ -524,6 +524,18 @@ export class ClassSessionStore {
     }
   }
 
+  public getStoragePath(): string {
+    return this.storageFilePath;
+  }
+
+  public setStoragePath(customStoragePath?: string): void {
+    const defaultDir = path.resolve(process.cwd(), 'data');
+    this.storageFilePath = customStoragePath || process.env.CLASS_SESSIONS_STORE_FILE || path.join(defaultDir, 'class-sessions.json');
+    if (!this.loadFromDisk()) {
+      this.resetToDefaults();
+    }
+  }
+
   private loadFromDisk(): boolean {
     try {
       if (fs.existsSync(this.storageFilePath)) {

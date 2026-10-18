@@ -1,13 +1,38 @@
 /** Deterministic HTTP harness: imports the production app without Vite or port 3000. */
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 import type { Server } from 'node:http';
 import { signAuthPayload } from '../server/auth/tokens.ts';
-import { jarvisData } from '../server/data/index.ts';
+import {
+  jarvisData,
+  getActiveRepository,
+  setActiveRepository,
+  resetActiveRepository,
+  DiskJarvisDataRepository
+} from '../server/data/index.ts';
 import { app } from '../server.ts';
 
 export async function startHttpHarness(): Promise<{ baseUrl: string; close: () => Promise<void>; tokenFor: (userId: string) => Promise<string> }> {
   // The test issuer is explicit and process-local; production still refuses an
   // absent secret.
-  process.env.JARVIS_AUTH_SECRET ||= 'jarvis-http-harness-test-secret';
+  process.env.JARVIS_AUTH_SECRET ||= 'jarvis-http-harness-test-secret-at-least-32chars';
+
+  const defaultDbPath = path.resolve(process.cwd(), 'data', 'jarvis-db.json');
+  const currentRepoPath = (getActiveRepository() as any).getStoragePath?.();
+  let harnessIsolatedDir: string | null = null;
+
+  if (!currentRepoPath || path.resolve(currentRepoPath) === defaultDbPath) {
+    harnessIsolatedDir = path.resolve(process.cwd(), 'tmp', `http-harness-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`);
+    fs.mkdirSync(harnessIsolatedDir, { recursive: true });
+    const isolatedDbPath = path.join(harnessIsolatedDir, 'jarvis-db.json');
+    if (fs.existsSync(defaultDbPath)) {
+      fs.copyFileSync(defaultDbPath, isolatedDbPath);
+    }
+    const isolatedRepo = new DiskJarvisDataRepository(isolatedDbPath);
+    setActiveRepository(isolatedRepo);
+  }
+
   await jarvisData.init();
   await jarvisData.seed();
   const server: Server = await new Promise((resolve) => {
@@ -27,6 +52,16 @@ export async function startHttpHarness(): Promise<{ baseUrl: string; close: () =
         jti: `test-jti-${Date.now()}`
       });
     },
-    close: () => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
+    close: async () => {
+      await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      if (harnessIsolatedDir) {
+        resetActiveRepository();
+        try {
+          if (fs.existsSync(harnessIsolatedDir)) {
+            fs.rmSync(harnessIsolatedDir, { recursive: true, force: true });
+          }
+        } catch {}
+      }
+    }
   };
 }

@@ -51,6 +51,12 @@ export const JarvisMark: React.FC<JarvisMarkProps> = ({
     pulse: '#22d3ee'
   }[variant];
 
+  const glowClass = glow
+    ? pixelSize <= 24
+      ? 'drop-shadow-[0_0_6px_rgba(56,189,248,0.70)]'
+      : 'drop-shadow-[0_0_12px_rgba(6,182,212,0.55)]'
+    : '';
+
   return (
     <svg
       width={pixelSize}
@@ -58,7 +64,7 @@ export const JarvisMark: React.FC<JarvisMarkProps> = ({
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`shrink-0 select-none ${glow ? 'drop-shadow-[0_0_12px_rgba(6,182,212,0.45)]' : ''} ${className}`}
+      className={`shrink-0 select-none ${glowClass} ${className}`}
       aria-label="JARVIS Intelligent OS Mark"
       role="img"
       {...props}
@@ -81,36 +87,47 @@ export const JarvisMark: React.FC<JarvisMarkProps> = ({
         </linearGradient>
       </defs>
 
-      {/* 1. Precision Orbital Halo (Outer Lens Arc) */}
+      {/* 1. Signature J Top Horizontal Stroke (Crisp, Continuous) */}
       <path
-        d="M50 12 A 38 38 0 1 1 20 74"
+        d="M24 22 H74"
         stroke={strokeColor}
-        strokeWidth="7"
+        strokeWidth="8"
         strokeLinecap="round"
-        opacity={variant === 'monochrome' ? 0.95 : 0.85}
       />
 
-      {/* 2. Iconic Architectural 'J' Stem & Loop */}
+      {/* 2. Signature J Vertical Stem & Sweeping Bottom Hook */}
       <path
-        d="M56 16 V56 C56 66.5 47.5 75 37 75 C26.5 75 18 66.5 18 56 V50"
+        d="M58 22 V58 C58 71.5 48.5 81 35.5 81 C22.5 81 16 71.5 16 61"
         stroke={strokeColor}
-        strokeWidth="7.5"
+        strokeWidth="8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
-      {/* 3. Singularity Intelligence Focal Apex (Orbital Aperture Node) */}
+      {/* 3. Microscopic Constellation Core Nodes & Highlights */}
       <circle
-        cx="72"
-        cy="28"
-        r="4.5"
+        cx="74"
+        cy="22"
+        r="3.5"
         fill={nodeColor}
       />
       <circle
-        cx="72"
-        cy="28"
-        r="2"
+        cx="74"
+        cy="22"
+        r="1.75"
         fill="#ffffff"
+      />
+      <circle
+        cx="24"
+        cy="22"
+        r="2.75"
+        fill={nodeColor}
+      />
+      <circle
+        cx="16"
+        cy="61"
+        r="2.75"
+        fill={nodeColor}
       />
     </svg>
   );

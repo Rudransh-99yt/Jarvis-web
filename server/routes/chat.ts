@@ -10,20 +10,29 @@ import { requirePrincipal } from '../auth/principal.ts';
 const MAX_TOOL_ROUNDS = 5;
 
 export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Response): Promise<void> {
-  const { message, sessionId, conversationId, stream, context } = req.body;
   const actor = res.locals.principal;
-  if (!actor) { res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Authenticated principal required.' } }); return; }
-  let permittedWorkspaces = await jarvisData.workspaces.listForUser(actor.userId);
-  if (permittedWorkspaces.length === 0) {
-    permittedWorkspaces = await jarvisData.workspaces.list();
+  if (!actor) {
+    res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Authenticated principal required.' } });
+    return;
   }
-  const requestedWorkspaceId = context?.workspaceId;
-  const workspace = requestedWorkspaceId
-    ? (permittedWorkspaces.find((candidate) => candidate.id === requestedWorkspaceId) || (await jarvisData.workspaces.getById(requestedWorkspaceId)))
-    : (permittedWorkspaces[0] || (await jarvisData.workspaces.getById('ws-stark-core')));
-  const workspaceId = workspace?.id || 'ws-stark-core';
-  // 1. Request Validation
-  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+
+  const rawBody = req.body as any;
+  const { sessionId, conversationId, stream, context } = rawBody || {};
+
+  // 1. Message Payload Extraction & Validation
+  let cleanMessage: string | undefined = undefined;
+  if (typeof rawBody?.message === 'string' && rawBody.message.trim().length > 0) {
+    cleanMessage = rawBody.message.trim();
+  } else if (Array.isArray(rawBody?.messages) && rawBody.messages.length > 0) {
+    const candidates = [...rawBody.messages].reverse();
+    const userMsg = candidates.find((m) => m && m.role === 'user' && typeof m.content === 'string' && m.content.trim().length > 0)
+      || candidates.find((m) => m && typeof m.content === 'string' && m.content.trim().length > 0);
+    if (userMsg) {
+      cleanMessage = userMsg.content.trim();
+    }
+  }
+
+  if (!cleanMessage) {
     res.status(400).json({
       error: {
         code: 'INVALID_REQUEST',
@@ -33,19 +42,71 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
     return;
   }
 
-  const cleanMessage = message.trim();
+  // 2. Strict Server-Side Workspace Authorization
+  const requestedWorkspaceId = context?.workspaceId;
+  const userWorkspaces = await jarvisData.workspaces.listForUser(actor.userId);
+  const isPrivileged = actor.role === 'admin' || actor.role === 'commander';
+
+  let workspaceId: string;
+  if (requestedWorkspaceId) {
+    const isAuthorized = isPrivileged || userWorkspaces.some((w) => w.id === requestedWorkspaceId);
+    if (!isAuthorized) {
+      res.status(403).json({
+        error: {
+          code: 'WORKSPACE_FORBIDDEN',
+          message: 'Caller is not authorized to access the requested workspace.'
+        }
+      });
+      return;
+    }
+    const targetWs = await jarvisData.workspaces.getById(requestedWorkspaceId);
+    if (!targetWs) {
+      res.status(404).json({
+        error: {
+          code: 'WORKSPACE_NOT_FOUND',
+          message: 'Requested workspace does not exist.'
+        }
+      });
+      return;
+    }
+    workspaceId = targetWs.id;
+  } else {
+    const user = await jarvisData.users.getById(actor.userId);
+    if (user?.workspaceId && (isPrivileged || userWorkspaces.some((w) => w.id === user.workspaceId))) {
+      workspaceId = user.workspaceId;
+    } else if (userWorkspaces.length > 0) {
+      workspaceId = userWorkspaces[0].id;
+    } else if (isPrivileged) {
+      workspaceId = 'ws-stark-core';
+    } else {
+      res.status(403).json({
+        error: {
+          code: 'WORKSPACE_FORBIDDEN',
+          message: 'No authorized workspace found for the authenticated caller.'
+        }
+      });
+      return;
+    }
+  }
+
+  // 3. Isolated Session Scoping
   const effectiveSessionId = sessionId || conversationId;
   let session;
   try {
-    session = sessionStore.getOrCreateSession(effectiveSessionId, workspaceId, actor.userId);
+    session = await sessionStore.getOrCreateSession(effectiveSessionId, workspaceId, actor.userId);
   } catch (err: any) {
-    res.status(err?.message === 'CONVERSATION_FORBIDDEN' ? 403 : 500).json({ error: { code: 'CONVERSATION_FORBIDDEN', message: 'Conversation does not belong to this authenticated actor and workspace.' } });
+    res.status(err?.message === 'CONVERSATION_FORBIDDEN' ? 403 : 500).json({
+      error: {
+        code: 'CONVERSATION_FORBIDDEN',
+        message: 'Conversation does not belong to this authenticated actor and workspace.'
+      }
+    });
     return;
   }
 
   // Append user message to in-memory session history
-  sessionStore.addMessage(session.id, 'user', cleanMessage);
-  const history = sessionStore.getMessages(session.id, 10);
+  await sessionStore.addMessage(session.id, 'user', cleanMessage);
+  const history = await sessionStore.getMessages(session.id, 10);
 
   const { provider, isFallback } = providerManager.getActiveProvider();
   const responseId = `resp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -268,7 +329,7 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
     }
 
     // Record final assistant reply into in-memory session store
-    sessionStore.addMessage(session.id, 'assistant', finalReply);
+    await sessionStore.addMessage(session.id, 'assistant', finalReply);
 
     // 4. Deliver Final Output
     if (wantsStream) {
@@ -339,23 +400,6 @@ export async function handleChatRoute(req: Request<{}, {}, ChatRequest>, res: Re
   }
 }
 
-export async function optionalChatPrincipal(req: Request, res: Response, next: import('express').NextFunction): Promise<void> {
-  try {
-    const user = await import('../auth/index.ts').then(m => m.authenticateRequest(req));
-    res.locals.principal = { userId: user.id, role: user.role, institutionId: user.institutionId, workspaceId: user.workspaceId, provenance: 'signed-hmac' };
-    next();
-  } catch (error: any) {
-    try {
-      const defaultUser = await jarvisData.users.getById('user-tony') || (await jarvisData.users.list())[0];
-      if (defaultUser) {
-        res.locals.principal = { userId: defaultUser.id, role: defaultUser.role, institutionId: defaultUser.institutionId, workspaceId: defaultUser.workspaceId, provenance: 'signed-hmac' };
-        next();
-        return;
-      }
-    } catch {}
-    const authError = error as any;
-    res.status(authError.statusCode || 401).json({ error: { code: authError.code || 'UNAUTHENTICATED', message: authError.message } });
-  }
-}
+export const optionalChatPrincipal = requirePrincipal;
 
-export const authenticatedChatRoute = [optionalChatPrincipal, handleChatRoute];
+export const authenticatedChatRoute = [requirePrincipal, handleChatRoute];

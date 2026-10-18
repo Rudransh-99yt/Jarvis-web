@@ -14,29 +14,15 @@ import type { User, UserRole } from '../../../data/types.ts';
  * Helper to resolve user from request with fallback for standard dev identity
  */
 async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    // Development fallback for browser UI without strict auth token
-    const roleHeader = (req.headers['x-user-role'] as string) || 'teacher';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'student' ? 'student-1' : 'teacher-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-    
-    const validRole: UserRole = (['admin', 'commander', 'teacher', 'student', 'guest'].includes(roleHeader)
-      ? roleHeader
-      : 'teacher') as UserRole;
+  return authenticateRequest(req, jarvisData);
+}
 
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: validRole,
-      department: 'Physics',
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString()
-    };
-  }
+function handleSessionRouteError(err: any, res: Response, fallback = 'SERVER_ERROR') {
+  const isUnauth = err.statusCode === 401 || err.code === 'UNAUTHENTICATED' || err.message?.includes('Authentication required') || err.message?.includes('Missing credentials');
+  const isForbidden = err.statusCode === 403 || err.code === 'FORBIDDEN' || err.message?.includes('Forbidden') || err.message?.includes('UNAUTHORIZED');
+  const isNotFound = err.statusCode === 404 || err.message?.includes('not found');
+  const status = isUnauth ? 401 : isForbidden ? 403 : isNotFound ? 404 : (err.statusCode || 500);
+  res.status(status).json({ error: { code: isUnauth ? 'UNAUTHENTICATED' : (err.code || fallback), message: err.message } });
 }
 
 // 1. GET /api/education/sessions - List sessions
@@ -59,7 +45,7 @@ classSessionRouter.get('/', async (req: Request, res: Response) => {
 
     res.json({ sessions: list });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -83,7 +69,7 @@ classSessionRouter.get('/smartboard/active', async (req: Request, res: Response)
 
     res.json({ session });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -108,7 +94,7 @@ classSessionRouter.get('/:id', async (req: Request, res: Response) => {
 
     res.json({ session });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -164,7 +150,7 @@ classSessionRouter.post('/', async (req: Request, res: Response) => {
 
     res.status(201).json({ session });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -205,7 +191,7 @@ classSessionRouter.post('/:id/sources', async (req: Request, res: Response) => {
 
     res.status(201).json({ session: updated, source: newSource });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -249,7 +235,7 @@ classSessionRouter.post('/:id/generate', async (req: Request, res: Response) => 
 
     res.json({ session: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -282,7 +268,7 @@ classSessionRouter.post('/:id/regenerate-section', async (req: Request, res: Res
 
     res.json({ session: updated, [sectionName]: regeneratedSection });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -309,7 +295,7 @@ classSessionRouter.patch('/:id/sections/:section', async (req: Request, res: Res
     const updated = await classSessionStore.updateSection(sessionId, section, payload);
     res.json({ session: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -335,7 +321,7 @@ classSessionRouter.post('/:id/approve-section', async (req: Request, res: Respon
     const updated = await classSessionStore.approveSection(sessionId, section);
     res.json({ session: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -360,7 +346,7 @@ classSessionRouter.post('/:id/approve-all', async (req: Request, res: Response) 
     const updated = await classSessionStore.approveAll(sessionId);
     res.json({ session: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -386,7 +372,7 @@ classSessionRouter.post('/:id/schedule', async (req: Request, res: Response) => 
     const updated = await classSessionStore.scheduleSession(sessionId, scheduledAt || new Date().toISOString());
     res.json({ session: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -412,7 +398,7 @@ classSessionRouter.post('/:id/release-controls', async (req: Request, res: Respo
     const updated = await classSessionStore.updateReleaseControls(sessionId, controls);
     res.json({ session: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });
 
@@ -444,6 +430,6 @@ classSessionRouter.post('/:id/launch-classroom', async (req: Request, res: Respo
 
     res.json({ session: updated, liveUrl: `/education?view=classroom&sessionId=${sessionId}` });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleSessionRouteError(err, res);
   }
 });

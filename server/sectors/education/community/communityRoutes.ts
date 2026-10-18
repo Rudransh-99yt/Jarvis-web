@@ -10,31 +10,17 @@ import type { User, UserRole } from '../../../data/types.ts';
 export const communityRouter = Router();
 
 /**
- * Helper to resolve user from request with development fallback
+ * Resolves and authenticates the user strictly via authenticateRequest.
+ * Fails closed without synthesizing fallback identities.
  */
 async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'student';
-    const userIdHeader = (req.headers['x-user-id'] as string) || (roleHeader === 'student' ? 'student-1' : 'teacher-1');
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
+  return authenticateRequest(req, jarvisData);
+}
 
-    const validRole: UserRole = (['admin', 'commander', 'teacher', 'student', 'guest'].includes(roleHeader)
-      ? roleHeader
-      : 'student') as UserRole;
-
-    return {
-      id: userIdHeader,
-      displayName: roleHeader === 'student' ? 'Alex Mercer' : 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: validRole,
-      department: 'Physics',
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString()
-    };
-  }
+function handleCommunityError(res: Response, err: any) {
+  const status = err.statusCode || (err.name === 'AuthenticationError' ? 401 : 500);
+  const code = err.code || (status === 401 ? 'UNAUTHENTICATED' : 'SERVER_ERROR');
+  return res.status(status).json({ error: { code, message: err.message } });
 }
 
 // 1. GET /api/education/community/events - Server-Sent Events (SSE) Real-Time Stream
@@ -123,7 +109,7 @@ communityRouter.get('/channels', async (req: Request, res: Response) => {
 
     res.json({ channels: authorizedChannels });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -159,7 +145,7 @@ communityRouter.post('/channels', async (req: Request, res: Response) => {
 
     res.status(201).json({ channel });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -188,7 +174,7 @@ communityRouter.get('/channels/:id/messages', async (req: Request, res: Response
 
     res.json({ channel, messages });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -235,7 +221,7 @@ communityRouter.post('/channels/:id/messages', async (req: Request, res: Respons
 
     res.status(201).json({ message });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -268,7 +254,7 @@ communityRouter.patch('/messages/:id', async (req: Request, res: Response) => {
 
     res.json({ message: updated });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -295,7 +281,7 @@ communityRouter.delete('/messages/:id', async (req: Request, res: Response) => {
 
     res.json({ success: true, messageId });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -320,7 +306,7 @@ communityRouter.post('/channels/:id/messages/:messageId/pin', async (req: Reques
 
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -347,7 +333,7 @@ communityRouter.post('/messages/:id/reactions', async (req: Request, res: Respon
 
     res.json({ reactions });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -377,7 +363,7 @@ communityRouter.get('/threads/:threadId/messages', async (req: Request, res: Res
 
     res.json({ thread, rootMessage, replies });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -432,7 +418,7 @@ communityRouter.post('/messages/:rootMessageId/thread', async (req: Request, res
 
     res.status(201).json({ thread, reply: replyMsg });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -443,7 +429,7 @@ communityRouter.get('/study-groups', async (req: Request, res: Response) => {
     const list = await communityStore.listStudyGroups('inst-stark-academy', classId as string);
     res.json({ studyGroups: list });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -476,7 +462,7 @@ communityRouter.post('/study-groups', async (req: Request, res: Response) => {
 
     res.status(201).json({ studyGroup: group });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -491,7 +477,7 @@ communityRouter.post('/study-groups/:id/join', async (req: Request, res: Respons
 
     res.json({ studyGroup: group });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -506,7 +492,7 @@ communityRouter.post('/study-groups/:id/leave', async (req: Request, res: Respon
 
     res.json({ studyGroup: group });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -521,7 +507,7 @@ communityRouter.get('/study-spaces', async (req: Request, res: Response) => {
     });
     res.json({ studySpaces: list });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -536,7 +522,7 @@ communityRouter.get('/study-spaces/:id', async (req: Request, res: Response) => 
     }
     res.json({ studySpace: space });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -584,7 +570,7 @@ communityRouter.post('/study-spaces', async (req: Request, res: Response) => {
 
     res.status(201).json({ studySpace: space });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -611,7 +597,7 @@ communityRouter.post('/study-spaces/:id/join', async (req: Request, res: Respons
 
     res.json({ studySpace: space });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -634,7 +620,7 @@ communityRouter.post('/study-spaces/:id/leave', async (req: Request, res: Respon
 
     res.json({ studySpace: space });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -662,7 +648,7 @@ communityRouter.post('/study-spaces/:id/participant-state', async (req: Request,
 
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -677,7 +663,7 @@ communityRouter.post('/study-spaces/:id/end', async (req: Request, res: Response
 
     res.json({ studySpace: space });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -688,7 +674,7 @@ communityRouter.get('/announcements', async (req: Request, res: Response) => {
     const list = await communityStore.listAnnouncements('inst-stark-academy', classId as string);
     res.json({ announcements: list });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -727,7 +713,7 @@ communityRouter.post('/announcements', async (req: Request, res: Response) => {
 
     res.status(201).json({ announcement });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -740,7 +726,7 @@ communityRouter.post('/announcements/:id/acknowledge', async (req: Request, res:
     const ann = await communityStore.acknowledgeAnnouncement(annId, user.id);
     res.json({ announcement: ann });
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });
 
@@ -755,6 +741,6 @@ communityRouter.get('/search', async (req: Request, res: Response) => {
     );
     res.json(results);
   } catch (err: any) {
-    res.status(500).json({ error: { code: 'SERVER_ERROR', message: err.message } });
+    handleCommunityError(res, err);
   }
 });

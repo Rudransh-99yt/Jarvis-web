@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { SectorId, EducationRole } from '../../types/api.ts';
+import type { AuthClientUser } from '../../services/authClient.ts';
 import {
   ShieldAlert,
   GraduationCap,
@@ -7,7 +8,9 @@ import {
   BarChart3,
   Home,
   Radio,
-  ChevronDown
+  ChevronDown,
+  LogOut,
+  KeyRound
 } from 'lucide-react';
 import { glassTokens } from '../../design-system/tokens.ts';
 import { JarvisMark } from '../brand/JarvisMark.tsx';
@@ -22,6 +25,9 @@ interface AppShellProps {
   isApiOnline?: boolean;
   educationRole?: EducationRole;
   onToggleEducationRole?: () => void;
+  currentUser?: AuthClientUser | null;
+  onLogout?: () => void;
+  onNavigateLogin?: () => void;
   children: React.ReactNode;
 }
 
@@ -33,6 +39,9 @@ export const AppShell: React.FC<AppShellProps> = ({
   isApiOnline = true,
   educationRole,
   onToggleEducationRole,
+  currentUser,
+  onLogout,
+  onNavigateLogin,
   children
 }) => {
   const [isSectorDropdownOpen, setIsSectorDropdownOpen] = useState(false);
@@ -236,6 +245,43 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <JarvisCore size="xs" state={isApiOnline ? 'idle' : 'warning'} label={`Jarvis Neural Core: ${isApiOnline ? 'Active' : 'Auxiliary'}`} />
                 <span className="text-[11px] font-mono text-neutral-300 font-medium">{isApiOnline ? 'Core Online' : 'Auxiliary'}</span>
               </div>
+
+              {/* Authentication & Profile Controls */}
+              {currentUser ? (
+                <div className="flex items-center gap-1.5 pl-1 border-l border-white/[0.08]">
+                  <div
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs"
+                    title={`Logged in as ${currentUser.displayName} (${currentUser.email || currentUser.role})`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 font-mono text-[9px] flex items-center justify-center font-bold">
+                      {(currentUser.displayName || "U")[0].toUpperCase()}
+                    </div>
+                    <span className="hidden lg:inline text-[11px] font-medium text-neutral-200 truncate max-w-[100px]">
+                      {currentUser.displayName}
+                    </span>
+                  </div>
+                  {onLogout && (
+                    <button
+                      onClick={onLogout}
+                      className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] text-neutral-400 hover:text-white transition-colors cursor-pointer select-none focus-ring"
+                      title="Log Out"
+                      aria-label="Log Out"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ) : onNavigateLogin ? (
+                <button
+                  onClick={onNavigateLogin}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-xs text-cyan-300 font-medium transition-colors cursor-pointer select-none focus-ring"
+                  title="Sign In with Email OTP"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
+              ) : null}
+
             </div>
           </div>
         </div>

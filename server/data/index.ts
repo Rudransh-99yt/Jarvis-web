@@ -6,6 +6,7 @@ import type { IJarvisDataRepository } from './repository.ts';
 export * from './types.ts';
 export * from './repository.ts';
 export * from './seedData.ts';
+export * from './transaction.ts';
 export { JsonFileStore } from './fileStore.ts';
 export { DiskJarvisDataRepository } from './diskRepository.ts';
 export { MemoryJarvisDataRepository } from './memoryRepository.ts';

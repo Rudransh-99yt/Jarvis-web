@@ -10,22 +10,7 @@ import type { User } from '../../../data/types.ts';
 export const teacherRouter = Router();
 
 async function resolveUser(req: Request): Promise<User> {
-  try {
-    return await authenticateRequest(req, jarvisData);
-  } catch {
-    const roleHeader = (req.headers['x-user-role'] as string) || 'teacher';
-    const userIdHeader = (req.headers['x-user-id'] as string) || 'teacher-1';
-    const existing = await jarvisData.users.getById(userIdHeader);
-    if (existing) return existing;
-    return {
-      id: userIdHeader,
-      displayName: 'Dr. Helen Cho',
-      email: `${userIdHeader}@starkacademy.edu`,
-      role: 'teacher',
-      department: 'Faculty of Physics',
-      createdAt: new Date().toISOString()
-    };
-  }
+  return authenticateRequest(req, jarvisData);
 }
 
 async function requireTeacherUser(req: Request): Promise<User> {

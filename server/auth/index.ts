@@ -5,13 +5,15 @@ import type { IJarvisDataRepository } from '../data/repository.ts';
 import { jarvisData } from '../data/index.ts';
 import { AuthService, AuthenticationError, authService } from './tokens.ts';
 import { checkPrivateAlphaAccess, getAlphaAllowlistConfig } from './alphaAllowlist.ts';
-export { AuthenticationError, AuthService, authService } from './tokens.ts';
+export { AuthenticationError, AuthService, authService, resolveAuthSecret, signAuthPayload, verifyAuthToken } from './tokens.ts';
 export { checkPrivateAlphaAccess, getAlphaAllowlistConfig } from './alphaAllowlist.ts';
 
 export * from './classroomPolicy.ts';
 export * from './tickets.ts';
 export * from './capabilities.ts';
 export * from './authRoutes.ts';
+export * from './otpService.ts';
+export * from './email/index.ts';
 
 /**
  * Extracts identity tokens / user identifiers from request headers.
@@ -32,9 +34,12 @@ export function extractAuthToken(req: Request): string | null {
     return authHeader.trim();
   }
 
-  const userIdHeader = req.headers['x-user-id'];
-  if (typeof userIdHeader === 'string' && userIdHeader.trim().length > 0) {
-    return userIdHeader.trim();
+  // Development & test harness fallback: permit x-user-id header ONLY when ALLOW_DEV_AUTH === 'true' and not in production
+  if (process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_AUTH === 'true') {
+    const userIdHeader = req.headers['x-user-id'];
+    if (typeof userIdHeader === 'string' && userIdHeader.trim().length > 0) {
+      return userIdHeader.trim();
+    }
   }
 
   return null;

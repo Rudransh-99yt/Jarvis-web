@@ -413,3 +413,85 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* =========================================================================
+   JARVIS LIVING INTELLIGENCE CORE MOTION SYSTEM
+   ========================================================================= */
+
+@keyframes jarvisBreathe {
+  0%, 100% {
+    transform: scale(0.985);
+    opacity: 0.38;
+  }
+  50% {
+    transform: scale(1.025);
+    opacity: 0.55;
+  }
+}
+
+@keyframes jarvisOrbitSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes jarvisOrbitCounter {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes jarvisSingularity {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.95;
+  }
+}
+
+@keyframes jarvisThinkingWave {
+  0%, 100% {
+    transform: scale(0.97);
+    opacity: 0.30;
+  }
+  50% {
+    transform: scale(1.01);
+    opacity: 0.50;
+  }
+}
+
+@keyframes jarvisSpeakingHarmonic {
+  0%, 100% {
+    transform: scale(0.98);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.60;
+  }
+}
+
+.animate-jarvis-breathe {
+  animation: jarvisBreathe 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-jarvis-orbit-slow {
+  animation: jarvisOrbitSlow 18s linear infinite;
+}
+
+.animate-jarvis-orbit-counter {
+  animation: jarvisOrbitCounter 22s linear infinite;
+}
+
+.animate-jarvis-singularity {
+  animation: jarvisSingularity 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-jarvis-thinking {
+  animation: jarvisThinkingWave 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-jarvis-speaking {
+  animation: jarvisSpeakingHarmonic 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

@@ -1,8 +1,10 @@
 // Disk-Backed Repository Implementation for Jarvis Platform
 import { JsonFileStore } from './fileStore.ts';
+import { AsyncMutex, transactionStorage, TransactionTimeoutError, type TransactionOptions, type TransactionContext } from './transaction.ts';
 import type {
   IJarvisDataRepository,
   IUserRepository,
+  IInstitutionRepository,
   IWorkspaceRepository,
   IConversationRepository,
   IKnowledgeRepository,
@@ -13,12 +15,34 @@ import type {
   IClassroomRepository,
   IQuizRepository,
   IVideoRepository,
+  IPersonalIdentityRepository,
+  IPersonalMemoryRepository,
+  IPersonalKnowledgeRepository,
+  IPersonalStudyRepository,
+  IActivityTimelineRepository,
+  IDiagnosticSessionRepository,
+  IKnowledgeAssetRepository,
+  ILearnerExposureRepository,
+  IAuthOtpRepository,
   CreateMessageInput,
   MessageFilter
 } from './repository.ts';
 
 import type {
+  CourseUnit,
+  CourseLesson
+} from '../../src/types/education.ts';
+import type { LearningLink } from '../../src/types/academicContext.ts';
+import type { ConversationSession } from '../session/sessionStore.ts';
+import type { ConversationMessage, MessageRole } from '../../src/types/api.ts';
+import { DEFAULT_COURSE_UNITS } from '../sectors/education/curriculumData.ts';
+
+import type {
   User,
+  UserRole,
+  Institution,
+  InstitutionMembership,
+  InstitutionInvitation,
   Workspace,
   WorkspaceMembership,
   Conversation,
@@ -26,6 +50,7 @@ import type {
   KnowledgeSpaceRecord,
   KnowledgeSourceRecord,
   ToolAuditEvent,
+  DatabaseSchema,
   ResearchProject,
   ResearchQuestion,
   EvidenceRecord,
@@ -48,7 +73,29 @@ import type {
   VideoRecord,
   CreateVideoInput,
   UpdateVideoInput,
-  VideoListFilter
+  VideoListFilter,
+  PersonalJarvisIdentity,
+  PersonalMemoryItem,
+  PersonalKnowledgeState,
+  PersonalKnowledgeConceptState,
+  PersonalKnowledgeSignal,
+  PersonalStudyNote,
+  PersonalFlashcard,
+  PersonalStudySessionPlan,
+  MemoryCategory,
+  MemoryVisibility,
+  MemorySourceType,
+  ActionActivityItem,
+  DiagnosticSessionRecord,
+  CheckpointEvaluationResult,
+  KnowledgeAsset,
+  AssetSearchCriteria,
+  LearnerQuestionExposure,
+  LearnerExposureSummary,
+  QuestionExposureStatus,
+  AuthOtpRecord,
+  AuthOtpIntent,
+  AuthOtpStatus
 } from './types.ts';
 import type {
   EducationClass,
@@ -56,15 +103,16 @@ import type {
   StudentSubmission,
   GroundedQueryResponse
 } from '../../src/types/education.ts';
-import type { MessageRole } from '../../src/types/api.ts';
 import { INITIAL_DATABASE_SCHEMA } from './seedData.ts';
 import { DeterministicLocalEmbeddingProvider } from '../rag/embeddingProvider.ts';
 
 export class DiskJarvisDataRepository implements IJarvisDataRepository {
   public readonly isPersistent = true;
   private store: JsonFileStore;
+  private mutex: AsyncMutex = new AsyncMutex();
 
   public users: IUserRepository;
+  public institutions: IInstitutionRepository;
   public workspaces: IWorkspaceRepository;
   public conversations: IConversationRepository;
   public knowledge: IKnowledgeRepository;
@@ -73,9 +121,10 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
   public research: IResearchRepository;
   public files: IFileRepository;
   public classroom: IClassroomRepository;
+  public authOtps: IAuthOtpRepository;
 
-  constructor(filePath?: string) {
-    this.store = new JsonFileStore({ filePath });
+  constructor(filePath?: string, options?: { skipProcessLock?: boolean }) {
+    this.store = new JsonFileStore({ filePath, skipProcessLock: options?.skipProcessLock });
 
     // 1. Users Sub-Repository
     this.users = {
@@ -92,11 +141,22 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
         return this.store.getState().users.map((u) => ({ ...u }));
       },
       create: async (user: Omit<User, 'createdAt'>): Promise<User> => {
+        const normalizedEmail = user.email ? user.email.trim().toLowerCase() : '';
         const record: User = {
           ...user,
+          email: normalizedEmail,
           createdAt: new Date().toISOString()
         };
         this.store.mutate((state) => {
+          if (!state.users) state.users = [];
+          if (normalizedEmail) {
+            const exists = state.users.some((u) => u.email.trim().toLowerCase() === normalizedEmail);
+            if (exists) {
+              const err = new Error('USER_EXISTS: A user with this email address already exists.');
+              (err as any).code = 'USER_EXISTS';
+              throw err;
+            }
+          }
           state.users.push(record);
         });
         return { ...record };
@@ -117,6 +177,286 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
           const prev = state.users.length;
           state.users = state.users.filter((u) => u.id !== id);
           return state.users.length < prev;
+        });
+      }
+    };
+
+    // 1.2 Auth OTP Sub-Repository (Milestone 2.1)
+    this.authOtps = {
+      getById: async (id: string): Promise<AuthOtpRecord | null> => {
+        const otp = (this.store.getState().authOtps || []).find((o) => o.id === id);
+        return otp ? JSON.parse(JSON.stringify(otp)) : null;
+      },
+      getActiveOtp: async (email: string, intent: AuthOtpIntent): Promise<AuthOtpRecord | null> => {
+        const normalized = email.trim().toLowerCase();
+        const now = Date.now();
+        const otp = (this.store.getState().authOtps || []).find(
+          (o) =>
+            o.email === normalized &&
+            o.intent === intent &&
+            o.status === 'pending' &&
+            new Date(o.expiresAt).getTime() > now &&
+            o.attemptsRemaining > 0
+        );
+        return otp ? JSON.parse(JSON.stringify(otp)) : null;
+      },
+      create: async (record: Omit<AuthOtpRecord, 'createdAt'>): Promise<AuthOtpRecord> => {
+        const normalizedEmail = record.email.trim().toLowerCase();
+        const newRecord: AuthOtpRecord = {
+          ...record,
+          email: normalizedEmail,
+          createdAt: new Date().toISOString()
+        };
+
+        this.store.mutate((state) => {
+          if (!state.authOtps) state.authOtps = [];
+          // Enforce one active OTP per email and intent:
+          // Invalidate any existing pending OTPs for this email and intent
+          for (const item of state.authOtps) {
+            if (item.email === normalizedEmail && item.intent === record.intent && item.status === 'pending') {
+              item.status = 'invalidated';
+            }
+          }
+          state.authOtps.push(JSON.parse(JSON.stringify(newRecord)));
+        });
+
+        return JSON.parse(JSON.stringify(newRecord));
+      },
+      update: async (
+        id: string,
+        updates: Partial<Omit<AuthOtpRecord, 'id' | 'createdAt'>>
+      ): Promise<AuthOtpRecord | null> => {
+        let updated: AuthOtpRecord | null = null;
+        this.store.mutate((state) => {
+          if (!state.authOtps) state.authOtps = [];
+          const idx = state.authOtps.findIndex((o) => o.id === id);
+          if (idx !== -1) {
+            state.authOtps[idx] = {
+              ...state.authOtps[idx],
+              ...updates,
+              id: state.authOtps[idx].id,
+              createdAt: state.authOtps[idx].createdAt
+            };
+            updated = JSON.parse(JSON.stringify(state.authOtps[idx]));
+          }
+        });
+        return updated;
+      },
+      invalidateActiveOtps: async (email: string, intent?: AuthOtpIntent): Promise<number> => {
+        const normalized = email.trim().toLowerCase();
+        let count = 0;
+        this.store.mutate((state) => {
+          if (!state.authOtps) return;
+          for (const item of state.authOtps) {
+            if (
+              item.email === normalized &&
+              (!intent || item.intent === intent) &&
+              item.status === 'pending'
+            ) {
+              item.status = 'invalidated';
+              count++;
+            }
+          }
+        });
+        return count;
+      },
+      cleanupExpired: async (): Promise<number> => {
+        const now = Date.now();
+        let count = 0;
+        this.store.mutate((state) => {
+          if (!state.authOtps) return;
+          for (const item of state.authOtps) {
+            if (item.status === 'pending' && new Date(item.expiresAt).getTime() <= now) {
+              item.status = 'expired';
+              count++;
+            }
+          }
+        });
+        return count;
+      },
+      list: async (filter?: { email?: string; intent?: AuthOtpIntent; status?: AuthOtpStatus }): Promise<AuthOtpRecord[]> => {
+        let list = this.store.getState().authOtps || [];
+        if (filter?.email) {
+          const norm = filter.email.trim().toLowerCase();
+          list = list.filter((o) => o.email === norm);
+        }
+        if (filter?.intent) {
+          list = list.filter((o) => o.intent === filter.intent);
+        }
+        if (filter?.status) {
+          list = list.filter((o) => o.status === filter.status);
+        }
+        return list.map((o) => JSON.parse(JSON.stringify(o)));
+      },
+      countRecentRequests: async (email: string, windowMs: number): Promise<number> => {
+        const normalized = email.trim().toLowerCase();
+        const cutoff = Date.now() - windowMs;
+        const list = this.store.getState().authOtps || [];
+        return list.filter(
+          (o) => o.email === normalized && new Date(o.createdAt).getTime() >= cutoff
+        ).length;
+      }
+    };
+
+    // 1.5 Institutions Sub-Repository
+    this.institutions = {
+      getById: async (id: string): Promise<Institution | null> => {
+        const inst = (this.store.getState().institutions || []).find((i) => i.id === id);
+        return inst ? { ...inst } : null;
+      },
+      list: async (): Promise<Institution[]> => {
+        return (this.store.getState().institutions || []).map((i) => ({ ...i }));
+      },
+      create: async (institution: Institution): Promise<Institution> => {
+        this.store.mutate((state) => {
+          if (!state.institutions) state.institutions = [];
+          state.institutions.push({ ...institution });
+        });
+        return { ...institution };
+      },
+      getMembership: async (institutionId: string, userId: string): Promise<InstitutionMembership | null> => {
+        const mem = (this.store.getState().institutionMemberships || []).find(
+          (m) => m.institutionId === institutionId && m.userId === userId
+        );
+        return mem ? { ...mem } : null;
+      },
+      listMemberships: async (): Promise<InstitutionMembership[]> => {
+        return (this.store.getState().institutionMemberships || []).map((m) => ({ ...m }));
+      },
+      listMembershipsForUser: async (userId: string): Promise<InstitutionMembership[]> => {
+        return (this.store.getState().institutionMemberships || [])
+          .filter((m) => m.userId === userId)
+          .map((m) => ({ ...m }));
+      },
+      listMembershipsForInstitution: async (institutionId: string): Promise<InstitutionMembership[]> => {
+        return (this.store.getState().institutionMemberships || [])
+          .filter((m) => m.institutionId === institutionId)
+          .map((m) => ({ ...m }));
+      },
+      addMembership: async (institutionId: string, userId: string, role: UserRole): Promise<InstitutionMembership> => {
+        const record: InstitutionMembership = {
+          id: `instmem-${userId}-${Date.now()}`,
+          institutionId,
+          userId,
+          role,
+          joinedAt: new Date().toISOString()
+        };
+        this.store.mutate((state) => {
+          if (!state.institutionMemberships) state.institutionMemberships = [];
+          const idx = state.institutionMemberships.findIndex(
+            (m) => m.institutionId === institutionId && m.userId === userId
+          );
+          if (idx >= 0) {
+            state.institutionMemberships[idx] = record;
+          } else {
+            state.institutionMemberships.push(record);
+          }
+        });
+        return { ...record };
+      },
+      removeMembership: async (institutionId: string, userId: string): Promise<boolean> => {
+        return this.store.mutate((state) => {
+          if (!state.institutionMemberships) return false;
+          const prev = state.institutionMemberships.length;
+          state.institutionMemberships = state.institutionMemberships.filter(
+            (m) => !(m.institutionId === institutionId && m.userId === userId)
+          );
+          return state.institutionMemberships.length < prev;
+        });
+      },
+      getInvitationByCode: async (code: string): Promise<InstitutionInvitation | null> => {
+        const clean = code.trim().toUpperCase();
+        const inv = (this.store.getState().institutionInvitations || []).find(
+          (i) => i.code.toUpperCase() === clean
+        );
+        return inv ? { ...inv } : null;
+      },
+      listInvitations: async (institutionId?: string): Promise<InstitutionInvitation[]> => {
+        let list = this.store.getState().institutionInvitations || [];
+        if (institutionId) {
+          list = list.filter((i) => i.institutionId === institutionId);
+        }
+        return list.map((i) => ({ ...i }));
+      },
+      createInvitation: async (invitation: Omit<InstitutionInvitation, 'usedCount' | 'createdAt'>): Promise<InstitutionInvitation> => {
+        const record: InstitutionInvitation = {
+          ...invitation,
+          code: invitation.code.trim().toUpperCase(),
+          usedCount: 0,
+          createdAt: new Date().toISOString()
+        };
+        this.store.mutate((state) => {
+          if (!state.institutionInvitations) state.institutionInvitations = [];
+          state.institutionInvitations.push(record);
+        });
+        return { ...record };
+      },
+      consumeInvitation: async (code: string, userId: string): Promise<{ invitation: InstitutionInvitation; membership: InstitutionMembership }> => {
+        const clean = code.trim().toUpperCase();
+        let targetInv: InstitutionInvitation | null = null;
+        let membership: InstitutionMembership | null = null;
+
+        this.store.mutate((state) => {
+          if (!state.institutionInvitations) state.institutionInvitations = [];
+          const invIndex = state.institutionInvitations.findIndex((i) => i.code.toUpperCase() === clean);
+          if (invIndex === -1) {
+            throw new Error('INVALID_INVITATION: Invitation code does not exist.');
+          }
+          const inv = state.institutionInvitations[invIndex];
+          if (inv.status !== 'active') {
+            throw new Error(`INVALID_INVITATION: Invitation code is ${inv.status}.`);
+          }
+          if (new Date(inv.expiresAt).getTime() <= Date.now()) {
+            inv.status = 'expired';
+            throw new Error('INVALID_INVITATION: Invitation code has expired.');
+          }
+          if (inv.usedCount >= inv.maxUses) {
+            inv.status = 'consumed';
+            throw new Error('INVALID_INVITATION: Invitation code has reached its usage limit.');
+          }
+
+          inv.usedCount += 1;
+          if (inv.usedCount >= inv.maxUses) {
+            inv.status = 'consumed';
+          }
+          targetInv = { ...inv };
+
+          // Add or update institution membership
+          if (!state.institutionMemberships) state.institutionMemberships = [];
+          // Role escalation guard: never allow an invitation to grant admin or commander
+          const allowedInvitationRoles: UserRole[] = ['student', 'teacher', 'principal', 'parent'];
+          const safeRole: UserRole = allowedInvitationRoles.includes(inv.role) ? inv.role : 'student';
+
+          membership = {
+            id: `instmem-${userId}-${Date.now()}`,
+            institutionId: inv.institutionId,
+            userId,
+            role: safeRole,
+            joinedAt: new Date().toISOString()
+          };
+          const existingIdx = state.institutionMemberships.findIndex(
+            (m) => m.institutionId === inv.institutionId && m.userId === userId
+          );
+          if (existingIdx >= 0) {
+            state.institutionMemberships[existingIdx] = membership;
+          } else {
+            state.institutionMemberships.push(membership);
+          }
+        });
+
+        if (!targetInv || !membership) {
+          throw new Error('Failed to consume invitation.');
+        }
+        return { invitation: targetInv, membership };
+      },
+      revokeInvitation: async (code: string): Promise<boolean> => {
+        const clean = code.trim().toUpperCase();
+        return this.store.mutate((state) => {
+          if (!state.institutionInvitations) return false;
+          const inv = state.institutionInvitations.find((i) => i.code.toUpperCase() === clean);
+          if (!inv) return false;
+          inv.status = 'revoked';
+          return true;
         });
       }
     };
@@ -501,6 +841,131 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
           state.conversations.push(thread);
         });
         return { ...thread };
+      },
+
+      // Session Management for AI & Conversational Flow
+      getOrCreateSession: async (sessionId: string | undefined, workspaceId: string, userId: string): Promise<ConversationSession> => {
+        const id = sessionId && sessionId.trim().length > 0
+          ? sessionId.trim()
+          : `session-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const state = this.store.getState();
+        let conv = (state.conversations || []).find((c) => c.id === id);
+        const now = new Date().toISOString();
+        if (!conv) {
+          conv = {
+            id,
+            workspaceId: workspaceId || 'ws-stark-core',
+            userId: userId || 'user-tony',
+            title: 'New Conversation',
+            sector: 'command',
+            createdAt: now,
+            updatedAt: now,
+            messageCount: 0
+          };
+          this.store.mutate((s) => {
+            if (!s.conversations) s.conversations = [];
+            s.conversations.push(conv!);
+          });
+        } else if (userId && workspaceId && (conv.userId !== userId || conv.workspaceId !== workspaceId)) {
+          throw new Error('CONVERSATION_FORBIDDEN');
+        }
+
+        const msgs = (this.store.getState().messages || [])
+          .filter((m) => m.conversationId === id)
+          .map((m) => ({
+            id: m.id,
+            role: m.role as MessageRole,
+            content: m.content,
+            timestamp: m.timestamp,
+            toolCall: m.toolCall,
+            toolResult: m.toolResult
+          }));
+
+        return {
+          id: conv.id,
+          createdAt: conv.createdAt,
+          updatedAt: conv.updatedAt,
+          messages: msgs
+        };
+      },
+
+      addSessionMessage: async (sessionId: string, role: MessageRole, content: string, extra?: { toolCall?: any; toolResult?: any }): Promise<ConversationMessage> => {
+        const now = new Date().toISOString();
+        const message: ConversationMessage = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          role,
+          content,
+          timestamp: now,
+          toolCall: extra?.toolCall,
+          toolResult: extra?.toolResult
+        };
+
+        this.store.mutate((state) => {
+          let conv = (state.conversations || []).find((c) => c.id === sessionId);
+          if (!conv) {
+            throw new Error('Conversation must be created with a verified owner before messages can be appended.');
+          } else {
+            conv.updatedAt = now;
+            if (conv.title === 'New Conversation' && content.trim()) {
+              conv.title = content.slice(0, 35);
+            }
+          }
+
+          if (!state.messages) state.messages = [];
+          state.messages.push({
+            ...message,
+            conversationId: sessionId
+          });
+
+          // Prune excessive messages per session to keep sliding window healthy (> 60)
+          const sessionMsgs = state.messages.filter((m) => m.conversationId === sessionId);
+          if (sessionMsgs.length > 60) {
+            const excess = sessionMsgs.length - 60;
+            let removed = 0;
+            state.messages = state.messages.filter((m) => {
+              if (m.conversationId === sessionId && removed < excess) {
+                removed++;
+                return false;
+              }
+              return true;
+            });
+          }
+        });
+
+        return message;
+      },
+
+      getSessionMessages: async (sessionId: string, limit?: number): Promise<ConversationMessage[]> => {
+        const state = this.store.getState();
+        const msgs: ConversationMessage[] = (state.messages || [])
+          .filter((m) => m.conversationId === sessionId)
+          .map((m) => ({
+            id: m.id,
+            role: m.role as MessageRole,
+            content: m.content,
+            timestamp: m.timestamp,
+            toolCall: m.toolCall,
+            toolResult: m.toolResult
+          }));
+
+        msgs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        if (limit && limit > 0) {
+          return msgs.slice(-limit);
+        }
+        return msgs;
+      },
+
+      clearSession: async (sessionId: string): Promise<boolean> => {
+        return this.store.mutate((state) => {
+          const prevConvs = (state.conversations || []).length;
+          state.messages = (state.messages || []).filter((m) => m.conversationId !== sessionId);
+          state.conversations = (state.conversations || []).filter((c) => c.id !== sessionId);
+          return (state.conversations || []).length < prevConvs;
+        });
+      },
+
+      getActiveSessionCount: async (): Promise<number> => {
+        return (this.store.getState().conversations || []).length;
       }
     };
 
@@ -825,6 +1290,107 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
 
           return { ...sub };
         });
+      },
+
+      toggleLessonCompletion: async (classId: string, unitId: string, lessonId: string, isCompleted: boolean): Promise<boolean> => {
+        return this.store.mutate((state) => {
+          const c = state.classes.find((item) => item.id === classId);
+          if (c) {
+            if (!c.units || c.units.length === 0) {
+              c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+            }
+            const units = c.units || [];
+            const u = units.find((unit) => unit.id === unitId);
+            if (u) {
+              const l = u.lessons.find((les) => les.id === lessonId);
+              if (l) {
+                l.isCompleted = isCompleted;
+                const completedCount = u.lessons.filter((les) => les.isCompleted).length;
+                u.masteryPercent = Math.round((completedCount / u.lessons.length) * 100);
+                u.isCompleted = completedCount === u.lessons.length;
+                return true;
+              }
+            }
+          }
+          return false;
+        });
+      },
+
+      addUnitToCourse: async (classId: string, unit: Omit<CourseUnit, 'id'>): Promise<CourseUnit> => {
+        const newUnitId = `unit-${classId}-${Date.now().toString(36)}`;
+        const newUnit: CourseUnit = {
+          ...unit,
+          id: newUnitId,
+          courseId: classId,
+          lessons: unit.lessons || []
+        };
+        this.store.mutate((state) => {
+          const c = state.classes.find((item) => item.id === classId);
+          if (c) {
+            if (!c.units || c.units.length === 0) {
+              c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+            }
+            const units = c.units || [];
+            units.push(newUnit);
+            c.units = units;
+          }
+        });
+        return newUnit;
+      },
+
+      addLessonToUnit: async (classId: string, unitId: string, lesson: Omit<CourseLesson, 'id' | 'unitId' | 'courseId'>): Promise<CourseLesson> => {
+        const newLessonId = `les-${unitId}-${Date.now().toString(36)}`;
+        const newLesson: CourseLesson = {
+          ...lesson,
+          id: newLessonId,
+          unitId,
+          courseId: classId
+        };
+        this.store.mutate((state) => {
+          const c = state.classes.find((item) => item.id === classId);
+          if (c) {
+            if (!c.units || c.units.length === 0) {
+              c.units = JSON.parse(JSON.stringify(DEFAULT_COURSE_UNITS[classId] || []));
+            }
+            const units = c.units || [];
+            const u = units.find((unit) => unit.id === unitId);
+            if (u) {
+              u.lessons.push(newLesson);
+            }
+          }
+        });
+        return newLesson;
+      },
+
+      createLearningLink: async (link: LearningLink): Promise<LearningLink> => {
+        this.store.mutate((state) => {
+          if (!state.learningLinks) state.learningLinks = [];
+          state.learningLinks.push({ ...link });
+        });
+        return { ...link };
+      },
+
+      deleteLearningLink: async (id: string): Promise<boolean> => {
+        return this.store.mutate((state) => {
+          if (!Array.isArray(state.learningLinks)) return false;
+          const prev = state.learningLinks.length;
+          state.learningLinks = state.learningLinks.filter((l) => l.id !== id);
+          return state.learningLinks.length < prev;
+        });
+      },
+
+      listLearningLinks: async (filter?: { entityId?: string; entityType?: string }): Promise<LearningLink[]> => {
+        const links = this.store.getState().learningLinks || [];
+        if (!filter) return links.map((l) => ({ ...l }));
+        return links
+          .filter((l) => {
+            if (filter.entityId && filter.entityType) {
+              return (l.sourceType === filter.entityType && l.sourceId === filter.entityId) ||
+                     (l.targetType === filter.entityType && l.targetId === filter.entityId);
+            }
+            return true;
+          })
+          .map((l) => ({ ...l }));
       }
     };
 
@@ -1795,6 +2361,943 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
     };
   }
 
+  get personalIdentities(): IPersonalIdentityRepository {
+    return {
+      getById: async (userId: string): Promise<PersonalJarvisIdentity | null> => {
+        const state = this.store.getState();
+        const ident = (state.personalIdentities || []).find((i) => i.userId === userId);
+        return ident ? JSON.parse(JSON.stringify(ident)) : null;
+      },
+      list: async (): Promise<PersonalJarvisIdentity[]> => {
+        const state = this.store.getState();
+        return (state.personalIdentities || []).map((i) => JSON.parse(JSON.stringify(i)));
+      },
+      create: async (identity: PersonalJarvisIdentity): Promise<PersonalJarvisIdentity> => {
+        const record = JSON.parse(JSON.stringify(identity));
+        this.store.mutate((st) => {
+          if (!st.personalIdentities) st.personalIdentities = [];
+          const idx = st.personalIdentities.findIndex((i) => i.userId === identity.userId);
+          if (idx !== -1) {
+            st.personalIdentities[idx] = record;
+          } else {
+            st.personalIdentities.push(record);
+          }
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      update: async (userId: string, updates: Partial<PersonalJarvisIdentity>): Promise<PersonalJarvisIdentity | null> => {
+        let updated: PersonalJarvisIdentity | null = null;
+        this.store.mutate((st) => {
+          if (!st.personalIdentities) st.personalIdentities = [];
+          const idx = st.personalIdentities.findIndex((i) => i.userId === userId);
+          if (idx !== -1) {
+            st.personalIdentities[idx] = {
+              ...st.personalIdentities[idx],
+              ...updates,
+              userId,
+              updatedAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.personalIdentities[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      delete: async (userId: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.personalIdentities) return;
+          const prev = st.personalIdentities.length;
+          st.personalIdentities = st.personalIdentities.filter((i) => i.userId !== userId);
+          removed = st.personalIdentities.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      },
+      updateStats: async (userId: string, statsUpdates: Partial<PersonalJarvisIdentity['stats']>): Promise<PersonalJarvisIdentity | null> => {
+        let updated: PersonalJarvisIdentity | null = null;
+        this.store.mutate((st) => {
+          if (!st.personalIdentities) st.personalIdentities = [];
+          const idx = st.personalIdentities.findIndex((i) => i.userId === userId);
+          if (idx !== -1) {
+            st.personalIdentities[idx].stats = {
+              ...st.personalIdentities[idx].stats,
+              ...statsUpdates
+            };
+            st.personalIdentities[idx].updatedAt = new Date().toISOString();
+            updated = JSON.parse(JSON.stringify(st.personalIdentities[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      setActiveContext: async (userId: string, contextId: string): Promise<PersonalJarvisIdentity | null> => {
+        let updated: PersonalJarvisIdentity | null = null;
+        this.store.mutate((st) => {
+          if (!st.personalIdentities) st.personalIdentities = [];
+          const idx = st.personalIdentities.findIndex((i) => i.userId === userId);
+          if (idx !== -1) {
+            const ident = st.personalIdentities[idx];
+            ident.activeContextId = contextId;
+            ident.contexts = (ident.contexts || []).map((c) => ({
+              ...c,
+              isActive: c.id === contextId
+            }));
+            ident.updatedAt = new Date().toISOString();
+            updated = JSON.parse(JSON.stringify(ident));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      }
+    };
+  }
+
+  get personalMemories(): IPersonalMemoryRepository {
+    return {
+      getById: async (id: string): Promise<PersonalMemoryItem | null> => {
+        const state = this.store.getState();
+        const mem = (state.personalMemories || []).find((m) => m.id === id);
+        return mem ? JSON.parse(JSON.stringify(mem)) : null;
+      },
+      listForUser: async (
+        userId: string,
+        options?: { contextId?: string; category?: MemoryCategory; visibility?: MemoryVisibility; source?: MemorySourceType; limit?: number }
+      ): Promise<PersonalMemoryItem[]> => {
+        const state = this.store.getState();
+        let list = (state.personalMemories || []).filter((m) => m.userId === userId);
+        if (options?.contextId) {
+          list = list.filter((m) => m.contextId === options.contextId);
+        }
+        if (options?.category) {
+          list = list.filter((m) => m.category === options.category);
+        }
+        if (options?.visibility) {
+          list = list.filter((m) => m.visibility === options.visibility);
+        }
+        if (options?.source) {
+          list = list.filter((m) => m.source === options.source);
+        }
+        if (options?.limit && options.limit > 0) {
+          list = list.slice(0, options.limit);
+        }
+        return list.map((m) => JSON.parse(JSON.stringify(m)));
+      },
+      create: async (
+        memory: Omit<PersonalMemoryItem, 'id' | 'createdAt' | 'updatedAt'> & { id?: string; createdAt?: string; updatedAt?: string }
+      ): Promise<PersonalMemoryItem> => {
+        const now = new Date().toISOString();
+        const record: PersonalMemoryItem = {
+          ...memory,
+          id: memory.id || `mem-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          createdAt: memory.createdAt || now,
+          updatedAt: memory.updatedAt || now
+        };
+        this.store.mutate((st) => {
+          if (!st.personalMemories) st.personalMemories = [];
+          st.personalMemories.push(JSON.parse(JSON.stringify(record)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      update: async (
+        id: string,
+        updates: Partial<Omit<PersonalMemoryItem, 'id' | 'userId' | 'createdAt'>>,
+        userId?: string
+      ): Promise<PersonalMemoryItem | null> => {
+        let updated: PersonalMemoryItem | null = null;
+        this.store.mutate((st) => {
+          if (!st.personalMemories) st.personalMemories = [];
+          const idx = st.personalMemories.findIndex((m) => m.id === id && (!userId || m.userId === userId));
+          if (idx !== -1) {
+            st.personalMemories[idx] = {
+              ...st.personalMemories[idx],
+              ...updates,
+              id,
+              userId: st.personalMemories[idx].userId,
+              updatedAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.personalMemories[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      delete: async (id: string, userId: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.personalMemories) return;
+          const prev = st.personalMemories.length;
+          st.personalMemories = st.personalMemories.filter((m) => !(m.id === id && m.userId === userId));
+          removed = st.personalMemories.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      },
+      deleteForUser: async (userId: string): Promise<number> => {
+        let count = 0;
+        this.store.mutate((st) => {
+          if (!st.personalMemories) return;
+          const initial = st.personalMemories.length;
+          st.personalMemories = st.personalMemories.filter((m) => m.userId !== userId);
+          count = initial - st.personalMemories.length;
+        });
+        if (count > 0) await this.store.flush();
+        return count;
+      }
+    };
+  }
+
+  get personalKnowledge(): IPersonalKnowledgeRepository {
+    return {
+      getState: async (userId: string): Promise<PersonalKnowledgeState | null> => {
+        const state = this.store.getState();
+        const k = (state.personalKnowledgeStates || []).find((s) => s.userId === userId);
+        return k ? JSON.parse(JSON.stringify(k)) : null;
+      },
+      upsertState: async (newState: PersonalKnowledgeState): Promise<PersonalKnowledgeState> => {
+        const record = JSON.parse(JSON.stringify(newState));
+        this.store.mutate((st) => {
+          if (!st.personalKnowledgeStates) st.personalKnowledgeStates = [];
+          const idx = st.personalKnowledgeStates.findIndex((s) => s.userId === newState.userId);
+          if (idx !== -1) {
+            st.personalKnowledgeStates[idx] = record;
+          } else {
+            st.personalKnowledgeStates.push(record);
+          }
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      getConcept: async (userId: string, conceptId: string): Promise<PersonalKnowledgeConceptState | null> => {
+        const state = this.store.getState();
+        const k = (state.personalKnowledgeStates || []).find((s) => s.userId === userId);
+        if (!k || !k.concepts) return null;
+        const concept =
+          k.concepts[conceptId] ||
+          Object.values(k.concepts).find((c) => c.conceptName.toLowerCase() === conceptId.toLowerCase());
+        return concept ? JSON.parse(JSON.stringify(concept)) : null;
+      },
+      recordConceptMastery: async (
+        userId: string,
+        concept: PersonalKnowledgeConceptState,
+        signal?: PersonalKnowledgeSignal
+      ): Promise<PersonalKnowledgeConceptState> => {
+        const updatedConcept: PersonalKnowledgeConceptState = JSON.parse(JSON.stringify(concept));
+        this.store.mutate((st) => {
+          if (!st.personalKnowledgeStates) st.personalKnowledgeStates = [];
+          let idx = st.personalKnowledgeStates.findIndex((s) => s.userId === userId);
+          if (idx === -1) {
+            st.personalKnowledgeStates.push({
+              userId,
+              concepts: {},
+              recentSignals: [],
+              updatedAt: new Date().toISOString()
+            });
+            idx = st.personalKnowledgeStates.length - 1;
+          }
+          const userState = st.personalKnowledgeStates[idx];
+          if (!userState.concepts) userState.concepts = {};
+          userState.concepts[concept.conceptId] = JSON.parse(JSON.stringify(concept));
+          if (signal) {
+            if (!userState.recentSignals) userState.recentSignals = [];
+            userState.recentSignals.unshift(JSON.parse(JSON.stringify(signal)));
+            if (userState.recentSignals.length > 50) {
+              userState.recentSignals = userState.recentSignals.slice(0, 50);
+            }
+          }
+          userState.updatedAt = new Date().toISOString();
+        });
+        await this.store.flush();
+        return updatedConcept;
+      },
+      rollbackConceptMastery: async (
+        userId: string,
+        conceptId: string,
+        previousState: PersonalKnowledgeConceptState | null,
+        signalIdToRemove?: string
+      ): Promise<void> => {
+        this.store.mutate((st) => {
+          if (!st.personalKnowledgeStates) return;
+          const idx = st.personalKnowledgeStates.findIndex((s) => s.userId === userId);
+          if (idx === -1) return;
+          const userState = st.personalKnowledgeStates[idx];
+          if (userState.concepts) {
+            if (previousState) {
+              userState.concepts[conceptId] = JSON.parse(JSON.stringify(previousState));
+            } else {
+              delete userState.concepts[conceptId];
+            }
+          }
+          if (signalIdToRemove && userState.recentSignals) {
+            userState.recentSignals = userState.recentSignals.filter((s) => s.id !== signalIdToRemove);
+          }
+          userState.updatedAt = new Date().toISOString();
+        });
+        await this.store.flush();
+      },
+      listSignals: async (userId: string, limit?: number): Promise<PersonalKnowledgeSignal[]> => {
+        const state = this.store.getState();
+        const k = (state.personalKnowledgeStates || []).find((s) => s.userId === userId);
+        if (!k || !k.recentSignals) return [];
+        let list = [...k.recentSignals];
+        if (limit && limit > 0) list = list.slice(0, limit);
+        return list.map((s) => JSON.parse(JSON.stringify(s)));
+      }
+    };
+  }
+
+  get personalStudy(): IPersonalStudyRepository {
+    return {
+      getNoteById: async (id: string, userId?: string): Promise<PersonalStudyNote | null> => {
+        const state = this.store.getState();
+        const note = (state.personalStudyNotes || []).find((n) => n.id === id && (!userId || n.userId === userId));
+        return note ? JSON.parse(JSON.stringify(note)) : null;
+      },
+      listNotes: async (
+        userId: string,
+        options?: { subject?: string; contextId?: string; tag?: string }
+      ): Promise<PersonalStudyNote[]> => {
+        const state = this.store.getState();
+        let list = (state.personalStudyNotes || []).filter((n) => n.userId === userId);
+        if (options?.subject) {
+          list = list.filter((n) => n.subject?.toLowerCase() === options.subject?.toLowerCase());
+        }
+        if (options?.contextId) {
+          list = list.filter((n) => n.contextId === options.contextId);
+        }
+        if (options?.tag) {
+          list = list.filter((n) => n.tags && n.tags.some((t) => t.toLowerCase() === options.tag?.toLowerCase()));
+        }
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return list.map((n) => JSON.parse(JSON.stringify(n)));
+      },
+      createNote: async (
+        note: Omit<PersonalStudyNote, 'createdAt' | 'updatedAt'> & { createdAt?: string; updatedAt?: string }
+      ): Promise<PersonalStudyNote> => {
+        const now = new Date().toISOString();
+        const record: PersonalStudyNote = {
+          ...note,
+          id: note.id || `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          createdAt: note.createdAt || now,
+          updatedAt: note.updatedAt || now
+        };
+        this.store.mutate((st) => {
+          if (!st.personalStudyNotes) st.personalStudyNotes = [];
+          st.personalStudyNotes.push(JSON.parse(JSON.stringify(record)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      updateNote: async (
+        id: string,
+        updates: Partial<Omit<PersonalStudyNote, 'id' | 'userId' | 'createdAt'>>,
+        userId?: string
+      ): Promise<PersonalStudyNote | null> => {
+        let updated: PersonalStudyNote | null = null;
+        this.store.mutate((st) => {
+          if (!st.personalStudyNotes) st.personalStudyNotes = [];
+          const idx = st.personalStudyNotes.findIndex((n) => n.id === id && (!userId || n.userId === userId));
+          if (idx !== -1) {
+            st.personalStudyNotes[idx] = {
+              ...st.personalStudyNotes[idx],
+              ...updates,
+              id,
+              userId: st.personalStudyNotes[idx].userId,
+              updatedAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.personalStudyNotes[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      deleteNote: async (id: string, userId: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.personalStudyNotes) return;
+          const prev = st.personalStudyNotes.length;
+          st.personalStudyNotes = st.personalStudyNotes.filter((n) => !(n.id === id && n.userId === userId));
+          removed = st.personalStudyNotes.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      },
+      deleteAllNotes: async (userId: string, subject?: string): Promise<number> => {
+        let count = 0;
+        this.store.mutate((st) => {
+          if (!st.personalStudyNotes) return;
+          const initial = st.personalStudyNotes.length;
+          st.personalStudyNotes = st.personalStudyNotes.filter((n) => {
+            if (n.userId !== userId) return true;
+            if (subject && n.subject?.toLowerCase() !== subject.toLowerCase()) return true;
+            return false;
+          });
+          count = initial - st.personalStudyNotes.length;
+        });
+        if (count > 0) await this.store.flush();
+        return count;
+      },
+
+      getFlashcardById: async (id: string, userId?: string): Promise<PersonalFlashcard | null> => {
+        const state = this.store.getState();
+        const card = (state.personalFlashcards || []).find((c) => c.id === id && (!userId || c.userId === userId));
+        return card ? JSON.parse(JSON.stringify(card)) : null;
+      },
+      listFlashcards: async (
+        userId: string,
+        options?: { subject?: string; conceptId?: string }
+      ): Promise<PersonalFlashcard[]> => {
+        const state = this.store.getState();
+        let list = (state.personalFlashcards || []).filter((c) => c.userId === userId);
+        if (options?.subject) {
+          list = list.filter((c) => c.subject?.toLowerCase() === options.subject?.toLowerCase());
+        }
+        if (options?.conceptId) {
+          list = list.filter((c) => c.conceptId === options.conceptId);
+        }
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return list.map((c) => JSON.parse(JSON.stringify(c)));
+      },
+      createFlashcard: async (
+        card: Omit<PersonalFlashcard, 'createdAt'> & { createdAt?: string }
+      ): Promise<PersonalFlashcard> => {
+        const record: PersonalFlashcard = {
+          ...card,
+          id: card.id || `card-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          createdAt: card.createdAt || new Date().toISOString()
+        };
+        this.store.mutate((st) => {
+          if (!st.personalFlashcards) st.personalFlashcards = [];
+          st.personalFlashcards.push(JSON.parse(JSON.stringify(record)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      updateFlashcard: async (
+        id: string,
+        updates: Partial<Omit<PersonalFlashcard, 'id' | 'userId' | 'createdAt'>>,
+        userId?: string
+      ): Promise<PersonalFlashcard | null> => {
+        let updated: PersonalFlashcard | null = null;
+        this.store.mutate((st) => {
+          if (!st.personalFlashcards) st.personalFlashcards = [];
+          const idx = st.personalFlashcards.findIndex((c) => c.id === id && (!userId || c.userId === userId));
+          if (idx !== -1) {
+            st.personalFlashcards[idx] = {
+              ...st.personalFlashcards[idx],
+              ...updates,
+              id,
+              userId: st.personalFlashcards[idx].userId
+            };
+            updated = JSON.parse(JSON.stringify(st.personalFlashcards[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      deleteFlashcard: async (id: string, userId: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.personalFlashcards) return;
+          const prev = st.personalFlashcards.length;
+          st.personalFlashcards = st.personalFlashcards.filter((c) => !(c.id === id && c.userId === userId));
+          removed = st.personalFlashcards.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      },
+
+      listStudyPlans: async (userId: string): Promise<PersonalStudySessionPlan[]> => {
+        const state = this.store.getState();
+        const list = (state.personalStudyPlans || []).filter((p) => p.userId === userId);
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return list.map((p) => JSON.parse(JSON.stringify(p)));
+      },
+      createStudyPlan: async (
+        plan: Omit<PersonalStudySessionPlan, 'createdAt'> & { createdAt?: string }
+      ): Promise<PersonalStudySessionPlan> => {
+        const record: PersonalStudySessionPlan = {
+          ...plan,
+          id: plan.id || `plan-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          createdAt: plan.createdAt || new Date().toISOString()
+        };
+        this.store.mutate((st) => {
+          if (!st.personalStudyPlans) st.personalStudyPlans = [];
+          st.personalStudyPlans.push(JSON.parse(JSON.stringify(record)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      updateStudyPlan: async (
+        id: string,
+        updates: Partial<PersonalStudySessionPlan>,
+        userId?: string
+      ): Promise<PersonalStudySessionPlan | null> => {
+        let updated: PersonalStudySessionPlan | null = null;
+        this.store.mutate((st) => {
+          if (!st.personalStudyPlans) st.personalStudyPlans = [];
+          const idx = st.personalStudyPlans.findIndex((p) => p.id === id && (!userId || p.userId === userId));
+          if (idx !== -1) {
+            st.personalStudyPlans[idx] = {
+              ...st.personalStudyPlans[idx],
+              ...updates,
+              id,
+              userId: st.personalStudyPlans[idx].userId
+            };
+            updated = JSON.parse(JSON.stringify(st.personalStudyPlans[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      deleteStudyPlan: async (id: string, userId: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.personalStudyPlans) return;
+          const prev = st.personalStudyPlans.length;
+          st.personalStudyPlans = st.personalStudyPlans.filter((p) => !(p.id === id && p.userId === userId));
+          removed = st.personalStudyPlans.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      }
+    };
+  }
+
+  get activityTimeline(): IActivityTimelineRepository {
+    return {
+      getActivity: async (
+        userId: string,
+        options?: { contextId?: string; contextType?: string; limit?: number }
+      ): Promise<ActionActivityItem[]> => {
+        const state = this.store.getState();
+        let list = (state.activityTimeline || []).filter((a) => a.userId === userId);
+        if (options?.contextId) {
+          list = list.filter((a) => a.contextId === options.contextId);
+        }
+        if (options?.contextType) {
+          list = list.filter((a) => a.contextType?.toLowerCase() === options.contextType?.toLowerCase());
+        }
+        list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        if (options?.limit && options.limit > 0) {
+          list = list.slice(0, options.limit);
+        }
+        return list.map((a) => JSON.parse(JSON.stringify(a)));
+      },
+      getById: async (id: string, userId?: string): Promise<ActionActivityItem | null> => {
+        const state = this.store.getState();
+        const item = (state.activityTimeline || []).find((a) => a.id === id && (!userId || a.userId === userId));
+        return item ? JSON.parse(JSON.stringify(item)) : null;
+      },
+      recordActivity: async (
+        item: Omit<ActionActivityItem, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
+      ): Promise<ActionActivityItem> => {
+        const record: ActionActivityItem = {
+          ...item,
+          id: item.id || `act-item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          timestamp: item.timestamp || new Date().toISOString()
+        };
+        this.store.mutate((st) => {
+          if (!st.activityTimeline) st.activityTimeline = [];
+          st.activityTimeline.unshift(JSON.parse(JSON.stringify(record)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      updateActivity: async (
+        id: string,
+        updates: Partial<ActionActivityItem>,
+        userId?: string
+      ): Promise<ActionActivityItem | null> => {
+        let updated: ActionActivityItem | null = null;
+        this.store.mutate((st) => {
+          if (!st.activityTimeline) st.activityTimeline = [];
+          const idx = st.activityTimeline.findIndex((a) => a.id === id && (!userId || a.userId === userId));
+          if (idx !== -1) {
+            st.activityTimeline[idx] = {
+              ...st.activityTimeline[idx],
+              ...updates,
+              id,
+              userId: st.activityTimeline[idx].userId
+            };
+            updated = JSON.parse(JSON.stringify(st.activityTimeline[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      deleteActivity: async (id: string, userId: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.activityTimeline) return;
+          const prev = st.activityTimeline.length;
+          st.activityTimeline = st.activityTimeline.filter((a) => !(a.id === id && a.userId === userId));
+          removed = st.activityTimeline.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      }
+    };
+  }
+
+  get diagnosticSessions(): IDiagnosticSessionRepository {
+    return {
+      getSessionById: async (sessionId: string, userId?: string): Promise<DiagnosticSessionRecord | null> => {
+        const state = this.store.getState();
+        const s = (state.diagnosticSessions || []).find(
+          (item) => item.sessionId === sessionId && (!userId || item.userId === userId)
+        );
+        return s ? JSON.parse(JSON.stringify(s)) : null;
+      },
+      listSessionsForUser: async (
+        userId: string,
+        options?: { conceptName?: string; completed?: boolean; limit?: number }
+      ): Promise<DiagnosticSessionRecord[]> => {
+        const state = this.store.getState();
+        let list = (state.diagnosticSessions || []).filter((s) => s.userId === userId);
+        if (options?.conceptName) {
+          list = list.filter((s) => s.conceptName.toLowerCase() === options.conceptName?.toLowerCase());
+        }
+        if (options?.completed !== undefined) {
+          list = list.filter((s) => s.completed === options.completed);
+        }
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        if (options?.limit && options.limit > 0) {
+          list = list.slice(0, options.limit);
+        }
+        return list.map((s) => JSON.parse(JSON.stringify(s)));
+      },
+      createSession: async (session: DiagnosticSessionRecord): Promise<DiagnosticSessionRecord> => {
+        const record = JSON.parse(JSON.stringify(session));
+        this.store.mutate((st) => {
+          if (!st.diagnosticSessions) st.diagnosticSessions = [];
+          const idx = st.diagnosticSessions.findIndex((s) => s.sessionId === session.sessionId);
+          if (idx !== -1) {
+            st.diagnosticSessions[idx] = record;
+          } else {
+            st.diagnosticSessions.push(record);
+          }
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      updateSession: async (
+        sessionId: string,
+        updates: Partial<DiagnosticSessionRecord>,
+        userId?: string
+      ): Promise<DiagnosticSessionRecord | null> => {
+        let updated: DiagnosticSessionRecord | null = null;
+        this.store.mutate((st) => {
+          if (!st.diagnosticSessions) st.diagnosticSessions = [];
+          const idx = st.diagnosticSessions.findIndex(
+            (s) => s.sessionId === sessionId && (!userId || s.userId === userId)
+          );
+          if (idx !== -1) {
+            st.diagnosticSessions[idx] = {
+              ...st.diagnosticSessions[idx],
+              ...updates,
+              sessionId,
+              userId: st.diagnosticSessions[idx].userId,
+              updatedAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.diagnosticSessions[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      recordCheckpointEvaluation: async (
+        sessionId: string,
+        checkpoint: CheckpointEvaluationResult,
+        userId?: string
+      ): Promise<DiagnosticSessionRecord | null> => {
+        let updated: DiagnosticSessionRecord | null = null;
+        this.store.mutate((st) => {
+          if (!st.diagnosticSessions) st.diagnosticSessions = [];
+          const idx = st.diagnosticSessions.findIndex(
+            (s) => s.sessionId === sessionId && (!userId || s.userId === userId)
+          );
+          if (idx !== -1) {
+            const sess = st.diagnosticSessions[idx];
+            if (!sess.evaluatedCheckpoints) sess.evaluatedCheckpoints = {};
+            sess.evaluatedCheckpoints[checkpoint.questionId] = JSON.parse(JSON.stringify(checkpoint));
+            sess.updatedAt = new Date().toISOString();
+
+            const totalQuestions = sess.questions.length;
+            const evaluatedCount = Object.keys(sess.evaluatedCheckpoints).length;
+            if (totalQuestions > 0 && evaluatedCount >= totalQuestions) {
+              sess.completed = true;
+              sess.status = 'completed';
+              sess.completedAt = new Date().toISOString();
+            }
+            updated = JSON.parse(JSON.stringify(sess));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      deleteSession: async (sessionId: string, userId?: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.diagnosticSessions) return;
+          const prev = st.diagnosticSessions.length;
+          st.diagnosticSessions = st.diagnosticSessions.filter(
+            (s) => !(s.sessionId === sessionId && (!userId || s.userId === userId))
+          );
+          removed = st.diagnosticSessions.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      }
+    };
+  }
+
+  get knowledgeAssets(): IKnowledgeAssetRepository {
+    return {
+      getById: async (
+        id: string,
+        callerContext?: { userId?: string; institutionId?: string; workspaceId?: string }
+      ): Promise<KnowledgeAsset | null> => {
+        const state = this.store.getState();
+        const asset = (state.knowledgeAssets || []).find((a) => a.id === id);
+        if (!asset) return null;
+        if (callerContext) {
+          const isOwner = callerContext.userId && asset.ownerId === callerContext.userId;
+          const isInst = callerContext.institutionId && asset.institutionId === callerContext.institutionId;
+          const isWs = callerContext.workspaceId && asset.workspaceId === callerContext.workspaceId;
+          const isReusable = asset.reusable;
+          if (!isOwner && !isInst && !isWs && !isReusable) {
+            return null;
+          }
+        }
+        return JSON.parse(JSON.stringify(asset));
+      },
+      list: async (filter?: AssetSearchCriteria): Promise<KnowledgeAsset[]> => {
+        const state = this.store.getState();
+        let list = [...(state.knowledgeAssets || [])];
+        if (filter?.userId) {
+          list = list.filter((a) => a.ownerId === filter.userId);
+        }
+        if (filter?.contextId) {
+          list = list.filter((a) => a.contextId === filter.contextId);
+        }
+        if (filter?.institutionId) {
+          list = list.filter((a) => a.institutionId === filter.institutionId);
+        }
+        if (filter?.assetType) {
+          list = list.filter((a) => a.assetType === filter.assetType);
+        }
+        if (filter?.subject) {
+          list = list.filter((a) => a.subject.toLowerCase() === filter.subject?.toLowerCase());
+        }
+        if (filter?.topic) {
+          list = list.filter((a) => a.topic.toLowerCase() === filter.topic?.toLowerCase());
+        }
+        if (filter?.difficulty) {
+          list = list.filter((a) => a.difficulty.toLowerCase() === filter.difficulty?.toLowerCase());
+        }
+        return list.map((a) => JSON.parse(JSON.stringify(a)));
+      },
+      create: async (asset: KnowledgeAsset): Promise<KnowledgeAsset> => {
+        const now = new Date().toISOString();
+        const record: KnowledgeAsset = {
+          ...asset,
+          id: asset.id || `ka-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          createdAt: asset.createdAt || now,
+          updatedAt: asset.updatedAt || now
+        };
+        this.store.mutate((st) => {
+          if (!st.knowledgeAssets) st.knowledgeAssets = [];
+          st.knowledgeAssets.push(JSON.parse(JSON.stringify(record)));
+        });
+        await this.store.flush();
+        return JSON.parse(JSON.stringify(record));
+      },
+      update: async (
+        id: string,
+        updates: Partial<Omit<KnowledgeAsset, 'id' | 'createdAt'>>,
+        callerUserId?: string
+      ): Promise<KnowledgeAsset | null> => {
+        let updated: KnowledgeAsset | null = null;
+        this.store.mutate((st) => {
+          if (!st.knowledgeAssets) st.knowledgeAssets = [];
+          const idx = st.knowledgeAssets.findIndex(
+            (a) => a.id === id && (!callerUserId || a.ownerId === callerUserId)
+          );
+          if (idx !== -1) {
+            st.knowledgeAssets[idx] = {
+              ...st.knowledgeAssets[idx],
+              ...updates,
+              id,
+              ownerId: st.knowledgeAssets[idx].ownerId,
+              updatedAt: new Date().toISOString()
+            };
+            updated = JSON.parse(JSON.stringify(st.knowledgeAssets[idx]));
+          }
+        });
+        if (updated) await this.store.flush();
+        return updated;
+      },
+      delete: async (id: string, callerUserId?: string): Promise<boolean> => {
+        let removed = false;
+        this.store.mutate((st) => {
+          if (!st.knowledgeAssets) return;
+          const prev = st.knowledgeAssets.length;
+          st.knowledgeAssets = st.knowledgeAssets.filter(
+            (a) => !(a.id === id && (!callerUserId || a.ownerId === callerUserId))
+          );
+          removed = st.knowledgeAssets.length < prev;
+        });
+        if (removed) await this.store.flush();
+        return removed;
+      }
+    };
+  }
+
+  get learnerExposures(): ILearnerExposureRepository {
+    return {
+      getExposure: async (
+        userId: string,
+        contextId: string,
+        questionId: string
+      ): Promise<LearnerQuestionExposure | null> => {
+        const state = this.store.getState();
+        const exp = (state.learnerExposures || []).find(
+          (e) => e.userId === userId && e.contextId === contextId && e.questionId === questionId
+        );
+        return exp ? JSON.parse(JSON.stringify(exp)) : null;
+      },
+      listExposuresForLearner: async (
+        userId: string,
+        options?: { contextId?: string; subject?: string; topic?: string; status?: QuestionExposureStatus }
+      ): Promise<LearnerQuestionExposure[]> => {
+        const state = this.store.getState();
+        let list = (state.learnerExposures || []).filter((e) => e.userId === userId);
+        if (options?.contextId) {
+          list = list.filter((e) => e.contextId === options.contextId);
+        }
+        if (options?.subject) {
+          list = list.filter((e) => e.subject.toLowerCase() === options.subject?.toLowerCase());
+        }
+        if (options?.topic) {
+          list = list.filter((e) => e.topic.toLowerCase() === options.topic?.toLowerCase());
+        }
+        if (options?.status) {
+          list = list.filter((e) => e.status === options.status);
+        }
+        return list.map((e) => JSON.parse(JSON.stringify(e)));
+      },
+      recordExposures: async (params: {
+        userId: string;
+        contextId?: string;
+        exposures: LearnerQuestionExposure[];
+      }): Promise<void> => {
+        const { userId, contextId = 'ctx-default', exposures } = params;
+        const now = new Date().toISOString();
+        this.store.mutate((st) => {
+          if (!st.learnerExposures) st.learnerExposures = [];
+          for (const exp of exposures) {
+            const idx = st.learnerExposures.findIndex(
+              (e) => e.userId === userId && e.contextId === (exp.contextId || contextId) && e.questionId === exp.questionId
+            );
+            if (idx !== -1) {
+              st.learnerExposures[idx].lastSeenAt = now;
+              if (exp.status === 'COMPLETED' && st.learnerExposures[idx].status !== 'MASTERED') {
+                st.learnerExposures[idx].status = 'COMPLETED';
+              } else if (exp.status === 'ATTEMPTED' && st.learnerExposures[idx].status === 'SEEN') {
+                st.learnerExposures[idx].status = 'ATTEMPTED';
+              }
+            } else {
+              st.learnerExposures.push(JSON.parse(JSON.stringify(exp)));
+            }
+          }
+        });
+        await this.store.flush();
+      },
+      recordAttempt: async (params: {
+        userId: string;
+        contextId?: string;
+        questionId: string;
+        exposure: LearnerQuestionExposure;
+      }): Promise<LearnerQuestionExposure> => {
+        const { userId, contextId = 'ctx-default', questionId, exposure } = params;
+        let result: LearnerQuestionExposure = JSON.parse(JSON.stringify(exposure));
+        this.store.mutate((st) => {
+          if (!st.learnerExposures) st.learnerExposures = [];
+          const idx = st.learnerExposures.findIndex(
+            (e) => e.userId === userId && e.contextId === contextId && e.questionId === questionId
+          );
+          if (idx !== -1) {
+            st.learnerExposures[idx] = JSON.parse(JSON.stringify(exposure));
+          } else {
+            st.learnerExposures.push(JSON.parse(JSON.stringify(exposure)));
+          }
+          result = JSON.parse(JSON.stringify(exposure));
+        });
+        await this.store.flush();
+        return result;
+      },
+      getExposureSummary: async (
+        userId: string,
+        contextId?: string,
+        subject?: string
+      ): Promise<LearnerExposureSummary> => {
+        const state = this.store.getState();
+        let list = (state.learnerExposures || []).filter((e) => e.userId === userId);
+        if (contextId) list = list.filter((e) => e.contextId === contextId);
+        if (subject) list = list.filter((e) => e.subject.toLowerCase() === subject.toLowerCase());
+
+        const seenIds = new Set<string>();
+        const completedIds = new Set<string>();
+        const incorrectIds = new Set<string>();
+        const masteredIds = new Set<string>();
+        const weaknesses = new Set<string>();
+
+        let totalSeen = 0;
+        let totalAttempted = 0;
+        let totalCompleted = 0;
+        let totalMastered = 0;
+
+        for (const e of list) {
+          seenIds.add(e.questionId);
+          totalSeen++;
+          if (e.attemptCount > 0) totalAttempted++;
+          if (e.status === 'COMPLETED' || e.status === 'MASTERED') {
+            completedIds.add(e.questionId);
+            totalCompleted++;
+          }
+          if (e.status === 'MASTERED') {
+            masteredIds.add(e.questionId);
+            totalMastered++;
+          }
+          if (e.latestResult === 'INCORRECT' || e.incorrectCount > 0) {
+            incorrectIds.add(e.questionId);
+          }
+          if (e.weaknessFlag && e.concept) {
+            weaknesses.add(e.concept);
+          }
+        }
+
+        return {
+          userId,
+          contextId,
+          subject,
+          totalSeen,
+          totalAttempted,
+          totalCompleted,
+          totalMastered,
+          seenQuestionIds: Array.from(seenIds),
+          completedQuestionIds: Array.from(completedIds),
+          incorrectQuestionIds: Array.from(incorrectIds),
+          masteredQuestionIds: Array.from(masteredIds),
+          weaknessConcepts: Array.from(weaknesses)
+        };
+      }
+    };
+  }
+
   get storagePath(): string {
     return this.store.getStoragePath();
   }
@@ -1856,6 +3359,33 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
       });
       await this.store.flush();
     }
+    // Seed institution invitations if not present in existing database
+    if (!state.institutionInvitations || state.institutionInvitations.length === 0) {
+      this.store.mutate((st) => {
+        st.institutionInvitations = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.institutionInvitations || []));
+      });
+      await this.store.flush();
+    }
+    // Seed institutions if not present in existing database
+    if (!state.institutions || state.institutions.length === 0) {
+      this.store.mutate((st) => {
+        st.institutions = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.institutions || []));
+        st.institutionMemberships = JSON.parse(JSON.stringify(INITIAL_DATABASE_SCHEMA.institutionMemberships || []));
+      });
+      await this.store.flush();
+    }
+  }
+
+  getFileStore(): JsonFileStore {
+    return this.store;
+  }
+
+  getState(): DatabaseSchema {
+    return this.store.getState();
+  }
+
+  mutate<T>(fn: (state: DatabaseSchema) => T): T {
+    return this.store.mutate(fn);
   }
 
   async flush(): Promise<void> {
@@ -1864,9 +3394,69 @@ export class DiskJarvisDataRepository implements IJarvisDataRepository {
 
   async close(): Promise<void> {
     await this.store.flush();
+    this.store.close();
   }
 
   async reset(): Promise<void> {
     await this.store.reset();
+  }
+
+  /**
+   * Stage 6.4.4: Executes a coordinated unit of work across one or more sub-repositories.
+   * Guarantees bounded process-local atomicity, isolated snapshot rollback on failure,
+   * and single-operation disk flush on successful commit.
+   */
+  async runTransaction<T>(
+    work: (txRepo: IJarvisDataRepository) => Promise<T>,
+    options?: TransactionOptions
+  ): Promise<T> {
+    const parentTx = transactionStorage.getStore();
+    if (parentTx && parentTx.repo === this) {
+      // Nested transaction within the same repository instance: create a savepoint
+      this.store.beginTransaction();
+      try {
+        const result = await work(this);
+        await this.store.commitTransaction();
+        return result;
+      } catch (err) {
+        this.store.rollbackTransaction();
+        throw err;
+      }
+    }
+
+    // Root transaction: acquire process-local lock
+    const timeoutMs = options?.timeoutMs ?? 10000;
+    const release = await this.mutex.acquire(timeoutMs);
+    this.store.beginTransaction();
+    let timer: NodeJS.Timeout | null = null;
+    try {
+      const context: TransactionContext = {
+        id: `tx-disk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        repo: this,
+        name: options?.name,
+        userId: options?.userId,
+        startedAt: new Date().toISOString(),
+        depth: 1
+      };
+
+      const workPromise = transactionStorage.run(context, () => work(this));
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new TransactionTimeoutError(`Transaction execution timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      });
+
+      const result = await Promise.race([workPromise, timeoutPromise]);
+      if (timer) clearTimeout(timer);
+
+      await this.store.commitTransaction();
+      return result;
+    } catch (err) {
+      this.store.rollbackTransaction();
+      throw err;
+    } finally {
+      if (timer) clearTimeout(timer);
+      release();
+    }
   }
 }

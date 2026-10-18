@@ -1,6 +1,20 @@
-import express, { type Request, type Response } from 'express';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import express, { type Request, type Response } from "express";
+import type { Server } from "node:http";
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+
+// Load local .env in non-production if present and not already loaded by CLI --env-file
+if (process.env.NODE_ENV !== "production" && typeof (process as any).loadEnvFile === "function") {
+  try {
+    const defaultEnvPath = path.resolve(process.cwd(), ".env");
+    if (fs.existsSync(defaultEnvPath)) {
+      (process as any).loadEnvFile(defaultEnvPath);
+    }
+  } catch {
+    // Ignore if inaccessible or already loaded
+  }
+}
 import type { HealthResponse } from './src/types/api.ts';
 import { authenticatedChatRoute } from './server/routes/chat.ts';
 import { providerManager } from './server/providers/providerManager.ts';
@@ -17,9 +31,9 @@ import { quizRouter } from './server/sectors/education/quizRoutes.ts';
 import { storageManager } from './server/storage/index.ts';
 import { jarvisData } from './server/data/index.ts';
 import { personalRouter } from './server/personal/personalRoutes.ts';
-import { authRouter } from './server/auth/index.ts';
+import { authRouter, resolveAuthSecret, validateProductionEmailConfig } from './server/auth/index.ts';
 import { correlationMiddleware } from './server/logging/logger.ts';
-import { corsAndSecurityHeaders } from './server/security/corsAndHeaders.ts';
+import { corsAndSecurityHeaders, validateCorsConfiguration } from './server/security/corsAndHeaders.ts';
 import { getProductionDiagnostics } from './server/diagnostics/productionHealth.ts';
 import { productionErrorHandler } from './server/middleware/errorHandler.ts';
 
@@ -32,6 +46,13 @@ function getArg(flag: string): string | undefined {
 }
 
 export const app = express();
+
+// 0. Production Secret Pre-flight Verification (Fail closed if secret missing or insecure)
+if (process.env.NODE_ENV === "production") {
+  resolveAuthSecret();
+}
+validateCorsConfiguration();
+
 // AI Studio dev environment requires port 3000. In production containers (e.g. Cloud Run), allow process.env.PORT.
 const PORT = parseInt(
   getArg('--port') || 
@@ -108,7 +129,7 @@ app.post('/api/chat', ...authenticatedChatRoute);
 app.use(productionErrorHandler);
 
 // Frontend Vite Integration: Middleware mode in development, static bundle in production
-async function startServer() {
+export async function startServer(port: number = PORT, host: string = HOST): Promise<Server> {
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Initialize and verify core persistent storage
@@ -117,7 +138,8 @@ async function startServer() {
     await jarvisData.seed();
     console.log(`[Web Jarvis] Core persistence initialized at: ${jarvisData.storagePath || 'in-memory'}`);
   } catch (err) {
-    console.error('[Web Jarvis] Error initializing data repository:', err);
+    console.error('[Web Jarvis] Core persistence initialization failed:', err);
+    throw err;
   }
 
   if (!isProduction) {
@@ -136,8 +158,18 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, HOST, () => {
-    console.log(`[Web Jarvis] Server listening on http://${HOST}:${PORT}`);
+    // Validate production authentication secret and email configuration before opening network listener
+  if (isProduction) {
+    resolveAuthSecret();
+    validateProductionEmailConfig();
+  }
+
+  return new Promise<Server>((resolve, reject) => {
+    const server = app.listen(port, host, () => {
+      console.log(`[Web Jarvis] Server listening on http://localhost:${port} (bound to ${host})`);
+      resolve(server);
+    });
+    server.once("error", reject);
   });
 }
 

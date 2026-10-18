@@ -166,14 +166,11 @@ educationRouter.post('/classes/:id/units/:unitId/lessons', (req: Request, res: R
 // POST /api/education/classes/:id/units/:unitId/lessons/:lessonId/complete - Toggle lesson completion
 educationRouter.post('/classes/:id/units/:unitId/lessons/:lessonId/complete', async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers['authorization'];
-    if (authHeader) {
-      const user = await authenticateRequest(req, jarvisData);
-      if (user.role !== 'student' && user.role !== 'admin' && user.role !== 'commander') {
-        return res.status(403).json({
-          error: { code: 'FORBIDDEN', message: `User '${user.id}' with role '${user.role}' cannot modify student lesson completion.` }
-        });
-      }
+    const user = await authenticateRequest(req, jarvisData);
+    if (user.role !== 'student' && user.role !== 'admin' && user.role !== 'commander') {
+      return res.status(403).json({
+        error: { code: 'FORBIDDEN', message: `User '${user.id}' with role '${user.role}' cannot modify student lesson completion.` }
+      });
     }
     const { isCompleted } = req.body;
     const classId = req.params.id as string;
@@ -232,16 +229,21 @@ educationRouter.get('/submissions', (req: Request, res: Response) => {
 // POST /api/education/submissions - Student submits work
 educationRouter.post('/submissions', async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers['authorization'];
-    if (authHeader) {
-      const user = await authenticateRequest(req, jarvisData);
-      if (user.role !== 'student' && user.role !== 'admin' && user.role !== 'commander') {
-        return res.status(403).json({
-          error: { code: 'FORBIDDEN', message: `User '${user.id}' with role '${user.role}' cannot submit assignments.` }
-        });
-      }
+    const user = await authenticateRequest(req, jarvisData);
+    if (user.role !== 'student' && user.role !== 'admin' && user.role !== 'commander') {
+      return res.status(403).json({
+        error: { code: 'FORBIDDEN', message: `User '${user.id}' with role '${user.role}' cannot submit assignments.` }
+      });
     }
-    const { assignmentId, studentId, studentName, content, attachments } = req.body;
+    const { assignmentId, content, attachments } = req.body;
+    const studentId = req.body.studentId || user.id;
+    const studentName = req.body.studentName || user.displayName || user.id;
+
+    if (user.role === 'student' && req.body.studentId && req.body.studentId !== user.id) {
+      return res.status(403).json({
+        error: { code: 'FORBIDDEN', message: `Student '${user.id}' cannot submit work for '${req.body.studentId}'.` }
+      });
+    }
 
     if (!assignmentId || !studentId || !content) {
       return res.status(400).json({

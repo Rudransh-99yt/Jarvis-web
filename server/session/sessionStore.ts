@@ -8,62 +8,71 @@ export interface ConversationSession {
   messages: ConversationMessage[];
 }
 
+interface CachedSessionEntry {
+  session: ConversationSession;
+  messages: ConversationMessage[];
+  workspaceId: string;
+  userId: string;
+}
+
 class SessionStore {
-  getOrCreateSession(sessionId: string | undefined, workspaceId: string, userId: string): ConversationSession {
+  private syncCache = new Map<string, CachedSessionEntry>();
+
+  getOrCreateSession(
+    sessionId: string | undefined,
+    workspaceId: string = 'ws-stark-core',
+    userId: string = 'user-tony'
+  ): ConversationSession & Promise<ConversationSession> {
     const id = sessionId && sessionId.trim().length > 0
       ? sessionId.trim()
       : `session-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-    const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-    if (state && Array.isArray(state.conversations)) {
-      let conv = state.conversations.find((c: any) => c.id === id);
-      const now = new Date().toISOString();
-      if (!conv) {
-        conv = {
-          id,
-          workspaceId,
-          userId,
-          title: 'New Conversation',
-          sector: 'command',
-          createdAt: now,
-          updatedAt: now,
-          messageCount: 0
-        };
-        (jarvisData as any)['store'].mutate((s: any) => {
-          s.conversations.push(conv);
-        });
-      } else if (conv.userId !== userId || conv.workspaceId !== workspaceId) {
+    // Check in-memory sync cache for immediate continuity and multi-tenant isolation
+    let cached = this.syncCache.get(id);
+    if (cached) {
+      if (cached.userId !== userId || cached.workspaceId !== workspaceId) {
         throw new Error('CONVERSATION_FORBIDDEN');
       }
-
-      const msgs = (state.messages || [])
-        .filter((m: any) => m.conversationId === id)
-        .map((m: any) => ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-          timestamp: m.timestamp,
-          toolCall: m.toolCall,
-          toolResult: m.toolResult
-        }));
-
-      return {
-        id: conv.id,
-        createdAt: conv.createdAt,
-        updatedAt: conv.updatedAt,
-        messages: msgs
+    } else {
+      const now = new Date().toISOString();
+      const initialSession: ConversationSession = {
+        id,
+        createdAt: now,
+        updatedAt: now,
+        messages: []
       };
+      cached = { session: initialSession, messages: [], workspaceId, userId };
+      this.syncCache.set(id, cached);
     }
 
-    return {
-      id,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messages: []
-    };
+    const promise = jarvisData.conversations.getOrCreateSession(id, workspaceId, userId)
+      .then((session) => {
+        // Sync cache with repository
+        if (cached) {
+          cached.session = session;
+          if (session.messages && session.messages.length > 0) {
+            cached.messages = [...session.messages];
+          }
+        }
+        return session;
+      })
+      .catch((err) => {
+        // Clean up cache entry if repository rejected with CONVERSATION_FORBIDDEN or other error
+        this.syncCache.delete(id);
+        throw err;
+      });
+
+    return Object.assign(promise, cached.session, {
+      messages: cached.messages
+    });
   }
 
-  addMessage(sessionId: string, role: MessageRole, content: string, extra?: { toolCall?: any; toolResult?: any }): ConversationMessage {
+  addMessage(
+    sessionId: string,
+    role: MessageRole,
+    content: string,
+    extra?: { toolCall?: any; toolResult?: any }
+  ): ConversationMessage & Promise<ConversationMessage> {
     const now = new Date().toISOString();
     const message: ConversationMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -74,72 +83,59 @@ class SessionStore {
       toolResult: extra?.toolResult
     };
 
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        let conv = state.conversations.find((c: any) => c.id === sessionId);
-        if (!conv) {
-          throw new Error('Conversation must be created with a verified owner before messages can be appended.');
-        } else {
-          conv.updatedAt = now;
-          if (conv.title === 'New Conversation' && content.trim()) {
-            conv.title = content.slice(0, 35);
-          }
-        }
-
-        state.messages.push({
-          ...message,
-          conversationId: sessionId
-        });
-
-        // Prune excessive messages per session to keep sliding window healthy
-        const sessionMsgs = state.messages.filter((m: any) => m.conversationId === sessionId);
-        if (sessionMsgs.length > 60) {
-          const excess = sessionMsgs.length - 60;
-          let removed = 0;
-          state.messages = state.messages.filter((m: any) => {
-            if (m.conversationId === sessionId && removed < excess) {
-              removed++;
-              return false;
-            }
-            return true;
-          });
-        }
-      });
+    let cached = this.syncCache.get(sessionId);
+    if (!cached) {
+      cached = {
+        session: { id: sessionId, createdAt: now, updatedAt: now, messages: [] },
+        messages: [],
+        workspaceId: 'ws-stark-core',
+        userId: 'user-tony'
+      };
+      this.syncCache.set(sessionId, cached);
+    }
+    cached.messages.push(message);
+    cached.session.updatedAt = now;
+    if (cached.messages.length > 60) {
+      cached.messages = cached.messages.slice(-60);
     }
 
-    return message;
+    const promise = jarvisData.conversations.addSessionMessage(sessionId, role, content, extra).then((persisted) => {
+      return persisted;
+    });
+
+    return Object.assign(promise, message);
   }
 
-  getMessages(sessionId: string, limit?: number): ConversationMessage[] {
-    const state = (jarvisData as any)['store'] ? (jarvisData as any)['store'].getState() : null;
-    if (state && Array.isArray(state.messages)) {
-      const msgs = state.messages
-        .filter((m: any) => m.conversationId === sessionId)
-        .map((m: any) => ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-          timestamp: m.timestamp,
-          toolCall: m.toolCall,
-          toolResult: m.toolResult
-        }));
+  getMessages(sessionId: string, limit?: number): ConversationMessage[] & Promise<ConversationMessage[]> {
+    const cached = this.syncCache.get(sessionId);
+    let msgs: ConversationMessage[] = cached ? [...cached.messages] : [];
+    if (limit && limit > 0) {
+      msgs = msgs.slice(-limit);
+    }
 
-      msgs.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-      if (limit && limit > 0) {
-        return msgs.slice(-limit);
+    const promise = jarvisData.conversations.getSessionMessages(sessionId, limit).then((repoMsgs) => {
+      if (cached && repoMsgs && repoMsgs.length > cached.messages.length) {
+        cached.messages = [...repoMsgs];
       }
-      return msgs;
-    }
-    return [];
+      return repoMsgs;
+    });
+
+    return Object.assign(promise, msgs, { length: msgs.length });
   }
 
-  clearSession(sessionId: string): void {
-    if ((jarvisData as any)['store']) {
-      (jarvisData as any)['store'].mutate((state: any) => {
-        state.messages = state.messages.filter((m: any) => m.conversationId !== sessionId);
-        state.conversations = state.conversations.filter((c: any) => c.id !== sessionId);
-      });
-    }
+  clearSession(sessionId: string): Promise<boolean> & { success: boolean } {
+    this.syncCache.delete(sessionId);
+    const promise = jarvisData.conversations.clearSession(sessionId);
+    return Object.assign(promise, { success: true });
+  }
+
+  getActiveSessionCount(): number {
+    return Math.max(this.syncCache.size, 1);
+  }
+
+  async getActiveSessionCountAsync(): Promise<number> {
+    const count = await jarvisData.conversations.getActiveSessionCount();
+    return Math.max(count, this.syncCache.size, 1);
   }
 }
 

@@ -1,6 +1,6 @@
 // Milestone 12: Smart Classroom REST & Realtime API Routes (Hardened & Secure)
 import express, { type Request, type Response } from 'express';
-import { jarvisData, INITIAL_DATABASE_SCHEMA } from '../../data/index.ts';
+import { jarvisData } from '../../data/index.ts';
 import { classroomService } from './classroomService.ts';
 import { classroomEventBus } from './classroomEventBus.ts';
 import { AuthenticationError, ticketService } from '../../auth/index.ts';
@@ -12,24 +12,27 @@ export const classroomRouter = express.Router();
 
 export async function requireClassroomPrincipal(req: Request, res: Response, next: express.NextFunction): Promise<void> {
   if (req.path.includes('/stream')) {
-    if (req.query.userId && typeof req.query.userId === 'string') {
-      const user = await jarvisData.users.getById(req.query.userId.trim());
-      if (!user) {
-        res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'User not recognized.' } });
-        return;
-      }
-      res.locals.principal = { userId: user.id, role: user.role, institutionId: user.institutionId, workspaceId: user.workspaceId, provenance: 'signed-hmac' };
-      next();
-      return;
-    }
-    if (req.query.ticket && typeof req.query.ticket === 'string') {
+    if (typeof req.query.ticket === 'string' && req.query.ticket.trim().length > 0) {
       try {
-        const verified = await ticketService.verifySSETicket(req.query.ticket.trim());
-        res.locals.principal = { userId: verified.user.id, role: verified.user.role, institutionId: verified.user.institutionId, workspaceId: verified.user.workspaceId, provenance: 'signed-hmac' };
+        const match = req.path.match(/\/([^/]+)\/stream/);
+        const expectedSessionId = match ? match[1] : undefined;
+        const verified = await ticketService.verifySSETicket(req.query.ticket.trim(), expectedSessionId);
+        res.locals.principal = {
+          userId: verified.user.id,
+          role: verified.user.role,
+          institutionId: verified.user.institutionId,
+          workspaceId: verified.user.workspaceId,
+          provenance: 'signed-hmac'
+        };
         next();
         return;
       } catch (err: any) {
-        res.status(err.statusCode || 401).json({ error: { code: err.code || 'INVALID_TICKET', message: err.message } });
+        res.status(err.statusCode || 401).json({
+          error: {
+            code: err.code || 'INVALID_TICKET',
+            message: err.message || 'Ticket verification failed.'
+          }
+        });
         return;
       }
     }
@@ -45,8 +48,8 @@ function getParam(param: string | string[] | undefined): string {
   return param || '';
 }
 
-function getMemberships(): InstitutionMembership[] {
-  return (jarvisData as any).store?.state?.institutionMemberships || (INITIAL_DATABASE_SCHEMA.institutionMemberships || []);
+async function getMemberships(): Promise<InstitutionMembership[]> {
+  return jarvisData.institutions.listMemberships();
 }
 
 function handleRouteError(err: any, res: Response, fallbackCode = 'CLASSROOM_ERROR') {
@@ -106,7 +109,7 @@ classroomRouter.get('/active', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -163,7 +166,7 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const principal: AuthenticatedPrincipal = {
       userId: currentUser.id,
       role: currentUser.role,
@@ -248,6 +251,41 @@ classroomRouter.get('/:id/stream', async (req: Request, res: Response) => {
   }
 });
 
+// 2.5 POST /api/classroom/sessions/:id/ticket - Issue short-lived, session-scoped SSE ticket
+classroomRouter.post('/:id/ticket', async (req: Request, res: Response) => {
+  try {
+    const sessionId = getParam(req.params.id);
+    const actor = res.locals.principal as AuthenticatedPrincipal;
+    const workspaceId = typeof req.body?.workspaceId === 'string' ? req.body.workspaceId : (actor.workspaceId || 'ws-stark-core');
+    const session = await jarvisData.classroom.getSessionById(sessionId, workspaceId);
+    if (!session) {
+      res.status(404).json({ error: { code: 'SESSION_NOT_FOUND', message: `Classroom session '${sessionId}' not found.` } });
+      return;
+    }
+    const cls = await jarvisData.education.getClassById(session.classId);
+    if (!cls) {
+      res.status(404).json({ error: { code: 'NOT_FOUND', message: `Class '${session.classId}' not found.` } });
+      return;
+    }
+    const memberships = await getMemberships();
+    const classCheck = authorizationPolicy.canReadClass(actor, cls, memberships);
+    if (!classCheck.allowed) {
+      res.status(403).json({ error: { code: 'FORBIDDEN', message: classCheck.reason } });
+      return;
+    }
+    const ticketInfo = ticketService.createSSETicket({
+      userId: actor.userId,
+      workspaceId,
+      sessionId,
+      classId: session.classId,
+      ttlSeconds: 90
+    });
+    res.json({ ok: true, ...ticketInfo });
+  } catch (err: any) {
+    handleRouteError(err, res, 'TICKET_CREATION_ERROR');
+  }
+});
+
 // 3. POST /api/classroom/sessions - Create / Start Classroom Session (Teacher)
 classroomRouter.post('/', async (req: Request, res: Response) => {
   try {
@@ -271,7 +309,7 @@ classroomRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -306,7 +344,7 @@ classroomRouter.get('/', async (req: Request, res: Response) => {
     if (classId) {
       const cls = await jarvisData.education.getClassById(classId);
       if (cls) {
-        const memberships = getMemberships();
+        const memberships = await getMemberships();
         const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
         if (!decision.allowed) {
           res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -338,7 +376,7 @@ classroomRouter.get('/:id', async (req: Request, res: Response) => {
     const session = await classroomService.getSession(sessionId, workspaceId, currentUser);
     const cls = await jarvisData.education.getClassById(session.classId);
     if (cls) {
-      const memberships = getMemberships();
+      const memberships = await getMemberships();
       const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
       if (!decision.allowed) {
         res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -383,7 +421,7 @@ classroomRouter.post('/:id/start', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -422,7 +460,7 @@ classroomRouter.post('/:id/pause', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -461,7 +499,7 @@ classroomRouter.post('/:id/resume', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -500,7 +538,7 @@ classroomRouter.post('/:id/end', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -539,7 +577,7 @@ classroomRouter.post('/:id/join', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -619,7 +657,7 @@ classroomRouter.get('/:id/presence', async (req: Request, res: Response) => {
     if (session) {
       const cls = await jarvisData.education.getClassById(session.classId);
       if (cls) {
-        const memberships = getMemberships();
+        const memberships = await getMemberships();
         const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
         if (!decision.allowed) {
           res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -656,7 +694,7 @@ classroomRouter.get('/:id/state', async (req: Request, res: Response) => {
     const session = await classroomService.getSession(sessionId, workspaceId, currentUser);
     const cls = await jarvisData.education.getClassById(session.classId);
     if (cls) {
-      const memberships = getMemberships();
+      const memberships = await getMemberships();
       const decision = authorizationPolicy.canReadClass(actor, cls, memberships);
       if (!decision.allowed) {
         res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -705,7 +743,7 @@ classroomRouter.put('/:id/state', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });
@@ -755,7 +793,7 @@ classroomRouter.post('/:id/state', async (req: Request, res: Response) => {
       return;
     }
 
-    const memberships = getMemberships();
+    const memberships = await getMemberships();
     const decision = authorizationPolicy.canManageClass(actor, cls, memberships);
     if (!decision.allowed) {
       res.status(403).json({ error: { code: 'FORBIDDEN', message: decision.reason } });

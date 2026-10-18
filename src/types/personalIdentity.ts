@@ -149,7 +149,15 @@ export interface PersonalKnowledgeState {
 export interface NextBestAction {
   id: string;
   title: string;
-  type: 'lesson_practice' | 'review_prerequisite' | 'assignment_due' | 'concept_reinforce' | 'quiz_prep';
+  type:
+    | 'lesson_practice'
+    | 'review_prerequisite'
+    | 'assignment_due'
+    | 'concept_reinforce'
+    | 'quiz_prep'
+    | 'goal_definition'
+    | 'research_synthesis'
+    | 'study_plan';
   estimatedMinutes: number;
   priority: 'high' | 'medium' | 'low';
   targetContext: string;
@@ -160,7 +168,21 @@ export interface NextBestAction {
     lessonId?: string;
     assignmentId?: string;
     concept?: string;
+    toolId?: string;
+    toolArgs?: any;
   };
+  alternativeActions?: Array<{
+    id: string;
+    title: string;
+    type: string;
+    estimatedMinutes: number;
+    rationale: string;
+    actionTarget: {
+      toolId?: string;
+      toolArgs?: any;
+      concept?: string;
+    };
+  }>;
 }
 
 /**
@@ -353,6 +375,7 @@ export interface ProgressiveOnboardingPayload {
   userId: string;
   name: string;
   preferredName?: string;
+  pathChoice?: 'personal' | 'institution';
   ageRange?: string;
   country?: string;
   primaryRole: 'student' | 'teacher' | 'researcher' | 'professional' | 'lifelong_learner';
