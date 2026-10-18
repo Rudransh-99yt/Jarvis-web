@@ -303,18 +303,8 @@ export const PublicRoutePortal: React.FC<PublicRoutePortalProps> = ({
         return;
       }
 
-      // 2. Existing account: request OTP dispatch
+      // 2. Existing account: request OTP dispatch and transition directly to OTP verification
       const res = await authClient.requestOtp(clean, 'login');
-
-      // Defense-in-depth safeguard: if backend returned anti-enumeration message
-      if (res.message && res.message.includes('If an account exists')) {
-        setLoginFeedback({
-          type: 'error',
-          text: 'No Jarvis account exists for this email yet. Please sign up first to create your account and receive a verification code.',
-          isNotFound: true
-        });
-        return;
-      }
 
       setLoginStep('otp');
       setLoginResendAvailableAt(res.resendAvailableAt || new Date(Date.now() + 60000).toISOString());

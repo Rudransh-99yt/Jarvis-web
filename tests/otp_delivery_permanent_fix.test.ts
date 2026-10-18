@@ -510,7 +510,7 @@ async function runOtpDeliveryPermanentFixTests() {
     console.log('  [PASS] 9. GmailSmtpEmailProvider accurately distinguishes accepted vs rejected SMTP recipients');
 
     // -------------------------------------------------------------------------
-    // TEST 10: Clear Account-Not-Found Login Flow & Eligibility Verification
+    // TEST 10: Clear Account-Not-Found Login Flow, Eligibility & Regression Suite
     // -------------------------------------------------------------------------
     console.log('\n--- Test 10: Clear Account-Not-Found Login Flow & Eligibility ---');
     mockProvider.reset();
@@ -538,9 +538,33 @@ async function runOtpDeliveryPermanentFixTests() {
       body: JSON.stringify({ email: knownUserEmail, intent: 'login' })
     });
     assert.equal(knownOtpReq.status, 200);
+    const knownOtpBody = await knownOtpReq.json();
+    assert.equal(knownOtpBody.success, true);
     assert.equal(mockProvider.dispatched.length, 1, 'Login OTP must be dispatched for existing account');
 
-    // 10.2 Unregistered account: eligibility confirms accountExists: false, no OTP sent
+    // Verify existing user completes verification with issued token
+    const knownCode = extractCodeFromDispatch(knownUserEmail);
+    const knownVerifyResp = await fetch(`${baseUrl}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: knownUserEmail, code: knownCode, intent: 'login' })
+    });
+    assert.equal(knownVerifyResp.status, 200);
+    const knownVerifyBody = await knownVerifyResp.json();
+    assert.ok(knownVerifyBody.token, 'Existing user login verification must issue JWT token');
+
+    // 10.2 Existing account during sign-up: duplicate registration blocked with 409 USER_EXISTS
+    const dupSignupReq = await fetch(`${baseUrl}/api/auth/otp/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: knownUserEmail, intent: 'register' })
+    });
+    assert.equal(dupSignupReq.status, 409, 'Duplicate registration attempt must reject with 409 Conflict');
+    const dupSignupBody = await dupSignupReq.json();
+    assert.equal(dupSignupBody.error?.code, 'USER_EXISTS');
+    assert.equal(dupSignupBody.error?.message, 'An account with this email address already exists.');
+
+    // 10.3 Unregistered account: eligibility confirms accountExists: false, no OTP sent
     mockProvider.reset();
     const ghostEmail = 'nonexistent.user.test@domain.org';
     const ghostEligResp = await fetch(`${baseUrl}/api/auth/otp/eligibility?email=${encodeURIComponent(ghostEmail)}&intent=login`);
@@ -548,6 +572,19 @@ async function runOtpDeliveryPermanentFixTests() {
     const ghostEligData = await ghostEligResp.json();
     assert.equal(ghostEligData.success, true);
     assert.equal(ghostEligData.accountExists, false, 'Unregistered user must have accountExists: false');
+
+    // Direct login OTP request to unknown email returns generic anti-enumeration success but dispatches ZERO emails
+    const ghostOtpReq = await fetch(`${baseUrl}/api/auth/otp/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: ghostEmail, intent: 'login' })
+    });
+    assert.equal(ghostOtpReq.status, 200);
+    const ghostOtpBody = await ghostOtpReq.json();
+    assert.equal(ghostOtpBody.success, true);
+    assert.equal(mockProvider.dispatched.length, 0, 'No email must be dispatched for unknown accounts');
+    assert.equal(ghostOtpBody.message, knownOtpBody.message, 'Known and unknown accounts must return identical public message');
+    assert.deepEqual(Object.keys(ghostOtpBody).sort(), Object.keys(knownOtpBody).sort(), 'Public response shape must be identical');
 
     // Verify UI contract for unregistered account
     const portalSource = fs.readFileSync(path.resolve('./src/components/landing/PublicRoutePortal.tsx'), 'utf-8');
@@ -560,8 +597,12 @@ async function runOtpDeliveryPermanentFixTests() {
       'PublicRoutePortal must check eligibility.accountExists === false'
     );
     assert.ok(
-      portalSource.includes("res.message.includes('If an account exists')"),
-      'PublicRoutePortal must include defense-in-depth guard for unregistered accounts'
+      !portalSource.includes("res.message.includes('If an account exists')"),
+      'PublicRoutePortal must NOT treat generic anti-enumeration response as an account-not-found error'
+    );
+    assert.ok(
+      portalSource.includes("setLoginStep('otp')"),
+      'PublicRoutePortal must transition to OTP screen upon successful request'
     );
     assert.ok(
       portalSource.includes('login-account-not-found-signup-btn'),
@@ -572,12 +613,12 @@ async function runOtpDeliveryPermanentFixTests() {
       'PublicRoutePortal must preserve email when navigating to signup'
     );
 
-    // 10.3 Signup action preserves email address
+    // 10.4 Signup action preserves email address
     const testSignupUrl = `/signup?email=${encodeURIComponent('student.transfer@domain.org')}`;
     const params = new URLSearchParams(testSignupUrl.slice(testSignupUrl.indexOf('?')));
     assert.equal(params.get('email'), 'student.transfer@domain.org', 'Email query param must be preserved');
 
-    // 10.4 Signup flow still requests OTP for new users
+    // 10.5 Signup flow still requests OTP for new users
     mockProvider.reset();
     const brandNewEmail = 'brand.new.registrant@domain.org';
     const newRegEligResp = await fetch(`${baseUrl}/api/auth/otp/eligibility?email=${encodeURIComponent(brandNewEmail)}&intent=register`);
@@ -596,14 +637,63 @@ async function runOtpDeliveryPermanentFixTests() {
     const newRegCode = extractCodeFromDispatch(brandNewEmail);
     assert.ok(newRegCode && newRegCode.length === 6);
 
-    // 10.5 Eligibility API / network failure handling: retryable error, never false account-not-found
+    // 10.6 Eligibility API / network failure handling: retryable error, never false account-not-found
     const invalidEmailResp = await fetch(`${baseUrl}/api/auth/otp/eligibility?email=not-an-email&intent=login`);
     assert.equal(invalidEmailResp.status, 400);
     const invalidData = await invalidEmailResp.json();
     assert.equal(invalidData.error?.code, 'INVALID_ARGUMENTS');
     assert.equal(invalidData.accountExists, undefined, 'API failure must not claim account does not exist');
 
-    console.log('  [PASS] 10. Clear account-not-found login flow, eligibility verification, signup prefill, and failure handling verified');
+    // 10.7 Mixed-case and whitespace email normalization across login and signup
+    mockProvider.reset();
+    authIpRateLimiter.reset();
+    const normUserEmail = 'normalized.case.student@domain.org';
+    await jarvisData.users.create({
+      id: `user-norm-${Date.now()}`,
+      email: normUserEmail,
+      displayName: 'Normalized Student',
+      role: 'student'
+    });
+
+    const dirtyInput = '   NORMALIZED.Case.Student@Domain.ORG   ';
+    // Eligibility handles mixed case & whitespace
+    const normEligResp = await fetch(`${baseUrl}/api/auth/otp/eligibility?email=${encodeURIComponent(dirtyInput)}&intent=login`);
+    assert.equal(normEligResp.status, 200);
+    const normEligData = await normEligResp.json();
+    assert.equal(normEligData.accountExists, true, 'Eligibility must match email case-insensitively with trimmed whitespace');
+
+    // Login OTP request handles mixed case & whitespace
+    const normOtpReq = await fetch(`${baseUrl}/api/auth/otp/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: dirtyInput, intent: 'login' })
+    });
+    assert.equal(normOtpReq.status, 200);
+    assert.equal(mockProvider.dispatched.length, 1, 'Login OTP must be dispatched for normalized email');
+    assert.equal(mockProvider.dispatched[0].to, normUserEmail, 'Recipient email must be stored normalized');
+
+    // Verification handles mixed case & whitespace
+    const dirtyCode = extractCodeFromDispatch(normUserEmail);
+    const normVerifyResp = await fetch(`${baseUrl}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: dirtyInput, code: dirtyCode, intent: 'login' })
+    });
+    assert.equal(normVerifyResp.status, 200);
+    const dirtyVerifyBody = await normVerifyResp.json();
+    assert.ok(dirtyVerifyBody.token, 'Verification must succeed with normalized email');
+
+    // Duplicate signup attempt with mixed case & whitespace rejected with 409 USER_EXISTS
+    const normDupSignup = await fetch(`${baseUrl}/api/auth/otp/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: dirtyInput, intent: 'register' })
+    });
+    assert.equal(normDupSignup.status, 409, 'Duplicate registration with mixed case & whitespace must return 409');
+    const normDupBody = await normDupSignup.json();
+    assert.equal(normDupBody.error?.code, 'USER_EXISTS');
+
+    console.log('  [PASS] 10. Clear account-not-found login flow, eligibility verification, signup prefill, duplicate rejection, and normalization verified');
 
   } finally {
     if (harness) {
