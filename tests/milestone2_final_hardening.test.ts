@@ -361,25 +361,36 @@ async function runFinalHardeningTestSuite() {
         process.env.NODE_ENV = 'production';
         resetEmailProvider();
 
-        // 6.1 Cannot use smtp in production
+        // 6.1 Valid smtp is allowed in production
         process.env.JARVIS_EMAIL_PROVIDER = 'smtp';
+        process.env.SMTP_USER = 'auth@stark.edu';
+        process.env.SMTP_PASS = 'mockpassword1234';
+        process.env.JARVIS_EMAIL_FROM = 'J.A.R.V.I.S. <auth@stark.edu>';
+        resetEmailProvider();
+        validateProductionEmailConfig();
+        const prodSmtp = resolveEmailProvider();
+        assert.strictEqual(prodSmtp.name, 'smtp');
+
+        // 6.1b Missing SMTP_PASS throws
+        delete process.env.SMTP_PASS;
+        resetEmailProvider();
         assert.throws(
           () => validateProductionEmailConfig(),
-          /In production, JARVIS_EMAIL_PROVIDER must be 'resend'/
+          /SMTP_PASS is required in production/
         );
 
         // 6.2 Cannot use console in production
         process.env.JARVIS_EMAIL_PROVIDER = 'console';
         assert.throws(
           () => validateProductionEmailConfig(),
-          /In production, JARVIS_EMAIL_PROVIDER must be 'resend'/
+          /cannot be 'console'/
         );
 
         // 6.3 Cannot use mock in production
         process.env.JARVIS_EMAIL_PROVIDER = 'mock';
         assert.throws(
           () => validateProductionEmailConfig(),
-          /In production, JARVIS_EMAIL_PROVIDER must be 'resend'/
+          /cannot be 'mock'/
         );
 
         // 6.4 Missing RESEND_API_KEY throws
@@ -399,7 +410,7 @@ async function runFinalHardeningTestSuite() {
           /JARVIS_EMAIL_FROM is required in production/
         );
 
-        console.log('[PASS] 6.1 Production provider resolution strictly fails closed on invalid/dev providers');
+        console.log('[PASS] 6.1 Production provider resolution strictly fails closed on invalid/dev providers and verifies smtp/resend');
       } finally {
         process.env.NODE_ENV = prevEnv;
         if (prevProv !== undefined) process.env.JARVIS_EMAIL_PROVIDER = prevProv; else delete process.env.JARVIS_EMAIL_PROVIDER;

@@ -287,7 +287,7 @@ async function runMilestone22OtpEmailDeliveryTests() {
     process.env.JARVIS_EMAIL_PROVIDER = 'console';
     assert.throws(
       () => validateProductionEmailConfig(),
-      /JARVIS_EMAIL_PROVIDER must be 'resend'/
+      /JARVIS_EMAIL_PROVIDER/
     );
 
     // 3.6 ConsoleEmailProvider constructor strictly throws in production

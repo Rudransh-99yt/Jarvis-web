@@ -133,17 +133,35 @@ async function runGmailSmtpTestSuite() {
     process.env.SMTP_PASS = 'abcdefghijklmnop';
     process.env.JARVIS_EMAIL_FROM = 'dev@gmail.com';
 
+    // 3.1 Valid Gmail SMTP configuration succeeds in production
+    resetEmailProvider();
+    validateProductionEmailConfig();
+    const prodSmtp = resolveEmailProvider();
+    assert.strictEqual(prodSmtp.name, 'smtp');
+    assert(prodSmtp instanceof GmailSmtpEmailProvider);
+    console.log('[PASS] 3.1 Valid Gmail SMTP provider supported and resolved in production');
+
+    // 3.2 Missing SMTP_PASS fails closed in production
+    resetEmailProvider();
+    delete process.env.SMTP_PASS;
     assert.throws(
       () => validateProductionEmailConfig(),
-      /CONFIGURATION_ERROR: In production, JARVIS_EMAIL_PROVIDER must be 'resend'/
+      /CONFIGURATION_ERROR: SMTP_PASS is required in production/
     );
-
-    resetEmailProvider();
     assert.throws(
       () => resolveEmailProvider(),
-      /CONFIGURATION_ERROR: In production, JARVIS_EMAIL_PROVIDER must be 'resend'/
+      /CONFIGURATION_ERROR: SMTP_PASS is required in production/
     );
-    console.log('[PASS] 3.1 Gmail SMTP strictly disallowed in production; fails closed with CONFIGURATION_ERROR');
+    console.log('[PASS] 3.2 Missing SMTP_PASS strictly fails closed in production');
+
+    // 3.3 Dev fallbacks (console / mock) strictly disallowed in production
+    resetEmailProvider();
+    process.env.JARVIS_EMAIL_PROVIDER = 'console';
+    assert.throws(
+      () => validateProductionEmailConfig(),
+      /CONFIGURATION_ERROR: In production, JARVIS_EMAIL_PROVIDER cannot be 'console'/
+    );
+    console.log('[PASS] 3.3 Silent console fallback strictly disallowed in production');
 
     // =========================================================================
     // SECTION 4: PROVIDER SELECTION & LOCAL ENVIRONMENT RESOLUTION

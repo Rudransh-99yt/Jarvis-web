@@ -1,7 +1,7 @@
 // Email Provider Resolution and Production Fail-Closed Boundary (Milestone 2.2)
 import type { IEmailProvider } from './types.ts';
 import { ResendEmailProvider } from './resendProvider.ts';
-import { GmailSmtpEmailProvider } from './gmailSmtpProvider.ts';
+import { GmailSmtpEmailProvider, extractEmailAddress } from './gmailSmtpProvider.ts';
 import { ConsoleEmailProvider, MockEmailProvider } from './devProvider.ts';
 
 let activeProvider: IEmailProvider | null = null;
@@ -9,25 +9,28 @@ let activeProvider: IEmailProvider | null = null;
 /**
  * Validates production email configuration.
  * Enforces strict fail-closed security invariants:
- * 1. Must use 'resend' provider in production. Silent mock or console fallback is forbidden.
- * 2. RESEND_API_KEY is mandatory, must begin with "re_", and have valid length.
- * 3. JARVIS_EMAIL_FROM is mandatory and must contain a valid email address.
+ * 1. Must use a verified delivery provider ('smtp' or 'resend') in production.
+ *    Silent mock or console fallback is strictly forbidden.
+ * 2. If 'resend': RESEND_API_KEY is mandatory, must begin with "re_", and have valid length (>= 10).
+ * 3. If 'smtp' (or 'gmail'): SMTP_USER and SMTP_PASS are mandatory.
+ * 4. JARVIS_EMAIL_FROM is mandatory and must contain a valid email address matching the SMTP sender or authorized domain.
  */
 export function validateProductionEmailConfig(): void {
   const isProd = process.env.NODE_ENV === 'production';
   if (!isProd) return;
 
-  const provider = (process.env.JARVIS_EMAIL_PROVIDER || 'resend').trim().toLowerCase();
-  if (provider !== 'resend') {
+  const rawProvider = (process.env.JARVIS_EMAIL_PROVIDER || '').trim().toLowerCase();
+  const provider = rawProvider || 'resend';
+
+  if (provider === 'console' || provider === 'mock') {
     throw new Error(
-      `CONFIGURATION_ERROR: In production, JARVIS_EMAIL_PROVIDER must be 'resend'. Gmail SMTP is only supported for local development. Silent fallbacks are strictly disallowed.`
+      `CONFIGURATION_ERROR: In production, JARVIS_EMAIL_PROVIDER cannot be '${provider}'. A verified delivery provider ('smtp' or 'resend') is required. Silent fallbacks are strictly disallowed.`
     );
   }
 
-  const apiKey = (process.env.RESEND_API_KEY || '').trim();
-  if (!apiKey || !apiKey.startsWith('re_') || apiKey.length < 10) {
+  if (provider !== 'resend' && provider !== 'smtp' && provider !== 'gmail') {
     throw new Error(
-      `CONFIGURATION_ERROR: RESEND_API_KEY is required in production and must be a valid Resend API key starting with "re_".`
+      `CONFIGURATION_ERROR: Unsupported email provider "${provider}". In production, JARVIS_EMAIL_PROVIDER must be 'smtp' or 'resend'. Silent fallbacks are strictly disallowed.`
     );
   }
 
@@ -46,6 +49,38 @@ export function validateProductionEmailConfig(): void {
       `CONFIGURATION_ERROR: JARVIS_EMAIL_FROM contains an invalid email address format: "${from}".`
     );
   }
+
+  if (provider === 'resend') {
+    const apiKey = (process.env.RESEND_API_KEY || '').trim();
+    if (!apiKey || !apiKey.startsWith('re_') || apiKey.length < 10) {
+      throw new Error(
+        `CONFIGURATION_ERROR: RESEND_API_KEY is required in production and must be a valid Resend API key starting with "re_".`
+      );
+    }
+  }
+
+  if (provider === 'smtp' || provider === 'gmail') {
+    const user = (process.env.SMTP_USER || '').trim();
+    if (!user || !user.includes('@')) {
+      throw new Error(
+        `CONFIGURATION_ERROR: SMTP_USER is required in production and must be a valid email address (e.g. yourname@gmail.com).`
+      );
+    }
+
+    const pass = (process.env.SMTP_PASS || '').trim();
+    if (!pass) {
+      throw new Error(
+        `CONFIGURATION_ERROR: SMTP_PASS is required in production and must be a valid Google App Password.`
+      );
+    }
+
+    const userEmail = extractEmailAddress(user);
+    if (emailAddr.toLowerCase() !== userEmail.toLowerCase()) {
+      throw new Error(
+        `CONFIGURATION_ERROR: JARVIS_EMAIL_FROM address ("${emailAddr}") must match the authenticated Gmail sender ("${userEmail}") or an authorized alias.`
+      );
+    }
+  }
 }
 
 /**
@@ -60,8 +95,10 @@ export function resolveEmailProvider(): IEmailProvider {
   const isProd = process.env.NODE_ENV === 'production';
   const hasSmtpConfig = Boolean(process.env.SMTP_USER?.trim() && process.env.SMTP_PASS?.trim());
   const defaultNonProd = hasSmtpConfig ? 'smtp' : (process.env.NODE_ENV === 'test' ? 'mock' : 'console');
+
+  const rawProvider = (process.env.JARVIS_EMAIL_PROVIDER || '').trim().toLowerCase();
   const providerType = (
-    process.env.JARVIS_EMAIL_PROVIDER ||
+    rawProvider ||
     (isProd ? 'resend' : defaultNonProd)
   )
     .trim()
@@ -71,14 +108,24 @@ export function resolveEmailProvider(): IEmailProvider {
     validateProductionEmailConfig();
     const timeoutMs = process.env.JARVIS_EMAIL_TIMEOUT_MS
       ? parseInt(process.env.JARVIS_EMAIL_TIMEOUT_MS, 10)
-      : 5000;
+      : (providerType === 'smtp' || providerType === 'gmail' ? 10000 : 5000);
 
-    activeProvider = new ResendEmailProvider({
-      apiKey: process.env.RESEND_API_KEY!,
-      from: process.env.JARVIS_EMAIL_FROM!,
-      timeoutMs
-    });
-    return activeProvider;
+    if (providerType === 'smtp' || providerType === 'gmail') {
+      const user = process.env.SMTP_USER!.trim();
+      const pass = process.env.SMTP_PASS!.trim();
+      const from = (process.env.JARVIS_EMAIL_FROM || user).trim();
+      activeProvider = new GmailSmtpEmailProvider({ user, pass, from, timeoutMs });
+      return activeProvider;
+    }
+
+    if (providerType === 'resend') {
+      activeProvider = new ResendEmailProvider({
+        apiKey: process.env.RESEND_API_KEY!,
+        from: process.env.JARVIS_EMAIL_FROM!,
+        timeoutMs
+      });
+      return activeProvider;
+    }
   }
 
   // Non-production resolution
